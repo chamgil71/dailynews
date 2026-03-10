@@ -9,36 +9,30 @@
 import logging
 import os
 from datetime import datetime
+import markdown
 
 import requests
 
 from config.settings import EMAIL_FROM, EMAIL_SUBJECT, EMAIL_TO, RESEND_API_KEY
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 logger = logging.getLogger(__name__)
 
 
 def _md_to_html(md: str) -> str:
-    """Markdown을 간단한 HTML로 변환 (외부 의존 없이)."""
-    import re
-    html = md
-    # 헤딩
-    html = re.sub(r"^## (.+)$",   r"<h2>\1</h2>",  html, flags=re.MULTILINE)
-    html = re.sub(r"^### (.+)$",  r"<h3>\1</h3>",  html, flags=re.MULTILINE)
-    html = re.sub(r"^# (.+)$",    r"<h1>\1</h1>",  html, flags=re.MULTILINE)
-    # 굵게
-    html = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html)
-    # 구분선
-    html = html.replace("---", "<hr>")
-    # 줄바꿈
-    html = html.replace("\n", "<br>\n")
+    body = markdown.markdown(
+        md,
+        extensions=["tables", "fenced_code"]
+    )
     return f"""
 <html><body style="font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:20px">
-{html}
+{body}
 <br><hr>
 <small style="color:#888">AI News Daily — {datetime.now().strftime('%Y-%m-%d')}</small>
 </body></html>
 """
-
 
 def send_email(md_content: str) -> bool:
     """
@@ -71,6 +65,7 @@ def send_email(md_content: str) -> bool:
                 "html":    html,
             },
             timeout=15,
+            verify=False,
         )
         if resp.status_code in (200, 201):
             logger.info(f"[이메일 발송] 성공 → {EMAIL_TO}")

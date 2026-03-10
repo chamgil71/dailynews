@@ -5,25 +5,36 @@ import os
 LLM_PROVIDER    = os.getenv("LLM_PROVIDER", "gpt")   # "gpt" | "claude" | "gemini"
 OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_KEY   = os.getenv("ANTHROPIC_API_KEY", "")
+GEMINI_API_KEY  = os.getenv("GEMINI_API_KEY", "")
 
-# 조건부 모델 다운그레이드: 뉴스 건수가 적으면 mini 사용
-GPT_MODEL_FULL      = "gpt-4o"
-GPT_MODEL_MINI      = "gpt-4o-mini"
-GPT_MINI_THRESHOLD  = 20          # 뉴스 ≤ 20건이면 mini 자동 선택
+# ── GPT 모델 설정 ─────────────────────────────────────────────────────────────
+GPT_MODEL_FULL     = "gpt-4o"
+GPT_MODEL_MINI     = "gpt-4o-mini"
+GPT_MINI_THRESHOLD = 20          # 뉴스 ≤ 20건이면 mini 자동 선택
+
+# ── Claude 모델 설정 ──────────────────────────────────────────────────────────
+CLAUDE_MODEL_FULL  = "claude-opus-4-5"         # 고품질
+CLAUDE_MODEL_MINI  = "claude-haiku-4-5-20251001"  # 빠르고 저렴
+CLAUDE_MINI_THRESHOLD = 20
+
+# ── Gemini 모델 설정 ──────────────────────────────────────────────────────────
+GEMINI_MODEL_FULL  = "gemini-2.0-flash"        # ← 변경
+GEMINI_MODEL_MINI  = "gemini-2.0-flash-lite"   # ← 변경
+GEMINI_MINI_THRESHOLD = 20
 
 # ── 수집 설정 ─────────────────────────────────────────────────────────────────
-MAX_ENTRIES_PER_FEED    = 5       # 피드당 최대 기사 수
-MAX_TITLES_TO_ANALYZE   = 35      # AI에 전송할 최대 제목 수 (토큰 절감)
+MAX_ENTRIES_PER_FEED    = 5
+MAX_TITLES_TO_ANALYZE   = 20
 RSS_TIMEOUT_SECONDS     = 10
 
-# ── 캐시 설정 (중복 기사 제거) ────────────────────────────────────────────────
+# ── 캐시 설정 ─────────────────────────────────────────────────────────────────
 CACHE_ENABLED   = True
 CACHE_FILE      = ".cache/last_urls.json"
 CACHE_TTL_HOURS = 23
 
 # ── 이메일 설정 ───────────────────────────────────────────────────────────────
 RESEND_API_KEY  = os.getenv("RESEND_API_KEY", "")
-EMAIL_FROM      = "news@resend.dev"
+EMAIL_FROM      = "onboarding@resend.dev"
 EMAIL_TO        = [e.strip() for e in os.getenv("RECIPIENT_EMAIL", "").split(",") if e.strip()]
 EMAIL_SUBJECT   = "📰 Daily News Brief — {date}"
 

@@ -12,6 +12,7 @@ import logging
 import os
 import socket
 import time
+import re
 from datetime import datetime, timedelta
 
 import feedparser
@@ -25,6 +26,12 @@ from config.settings import (
 
 logger = logging.getLogger(__name__)
 
+# ── 헬퍼 ──────────────────────────────────────────────────────────────────────
+
+def _clean_summary(raw: str) -> str:
+    """RSS summary에서 HTML 태그 제거 후 150자 제한."""
+    text = re.sub(r"<[^>]+>", "", raw).strip()
+    return text[:150] + "..." if len(text) > 150 else text
 
 # ── 캐시 ──────────────────────────────────────────────────────────────────────
 
@@ -93,6 +100,7 @@ def _fetch_feed(url: str, category: str, lang: str, label: str,
                 "title":     title,
                 "link":      link,
                 "published": getattr(entry, "published", ""),
+                "summary":   _clean_summary(getattr(entry, "summary", "")),
             })
             count += 1
 

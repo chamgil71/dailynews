@@ -9,7 +9,7 @@ RSS_FEEDS = {
         "feeds": [
             "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
             "https://feeds.bbci.co.uk/news/rss.xml",
-            "https://feeds.reuters.com/reuters/topNews",
+            "https://feeds.skynews.com/feeds/rss/world.xml",
         ],
     },
 
@@ -54,7 +54,7 @@ RSS_FEEDS = {
         "label": "국내 경제",
         "feeds": [
             "https://www.hankyung.com/feed/economy",
-            "https://rss.mt.co.kr/news/rssView.php?pCodeList=rss001",
+            #"https://rss.mt.co.kr/news/rssView.php?pCodeList=rss001",
         ],
     },
 }

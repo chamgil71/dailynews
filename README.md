@@ -461,3 +461,28 @@ GEMINI_API_KEY=AIza...
 | Phase 4 | 시장·투자 영향 분석 모듈 | ⭐⭐⭐ |
 
 ---
+
+ MD 파일만 이메일 발송 테스트
+main.py 건드리지 않고 터미널에서 바로 실행하세요.
+bashpython -c "
+from dotenv import load_dotenv
+load_dotenv()
+from core.mailer import send_email
+with open('reports/news_2026-03-10.md', encoding='utf-8') as f:
+    md = f.read()
+result = send_email(md)
+print('성공' if result else '실패')
+"
+
+---
+ Gemini 단독 테스트
+
+python -c "
+from dotenv import load_dotenv
+load_dotenv()
+from google import genai
+from config.settings import GEMINI_API_KEY
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
+print(model.generate_content('안녕하세요').text)
+"
