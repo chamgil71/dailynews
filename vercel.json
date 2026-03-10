@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "name": "ai-news-daily",
+  "builds": [
+    {
+      "src": "docs/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/",          "dest": "/docs/app.html" },
+    { "src": "/archive",   "dest": "/docs/archive.html" },
+    { "src": "/(.*).html", "dest": "/docs/$1.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Cache-Control",          "value": "public, max-age=3600" }
+      ]
+    }
+  ]
+}

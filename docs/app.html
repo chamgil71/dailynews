@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI가 매일 자동으로 수집·분석하는 글로벌 뉴스 브리핑">
+  <title>AI News Daily</title>
+  <style>
+    :root {
+      --blue:   #2563eb;
+      --navy:   #1e3a5f;
+      --bg:     #f8fafc;
+      --card:   #ffffff;
+      --border: #e2e8f0;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --green:  #16a34a;
+      --orange: #ea580c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.7;
+    }
+
+    /* ── 헤더 ── */
+    header {
+      background: var(--navy); color: #fff;
+      padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+      position: sticky; top: 0; z-index: 200;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+    .logo { font-size: 1.15rem; font-weight: 700; }
+    .logo span { color: #60a5fa; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a {
+      color: rgba(255,255,255,.75); text-decoration: none;
+      font-size: .88rem; transition: color .15s;
+    }
+    .header-right a:hover { color: #fff; }
+
+    /* ── 레이아웃 ── */
+    .layout {
+      max-width: 1100px; margin: 0 auto;
+      padding: 32px 20px 80px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 28px;
+    }
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+
+    /* ── 사이드바 ── */
+    .sidebar { position: sticky; top: 80px; align-self: start; }
+    .sidebar-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .sidebar-card h3 {
+      font-size: .8rem; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    /* 검색 */
+    .search-wrap { position: relative; }
+    .search-wrap input {
+      width: 100%; padding: 9px 36px 9px 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: .9rem; outline: none;
+      transition: border-color .2s;
+    }
+    .search-wrap input:focus { border-color: var(--blue); }
+    .search-wrap .icon {
+      position: absolute; right: 10px; top: 50%;
+      transform: translateY(-50%); color: var(--muted); pointer-events: none;
+    }
+
+    /* 날짜 목록 */
+    .date-list { list-style: none; }
+    .date-list li {
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .date-list li:last-child { border-bottom: none; }
+    .date-list a {
+      color: var(--text); text-decoration: none; font-size: .88rem;
+      display: flex; align-items: center; gap: 6px;
+      transition: color .15s;
+    }
+    .date-list a:hover { color: var(--blue); }
+    .date-list a.active { color: var(--blue); font-weight: 600; }
+
+    /* 통계 */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-item {
+      text-align: center; padding: 10px;
+      background: var(--bg); border-radius: 8px;
+    }
+    .stat-item .num { font-size: 1.4rem; font-weight: 700; color: var(--blue); }
+    .stat-item .lbl { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── 메인 콘텐츠 ── */
+    .main-area {}
+
+    /* 컨트롤 바 */
+    .controls {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+    }
+    .controls h2 { font-size: 1.1rem; color: var(--navy); }
+    .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab {
+      padding: 5px 14px; border-radius: 20px; font-size: .82rem;
+      border: 1px solid var(--border); background: var(--card);
+      cursor: pointer; transition: all .15s; font-weight: 500;
+    }
+    .tab:hover { border-color: var(--blue); color: var(--blue); }
+    .tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    /* 리포트 카드 */
+    .report-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      animation: fadeIn .3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+    .report-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 16px;
+      flex-wrap: wrap; gap: 8px;
+    }
+    .report-date { font-size: 1.15rem; font-weight: 700; color: var(--navy); }
+    .badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge {
+      padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 500;
+    }
+    .badge-blue   { background: #eff6ff; color: var(--blue); border: 1px solid #bfdbfe; }
+    .badge-green  { background: #f0fdf4; color: var(--green); border: 1px solid #bbf7d0; }
+    .badge-orange { background: #fff7ed; color: var(--orange); border: 1px solid #fed7aa; }
+
+    /* 분석 텍스트 */
+    .analysis { margin-bottom: 20px; }
+    .analysis h2 { font-size: 1rem; color: var(--blue); margin: 1.2em 0 .4em; }
+    .analysis h3 { font-size: .95rem; color: var(--navy); margin: 1em 0 .3em; }
+    .analysis p  { font-size: .9rem; margin-bottom: .6em; }
+    .analysis ul { padding-left: 1.2em; font-size: .9rem; }
+    .analysis li { margin-bottom: .25em; }
+    .analysis hr { border: none; border-top: 1px solid var(--border); margin: 1.2em 0; }
+    .analysis a  { color: var(--blue); }
+    .analysis strong { color: var(--navy); }
+    .analysis blockquote {
+      border-left: 3px solid var(--blue); padding: 6px 14px;
+      background: #eff6ff; border-radius: 0 6px 6px 0;
+      font-size: .88rem; color: var(--muted); margin: .8em 0;
+    }
+
+    /* 뉴스 링크 목록 */
+    .news-toggle {
+      background: none; border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 16px;
+      font-size: .85rem; cursor: pointer; width: 100%;
+      text-align: left; color: var(--muted);
+      display: flex; justify-content: space-between; align-items: center;
+      transition: background .15s;
+    }
+    .news-toggle:hover { background: var(--bg); }
+    .news-list {
+      display: none; margin-top: 10px;
+      border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden;
+    }
+    .news-list.open { display: block; }
+    .news-item {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: .83rem;
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-item a { color: var(--blue); text-decoration: none; }
+    .news-item a:hover { text-decoration: underline; }
+    .news-item .cat {
+      font-size: .72rem; color: var(--muted);
+      background: var(--bg); padding: 1px 6px; border-radius: 4px;
+      margin-right: 6px;
+    }
+
+    /* 검색 하이라이트 */
+    mark { background: #fef08a; border-radius: 2px; }
+
+    /* 로딩 */
+    .loading {
+      text-align: center; padding: 60px;
+      color: var(--muted); font-size: .95rem;
+    }
+    .spinner {
+      width: 32px; height: 32px; margin: 0 auto 12px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 빈 결과 */
+    .empty { text-align: center; padding: 48px; color: var(--muted); }
+    .empty .icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+    footer {
+      text-align: center; padding: 24px;
+      color: var(--muted); font-size: .78rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📰 AI <span>News</span> Daily</div>
+  <div class="header-right">
+    <a href="archive.html">📚 전체 목록</a>
+    <a href="https://github.com" target="_blank">GitHub ↗</a>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── 사이드바 ── -->
+  <aside class="sidebar">
+
+    <!-- 검색 -->
+    <div class="sidebar-card">
+      <h3>🔍 검색</h3>
+      <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="키워드 검색...">
+        <span class="icon">🔍</span>
+      </div>
+    </div>
+
+    <!-- 통계 -->
+    <div class="sidebar-card">
+      <h3>📊 통계</h3>
+      <div class="stat-grid" id="statsGrid">
+        <div class="stat-item"><div class="num" id="statTotal">-</div><div class="lbl">총 리포트</div></div>
+        <div class="stat-item"><div class="num" id="statNews">-</div><div class="lbl">총 기사 수</div></div>
+        <div class="stat-item"><div class="num" id="statEn">-</div><div class="lbl">영어</div></div>
+        <div class="stat-item"><div class="num" id="statKo">-</div><div class="lbl">한국어</div></div>
+      </div>
+    </div>
+
+    <!-- 날짜 목록 -->
+    <div class="sidebar-card">
+      <h3>📅 리포트 날짜</h3>
+      <ul class="date-list" id="dateList"></ul>
+    </div>
+
+  </aside>
+
+  <!-- ── 메인 ── -->
+  <main class="main-area">
+
+    <div class="controls">
+      <h2 id="mainTitle">최신 뉴스 브리핑</h2>
+      <div class="filter-tabs">
+        <button class="tab active" data-lang="all">전체</button>
+        <button class="tab" data-lang="en">🌐 영어</button>
+        <button class="tab" data-lang="ko">🇰🇷 한국어</button>
+      </div>
+    </div>
+
+    <div id="reportArea">
+      <div class="loading">
+        <div class="spinner"></div>
+        리포트를 불러오는 중...
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer>
+  Powered by GitHub Actions · OpenAI GPT · RSS Feeds — 매일 자동 업데이트
+</footer>
+
+<script>
+// ── 상태 ──────────────────────────────────────────────────────────────────────
+const state = {
+  reports:     [],   // [{date, analysis_en, analysis_ko, news_en, news_ko, stats}]
+  activeDate:  null,
+  activeLang:  "all",
+  searchQuery: "",
+};
+
+// ── 유틸 ──────────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function highlight(text, query) {
+  if (!query) return text;
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi");
+  return text.replace(re, "<mark>$1</mark>");
+}
+
+// ── MD → HTML (초경량 변환) ────────────────────────────────────────────────
+function mdToHtml(md) {
+  if (!md) return "";
+  let h = md
+    .replace(/^## (.+)$/gm,    "<h2>$1</h2>")
+    .replace(/^### (.+)$/gm,   "<h3>$1</h3>")
+    .replace(/^# (.+)$/gm,     "<h1>$1</h1>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,     "<em>$1</em>")
+    .replace(/^> (.+)$/gm,     "<blockquote>$1</blockquote>")
+    .replace(/^---$/gm,        "<hr>")
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/^- (.+)$/gm,     "<li>$1</li>")
+    .replace(/(<li>.*<\/li>\n?)+/gs, m => `<ul>${m}</ul>`)
+    .replace(/\n\n+/g,         "</p><p>")
+    .replace(/^(?!<[hbup]|<\/)/gm, "");
+  return `<p>${h}</p>`;
+}
+
+// ── 데이터 로드 ───────────────────────────────────────────────────────────────
+async function loadReportIndex() {
+  try {
+    const res = await fetch("reports.json");
+    if (!res.ok) throw new Error("reports.json 없음");
+    return await res.json();  // [{date, url}]
+  } catch {
+    // 개발/테스트용 더미
+    return [{ date: "2026-03-08", url: "2026-03-08.html" }];
+  }
+}
+
+async function loadReportData(date) {
+  // reports/news_YYYY-MM-DD.md를 직접 fetch
+  const mdUrl = `../reports/news_${date}.md`;
+  try {
+    const res = await fetch(mdUrl);
+    if (!res.ok) throw new Error("MD 없음");
+    const raw = await res.text();
+    return parseMarkdown(raw, date);
+  } catch {
+    return null;
+  }
+}
+
+function parseMarkdown(raw, date) {
+  // 통계 줄 파싱
+  const statsLine = raw.match(/> 📊 수집: (.+)/)?.[1] || "";
+  const stats = {
+    total:      parseInt(statsLine.match(/총 (\d+)건/)?.[1] || "0"),
+    en:         parseInt(statsLine.match(/EN: (\d+)/)?.[1] || "0"),
+    ko:         parseInt(statsLine.match(/KO: (\d+)/)?.[1] || "0"),
+    sent_to_ai: parseInt(statsLine.match(/AI 분석: (\d+)건/)?.[1] || "0"),
+  };
+
+  // 언어별 뉴스 파싱 (마크다운 목록)
+  const newsEn = [], newsKo = [];
+  const sections = raw.split(/^### /m);
+  for (const sec of sections) {
+    const isEn = sec.startsWith("🌐 영어");
+    const isKo = sec.startsWith("🇰🇷 한국어");
+    if (!isEn && !isKo) continue;
+    const lines = sec.split("\n");
+    for (const line of lines) {
+      const m = line.match(/^- \*\*\[(.+?)\]\*\* \[(.+?)\]\((.+?)\)/);
+      if (m) {
+        const item = { label: m[1], title: m[2], link: m[3] };
+        if (isEn) newsEn.push(item);
+        else      newsKo.push(item);
+      }
+    }
+  }
+
+  // 분석 섹션 파싱
+  const analysisMatch = raw.match(/(?:## 🌐|## 🇰🇷)([\s\S]*?)(?=## 📋|$)/g) || [];
+  const combined = analysisMatch.join("\n\n---\n\n");
+
+  const enMatch = raw.match(/## 🌐 Global News Analysis\n([\s\S]*?)(?=---\n\n## 🇰🇷|## 📋|$)/);
+  const koMatch = raw.match(/## 🇰🇷 국내 뉴스 분석\n([\s\S]*?)(?=## 📋|$)/);
+
+  return {
+    date,
+    analysis_en: enMatch?.[1]?.trim() || "",
+    analysis_ko: koMatch?.[1]?.trim() || "",
+    combined:    combined.trim() || raw.split("## 📋")[0].trim(),
+    news_en:     newsEn,
+    news_ko:     newsKo,
+    stats,
+  };
+}
+
+// ── 렌더링 ────────────────────────────────────────────────────────────────────
+function renderReport(report) {
+  if (!report) {
+    return `<div class="report-card"><div class="empty">
+      <div class="icon">⚠️</div>리포트를 불러올 수 없습니다.
+    </div></div>`;
+  }
+
+  const { date, analysis_en, analysis_ko, combined, news_en, news_ko, stats } = report;
+
+  // 언어 필터
+  let analysis = combined;
+  let newsEn   = news_en;
+  let newsKo   = news_ko;
+  if (state.activeLang === "en") { analysis = analysis_en; newsKo = []; }
+  if (state.activeLang === "ko") { analysis = analysis_ko; newsEn = []; }
+
+  // 검색 필터
+  const q = state.searchQuery;
+  const filterNews = (list) => q
+    ? list.filter(n => n.title.toLowerCase().includes(q.toLowerCase()))
+    : list;
+  const filteredEn = filterNews(newsEn);
+  const filteredKo = filterNews(newsKo);
+
+  // 날짜 포맷
+  const [y, m, d] = date.split("-");
+  const displayDate = `${y}년 ${m}월 ${d}일`;
+
+  // 뉴스 목록 HTML
+  function newsListHtml(items, lang) {
+    if (!items.length) return "";
+    const flag = lang === "en" ? "🌐" : "🇰🇷";
+    const label = lang === "en" ? "영어 뉴스" : "한국어 뉴스";
+    const rows = items.map(n => `
+      <div class="news-item">
+        <span class="cat">${esc(n.label)}</span>
+        <a href="${esc(n.link)}" target="_blank">${highlight(esc(n.title), q)}</a>
+      </div>`).join("");
+    const id = `news-${lang}-${date}`;
+    return `
+      <button class="news-toggle" onclick="toggleNews('${id}')">
+        ${flag} ${label} ${items.length}건 보기 <span id="${id}-arrow">▼</span>
+      </button>
+      <div class="news-list" id="${id}">${rows}</div>`;
+  }
+
+  return `
+  <div class="report-card">
+    <div class="report-header">
+      <div class="report-date">📰 ${displayDate} 브리핑</div>
+      <div class="badges">
+        <span class="badge badge-blue">EN ${stats.en}건</span>
+        <span class="badge badge-green">KO ${stats.ko}건</span>
+        <span class="badge badge-orange">AI 분석 ${stats.sent_to_ai}건</span>
+      </div>
+    </div>
+
+    <div class="analysis">${mdToHtml(analysis)}</div>
+
+    ${newsListHtml(filteredEn, "en")}
+    ${newsListHtml(filteredKo, "ko")}
+
+    ${q && !filteredEn.length && !filteredKo.length
+      ? `<div class="empty"><div class="icon">🔍</div>"${esc(q)}" 검색 결과 없음</div>`
+      : ""}
+  </div>`;
+}
+
+function toggleNews(id) {
+  const el  = document.getElementById(id);
+  const arr = document.getElementById(id + "-arrow");
+  if (!el) return;
+  el.classList.toggle("open");
+  arr.textContent = el.classList.contains("open") ? "▲" : "▼";
+}
+
+// ── 사이드바 렌더링 ───────────────────────────────────────────────────────────
+function renderSidebar(index) {
+  const dateList = document.getElementById("dateList");
+  dateList.innerHTML = index.map(({ date }) => {
+    const [y, m, d] = date.split("-");
+    return `<li>
+      <a href="#" class="${date === state.activeDate ? "active" : ""}"
+         onclick="selectDate('${date}');return false;">
+        📄 ${y}.${m}.${d}
+      </a>
+    </li>`;
+  }).join("");
+}
+
+function renderStats() {
+  const all   = state.reports;
+  const total = all.length;
+  const news  = all.reduce((s, r) => s + (r.stats?.total || 0), 0);
+  const en    = all.reduce((s, r) => s + (r.stats?.en    || 0), 0);
+  const ko    = all.reduce((s, r) => s + (r.stats?.ko    || 0), 0);
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statNews").textContent  = news;
+  document.getElementById("statEn").textContent    = en;
+  document.getElementById("statKo").textContent    = ko;
+}
+
+// ── 이벤트 ────────────────────────────────────────────────────────────────────
+async function selectDate(date) {
+  state.activeDate = date;
+  document.getElementById("reportArea").innerHTML =
+    `<div class="loading"><div class="spinner"></div>불러오는 중...</div>`;
+
+  let report = state.reports.find(r => r.date === date);
+  if (!report) {
+    report = await loadReportData(date);
+    if (report) state.reports.push(report);
+  }
+
+  renderSidebar(state.reports.map(r => ({ date: r.date })));
+  document.getElementById("reportArea").innerHTML = renderReport(report);
+  document.getElementById("mainTitle").textContent =
+    `${date.replace(/-/g, ".")} 브리핑`;
+}
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.activeLang = btn.dataset.lang;
+    const cur = state.reports.find(r => r.date === state.activeDate);
+    document.getElementById("reportArea").innerHTML = renderReport(cur);
+  });
+});
+
+let searchTimer;
+document.getElementById("searchInput").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    state.searchQuery = e.target.value.trim();
+    const cur = state.reports.find(r => r.date === state.activeDate);
+    document.getElementById("reportArea").innerHTML = renderReport(cur);
+  }, 300);
+});
+
+// ── 초기 로드 ─────────────────────────────────────────────────────────────────
+(async () => {
+  const index = await loadReportIndex();   // [{date, url}]
+  if (!index.length) {
+    document.getElementById("reportArea").innerHTML =
+      `<div class="empty"><div class="icon">📭</div>아직 리포트가 없습니다.</div>`;
+    return;
+  }
+
+  // 최신 리포트 먼저 로드
+  const latest = index[0];
+  const report = await loadReportData(latest.date);
+  if (report) state.reports.push(report);
+
+  state.activeDate = latest.date;
+  renderSidebar(index);
+  renderStats();
+  document.getElementById("reportArea").innerHTML = renderReport(report);
+  document.getElementById("mainTitle").textContent =
+    `${latest.date.replace(/-/g, ".")} 브리핑`;
+})();
+</script>
+</body>
+</html>
