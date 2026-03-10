@@ -461,7 +461,3 @@ GEMINI_API_KEY=AIza...
 | Phase 4 | 시장·투자 영향 분석 모듈 | ⭐⭐⭐ |
 
 ---
-
-*Powered by GitHub Actions · OpenAI GPT · RSS Feeds*
-# dailynews
-데일리뉴스
