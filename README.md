@@ -475,14 +475,28 @@ print('성공' if result else '실패')
 "
 
 ---
- Gemini 단독 테스트
 
+사용가능한 목록 확인
 python -c "
 from dotenv import load_dotenv
 load_dotenv()
 from google import genai
 from config.settings import GEMINI_API_KEY
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
-print(model.generate_content('안녕하세요').text)
+client = genai.Client(api_key=GEMINI_API_KEY)
+for m in client.models.list():
+    print(m.name)
+"
+
+모델 작동 테스트
+python -c "
+from dotenv import load_dotenv
+load_dotenv()
+from google import genai
+from config.settings import GEMINI_API_KEY
+client = genai.Client(api_key=GEMINI_API_KEY)
+response = client.models.generate_content(
+    model='gemini-2.0-flash-lite',
+    contents='안녕하세요, 한 문장으로 답해주세요.'
+)
+print(response.text)
 "

@@ -58,6 +58,7 @@ def _build_prompt(news: list, lang: str) -> str:
     if lang == "ko":
         return f"""당신은 뉴스 분석 전문가입니다. 아래 한국어 뉴스 제목을 분석하세요.
 {hints}
+**반드시 한국어로 답변하세요.**
 
 출력 형식 (반드시 준수):
 ## 핵심 이슈 TOP 3

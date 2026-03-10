@@ -4,7 +4,7 @@ GitHub Pages 정적 사이트 빌더
 reports/*.md → docs/*.html + docs/index.html + docs/archive.html
 
 실행: python scripts/build_site.py
-의존: markdown2 (pip install markdown2)
+의존: markdown (pip install markdown)
 """
 
 import glob
@@ -12,7 +12,7 @@ import json
 import os
 from datetime import datetime
 
-import markdown2
+import markdown
 
 REPORTS_DIR = "reports"
 DOCS_DIR    = "docs"
@@ -182,7 +182,7 @@ def build_report_page(md_path: str, date_str: str) -> str:
             stats_line = line.lstrip("> ").strip()
             break
 
-    html_body = markdown2.markdown(
+    html_body = markdown.markdown(
         raw,
         extras=["tables", "fenced-code-blocks", "strike", "cuddled-lists"]
     )
