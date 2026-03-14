@@ -18,9 +18,9 @@ CLAUDE_MODEL_MINI  = "claude-haiku-4-5-20251001"  # 빠르고 저렴
 CLAUDE_MINI_THRESHOLD = 20
 
 # ── Gemini 모델 설정 ──────────────────────────────────────────────────────────
-GEMINI_MODEL_FULL  = "gemini-1.5-flash"  ##"gemini-2.5-pro"        # ← 변경
-GEMINI_MODEL_MINI  = "gemini-1.5-flash"  ##"gemini-2.0-flash-lite"   # ← 변경
-GEMINI_MINI_THRESHOLD = 20
+GEMINI_MODEL_FULL  = "gemini-1.5-flash"
+GEMINI_MODEL_MINI  = "gemini-1.5-flash"
+GEMINI_MINI_THRESHOLD = 40
 
 # ── 수집 설정 ─────────────────────────────────────────────────────────────────
 MAX_ENTRIES_PER_FEED    = 5
