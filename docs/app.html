@@ -336,74 +336,27 @@ function mdToHtml(md) {
 }
 
 // ── 데이터 로드 ───────────────────────────────────────────────────────────────
-async function loadReportIndex() {
+async function loadAllReports() {
   try {
-    const res = await fetch("reports.json");
-    if (!res.ok) throw new Error("reports.json 없음");
-    return await res.json();  // [{date, url}]
+    const res = await fetch("reports-data.json");
+    if (!res.ok) throw new Error("reports-data.json 없음");
+    return await res.json();
   } catch {
-    // 개발/테스트용 더미
-    return [{ date: "2026-03-08", url: "2026-03-08.html" }];
-  }
-}
-
-async function loadReportData(date) {
-  // reports/news_YYYY-MM-DD.md를 직접 fetch
-  const mdUrl = `../reports/news_${date}.md`;
-  try {
-    const res = await fetch(mdUrl);
-    if (!res.ok) throw new Error("MD 없음");
-    const raw = await res.text();
-    return parseMarkdown(raw, date);
-  } catch {
-    return null;
-  }
-}
-
-function parseMarkdown(raw, date) {
-  // 통계 줄 파싱
-  const statsLine = raw.match(/> 📊 수집: (.+)/)?.[1] || "";
-  const stats = {
-    total:      parseInt(statsLine.match(/총 (\d+)건/)?.[1] || "0"),
-    en:         parseInt(statsLine.match(/EN: (\d+)/)?.[1] || "0"),
-    ko:         parseInt(statsLine.match(/KO: (\d+)/)?.[1] || "0"),
-    sent_to_ai: parseInt(statsLine.match(/AI 분석: (\d+)건/)?.[1] || "0"),
-  };
-
-  // 언어별 뉴스 파싱 (마크다운 목록)
-  const newsEn = [], newsKo = [];
-  const sections = raw.split(/^### /m);
-  for (const sec of sections) {
-    const isEn = sec.startsWith("🌐 영어");
-    const isKo = sec.startsWith("🇰🇷 한국어");
-    if (!isEn && !isKo) continue;
-    const lines = sec.split("\n");
-    for (const line of lines) {
-      const m = line.match(/^- \*\*\[(.+?)\]\*\* \[(.+?)\]\((.+?)\)/);
-      if (m) {
-        const item = { label: m[1], title: m[2], link: m[3] };
-        if (isEn) newsEn.push(item);
-        else      newsKo.push(item);
-      }
+    // fallback: reports.json (메타만)
+    try {
+      const res2 = await fetch("reports.json");
+      if (!res2.ok) throw new Error("reports.json 없음");
+      const index = await res2.json();
+      return index.map(item => ({
+        date: item.date,
+        analysis_en: "", analysis_ko: "", combined: "",
+        news_en: [], news_ko: [],
+        stats: { total: 0, en: 0, ko: 0, sent_to_ai: 0 },
+      }));
+    } catch {
+      return [];
     }
   }
-
-  // 분석 섹션 파싱
-  const analysisMatch = raw.match(/(?:## 🌐|## 🇰🇷)([\s\S]*?)(?=## 📋|$)/g) || [];
-  const combined = analysisMatch.join("\n\n---\n\n");
-
-  const enMatch = raw.match(/## 🌐 Global News Analysis\n([\s\S]*?)(?=---\n\n## 🇰🇷|## 📋|$)/);
-  const koMatch = raw.match(/## 🇰🇷 국내 뉴스 분석\n([\s\S]*?)(?=## 📋|$)/);
-
-  return {
-    date,
-    analysis_en: enMatch?.[1]?.trim() || "",
-    analysis_ko: koMatch?.[1]?.trim() || "",
-    combined:    combined.trim() || raw.split("## 📋")[0].trim(),
-    news_en:     newsEn,
-    news_ko:     newsKo,
-    stats,
-  };
 }
 
 // ── 렌더링 ────────────────────────────────────────────────────────────────────
@@ -510,16 +463,9 @@ function renderStats() {
 }
 
 // ── 이벤트 ────────────────────────────────────────────────────────────────────
-async function selectDate(date) {
+function selectDate(date) {
   state.activeDate = date;
-  document.getElementById("reportArea").innerHTML =
-    `<div class="loading"><div class="spinner"></div>불러오는 중...</div>`;
-
-  let report = state.reports.find(r => r.date === date);
-  if (!report) {
-    report = await loadReportData(date);
-    if (report) state.reports.push(report);
-  }
+  const report = state.reports.find(r => r.date === date);
 
   renderSidebar(state.reports.map(r => ({ date: r.date })));
   document.getElementById("reportArea").innerHTML = renderReport(report);
@@ -549,24 +495,22 @@ document.getElementById("searchInput").addEventListener("input", e => {
 
 // ── 초기 로드 ─────────────────────────────────────────────────────────────────
 (async () => {
-  const index = await loadReportIndex();   // [{date, url}]
-  if (!index.length) {
+  const allReports = await loadAllReports();
+  if (!allReports.length) {
     document.getElementById("reportArea").innerHTML =
       `<div class="empty"><div class="icon">📭</div>아직 리포트가 없습니다.</div>`;
     return;
   }
 
-  // 최신 리포트 먼저 로드
-  const latest = index[0];
-  const report = await loadReportData(latest.date);
-  if (report) state.reports.push(report);
+  state.reports = allReports;
+  state.activeDate = allReports[0].date;
 
-  state.activeDate = latest.date;
+  const index = allReports.map(r => ({ date: r.date }));
   renderSidebar(index);
   renderStats();
-  document.getElementById("reportArea").innerHTML = renderReport(report);
+  document.getElementById("reportArea").innerHTML = renderReport(allReports[0]);
   document.getElementById("mainTitle").textContent =
-    `${latest.date.replace(/-/g, ".")} 브리핑`;
+    `${allReports[0].date.replace(/-/g, ".")} 브리핑`;
 })();
 </script>
 </body>
