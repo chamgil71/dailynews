@@ -23,8 +23,8 @@ GEMINI_MODEL_MINI  = "gemini-3.1-flash-lite-preview"
 GEMINI_MINI_THRESHOLD = 40
 
 # ── 수집 설정 ─────────────────────────────────────────────────────────────────
-MAX_ENTRIES_PER_FEED    = 5
-MAX_TITLES_TO_ANALYZE   = 20
+MAX_ENTRIES_PER_FEED    = 8
+MAX_TITLES_TO_ANALYZE   = 40
 RSS_TIMEOUT_SECONDS     = 10
 
 # ── 캐시 설정 ─────────────────────────────────────────────────────────────────
