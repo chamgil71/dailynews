@@ -37,7 +37,7 @@ def main():
 
     # ── Step 1: 뉴스 수집 ────────────────────────────────────
     from core.collector import collect_news
-    logger.info("[1/4] 뉴스 수집 중...")
+    logger.info("[1/5] 뉴스 수집 중...")
     news_data = collect_news()
     stats = news_data["stats"]
     logger.info(f"     → 총 {stats['total']}건 수집 "
@@ -50,20 +50,27 @@ def main():
 
     # ── Step 2: AI 분석 ──────────────────────────────────────
     from core.analyzer import analyze
-    logger.info("[2/4] AI 분석 중...")
+    logger.info("[2/5] AI 분석 중...")
     analysis = analyze(news_data)
     logger.info("     → 분석 완료")
 
     # ── Step 3: 리포트 생성 및 저장 ──────────────────────────
     from core.report import generate, save_report
-    logger.info("[3/4] 리포트 생성 중...")
+    logger.info("[3/5] 리포트 생성 중...")
     md_content = generate(news_data, analysis)
     filepath   = save_report(md_content)
     logger.info(f"     → 저장: {filepath}")
 
-    # ── Step 4: 이메일 발송 ──────────────────────────────────
+    # ── Step 4: DB 누적 저장 (xlsx) ──────────────────────────
+    from core.db import append_news
+    logger.info("[4/5] DB 누적 저장 중...")
+    date_tag = datetime.now().strftime("%Y-%m-%d")
+    added = append_news(news_data.get("all", []), date_tag)
+    logger.info(f"     → {added}건 저장 완료")
+
+    # ── Step 5: 이메일 발송 ──────────────────────────────────
     from core.mailer import send_email
-    logger.info("[4/4] 이메일 발송 중...")
+    logger.info("[5/5] 이메일 발송 중...")
     ok = send_email(md_content)
     logger.info(f"     → {'성공' if ok else '실패(로그 확인)'}")
 

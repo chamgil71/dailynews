@@ -13,7 +13,7 @@ import os
 import re
 from datetime import datetime
 
-import markdown
+import markdown2
 
 REPORTS_DIR = "reports"
 DOCS_DIR    = "docs"
@@ -233,7 +233,7 @@ def build_report_page(md_path: str, date_str: str) -> str:
     with open(md_path, encoding="utf-8") as f:
         raw = f.read()
 
-    html_body = markdown.markdown(
+    html_body = markdown2.markdown(
         raw,
         extras=["tables", "fenced-code-blocks", "strike", "cuddled-lists"]
     )
