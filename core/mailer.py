@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def _md_to_html(md: str) -> str:
     body = markdown2.markdown(
         md,
-        extras=["tables", "fenced-code-blocks"]
+        markdown2.markdown(md, extras=["tables", "fenced-code-blocks"])
     )
     return f"""
 <html><body style="font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:20px">
