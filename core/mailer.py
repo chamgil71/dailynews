@@ -9,7 +9,7 @@
 import logging
 import os
 from datetime import datetime
-import markdown
+import markdown2
 
 import requests
 
@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 def _md_to_html(md: str) -> str:
-    body = markdown.markdown(
+    body = markdown2.markdown(
         md,
-        extensions=["tables", "fenced_code"]
+        extras=["tables", "fenced-code-blocks"]
     )
     return f"""
 <html><body style="font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:20px">
