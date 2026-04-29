@@ -27,6 +27,7 @@ EN_TECH = {
             "https://feeds.wired.com/wired/index",                           # Wired
             "https://www.technologyreview.com/feed/",                        # MIT Tech Review
             "https://www.zdnet.com/news/rss.xml",                            # ZDNet
+            
         ],
     },
 }
@@ -36,10 +37,14 @@ EN_AI = {
         "lang": "en",
         "label": "AI·ML",
         "feeds": [
-            "https://venturebeat.com/category/ai/feed/",                     # VentureBeat AI
-            "https://www.artificialintelligence-news.com/feed/",             # AI News
-            "https://aiweekly.co/issues.rss",                                # AI Weekly
-            "https://www.deeplearning.ai/the-batch/feed/",                   # DeepLearning.AI
+            "https://venturebeat.com/category/ai/feed/",                            # VentureBeat AI
+            "https://www.artificialintelligence-news.com/feed/",                    # AI News
+            "https://aiweekly.co/issues.rss",                                       # AI Weekly
+            "https://www.deeplearning.ai/the-batch/feed/",                          # DeepLearning.AI
+            "https://www.technologyreview.com/topic/artificial-intelligence/feed/", # MIT Tech Review AI
+            "https://www.wired.com/feed/tag/ai/latest/rss",                         # Wired AI
+            "https://hai.stanford.edu/news/rss.xml",                                # Stanford HAI
+            "https://oecd.ai/en/news-and-blog/feed",                               # OECD.AI Policy
         ],
     },
 }

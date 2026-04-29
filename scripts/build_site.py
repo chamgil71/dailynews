@@ -1,7 +1,7 @@
 # scripts/build_site.py
 """
 GitHub Pages 정적 사이트 빌더
-reports/*.md → docs/*.html + docs/index.html + docs/archive.html + docs/reports-data.json
+reports/*.md → publish/*.html + publish/index.html + publish/archive.html + publish/reports-data.json
 
 실행: python scripts/build_site.py
 의존: markdown (pip install markdown)
@@ -16,7 +16,7 @@ from datetime import datetime
 import markdown2
 
 REPORTS_DIR = "reports"
-DOCS_DIR    = "docs"
+DOCS_DIR    = "publish"
 SITE_TITLE  = "AI News Daily"
 os.makedirs(DOCS_DIR, exist_ok=True)
 

@@ -5,6 +5,7 @@
 - URL 기준 중복 제거 (세션 내 + 전일 캐시)
 - 피드별 장애 격리 — 한 피드 실패해도 나머지 계속
 - RSS_TIMEOUT_SECONDS 타임아웃 적용
+- 감시 키워드 포함 기사를 별도 버킷으로 분리 (AI 분석 제외)
 """
 
 import json
@@ -18,6 +19,7 @@ from datetime import datetime, timedelta
 import feedparser
 
 from config.rss_sources import RSS_FEEDS
+from config.keywords import WATCH_KEYWORDS
 from config.settings import (
     CACHE_ENABLED, CACHE_FILE, CACHE_TTL_HOURS,
     MAX_ENTRIES_PER_FEED, MAX_TITLES_TO_ANALYZE,
@@ -25,6 +27,14 @@ from config.settings import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _matches_keywords(item: dict) -> bool:
+    """제목 + 요약에 감시 키워드가 하나라도 포함되면 True."""
+    if not WATCH_KEYWORDS:
+        return False
+    text = (item.get("title", "") + " " + item.get("summary", "")).lower()
+    return any(kw.lower() in text for kw in WATCH_KEYWORDS)
 
 # ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
@@ -137,8 +147,12 @@ def collect_news() -> dict:
             all_news.extend(items)
             time.sleep(0.3)   # 서버 부하 방지
 
-    en_news = [n for n in all_news if n["lang"] == "en"]
-    ko_news = [n for n in all_news if n["lang"] == "ko"]
+    # 감시 키워드 분리 (분석 제외, 리포트 별도 섹션)
+    keyword_news  = [n for n in all_news if _matches_keywords(n)]
+    keyword_links = {n["link"] for n in keyword_news}
+
+    en_news = [n for n in all_news if n["lang"] == "en" and n["link"] not in keyword_links]
+    ko_news = [n for n in all_news if n["lang"] == "ko" and n["link"] not in keyword_links]
 
     # 토큰 예산: 영어 60% + 한국어 40%
     en_cap  = min(len(en_news), int(MAX_TITLES_TO_ANALYZE * 0.6))
@@ -146,16 +160,18 @@ def collect_news() -> dict:
     trimmed = en_news[:en_cap] + ko_news[:ko_cap]
 
     stats = {
-        "total":        len(all_news),
-        "en":           len(en_news),
-        "ko":           len(ko_news),
-        "sent_to_ai":   len(trimmed),
-        "skipped_dup":  len(cached_urls),
+        "total":           len(all_news),
+        "en":              len(en_news),
+        "ko":              len(ko_news),
+        "keyword_matches": len(keyword_news),
+        "sent_to_ai":      len(trimmed),
+        "skipped_dup":     len(cached_urls),
     }
     logger.info(f"[수집 완료] 총 {stats['total']}건 "
-                f"(EN:{stats['en']} KO:{stats['ko']}) → AI {stats['sent_to_ai']}건")
+                f"(EN:{stats['en']} KO:{stats['ko']}) "
+                f"키워드:{stats['keyword_matches']}건 → AI {stats['sent_to_ai']}건")
 
     _save_cache({n["link"] for n in all_news} - cached_urls)
 
     return {"en": en_news, "ko": ko_news, "all": all_news,
-            "trim": trimmed, "stats": stats}
+            "keyword": keyword_news, "trim": trimmed, "stats": stats}

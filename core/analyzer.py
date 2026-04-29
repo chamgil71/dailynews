@@ -20,21 +20,13 @@ from config.settings import (
     ANTHROPIC_KEY,  CLAUDE_MODEL_FULL, CLAUDE_MODEL_MINI, CLAUDE_MINI_THRESHOLD,
     GEMINI_API_KEY, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD,
 )
+from config.prompts import (
+    CATEGORY_PROMPTS, DEFAULT_PROMPT_HINT,
+    PROMPT_TEMPLATE_KO, PROMPT_TEMPLATE_EN,
+)
 
 logger = logging.getLogger(__name__)
 
-# ── 카테고리별 분석 프롬프트 ──────────────────────────────────────────────────
-
-CATEGORY_PROMPTS = {
-    "technology":     "기술 트렌드, 제품 출시, 주요 기업 동향에 초점을 맞춰 분석하세요.",
-    "economy":        "시장 영향, 금리·환율 변동, 투자 시사점 중심으로 분석하세요.",
-    "ai_ml":          "AI 모델 출시, 연구 성과, 산업 적용 사례 중심으로 분석하세요.",
-    "global_news":    "지정학적 리스크, 국제 정세, 주요 이벤트 중심으로 분석하세요.",
-    "korean_news":    "국내 정치·사회 주요 이슈, 정책 변화 중심으로 분석하세요.",
-    "korean_economy": "국내 경제 지표, 기업 실적, 부동산·주식 시장 중심으로 분석하세요.",
-}
-
-DEFAULT_PROMPT_HINT = "핵심 이슈와 공통 트렌드 중심으로 분석하세요."
 
 def _build_prompt(news: list, lang: str) -> str:
     """카테고리 분포를 파악해 프롬프트 힌트를 동적으로 구성."""
@@ -43,47 +35,15 @@ def _build_prompt(news: list, lang: str) -> str:
     hints      = " ".join(CATEGORY_PROMPTS.get(c, "") for c in top_cats).strip()
     if not hints:
         hints = DEFAULT_PROMPT_HINT
-    
-    # 요약 포함 데이터 구성
+
     title_block = "\n".join(
         f"[{n['label']}] {n['title']}"
-        + (f"\n  요약: {n['summary']}" if n.get('summary') else "")
+        + (f"\n  요약: {n['summary']}" if n.get("summary") else "")
         for n in news
     )
 
-    if lang == "ko":
-        return f"""당신은 뉴스 분석 전문가입니다. 아래 한국어 뉴스 제목을 분석하세요.
-{hints}
-**반드시 한국어로 답변하세요.**
-
-출력 형식 (반드시 준수):
-## 핵심 이슈 TOP 3
-1. **이슈 제목** — 2~3문장 요약, 중요도·배경 포함
-2. ...
-3. ...
-
-## 주목할 트렌드
-- 공통 키워드·패턴 2~3개를 짧게 서술
-
-뉴스 목록:
-{title_block}
-"""
-    else:
-        return f"""You are a professional news analyst. Analyze the following news headlines.
-{hints}
-
-Output format (strictly follow):
-## Top 3 Key Issues
-1. **Issue Title** — 2-3 sentence summary with context and significance
-2. ...
-3. ...
-
-## Notable Trends
-- 2-3 bullet points on patterns or common themes
-
-Headlines:
-{title_block}
-"""
+    template = PROMPT_TEMPLATE_KO if lang == "ko" else PROMPT_TEMPLATE_EN
+    return template.format(hints=hints, title_block=title_block)
 
 # ── 베이스 클래스 ─────────────────────────────────────────────────────────────
 

@@ -5,35 +5,35 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 from config.sources.ko_news import (
-    KO_GENERAL,
+    # KO_GENERAL,
     KO_ECONOMY,
     KO_TECH,
-    KO_STOCK,
+    # KO_STOCK,
     # KO_REAL_ESTATE,   # 필요 시 주석 해제
     # KO_POLITICS,      # 필요 시 주석 해제
     # KO_INTERNATIONAL, # 필요 시 주석 해제
 )
 
-# from config.sources.en_news import (
+from config.sources.en_news import (
 #     EN_GENERAL,
-#     EN_TECH,
-#     EN_AI,
+    EN_TECH,
+    EN_AI,
 #     EN_ECONOMY,
 #     EN_STARTUP,
-# )
+)
 
 # ── 최종 사용할 피드 조합 ─────────────────────────────────────────────────────
 RSS_FEEDS = {
-    **KO_GENERAL,
+    # **KO_GENERAL,
     **KO_ECONOMY,
     **KO_TECH,
-    **KO_STOCK,
+    # **KO_STOCK,
     # **KO_REAL_ESTATE,
     # **KO_POLITICS,
     # **KO_INTERNATIONAL,
     # **EN_GENERAL,
-    # **EN_TECH,
-    # **EN_AI,
+    **EN_TECH,
+    **EN_AI,
     # **EN_ECONOMY,
     # **EN_STARTUP,
 }

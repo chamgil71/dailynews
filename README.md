@@ -124,13 +124,19 @@ ai-news-daily/
 ├── main.py                  ← 전체 오케스트레이터 (순서대로 실행)
 │
 ├── config/
-│   ├── rss_sources.py       ← RSS URL 목록 (카테고리·언어별)
-│   └── settings.py          ← 모델, 토큰 수, 이메일 등 전체 설정
+│   ├── rss_sources.py       ← 활성 RSS 소스 조합 (주석/해제로 제어)
+│   ├── settings.py          ← 모델, 수집량, 이메일 등 전체 설정
+│   ├── prompts.py           ← AI 분석 프롬프트 템플릿 + 카테고리 힌트
+│   ├── keywords.py          ← 감시 키워드 목록 (별도 섹션 분류)
+│   └── sources/
+│       ├── ko_news.py       ← 한국어 RSS 소스 정의
+│       └── en_news.py       ← 영어 RSS 소스 정의
 │
 ├── core/
-│   ├── collector.py         ← RSS 수집 + 중복 제거 + 언어 분리
+│   ├── collector.py         ← RSS 수집 + 중복 제거 + 키워드 분리
 │   ├── analyzer.py          ← GPT/Claude/Gemini 분석 (전략 패턴)
 │   ├── report.py            ← MD 파일 생성 + 날짜별 저장
+│   ├── db.py                ← xlsx 누적 저장
 │   └── mailer.py            ← Resend 이메일 발송
 │
 ├── scripts/
@@ -139,23 +145,32 @@ ai-news-daily/
 ├── templates/
 │   └── daily_report.md      ← Jinja2 리포트 템플릿
 │
-├── docs/                    ← 웹사이트 파일 (자동 생성됨)
+├── publish/                 ← 빌드 결과물 (자동 생성, GitHub Pages 배포)
 │   ├── index.html           ← 최신 리포트 홈
 │   ├── archive.html         ← 전체 목록
 │   ├── app.html             ← 동적 웹앱 (검색·필터)
-│   └── reports.json         ← 날짜 인덱스
+│   ├── reports.json         ← 날짜 인덱스
+│   └── YYYY-MM-DD.html      ← 날짜별 리포트
+│
+├── docs/                    ← 프로젝트 문서
+│   ├── google-sheets-setup.md
+│   └── ...
 │
 ├── reports/                 ← MD 원본 누적 저장
-│   └── news_2026-03-09.md
+│   └── news_YYYY-MM-DD.md
+│
+├── storage/
+│   └── news_db.xlsx         ← 전체 기사 누적 DB
 │
 ├── .cache/
-│   └── last_urls.json       ← 전일 URL 캐시 (중복 방지)
+│   └── last_urls.json       ← 전일 URL 캐시 (TTL 23h)
 │
 ├── .github/workflows/
-│   └── news.yml             ← GitHub Actions 자동 실행 설정
+│   └── news.yml             ← GitHub Actions 자동 실행 + Pages 배포
 │
 ├── .env.example             ← 환경변수 샘플
-├── .gitignore
+├── README.md
+├── GUIDE.md                 ← 개발자 상세 가이드
 ├── requirements.txt
 └── vercel.json              ← Vercel 배포 설정
 ```
@@ -288,12 +303,12 @@ Repository → Settings → Secrets and variables → Actions
 
 | Secret 이름 | 값 | 필수 |
 |-------------|-----|------|
-| `OPENAI_API_KEY` | sk-... | ✅ |
 | `RESEND_API_KEY` | re_... | ✅ |
 | `RECIPIENT_EMAIL` | your@email.com | ✅ |
-| `LLM_PROVIDER` | gpt / claude / gemini | 선택 (기본 gpt) |
-| `ANTHROPIC_API_KEY` | sk-ant-... | Claude 사용 시 |
+| `LLM_PROVIDER` | gemini / claude / gpt | 선택 (기본 gemini) |
 | `GEMINI_API_KEY` | AIza... | Gemini 사용 시 |
+| `ANTHROPIC_API_KEY` | sk-ant-... | Claude 사용 시 |
+| `OPENAI_API_KEY` | sk-... | GPT 사용 시 |
 
 > ⚠️ `.env` 파일은 로컬 전용입니다. GitHub에는 반드시 Secrets에 등록하세요.
 
@@ -352,15 +367,21 @@ schedule:
 
 ## 6. 웹사이트 공개
 
-### GitHub Pages (정적, 클릭 3번)
+### GitHub Pages (GitHub Actions 배포)
+
+빌드 결과가 `publish/` 폴더에 생성되므로 **GitHub Actions 배포 방식**을 사용합니다.
 
 ```
 Repository → Settings → Pages
-→ Source: Deploy from a branch
-→ Branch: main  /  Folder: /docs  →  Save
+→ Source: GitHub Actions  ← (Deploy from a branch 아님)
+→ Save
 ```
 
+이후 Actions가 실행되면 자동 배포됩니다.  
 주소: `https://[이름].github.io/ai-news-daily/`
+
+> **기존 `docs/` 방식에서 전환하는 경우**: Pages 소스를 "Deploy from a branch → /docs"에서
+> "GitHub Actions"로 변경하면 됩니다. 추가 코드 수정 없이 다음 Actions 실행부터 자동 적용됩니다.
 
 ### Vercel (동적 웹앱, 검색·필터)
 
@@ -375,7 +396,7 @@ vercel.com → Add New Project → Import ai-news-daily
 |------|--------------|--------|
 | 비용 | 무료 | 무료 |
 | 검색·필터 | ❌ | ✅ |
-| 설정 난이도 | 클릭 3번 | 클릭 5번 |
+| 설정 | Pages 소스 변경 1회 | 클릭 5번 |
 | 추천 | 빠른 시작 | 기능 활용 |
 
 ---

@@ -2,17 +2,23 @@ name: Daily News Report
 
 on:
   schedule:
-    - cron: '0 02 * * *'
+    - cron: '0 02 * * *'   # UTC 02:00 = KST 11:00
   workflow_dispatch:
+
+# GitHub Pages 배포에 필요한 권한
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -28,12 +34,12 @@ jobs:
       - name: 뉴스 수집 및 리포트 생성
         run: python main.py
         env:
+          LLM_PROVIDER:      ${{ secrets.LLM_PROVIDER }}
+          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY:    ${{ secrets.OPENAI_API_KEY }}
           RESEND_API_KEY:    ${{ secrets.RESEND_API_KEY }}
           RECIPIENT_EMAIL:   ${{ secrets.RECIPIENT_EMAIL }}
-          LLM_PROVIDER:      ${{ secrets.LLM_PROVIDER }}
-          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
 
       - name: 사이트 빌드 (MD → HTML)
         run: python scripts/build_site.py
@@ -42,7 +48,16 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "actions@github.com"
-          git add reports/ docs/ storage/
+          git add reports/ publish/ storage/
           git diff --staged --quiet || \
             git commit -m "📰 Daily report $(date +'%Y-%m-%d')"
           git push
+
+      - name: GitHub Pages 배포
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: publish/
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

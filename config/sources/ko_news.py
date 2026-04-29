@@ -30,6 +30,22 @@ KO_ECONOMY = {
     },
 }
 
+KO_TECH = {
+    "korean_tech": {
+        "lang": "ko",
+        "label": "국내 IT·기술",
+        "feeds": [
+            "https://rss.etnews.com/Section901.xml",             # 전자신문 IT
+            "https://rss.etnews.com/04046.xml",                  # 전자신문 AI/빅데이터
+            "https://www.aitimes.com/rss/allArticle.xml",        # AI타임스
+            "https://zdnet.co.kr/rss/?t=a",                      # ZDNet Korea
+            "https://www.itworld.co.kr/rss/feed",                # ITWorld
+            "https://www.bloter.net/feed",                       # 블로터
+            "https://www.aitimes.kr/rss/all.xml",                # 인공지능신문
+        ],
+    },
+}
+
 KO_STOCK = {
     "korean_stock": {
         "lang": "ko",
@@ -39,20 +55,6 @@ KO_STOCK = {
             "https://www.hankyung.com/feed/finance",                         # 한국경제 금융
             "https://www.sedaily.com/RSS/S0601",                             # 서울경제 증권
             "https://stock.mk.co.kr/rss/40300003/",                         # MK 주식
-        ],
-    },
-}
-
-KO_TECH = {
-    "korean_tech": {
-        "lang": "ko",
-        "label": "국내 IT·기술",
-        "feeds": [
-            "https://rss.etnews.com/Section901.xml",                         # 전자신문 IT
-            "https://www.aitimes.com/rss/allArticle.xml",                    # AI타임스
-            "https://zdnet.co.kr/rss/?t=a",                                  # ZDNet Korea
-            "https://www.itworld.co.kr/rss/feed",                            # ITWorld
-            "https://www.bloter.net/feed",                                   # 블로터
         ],
     },
 }

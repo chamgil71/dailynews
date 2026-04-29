@@ -42,6 +42,7 @@ def main():
     stats = news_data["stats"]
     logger.info(f"     → 총 {stats['total']}건 수집 "
                 f"(EN:{stats['en']} KO:{stats['ko']}) | "
+                f"키워드:{stats['keyword_matches']}건 | "
                 f"중복 제외:{stats['skipped_dup']}건")
 
     if stats["total"] == 0:

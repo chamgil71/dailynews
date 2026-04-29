@@ -26,13 +26,14 @@ def generate(news_data: dict, analysis: dict) -> str:
     date_str = datetime.now().strftime("%Y-%m-%d %H:%M KST")
 
     return tpl.render(
-        date        = date_str,
-        analysis_en = analysis.get("en", ""),
-        analysis_ko = analysis.get("ko", ""),
-        combined    = analysis.get("combined", ""),
-        news_en     = news_data.get("en", []),
-        news_ko     = news_data.get("ko", []),
-        stats       = news_data.get("stats", {}),
+        date         = date_str,
+        analysis_en  = analysis.get("en", ""),
+        analysis_ko  = analysis.get("ko", ""),
+        combined     = analysis.get("combined", ""),
+        news_en      = news_data.get("en", []),
+        news_ko      = news_data.get("ko", []),
+        keyword_news = news_data.get("keyword", []),
+        stats        = news_data.get("stats", {}),
     )
 
 

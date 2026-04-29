@@ -1,13 +1,24 @@
 # Daily News Brief
 
 > 📅 생성일시: {{ date }}
-> 📊 수집: 총 {{ stats.total }}건 (EN: {{ stats.en }} / KO: {{ stats.ko }}) | AI 분석: {{ stats.sent_to_ai }}건 | 중복 제외: {{ stats.skipped_dup }}건
+> 📊 수집: 총 {{ stats.total }}건 (EN: {{ stats.en }} / KO: {{ stats.ko }}) | AI 분석: {{ stats.sent_to_ai }}건 | 키워드 매칭: {{ stats.keyword_matches }}건 | 중복 제외: {{ stats.skipped_dup }}건
 
 ---
 
 {{ combined }}
 
 ---
+
+{% if keyword_news %}
+## 🔍 키워드 매칭 기사 ({{ keyword_news | length }}건)
+
+{% for n in keyword_news %}
+- **[{{ n.label }}]** [{{ n.title }}]({{ n.link }}){% if n.summary %}
+  > {{ n.summary }}{% endif %}
+
+{% endfor %}
+---
+{% endif %}
 
 ## 📋 수집 기사 전체 목록
 
