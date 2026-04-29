@@ -13,8 +13,8 @@
 ## 🔍 키워드 매칭 기사 ({{ keyword_news | length }}건)
 
 {% for n in keyword_news %}
-- **[{{ n.label }}]** [{{ n.title }}]({{ n.link }}){% if n.summary %}
-  > {{ n.summary }}{% endif %}
+- **[{{ n.label }}]** [{{ n.title | highlight }}]({{ n.link }}){% if n.summary %}
+  > {{ n.summary | highlight }}{% endif %}
 
 {% endfor %}
 ---

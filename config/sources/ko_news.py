@@ -22,10 +22,11 @@ KO_ECONOMY = {
         "label": "국내 경제",
         "feeds": [
             "https://www.hankyung.com/feed/economy",                         # 한국경제
-            "https://www.edaily.co.kr/rss/rss_economy.xml",                  # 이데일리
-            "https://biz.chosun.com/rss/rss.htm",                            # 조선비즈
             "https://www.mk.co.kr/rss/40300001/",                            # 매일경제 경제
             "https://news.einfomax.co.kr/rss/allArticle.xml",                # 연합인포맥스
+            # 이데일리 — RSS → HTML 반환으로 서비스 중단 (제거)
+            # 조선비즈 — 봇 차단으로 접근 불가 (제거)
+            "https://news.google.com/rss/search?q=%EA%B2%BD%EC%A0%9C+%EA%B8%88%EC%9C%B5&hl=ko&gl=KR&ceid=KR:ko",  # Google News 경제·금융
         ],
     },
 }
@@ -38,10 +39,12 @@ KO_TECH = {
             "https://rss.etnews.com/Section901.xml",             # 전자신문 IT
             "https://rss.etnews.com/04046.xml",                  # 전자신문 AI/빅데이터
             "https://www.aitimes.com/rss/allArticle.xml",        # AI타임스
-            "https://zdnet.co.kr/rss/?t=a",                      # ZDNet Korea
-            "https://www.itworld.co.kr/rss/feed",                # ITWorld
-            "https://www.bloter.net/feed",                       # 블로터
-            "https://www.aitimes.kr/rss/all.xml",                # 인공지능신문
+            "https://feeds.feedburner.com/bloter",               # 블로터 (URL 변경)
+            # ZDNet Korea — 404 (제거)
+            # ITWorld Korea — 404 (제거)
+            # 인공지능신문(aitimes.kr) — 404 (제거)
+            "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=ko&gl=KR&ceid=KR:ko",  # Google News IT 종합
+            "https://news.google.com/rss/search?q=%EC%9D%B8%EA%B3%B5%EC%A7%80%EB%8A%A5+AI+%EA%B8%B0%EC%88%A0&hl=ko&gl=KR&ceid=KR:ko",  # Google News AI·기술
         ],
     },
 }

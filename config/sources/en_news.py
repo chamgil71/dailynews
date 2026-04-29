@@ -24,10 +24,10 @@ EN_TECH = {
             "https://feeds.arstechnica.com/arstechnica/index",               # Ars Technica
             "https://www.theverge.com/rss/index.xml",                        # The Verge
             "https://techcrunch.com/feed/",                                  # TechCrunch
-            "https://feeds.wired.com/wired/index",                           # Wired
             "https://www.technologyreview.com/feed/",                        # MIT Tech Review
             "https://www.zdnet.com/news/rss.xml",                            # ZDNet
-            
+            # feeds.wired.com — HTML 반환으로 접근 불가 (제거)
+            "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en",  # Google News Tech
         ],
     },
 }
@@ -40,11 +40,12 @@ EN_AI = {
             "https://venturebeat.com/category/ai/feed/",                            # VentureBeat AI
             "https://www.artificialintelligence-news.com/feed/",                    # AI News
             "https://aiweekly.co/issues.rss",                                       # AI Weekly
-            "https://www.deeplearning.ai/the-batch/feed/",                          # DeepLearning.AI
             "https://www.technologyreview.com/topic/artificial-intelligence/feed/", # MIT Tech Review AI
             "https://www.wired.com/feed/tag/ai/latest/rss",                         # Wired AI
-            "https://hai.stanford.edu/news/rss.xml",                                # Stanford HAI
-            "https://oecd.ai/en/news-and-blog/feed",                               # OECD.AI Policy
+            # DeepLearning.AI The Batch — 404 (제거)
+            # Stanford HAI — 404 (제거)
+            # OECD.AI — 404 (제거)
+            "https://news.google.com/rss/search?q=artificial+intelligence+LLM&hl=en-US&gl=US&ceid=US:en",  # Google News AI
         ],
     },
 }

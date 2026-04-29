@@ -46,18 +46,19 @@ PROMPT_TEMPLATE_KO: str = """\
 # ── 영어 뉴스 분석 프롬프트 템플릿 ───────────────────────────────────────────
 
 PROMPT_TEMPLATE_EN: str = """\
-You are a professional news analyst. Analyze the following news headlines.
+당신은 뉴스 분석 전문가입니다. 아래 영어 뉴스 제목을 분석하세요.
 {hints}
+**반드시 한국어로 답변하세요.**
 
-Output format (strictly follow):
-## Top 3 Key Issues
-1. **Issue Title** — 2-3 sentence summary with context and significance
+출력 형식 (반드시 준수):
+## 핵심 이슈 TOP 3
+1. **이슈 제목** — 2~3문장 요약, 중요도·배경 포함
 2. ...
 3. ...
 
-## Notable Trends
-- 2-3 bullet points on patterns or common themes
+## 주목할 트렌드
+- 공통 키워드·패턴 2~3개를 짧게 서술
 
-Headlines:
+뉴스 목록:
 {title_block}
 """

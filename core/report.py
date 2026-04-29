@@ -8,20 +8,33 @@ Markdown 리포트 생성 모듈
 
 import logging
 import os
+import re
 from datetime import datetime
 
-from jinja2 import Template
+from jinja2 import Environment, BaseLoader
 
+from config.keywords import WATCH_KEYWORDS
 from config.settings import REPORTS_DIR, REPORT_FILENAME
 
 logger = logging.getLogger(__name__)
+
+
+def _highlight(text: str) -> str:
+    """감시 키워드를 **bold** 처리 (Markdown → HTML 변환 시 <strong> 적용)."""
+    for kw in WATCH_KEYWORDS:
+        text = re.sub(re.escape(kw), f"**{kw}**", text, flags=re.IGNORECASE)
+    return text
 
 
 def generate(news_data: dict, analysis: dict) -> str:
     """Markdown 리포트 문자열 생성."""
     template_path = os.path.join("templates", "daily_report.md")
     with open(template_path, "r", encoding="utf-8") as f:
-        tpl = Template(f.read())
+        raw = f.read()
+
+    env = Environment(loader=BaseLoader())
+    env.filters["highlight"] = _highlight
+    tpl = env.from_string(raw)
 
     date_str = datetime.now().strftime("%Y-%m-%d %H:%M KST")
 
