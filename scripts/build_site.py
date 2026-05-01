@@ -171,6 +171,22 @@ def layout(title: str, body: str, active: str = "") -> str:
 </html>"""
 
 
+_SUBSCRIBE_CARD = """
+<div class="card" style="margin-top:1.5rem;text-align:center">
+  <h3 style="margin-top:0">📬 뉴스레터 구독</h3>
+  <p style="color:var(--muted);margin:.5em 0 1.2em">매일 오전 AI가 정리한 글로벌 뉴스 브리핑을 이메일로 받아보세요.</p>
+  <a href="https://forms.gle/REPLACE_WITH_GOOGLE_FORM_ID"
+     target="_blank" rel="noopener"
+     style="display:inline-block;background:var(--accent);color:#fff;
+            text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:600">
+    구독 신청하기
+  </a>
+  <p style="font-size:.8rem;color:var(--muted);margin:.8em 0 0">
+    구독 취소는 수신된 메일 하단 링크를 클릭하세요.
+  </p>
+</div>"""
+
+
 # ── MD 파싱 (app.html 용 JSON 데이터 추출) ────────────────────────────────────
 def parse_md_for_json(md_path: str, date_str: str) -> dict:
     with open(md_path, encoding="utf-8") as f:
@@ -256,7 +272,8 @@ def build_report_page(md_path: str, date_str: str) -> str:
       <h1>📰 Daily News Brief</h1>
       {badges}
       {html_body}
-    </div>"""
+    </div>
+    {_SUBSCRIBE_CARD}"""
 
     return layout(display_date, body, active="index")
 
