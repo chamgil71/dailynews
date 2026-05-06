@@ -55,7 +55,7 @@ db.append_news()
      │
      ▼  Step 5
 mailer.send_email()
-     └─ Resend API → RECIPIENT_EMAIL 수신자에게 HTML 메일 발송
+     └─ Gmail SMTP → RECIPIENT_EMAILS 수신자들에게 HTML 메일 개별 발송
 ```
 
 ### 핵심 질문 답변
@@ -541,6 +541,10 @@ GEMINI_MODEL_MINI = "gemini-1.5-flash-8b"
 
 ### 이메일 발송 실패
 
+1. `GMAIL_USER`, `GMAIL_APP_PASSWORD` 환경변수 확인
+2. Google 계정 2단계 인증 활성화 여부 확인
+3. 앱 비밀번호가 일반 비밀번호가 아닌지 확인 (Google 계정 → 보안 → 앱 비밀번호)
+
 ```bash
 python -c "
 from dotenv import load_dotenv; load_dotenv()
@@ -672,7 +676,7 @@ dailynews/
 │   ├── analyzer.py                  AI 분석 (GPT/Claude/Gemini 전략 패턴)
 │   ├── report.py                    Markdown 리포트 생성
 │   ├── db.py                        xlsx 누적 저장
-│   └── mailer.py                    Resend 이메일 발송
+│   └── mailer.py                    Gmail SMTP 이메일 발송 (다수 수신자 개별 발송)
 ├── scripts/
 │   └── build_site.py                MD → HTML 변환 (publish/ 폴더 출력)
 ├── templates/
@@ -694,4 +698,4 @@ dailynews/
 
 ---
 
-*최종 업데이트: 2026-04-29*
+*최종 업데이트: 2026-05-06*

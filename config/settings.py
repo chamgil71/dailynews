@@ -33,8 +33,8 @@ CACHE_FILE      = ".cache/last_urls.json"
 CACHE_TTL_HOURS = 23
 
 # ── 이메일 설정 ───────────────────────────────────────────────────────────────
-RESEND_API_KEY       = os.getenv("RESEND_API_KEY", "")
-EMAIL_FROM           = "onboarding@resend.dev"
+GMAIL_USER           = os.getenv("GMAIL_USER", "")
+GMAIL_APP_PASSWORD   = os.getenv("GMAIL_APP_PASSWORD", "")
 RECIPIENT_EMAILS     = [e.strip() for e in os.getenv("RECIPIENT_EMAILS", "").split(",") if e.strip()]
 EMAIL_SUBJECT        = "📰 Daily News Brief — {date}"
 UNSUBSCRIBE_SECRET   = os.getenv("UNSUBSCRIBE_SECRET", "")

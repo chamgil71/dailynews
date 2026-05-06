@@ -1,6 +1,6 @@
 # core/mailer.py
 """
-이메일 발송 모듈 (Resend Batch API)
+이메일 발송 모듈 (Gmail SMTP)
 - 수신자: RECIPIENT_EMAILS 환경변수 (쉼표 구분)
 - 개별 발송: 수신자끼리 서로 이메일 주소 안 보임
 - 구독 취소: 메일 하단 HMAC 토큰 링크 → Vercel API 처리
@@ -10,19 +10,20 @@ import hashlib
 import hmac
 import logging
 import os
+import smtplib
+import urllib.parse
 from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from pathlib import Path
 
 import markdown2
-import requests
 
 from config.settings import (
-    EMAIL_FROM,
     EMAIL_SUBJECT,
-    GH_CONTENTS_TOKEN,
-    GITHUB_REPOSITORY,
+    GMAIL_APP_PASSWORD,
+    GMAIL_USER,
     RECIPIENT_EMAILS,
-    RESEND_API_KEY,
     SITE_BASE_URL,
     UNSUBSCRIBE_SECRET,
 )
@@ -53,7 +54,6 @@ def _md_to_html(md: str, recipient_email: str) -> str:
 
     if SITE_BASE_URL:
         token = _make_token(recipient_email)
-        import urllib.parse
         encoded = urllib.parse.quote(recipient_email)
         unsubscribe_url = f"{SITE_BASE_URL}/api/unsubscribe?email={encoded}&token={token}"
         unsub_link = f'<a href="{unsubscribe_url}" style="color:#aaa">구독 취소</a>'
@@ -71,8 +71,8 @@ def _md_to_html(md: str, recipient_email: str) -> str:
 
 
 def send_email(md_content: str) -> bool:
-    if not RESEND_API_KEY:
-        logger.warning("[이메일] RESEND_API_KEY 미설정 — 발송 건너뜀")
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        logger.warning("[이메일] GMAIL_USER 또는 GMAIL_APP_PASSWORD 미설정 — 발송 건너뜀")
         return False
 
     recipients = _get_recipients()
@@ -81,35 +81,27 @@ def send_email(md_content: str) -> bool:
         return False
 
     date_str = datetime.now().strftime("%Y-%m-%d")
-    subject  = EMAIL_SUBJECT.format(date=date_str)
+    subject = EMAIL_SUBJECT.format(date=date_str)
 
-    batch_payload = [
-        {
-            "from":    EMAIL_FROM,
-            "to":      [email],
-            "subject": subject,
-            "html":    _md_to_html(md_content, email),
-        }
-        for email in recipients
-    ]
-
+    success_count = 0
     try:
-        resp = requests.post(
-            "https://api.resend.com/emails/batch",
-            headers={
-                "Authorization": f"Bearer {RESEND_API_KEY}",
-                "Content-Type":  "application/json",
-            },
-            json=batch_payload,
-            timeout=30,
-        )
-        if resp.status_code in (200, 201):
-            logger.info(f"[이메일 발송] 성공 → {len(recipients)}명")
-            return True
-        else:
-            logger.error(f"[이메일 발송 실패] {resp.status_code}: {resp.text}")
-            return False
-
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            for email in recipients:
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = subject
+                msg["From"] = GMAIL_USER
+                msg["To"] = email
+                msg.attach(MIMEText(_md_to_html(md_content, email), "html", "utf-8"))
+                smtp.sendmail(GMAIL_USER, email, msg.as_string())
+                success_count += 1
+                logger.info(f"[이메일 발송] → {email}")
+    except smtplib.SMTPAuthenticationError:
+        logger.error("[이메일 발송 실패] Gmail 인증 오류 — 앱 비밀번호를 확인하세요")
+        return False
     except Exception as e:
         logger.error(f"[이메일 발송 오류] {e}")
         return False
+
+    logger.info(f"[이메일 발송] 완료 → {success_count}/{len(recipients)}명")
+    return success_count > 0

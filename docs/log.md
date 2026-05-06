@@ -1,3 +1,29 @@
+# 변경 이력
+
+## 2026-05-06 — 이메일 발송 Resend → Gmail SMTP 전환
+
+**배경:** Resend의 `onboarding@resend.dev` 샌더는 계정 소유자 이메일 1개에만 발송 가능. 다수 수신자(RECIPIENT_EMAILS)에게 보내려면 커스텀 도메인 인증이 필요하나, 별도 도메인 없음.
+
+**변경 내용:**
+- `core/mailer.py`: Resend HTTP API → Gmail SMTP(`smtplib.SMTP_SSL`) 교체. 수신자별 개별 발송으로 주소 노출 없음.
+- `config/settings.py`: `RESEND_API_KEY`, `EMAIL_FROM` 제거 → `GMAIL_USER`, `GMAIL_APP_PASSWORD` 추가
+- `.github/workflows/news.yml`: `RESEND_API_KEY` → `GMAIL_USER`, `GMAIL_APP_PASSWORD` 시크릿으로 교체
+- `.env.example`: Gmail SMTP 항목으로 업데이트
+- `README.md`, `GUIDE.md`: 문서 전반 Resend → Gmail SMTP 반영
+
+**GitHub Secrets 현황 (2026-05-06 기준):**
+| 시크릿 | 상태 |
+|--------|------|
+| `GMAIL_USER` | ✅ 등록 |
+| `GMAIL_APP_PASSWORD` | ✅ 등록 |
+| `RECIPIENT_EMAILS` | ✅ 등록 (3명) |
+| `RESEND_API_KEY` | 미사용 (삭제 가능) |
+| `RECIPIENT_EMAIL` | 미사용 (삭제 가능) |
+
+---
+
+## 2026-04-29 — GitHub Actions 실행 로그
+
 2026-04-29T11:39:08.3910687Z Current runner version: '2.334.0'
 2026-04-29T11:39:08.3933794Z ##[group]Runner Image Provisioner
 2026-04-29T11:39:08.3934724Z Hosted Compute Agent

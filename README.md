@@ -27,7 +27,7 @@
 | AI 분석 | OpenAI GPT (기본) / Claude / Gemini 교체 가능 |
 | 리포트 형식 | Markdown (.md) — Obsidian 바로 사용 가능 |
 | 웹사이트 | GitHub Pages (정적) 또는 Vercel (동적 검색·필터) |
-| 이메일 | Resend API — 무료 100건/일 |
+| 이메일 | Gmail SMTP — 무료, 도메인 불필요, 다수 수신자 지원 |
 | 자동 실행 | GitHub Actions cron — 매일 오전 8시 KST |
 | 서버 | **불필요** (완전 서버리스) |
 
@@ -73,7 +73,7 @@
                ▼                ▼
 ┌──────────────────┐  ┌────────────────────┐
 │  build_site.py   │  │  mailer.py         │
-│  MD → HTML 변환  │  │  Resend API 발송   │
+│  MD → HTML 변환  │  │  Gmail SMTP 발송   │
 │  docs/*.html     │  │  수신자 이메일      │
 └──────────┬───────┘  └────────────────────┘
            │
@@ -97,7 +97,7 @@
    │       Vercel       → https://ai-news-daily.vercel.app
    │
    └── 📧 이메일
-           RECIPIENT_EMAIL 수신자에게 HTML 메일 자동 발송
+           RECIPIENT_EMAILS 수신자 전원에게 HTML 메일 개별 자동 발송
 ```
 
 ### LLM 교체 흐름
@@ -137,7 +137,7 @@ ai-news-daily/
 │   ├── analyzer.py          ← GPT/Claude/Gemini 분석 (전략 패턴)
 │   ├── report.py            ← MD 파일 생성 + 날짜별 저장
 │   ├── db.py                ← xlsx 누적 저장
-│   └── mailer.py            ← Resend 이메일 발송
+│   └── mailer.py            ← Gmail SMTP 이메일 발송 (다수 수신자 개별 발송)
 │
 ├── scripts/
 │   └── build_site.py        ← MD → HTML 변환 (웹사이트 빌드)
@@ -187,8 +187,8 @@ ai-news-daily/
 | 필요 항목 | 발급처 | 무료 여부 |
 |-----------|--------|-----------|
 | Python 3.10 이상 | python.org | ✅ |
-| OpenAI API Key | platform.openai.com | 유료 (소량) |
-| Resend API Key | resend.com | ✅ 100건/일 |
+| Gemini API Key | aistudio.google.com | ✅ 무료 |
+| Gmail 앱 비밀번호 | Google 계정 → 보안 → 앱 비밀번호 | ✅ 무료 |
 
 ### Step 1 — 코드 준비
 
@@ -218,13 +218,14 @@ cp .env.example .env
 `.env` 파일을 열고 실제 값으로 채웁니다:
 
 ```dotenv
-OPENAI_API_KEY=sk-...
-RESEND_API_KEY=re_...
-RECIPIENT_EMAIL=your@email.com
+# Gmail SMTP (이메일 발송)
+GMAIL_USER=your-gmail@gmail.com
+GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx   # Google 앱 비밀번호 16자리
+RECIPIENT_EMAILS=you@example.com,other@example.com
 
-# 선택: LLM 교체
-# LLM_PROVIDER=claude
-# ANTHROPIC_API_KEY=sk-ant-...
+# LLM (기본값: Gemini)
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=AIza...
 ```
 
 ### Step 4 — 실행
@@ -303,8 +304,9 @@ Repository → Settings → Secrets and variables → Actions
 
 | Secret 이름 | 값 | 필수 |
 |-------------|-----|------|
-| `RESEND_API_KEY` | re_... | ✅ |
-| `RECIPIENT_EMAIL` | your@email.com | ✅ |
+| `GMAIL_USER` | your-gmail@gmail.com | ✅ |
+| `GMAIL_APP_PASSWORD` | 16자리 앱 비밀번호 | ✅ |
+| `RECIPIENT_EMAILS` | email1@...,email2@... | ✅ |
 | `LLM_PROVIDER` | gemini / claude / gpt | 선택 (기본 gemini) |
 | `GEMINI_API_KEY` | AIza... | Gemini 사용 시 |
 | `ANTHROPIC_API_KEY` | sk-ant-... | Claude 사용 시 |
@@ -463,7 +465,7 @@ GEMINI_API_KEY=AIza...
 |------|------|---------|
 | GitHub Actions | 무료 2,000분/월 | $0 |
 | RSS 수집 | feedparser (무료) | $0 |
-| Resend 이메일 | 무료 100건/일 | $0 |
+| Gmail SMTP | 무료, 도메인 불필요 | $0 |
 | GPT 분석 | gpt-4o-mini 주력 | ~$0.5~1 |
 | GitHub Pages / Vercel | 무료 플랜 | $0 |
 | **합계** | | **~$0.5~1/월** |
