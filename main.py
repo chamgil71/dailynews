@@ -7,7 +7,7 @@ AI 자동 뉴스 리포트 — 메인 실행 파일
   2. AI 분석 (카테고리별 프롬프트, 조건부 모델 선택)
   3. Markdown 리포트 생성 (날짜별 파일명)
   4. GitHub 저장 (Actions에서 자동 커밋)
-  5. 이메일 발송 (Resend)
+  5. 이메일 발송 (Gmail SMTP)
 """
 
 import logging
