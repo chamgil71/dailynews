@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily News — Design Explorations</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700;800;900&family=Pretendard:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #f0eee9; font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+    #root { height: 100%; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="data.js"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="variations/editorial.jsx"></script>
+  <script type="text/babel" src="variations/minimal.jsx"></script>
+  <script type="text/babel" src="variations/terminal.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    const data = window.NEWS_DATA;
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection
+            id="brief"
+            title="Daily News — Brief Page Redesign"
+            subtitle="3 directions for the daily report (publish/YYYY-MM-DD.html). Same content, very different voices. Drag to reorder, click any artboard to focus."
+          >
+            <DCArtboard
+              id="editorial"
+              label="A · Editorial / Newspaper"
+              width={1180}
+              height={2200}
+            >
+              <Editorial data={data} />
+            </DCArtboard>
+
+            <DCArtboard
+              id="minimal"
+              label="B · Minimal / Substack"
+              width={1180}
+              height={2400}
+            >
+              <Minimal data={data} />
+            </DCArtboard>
+
+            <DCArtboard
+              id="terminal"
+              label="C · Terminal / Bloomberg"
+              width={1480}
+              height={1500}
+            >
+              <Terminal data={data} />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+/* =============================================================================
+   MS News (AI News Daily) — Colors & Type tokens
+   Source: chamgil71/dailynews (publish/index.html, publish/app.html)
+
+   Themes:
+     Default — Navy (modern tech-news)
+     .theme-ink     — Charcoal + red (traditional Korean newspaper)
+     .theme-forest  — Deep green + mint (fresh editorial / fintech-like)
+
+   Apply a theme by adding the class to <html> or <body>:
+     <html class="theme-ink">
+   ============================================================================= */
+
+:root {
+  /* ── Brand colors (Navy / default) ────────────────────────────────────── */
+  --color-blue:           #2563eb;   /* Primary action, links, headings (h2) */
+  --color-blue-light:     #60a5fa;   /* Logo accent ("News"), light highlight */
+  --color-blue-50:        #eff6ff;   /* Badge bg, blockquote bg */
+  --color-blue-200:       #bfdbfe;   /* Badge border */
+  --color-navy:           #1e3a5f;   /* Header bg, h1/h3 color, strong text */
+
+  /* ── Neutrals ─────────────────────────────────────────────────────────────── */
+  --color-bg:             #f8fafc;   /* Page background */
+  --color-card:           #ffffff;   /* Card / surface */
+  --color-border:         #e2e8f0;   /* Hairlines, dividers, default input border */
+  --color-text:           #1e293b;   /* Body text */
+  --color-muted:          #64748b;   /* Secondary text, footer, captions */
+  --color-code-bg:        #f1f5f9;   /* Inline code background */
+
+  /* ── Semantic accents ─────────────────────────────────────────────────────── */
+  --color-green:          #16a34a;   /* "KO" badge — green positive */
+  --color-green-50:       #f0fdf4;
+  --color-green-200:      #bbf7d0;
+  --color-orange:         #ea580c;   /* "AI analysis" badge — orange spotlight */
+  --color-orange-50:      #fff7ed;
+  --color-orange-200:     #fed7aa;
+  --color-yellow-mark:    #fef08a;   /* <mark> search hit highlight */
+
+  /* ── On-dark text (for navy header) ───────────────────────────────────────── */
+  --color-on-dark:        #ffffff;
+  --color-on-dark-muted:  rgba(255, 255, 255, 0.8);
+  --color-on-dark-faint:  rgba(255, 255, 255, 0.75);
+
+  /* ── Typography stack ─────────────────────────────────────────────────────── */
+  /* Source uses system fonts — Pretendard added as a higher-fidelity Korean
+     web font (graceful fallback to system). */
+  --font-sans:
+    "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Apple SD Gothic Neo", "Malgun Gothic", "Helvetica Neue", Arial,
+    "Noto Sans KR", sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* ── Type scale (rem-based, matches dailynews CSS) ─────────────────────── */
+  --type-h1:        1.6rem;     /* 25.6px — page title (card h1) */
+  --type-h2:        1.2rem;     /* 19.2px — section title */
+  --type-h3:        1rem;       /* 16px — subsection */
+  --type-body:      1rem;       /* 16px — paragraph */
+  --type-small:     0.9rem;     /* 14.4px — nav, secondary */
+  --type-badge:     0.78rem;    /* 12.5px — meta badges */
+  --type-meta:      0.85rem;    /* 13.6px — date strings, footnote */
+  --type-footer:    0.8rem;     /* 12.8px — footer */
+
+  /* Weights */
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semibold:600;
+  --weight-bold:    700;
+
+  /* Line height — generous for Korean readability */
+  --leading-tight:  1.3;
+  --leading-base:   1.7;        /* Page body default */
+
+  /* Letter spacing */
+  --tracking-tight: -0.3px;     /* Logo wordmark */
+  --tracking-wide:  0.08em;     /* All-caps eyebrow labels */
+
+  /* ── Spacing scale ────────────────────────────────────────────────────────── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-9:   36px;
+  --space-12:  48px;
+  --space-20:  80px;
+
+  /* ── Radius ───────────────────────────────────────────────────────────────── */
+  --radius-sm:   4px;            /* Inline code */
+  --radius-md:   8px;            /* Buttons, inputs, news-list */
+  --radius-lg:   12px;           /* Cards */
+  --radius-pill: 20px;           /* Badges, tabs */
+
+  /* ── Shadow / elevation ───────────────────────────────────────────────────── */
+  --shadow-card:   0 1px 4px rgba(0, 0, 0, 0.06);
+  --shadow-card-sm:0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-header: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-sticky: 0 2px 12px rgba(0, 0, 0, 0.30);
+
+  /* ── Motion ───────────────────────────────────────────────────────────────── */
+  --motion-fast:   .15s;
+  --motion-base:   .20s;
+  --motion-slow:   .30s;
+  --easing-base:   ease;
+
+  /* ── Layout ───────────────────────────────────────────────────────────────── */
+  --container-max: 860px;        /* Article reading width */
+  --layout-max:    1100px;       /* Sidebar + content app width */
+  --header-h:      58px;
+  --sidebar-w:     260px;
+}
+
+/* =============================================================================
+   Semantic element styles — drop-in via base.css link
+   ============================================================================= */
+
+html, body {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: var(--leading-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  font-size: var(--type-h1);
+  color: var(--color-navy);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  margin-bottom: 6px;
+}
+
+h2 {
+  font-size: var(--type-h2);
+  color: var(--color-blue);
+  font-weight: var(--weight-semibold);
+  margin: 2em 0 .6em;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--color-border);
+}
+
+h3 {
+  font-size: var(--type-h3);
+  color: var(--color-navy);
+  font-weight: var(--weight-semibold);
+  margin: 1.4em 0 .4em;
+}
+
+p  { margin-bottom: .9em; }
+a  { color: var(--color-blue); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { text-decoration: underline; }
+
+ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
+li     { margin-bottom: .3em; }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2em 0;
+}
+
+code {
+  background: var(--color-code-bg);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: .88em;
+  font-family: var(--font-mono);
+}
+
+blockquote {
+  border-left: 4px solid var(--color-blue);
+  padding: 8px 16px;
+  background: var(--color-blue-50);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin: 1em 0;
+  color: var(--color-muted);
+}
+
+mark {
+  background: var(--color-yellow-mark);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* =============================================================================
+   Theme: Ink — charcoal + red (traditional Korean newspaper feel)
+   The token NAMES stay the same; only the values shift, so every component
+   built against --color-blue / --color-navy adopts the new look automatically.
+   ============================================================================= */
+
+.theme-ink {
+  --color-blue:           #b91c1c;   /* Newspaper red — primary action */
+  --color-blue-light:     #f87171;   /* Logo accent */
+  --color-blue-50:        #fef2f2;   /* Badge bg */
+  --color-blue-200:       #fecaca;   /* Badge border */
+  --color-navy:           #1a1a1a;   /* Near-black chrome */
+
+  --color-bg:             #f7f5f0;   /* Newsprint cream */
+  --color-card:           #ffffff;
+  --color-border:         #d6d3ce;
+  --color-text:           #1a1a1a;
+  --color-muted:          #57534e;
+  --color-code-bg:        #efece6;
+
+  --color-green:          #166534;
+  --color-green-50:       #f0fdf4;
+  --color-green-200:      #bbf7d0;
+  --color-orange:         #c2410c;
+  --color-orange-50:      #fff7ed;
+  --color-orange-200:     #fed7aa;
+
+  /* Slightly tighter to feel printed */
+  --leading-base:         1.65;
+}
+
+/* =============================================================================
+   Theme: Forest — deep green + mint (fresh, fintech-modern editorial feel)
+   ============================================================================= */
+
+.theme-forest {
+  --color-blue:           #047857;   /* Emerald — primary action */
+  --color-blue-light:     #6ee7b7;   /* Logo accent */
+  --color-blue-50:        #ecfdf5;
+  --color-blue-200:       #a7f3d0;
+  --color-navy:           #064e3b;   /* Deep forest chrome */
+
+  --color-bg:             #f6faf8;
+  --color-card:           #ffffff;
+  --color-border:         #d1e7dc;
+  --color-text:           #0f2922;
+  --color-muted:          #4b6b5e;
+  --color-code-bg:        #ecf3ef;
+
+  --color-green:          #0f766e;
+  --color-green-50:       #ecfeff;
+  --color-green-200:      #99f6e4;
+  --color-orange:         #b45309;
+  --color-orange-50:      #fffbeb;
+  --color-orange-200:     #fde68a;
+}
