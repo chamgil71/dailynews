@@ -66,20 +66,13 @@ def main() -> None:
 
     from core.mailer import send_email
     from config.settings import STOCK_EMAIL_SUBJECT
-    import markdown2
 
     now = datetime.now()
     subject = STOCK_EMAIL_SUBJECT.format(
         date=date_str,
         weekday=_weekday_ko(now.weekday()),
     )
-    html_body = markdown2.markdown(email_md, extras=["tables", "fenced-code-blocks"])
-    html_content = f"""<html><body style="font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:20px">
-{html_body}
-<br><hr>
-<small style="color:#888">📊 Stock Briefing — {date_str} ※ 투자 권유 아님</small>
-</body></html>"""
-    ok = send_email(email_md, html_content=html_content, subject_override=subject)
+    ok = send_email(email_md, template="stock", subject_override=subject)
     logger.info(f"[send_stock_email] {'성공' if ok else '실패'}")
 
 

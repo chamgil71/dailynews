@@ -31,7 +31,8 @@ from config.settings import (
     UNSUBSCRIBE_SECRET,
 )
 
-_TEMPLATE_FILE = Path(__file__).parent.parent.parent / "storage" / "email_template.html"
+_TEMPLATE_FILE       = Path(__file__).parent.parent.parent / "storage" / "email_template.html"
+_STOCK_TEMPLATE_FILE = Path(__file__).parent.parent.parent / "storage" / "stock_email_template.html"
 
 
 def _get_email_theme() -> str:
@@ -152,6 +153,81 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
         return None
 
 
+def _parse_md_for_stock_email(md: str) -> dict:
+    """주식 MD에서 이메일 섹션 추출."""
+    summary_m  = re.search(r'## ■ 핵심 요약[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
+    keywords_m = re.search(r'## (?:3\. )?핵심 키워드[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
+    lt_m       = re.search(r'## (?:6\. )?장기투자[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
+    temp_m     = re.search(r'## 시장 온도계[:\s]*(.*)', md)
+    reason_m   = re.search(r'## 시장 온도계.*\n+>\s*(.*)', md)
+
+    summary_html    = markdown2.markdown(summary_m.group(1).strip(),  extras=["tables"]) if summary_m  else ""
+    keywords_html   = markdown2.markdown(keywords_m.group(1).strip(), extras=["tables"]) if keywords_m else ""
+    lt_comment_html = markdown2.markdown(lt_m.group(1).strip(),       extras=["tables"]) if lt_m       else ""
+
+    temperature_display = temp_m.group(1).strip() if temp_m else "🟡 중립"
+    temperature_reason  = reason_m.group(1).strip() if reason_m else ""
+
+    if "리스크오프" in temperature_display or "🔴" in temperature_display:
+        temperature_color = "#dc2626"
+    elif "리스크온" in temperature_display or "🟢" in temperature_display:
+        temperature_color = "#16a34a"
+    else:
+        temperature_color = "#ca8a04"
+
+    return {
+        "summary_html":       summary_html,
+        "keywords_html":      keywords_html,
+        "lt_comment_html":    lt_comment_html,
+        "temperature_display": temperature_display,
+        "temperature_color":  temperature_color,
+        "temperature_reason": temperature_reason,
+    }
+
+
+def _render_stock_email_template(md: str, recipient_email: str, theme_name: str = "classic") -> str | None:
+    """주식 시황 전용 Jinja2 템플릿 렌더링. 실패 시 None 반환."""
+    if not _STOCK_TEMPLATE_FILE.exists():
+        logger.debug("[주식 이메일 템플릿] stock_email_template.html 없음 → 기본 방식 사용")
+        return None
+    try:
+        from jinja2 import Environment, FileSystemLoader
+
+        try:
+            mod = importlib.import_module(f"themes.{theme_name}")
+            tokens = mod.TOKENS
+        except (ModuleNotFoundError, AttributeError):
+            from themes.classic import TOKENS as tokens  # type: ignore
+
+        c = tokens["colors"]
+        t = tokens["typography"]
+
+        unsubscribe_url = ""
+        if SITE_BASE_URL:
+            token = _make_token(recipient_email)
+            encoded = urllib.parse.quote(recipient_email)
+            unsubscribe_url = f"{SITE_BASE_URL}/api/unsubscribe?email={encoded}&token={token}"
+
+        sections = _parse_md_for_stock_email(md)
+        now = datetime.now()
+
+        env = Environment(loader=FileSystemLoader(str(_STOCK_TEMPLATE_FILE.parent)),
+                          autoescape=False)
+        tmpl = env.get_template(_STOCK_TEMPLATE_FILE.name)
+
+        return tmpl.render(
+            c=c, t=t,
+            date=now.strftime("%Y-%m-%d"),
+            display_date=now.strftime("%Y년 %m월 %d일"),
+            site_url=SITE_BASE_URL,
+            unsubscribe_url=unsubscribe_url,
+            **sections,
+        )
+    except Exception as e:
+        logger.warning(f"[주식 이메일 템플릿 렌더링 실패] {e} → 기본 방식으로 폴백")
+        return None
+
+
 def _md_to_html(md: str, recipient_email: str) -> str:
     body = markdown2.markdown(md, extras=["tables", "fenced-code-blocks"])
 
@@ -175,9 +251,11 @@ def _md_to_html(md: str, recipient_email: str) -> str:
 
 def send_email(md_content: str, html_content: str | None = None,
                theme_name: str | None = None,
-               subject_override: str | None = None) -> bool:
+               subject_override: str | None = None,
+               template: str | None = None) -> bool:
     """이메일 발송.
-    우선순위: html_content > email_template.html > _md_to_html() 폴백
+    template: "stock" → stock_email_template.html, None/"news" → email_template.html
+    우선순위: html_content > template 렌더러 > _md_to_html() 폴백
     """
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
         logger.warning("[이메일] GMAIL_USER 또는 GMAIL_APP_PASSWORD 미설정 — 발송 건너뜀")
@@ -203,6 +281,10 @@ def send_email(md_content: str, html_content: str | None = None,
                 msg["To"] = email
                 if html_content:
                     body = html_content
+                elif template == "stock":
+                    _theme = theme_name or _get_email_theme()
+                    body = (_render_stock_email_template(md_content, email, _theme)
+                            or _md_to_html(md_content, email))
                 else:
                     _theme = theme_name or _get_email_theme()
                     body = (_render_email_template(md_content, email, _theme)
