@@ -174,7 +174,8 @@ def _md_to_html(md: str, recipient_email: str) -> str:
 
 
 def send_email(md_content: str, html_content: str | None = None,
-               theme_name: str | None = None) -> bool:
+               theme_name: str | None = None,
+               subject_override: str | None = None) -> bool:
     """이메일 발송.
     우선순위: html_content > email_template.html > _md_to_html() 폴백
     """
@@ -188,7 +189,7 @@ def send_email(md_content: str, html_content: str | None = None,
         return False
 
     date_str = datetime.now().strftime("%Y-%m-%d")
-    subject = EMAIL_SUBJECT.format(date=date_str)
+    subject = subject_override if subject_override else EMAIL_SUBJECT.format(date=date_str)
 
     success_count = 0
     try:

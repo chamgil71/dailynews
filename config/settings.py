@@ -37,6 +37,7 @@ GMAIL_USER           = os.getenv("GMAIL_USER", "")
 GMAIL_APP_PASSWORD   = os.getenv("GMAIL_APP_PASSWORD", "")
 RECIPIENT_EMAILS     = [e.strip() for e in os.getenv("RECIPIENT_EMAILS", "").split(",") if e.strip()]
 EMAIL_SUBJECT        = "📰 Daily News Brief — {date}"
+STOCK_EMAIL_SUBJECT  = "📊 주식 시황 브리핑 — {date} ({weekday})"
 UNSUBSCRIBE_SECRET   = os.getenv("UNSUBSCRIBE_SECRET", "")
 SITE_BASE_URL        = os.getenv("SITE_BASE_URL", "").rstrip("/")
 
