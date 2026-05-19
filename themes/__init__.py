@@ -3,10 +3,37 @@
 테마 로더.
 SITE_THEME 환경변수(또는 인자)에 따라 테마 모듈을 동적으로 로드한다.
 
-각 테마 모듈은 다음 함수를 반드시 export해야 한다:
-  render_report(ctx)  → str   : 날짜별 뉴스 리포트 페이지
-  render_archive(ctx) → str   : 전체 목록 페이지
-  render_email(ctx)   → str   : 이메일 전용 HTML (인라인 스타일)
+── 테마 종류 ──────────────────────────────────────────────────────────
+[레이아웃 테마] 독립 레이아웃·폰트·구조 — CSS 전체 자체 보유
+  classic    — 네이비 헤더, 카드 레이아웃, 시스템 폰트
+  editorial  — 신문 마스트헤드, Noto Serif KR
+  terminal   — Bloomberg 다크 터미널, JetBrains Mono
+
+[색상 변형 테마] base 레이아웃 위임, CSS 토큰(TOKENS)만 교체
+  ink        — 붉은 accent (신문 느낌)
+  forest     — 에메랄드 accent (핀테크 그린)
+  minimal    — 오렌지 accent + 여백 CSS 오버라이드
+
+── 새 테마 추가 방법 ───────────────────────────────────────────────
+1. themes/{name}.py 생성
+2. TOKENS = { "meta": {...}, "colors": {...}, "typography": {...} } 정의
+3. render_report(), render_archive(), render_email() 등 구현
+4. (선택) config/theme_config.py DESIGN_TEMPLATES에 추가 (UI 표시용)
+──────────────────────────────────────────────────────────────────────
+
+── config vs themes 역할 경계 ─────────────────────────────────────
+  config/theme_config.py  → 어떤 테마 쓸지 (SECTION_THEMES, 설정값만)
+  themes/{name}.py        → CSS·폰트·레이아웃 렌더링 코드 + TOKENS
+  themes/base.py          → 공통 렌더링 엔진, get_tokens() 동적 로드
+──────────────────────────────────────────────────────────────────────
+
+각 테마 모듈이 export해야 하는 함수:
+  render_report(ctx)        → str  : 날짜별 뉴스 리포트 페이지
+  render_archive(ctx)       → str  : 전체 목록 페이지
+  render_email(ctx)         → str  : 이메일 전용 HTML
+  render_stock_report(ctx)  → str  : 주식시황 리포트
+  render_stock_archive(ctx) → str  : 주식 전체 목록
+  render_stock_email(ctx)   → str  : 주식 이메일
 
 ctx 딕셔너리 계약 (build_site.py → theme 전달):
   display_date : "2026년 05월 18일"

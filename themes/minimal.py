@@ -1,8 +1,38 @@
 # themes/minimal.py
-"""
-Minimal 테마 — Pretendard, 넓은 여백, 깔끔한 prose.
-base 레이아웃 사용 + CSS 오버라이드로 시각 차별화.
-"""
+"""Minimal 테마 — Pretendard, 넓은 여백, 오렌지 accent."""
+
+TOKENS = {
+    "meta": {
+        "name":     "minimal",
+        "label":    "Minimal",
+        "font_cdn": "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css",
+        "font_family": "'Pretendard Variable', 'Pretendard', -apple-system, sans-serif",
+    },
+    "colors": {
+        "blue":         "#ff5a1f",
+        "blue_light":   "#ff8c00",
+        "blue_50":      "#f1efe8",
+        "blue_200":     "#e6e2da",
+        "navy":         "#16181a",
+        "bg":           "#fafaf7",
+        "card":         "#ffffff",
+        "border":       "#e6e2da",
+        "text":         "#16181a",
+        "muted":        "#8a8f95",
+        "code_bg":      "#f1efe8",
+        "green":        "#16a34a",
+        "green_50":     "#f0fdf4",
+        "green_200":    "#bbf7d0",
+        "orange":       "#ea580c",
+        "orange_50":    "#fff7ed",
+        "orange_200":   "#fed7aa",
+    },
+    "typography": {
+        "font_sans": "'Pretendard Variable', 'Pretendard', -apple-system, sans-serif",
+        "leading":   1.75,
+    },
+}
+
 from themes.base import (
     layout_html, get_tokens,
     subscribe_card_html, hub_sections_html,

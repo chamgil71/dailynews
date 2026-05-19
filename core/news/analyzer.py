@@ -1,0 +1,225 @@
+"""
+AI 분석 모듈 (Gemini 3.1 최적화 버전)
+- 카테고리별 맞춤 프롬프트
+- Gemini 3.1의 'Thought Signature(사고 흔적) 순환' 로직 반영
+- google-genai 최신 SDK 기반 구현
+"""
+
+import logging
+import os
+from abc import ABC, abstractmethod
+from collections import Counter
+
+# 최신 SDK 임포트
+from google import genai
+from google.genai import types
+
+from config.settings import (
+    LLM_PROVIDER,
+    OPENAI_API_KEY, GPT_MODEL_FULL, GPT_MODEL_MINI, GPT_MINI_THRESHOLD,
+    ANTHROPIC_KEY,  CLAUDE_MODEL_FULL, CLAUDE_MODEL_MINI, CLAUDE_MINI_THRESHOLD,
+    GEMINI_API_KEY, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD,
+)
+from config.prompts import (
+    CATEGORY_PROMPTS, DEFAULT_PROMPT_HINT,
+    PROMPT_TEMPLATE_KO, PROMPT_TEMPLATE_EN,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def _build_prompt(news: list, lang: str) -> str:
+    """카테고리 분포를 파악해 프롬프트 힌트를 동적으로 구성."""
+    cat_counts = Counter(n["category"] for n in news)
+    top_cats   = [c for c, _ in cat_counts.most_common(2)]
+    hints      = " ".join(CATEGORY_PROMPTS.get(c, "") for c in top_cats).strip()
+    if not hints:
+        hints = DEFAULT_PROMPT_HINT
+
+    title_block = "\n".join(
+        f"[{n['label']}] {n['title']}"
+        + (f"\n  요약: {n['summary']}" if n.get("summary") else "")
+        for n in news
+    )
+
+    template = PROMPT_TEMPLATE_KO if lang == "ko" else PROMPT_TEMPLATE_EN
+    return template.format(hints=hints, title_block=title_block)
+
+# ── 베이스 클래스 ─────────────────────────────────────────────────────────────
+
+class BaseAnalyzer(ABC):
+    def _pick_model(self, news_count: int, model_full: str,
+                    model_mini: str, threshold: int) -> str:
+        """뉴스 건수에 따라 full/mini 모델 자동 선택."""
+        model = model_mini if news_count <= threshold else model_full
+        logger.info(f"[모델 선택] {model} (뉴스 {news_count}건, 기준 {threshold}건)")
+        return model
+
+    @abstractmethod
+    def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
+        """반환: {"en": str, "ko": str, "combined": str}"""
+
+# ── GPT ───────────────────────────────────────────────────────────────────────
+
+class GPTAnalyzer(BaseAnalyzer):
+    def __init__(self):
+        from openai import OpenAI
+        self.client = OpenAI(api_key=OPENAI_API_KEY)
+
+    def _call(self, prompt: str, news_count: int) -> str:
+        model = self._pick_model(
+            news_count, GPT_MODEL_FULL, GPT_MODEL_MINI, GPT_MINI_THRESHOLD
+        )
+        response = self.client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=800,
+            temperature=0.3,
+        )
+        return response.choices[0].message.content.strip()
+
+    def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
+        results = {"en": "", "ko": "", "combined": ""}
+        if en_news:
+            try:
+                results["en"] = self._call(_build_prompt(en_news, "en"), len(en_news))
+                logger.info(f"[GPT 분석 완료] 영어 {len(en_news)}건")
+            except Exception as e:
+                logger.error(f"[GPT EN 실패] {e}")
+                results["en"] = _fallback_summary(en_news, "en")
+        if ko_news:
+            try:
+                results["ko"] = self._call(_build_prompt(ko_news, "ko"), len(ko_news))
+                logger.info(f"[GPT 분석 완료] 한국어 {len(ko_news)}건")
+            except Exception as e:
+                logger.error(f"[GPT KO 실패] {e}")
+                results["ko"] = _fallback_summary(ko_news, "ko")
+        results["combined"] = _merge(results["en"], results["ko"])
+        return results
+
+# ── Claude ────────────────────────────────────────────────────────────────────
+
+class ClaudeAnalyzer(BaseAnalyzer):
+    def __init__(self):
+        import anthropic
+        self.client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+
+    def _call(self, prompt: str, news_count: int) -> str:
+        model = self._pick_model(
+            news_count, CLAUDE_MODEL_FULL, CLAUDE_MODEL_MINI, CLAUDE_MINI_THRESHOLD
+        )
+        msg = self.client.messages.create(
+            model=model,
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return msg.content[0].text.strip()
+
+    def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
+        results = {"en": "", "ko": "", "combined": ""}
+        if en_news:
+            try:
+                results["en"] = self._call(_build_prompt(en_news, "en"), len(en_news))
+                logger.info(f"[Claude 분석 완료] 영어 {len(en_news)}건")
+            except Exception as e:
+                logger.error(f"[Claude EN 실패] {e}")
+                results["en"] = _fallback_summary(en_news, "en")
+        if ko_news:
+            try:
+                results["ko"] = self._call(_build_prompt(ko_news, "ko"), len(ko_news))
+                logger.info(f"[Claude 분석 완료] 한국어 {len(ko_news)}건")
+            except Exception as e:
+                logger.error(f"[Claude KO 실패] {e}")
+                results["ko"] = _fallback_summary(ko_news, "ko")
+        results["combined"] = _merge(results["en"], results["ko"])
+        return results
+
+# ── Gemini (3.1 최적화) ────────────────────────────────────────────────────────
+
+class GeminiAnalyzer(BaseAnalyzer):
+    def __init__(self):
+        # 최신 통합 SDK 클라이언트 사용
+        self.client = genai.Client(api_key=GEMINI_API_KEY)
+        # 3.1 핵심: 사고 흔적(Thought Signature) 순환용 변수
+        self.last_thought_signature = None
+
+    def _call(self, prompt: str, news_count: int) -> str:
+        model_name = self._pick_model(
+            news_count, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD
+        )
+        
+        config_params = {
+            "max_output_tokens": 800,
+            "temperature": 0.3,
+        }
+
+        # 사고 흔적이 있다면 설정에 추가 (메일의 'circulation' 대응)
+        if self.last_thought_signature:
+            config_params["thought_signature"] = self.last_thought_signature
+            logger.info("[Gemini 3.1] 이전 사고 흔적(Thought Signature)을 포함합니다.")
+
+        response = self.client.models.generate_content(
+            model=model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(**config_params)
+        )
+
+        # 새로운 사고 흔적 캡처 (다음 호출에서 사용)
+        if hasattr(response, 'thought_signature'):
+            self.last_thought_signature = response.thought_signature
+
+        return response.text.strip()
+
+    def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
+        results = {"en": "", "ko": "", "combined": ""}
+        
+        # 1. 영어 뉴스 분석 (데이터가 있을 때만)
+        if en_news:
+            try:
+                results["en"] = self._call(_build_prompt(en_news, "en"), len(en_news))
+                logger.info(f"[Gemini 분석 완료] 영어 {len(en_news)}건")
+            except Exception as e:
+                logger.error(f"[Gemini EN 실패] {e}")
+                results["en"] = _fallback_summary(en_news, "en")
+        
+        # 2. 한국어 뉴스 분석
+        # 영문 분석이 끝난 상태라면 자동으로 사고 흔적이 포함되어 연속성 유지
+        if ko_news:
+            try:
+                results["ko"] = self._call(_build_prompt(ko_news, "ko"), len(ko_news))
+                logger.info(f"[Gemini 분석 완료] 한국어 {len(ko_news)}건")
+            except Exception as e:
+                logger.error(f"[Gemini KO 실패] {e}")
+                results["ko"] = _fallback_summary(ko_news, "ko")
+        
+        results["combined"] = _merge(results["en"], results["ko"])
+        return results
+
+# ── 헬퍼 및 API ──────────────────────────────────────────────────────────────
+
+def _fallback_summary(news: list, lang: str) -> str:
+    header = "⚠ AI 분석 실패 — 원문 제목 목록" if lang == "ko" \
+             else "⚠ AI analysis failed — raw headlines"
+    lines  = "\n".join(f"- [{n['label']}] {n['title']}" for n in news[:15])
+    return f"{header}\n\n{lines}"
+
+def _merge(en: str, ko: str) -> str:
+    parts = []
+    if en: parts.append("## 🌐 Global News Analysis\n\n" + en)
+    if ko: parts.append("## 🇰🇷 국내 뉴스 분석\n\n" + ko)
+    return "\n\n---\n\n".join(parts) if parts else "분석 결과 없음"
+
+def get_analyzer() -> BaseAnalyzer:
+    provider = LLM_PROVIDER.lower()
+    if provider == "claude":
+        return ClaudeAnalyzer()
+    if provider == "gemini":
+        return GeminiAnalyzer()
+    return GPTAnalyzer()
+
+def analyze(news_data: dict) -> dict:
+    analyzer = get_analyzer()
+    return analyzer.analyze_by_lang(
+        en_news=news_data.get("en", []),
+        ko_news=news_data.get("ko", []),
+    )

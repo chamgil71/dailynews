@@ -122,15 +122,33 @@ Repository → Settings → Pages → Source: GitHub Actions
 
 ## 테마 선택
 
+### 레이아웃 테마 (전체 레이아웃·폰트 변경)
+
 | 테마 | 특징 |
 |------|------|
-| `classic` | Classic Navy (기본) |
-| `minimal` | Pretendard, 넓은 여백 |
-| `ink` | 신문 스타일, 붉은 accent |
-| `forest` | 핀테크 그린, 에메랄드 accent |
+| `classic` | 네이비 헤더, 카드 레이아웃 (기본) |
+| `editorial` | 신문 마스트헤드, Noto Serif KR |
+| `terminal` | Bloomberg 다크 터미널, JetBrains Mono |
+
+### 색상 변형 테마 (레이아웃 유지, 색상만 교체)
+
+| 테마 | 특징 |
+|------|------|
+| `ink` | 붉은 accent (신문 ink) |
+| `forest` | 에메랄드 accent (핀테크 그린) |
+| `minimal` | 오렌지 accent + 넓은 여백 |
+
+### 섹션별 독립 설정
 
 ```bash
-SITE_THEME=minimal python scripts/build_site.py
+# 뉴스는 editorial, 주식은 terminal
+THEME_NEWS=editorial THEME_STOCK=terminal python scripts/build_site.py
+
+# 오늘 날짜 파일만 editorial로 빌드
+THEME_NEWS=editorial python scripts/build_site.py --from
+
+# 전체 재빌드
+python scripts/build_site.py --all --theme terminal
 ```
 
 ---
