@@ -74,8 +74,7 @@ def main() -> None:
         logger.info("[4/4] 이메일 발송 중...")
         from core.mailer import send_email
         from config.settings import STOCK_EMAIL_SUBJECT
-        email_md = _build_email_body(analysis, date_str)
-        ok = send_email(email_md, subject_override=STOCK_EMAIL_SUBJECT.format(
+        ok = send_email(md_content, template="stock", subject_override=STOCK_EMAIL_SUBJECT.format(
             date=date_str,
             weekday=_weekday_ko(datetime.now().weekday()),
         ))
@@ -88,22 +87,6 @@ def main() -> None:
 
 def _weekday_ko(wd: int) -> str:
     return ["월","화","수","목","금","토","일"][wd]
-
-
-def _build_email_body(analysis: dict, date_str: str) -> str:
-    """이메일용 축약 MD (핵심 요약 + 키워드 + 온도계만)."""
-    parts = [f"# 📊 주식 시황 브리핑 — {date_str}"]
-    if analysis.get("summary"):
-        parts += ["\n## ■ 핵심 요약 (3줄)", analysis["summary"]]
-    if analysis.get("keywords"):
-        parts += ["\n## 3. 핵심 키워드 TOP 5", analysis["keywords"]]
-    if analysis.get("lt_comment"):
-        parts += ["\n## 6. 장기투자 관점 코멘트", analysis["lt_comment"]]
-    temp = analysis.get("temperature_display", "🟡 중립")
-    reason = analysis.get("temperature_reason", "")
-    parts += [f"\n## 시장 온도계: {temp}", f"> {reason}"]
-    parts += ["\n---\n※ 투자 권유 아님."]
-    return "\n\n".join(parts)
 
 
 if __name__ == "__main__":
