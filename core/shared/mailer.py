@@ -31,8 +31,8 @@ from config.settings import (
     UNSUBSCRIBE_SECRET,
 )
 
-_TEMPLATE_FILE       = Path(__file__).parent.parent.parent / "storage" / "email_template.html"
-_STOCK_TEMPLATE_FILE = Path(__file__).parent.parent.parent / "storage" / "stock_email_template.html"
+_TEMPLATE_FILE       = Path(__file__).parent.parent.parent / "templates" / "email_news.html"
+_STOCK_TEMPLATE_FILE = Path(__file__).parent.parent.parent / "templates" / "email_stock.html"
 
 
 def _get_email_theme() -> str:

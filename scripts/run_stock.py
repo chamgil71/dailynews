@@ -74,7 +74,7 @@ def main() -> None:
         reason = analysis.get("temperature_reason", "")
         parts += [f"\n## 시장 온도계: {temp}", f"> {reason}", "\n---\n※ 투자 권유 아님."]
         email_md = "\n\n".join(parts)
-        ok = send_email(email_md, subject_override=STOCK_EMAIL_SUBJECT.format(
+        ok = send_email(email_md, template="stock", subject_override=STOCK_EMAIL_SUBJECT.format(
             date=date_str,
             weekday=_weekday_ko(datetime.now().weekday()),
         ))

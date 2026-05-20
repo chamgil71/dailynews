@@ -37,10 +37,8 @@ from themes.base import (
     layout_html, get_tokens,
     subscribe_card_html, hub_sections_html,
     render_archive as _base_archive,
-    render_email as _base_email,
     render_stock_report as _stock_report,
     render_stock_archive as _stock_archive,
-    render_stock_email as _stock_email,
 )
 
 _NAME = "minimal"
@@ -181,14 +179,8 @@ def render_archive(ctx: dict) -> str:
                        ctx['site_title'], ctx['now'], tokens, _EXTRA_CSS)
 
 
-def render_email(ctx: dict) -> str:
-    return _base_email(ctx, _NAME)
-
 def render_stock_report(ctx: dict) -> str:
     return _stock_report(ctx, _NAME)
 
 def render_stock_archive(ctx: dict) -> str:
     return _stock_archive(ctx, _NAME)
-
-def render_stock_email(ctx: dict) -> str:
-    return _stock_email(ctx, _NAME)

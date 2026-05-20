@@ -27,18 +27,27 @@
 config/
   stock_prompts.py         ← 루틴 프롬프트 + LLM 분석 프롬프트 + 티커 정의
   settings.py              ← STOCK_REPORTS_DIR, STOCK_EMAIL_SUBJECT, NAVER_*
+  theme_config.py          ← SECTION_THEMES["stock"] 으로 웹 테마 선택
 
-templates/
-  stock_report.md          ← Jinja2 주식 리포트 템플릿 (섹션 구조 기준)
+templates/                 ← 모든 HTML/MD 템플릿 (한 곳 집중)
+  stock_report.md          ← Jinja2 주식 MD 리포트 템플릿 (섹션 구조 기준)
+  email_stock.html         ← 주식 이메일 HTML 템플릿 (Jinja2)
+  web_stock.html           ← 주식 웹페이지 HTML 템플릿 (Jinja2)
+  web_stock_archive.html   ← 주식 아카이브 웹페이지 HTML 템플릿 (Jinja2)
+
+themes/
+  {name}.py                ← 색상·폰트 TOKENS (디자인 토큰)
+  base.py                  ← Jinja2 렌더링 엔진
 
 core/
-  stock_collector.py       ← yfinance 데이터 수집
-  stock_analyzer.py        ← LLM 분석 + 섹션 파싱
-  stock_report.py          ← Jinja2 렌더링 + MD 저장
+  stock/collector.py       ← yfinance 데이터 수집
+  stock/analyzer.py        ← LLM 분석 + 섹션 파싱
+  stock/report.py          ← Jinja2 렌더링 + MD 저장
+  shared/mailer.py         ← 이메일 발송 (templates/email_stock.html 사용)
 
 scripts/
-  stock_main.py            ← GitHub Actions 백업 경로 진입점
-  build_stock_site.py      ← stock MD → HTML 빌드
+  run_stock.py             ← 권장 진입점 (수집→분석→저장→이메일)
+  build_stock_site.py      ← stock MD → HTML 빌드 (themes/ + templates/ 사용)
   send_stock_email.py      ← push 트리거 경로 이메일 발송
 
 .github/workflows/
@@ -46,8 +55,6 @@ scripts/
 
 docs/
   claude_주식시황.md       ← Claude Code 루틴 프롬프트 (루틴에 그대로 붙여넣기)
-  templates/
-    stock_report.md        ← 형식 기준 템플릿
 
 reports/stock/
   stock_YYYY-MM-DD.md      ← 날짜별 주식시황 리포트 (루틴 또는 자동화 생성)
@@ -250,20 +257,37 @@ build(theme_name)
 
 ## 8. 이메일 발송
 
+### 발송 경로
+
+| 경로 | 스크립트 | 템플릿 파라미터 |
+|------|---------|--------------|
+| push 트리거 | `scripts/send_stock_email.py` | `template="stock"` |
+| 직접 실행 | `scripts/run_stock.py` | `template="stock"` |
+
 ### scripts/send_stock_email.py (push 트리거 경로)
 
 ```python
 latest_md = max(glob("reports/stock/stock_*.md"))
-md_content = latest_md.read_text()
-send_email(md_content, subject_override=STOCK_EMAIL_SUBJECT)
+email_md  = _email_body_from_md(latest_md)       # 핵심 섹션만 추출
+send_email(email_md, template="stock",            # stock 템플릿 지정 필수
+           subject_override=STOCK_EMAIL_SUBJECT)
 ```
 
-### 이메일 본문 구성 (themes/base.py::render_stock_email)
+### 이메일 템플릿 (`templates/email_stock.html`)
 
-- 핵심 요약 3줄
-- 시장 온도계 badge (🔴/🟡/🟢 색상 배경)
-- 핵심 키워드 ①~⑤
-- "전체 브리핑 보기" CTA 버튼 → publish/stock/
+- **파일 직접 수정**으로 이메일 HTML 구조 변경 가능
+- 색상은 `THEME_EMAIL` 테마의 `TOKENS` 값이 Jinja2 변수 `{{ c.* }}`로 주입됨
+
+### 이메일 본문 섹션 (Jinja2 변수)
+
+| 변수 | 내용 |
+|------|------|
+| `summary_html` | 핵심 요약 3줄 |
+| `keywords_html` | 핵심 키워드 TOP 5 |
+| `lt_comment_html` | 장기투자 관점 코멘트 |
+| `temperature_display` | 시장 온도계 (🔴/🟡/🟢) |
+| `temperature_color` | 온도계 배지 배경색 |
+| `temperature_reason` | 온도계 근거 문장 |
 
 ---
 
@@ -334,4 +358,4 @@ STOCK_EMAIL_SUBJECT = "📊 주식 시황 브리핑 — {date} ({weekday})"
 
 ---
 
-*최종 업데이트: 2026-05-18*
+*최종 업데이트: 2026-05-20*

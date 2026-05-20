@@ -253,11 +253,6 @@ def render_archive(ctx: dict) -> str:
     return _layout("ARCHIVE", body, "archive", ctx["site_title"], ctx["now"])
 
 
-def render_email(ctx: dict) -> str:
-    from themes.base import render_email as _base_email
-    return _base_email(ctx, "classic")
-
-
 def render_stock_report(ctx: dict) -> str:
     from themes.base import render_stock_report as _base
     return _base(ctx, "classic")
@@ -265,9 +260,4 @@ def render_stock_report(ctx: dict) -> str:
 
 def render_stock_archive(ctx: dict) -> str:
     from themes.base import render_stock_archive as _base
-    return _base(ctx, "classic")
-
-
-def render_stock_email(ctx: dict) -> str:
-    from themes.base import render_stock_email as _base
     return _base(ctx, "classic")

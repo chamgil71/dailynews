@@ -1,10 +1,18 @@
 # themes/base.py
 """
-토큰 기반 공통 레이아웃 & 렌더링 빌더.
+토큰 기반 렌더링 엔진.
 
-모든 테마는 이 모듈의 함수를 사용하거나 오버라이드한다.
-CSS 변수(웹)와 인라인 스타일(이메일) 모두 THEME_TOKENS에서 값을 읽어
-하드코딩을 제거한다.
+역할 분담:
+  templates/*.html  → HTML 구조 (Jinja2 템플릿)
+  themes/{name}.py  → 색상·폰트 토큰 (TOKENS dict)
+  themes/base.py    → 토큰 로드 + Jinja2 렌더링 (이 파일)
+
+표준 렌더러 (classic/ink/forest 등 토큰 교체형 테마):
+  render_report(), render_archive(), render_stock_report(), render_stock_archive()
+
+커스텀 레이아웃 테마 (editorial/terminal/minimal):
+  자체 render_*() 구현을 가지며, 웹 레이아웃을 Python에서 직접 정의.
+  layout_html()을 헬퍼로 사용할 수 있음.
 """
 from __future__ import annotations
 
@@ -18,8 +26,10 @@ import importlib
 
 from config.theme_config import NAV_SECTIONS, HUB_SECTIONS, FOOTER_CONFIG
 
+_TEMPLATES = Path(__file__).parent.parent / "templates"
 
-# ── 토큰 조회 — 각 테마 파일의 TOKENS를 동적 로드 ─────────────────────────────
+
+# ── 토큰 조회 ─────────────────────────────────────────────────────────────────
 
 def get_tokens(theme_name: str) -> dict:
     try:
@@ -30,10 +40,9 @@ def get_tokens(theme_name: str) -> dict:
         return TOKENS
 
 
-# ── CSS 생성 ───────────────────────────────────────────────────────────────────
+# ── CSS :root 변수 블록 (테마 토큰 → CSS 변수) ────────────────────────────────
 
 def css_root_vars(tokens: dict) -> str:
-    """CSS :root 변수 블록. 이름은 MS Design System 토큰과 동일."""
     c = tokens["colors"]
     t = tokens["typography"]
     return f"""
@@ -60,159 +69,9 @@ def css_root_vars(tokens: dict) -> str:
   }}"""
 
 
-def common_css() -> str:
-    """테마 중립 구조 CSS. 색상은 CSS 변수를 통해 테마가 결정."""
-    return """
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: var(--font-sans);
-    background: var(--color-bg);
-    color: var(--color-text);
-    line-height: var(--leading-base);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ── 헤더 ── */
-  header {
-    background: var(--color-navy);
-    color: #fff;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 58px;
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,.25);
-  }
-  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
-  header .logo .accent { color: var(--color-blue-light); }
-  header nav a {
-    color: rgba(255,255,255,.8);
-    text-decoration: none;
-    margin-left: 20px;
-    font-size: .9rem;
-    transition: color .15s;
-  }
-  header nav a:hover,
-  header nav a.active { color: #fff; font-weight: 600; }
-
-  /* ── 컨테이너 ── */
-  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
-
-  /* ── 카드 ── */
-  .card {
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 32px 36px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.06);
-  }
-
-  /* ── 타이포그래피 ── */
-  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
-       font-weight: 700; line-height: 1.3; }
-  h2 { font-size: 1.2rem; color: var(--color-blue); margin: 2em 0 .6em;
-       padding-bottom: 6px; border-bottom: 2px solid var(--color-border);
-       font-weight: 600; }
-  h3 { font-size: 1rem; color: var(--color-navy); margin: 1.4em 0 .4em;
-       font-weight: 600; }
-  p  { margin-bottom: .9em; }
-  a  { color: var(--color-blue); text-underline-offset: 2px; }
-  ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
-  li { margin-bottom: .3em; }
-  hr { border: none; border-top: 1px solid var(--color-border); margin: 2em 0; }
-  code { background: var(--color-code-bg); padding: 2px 6px;
-         border-radius: 4px; font-size: .88em; }
-  blockquote {
-    border-left: 4px solid var(--color-blue);
-    padding: 8px 16px;
-    background: var(--color-blue-50);
-    border-radius: 0 8px 8px 0;
-    margin: 1em 0;
-    color: var(--color-muted);
-  }
-  mark { background: #fef08a; border-radius: 2px; padding: 0 2px; }
-
-  /* ── 배지 ── */
-  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-  .badge {
-    background: var(--color-blue-50);
-    color: var(--color-blue);
-    border: 1px solid var(--color-blue-200);
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: .78rem;
-    font-weight: 500;
-  }
-  .badge-green {
-    background: var(--color-green-50);
-    color: var(--color-green);
-    border: 1px solid var(--color-green-200);
-  }
-  .badge-orange {
-    background: var(--color-orange-50);
-    color: var(--color-orange);
-    border: 1px solid var(--color-orange-200);
-  }
-
-  /* ── 아카이브 목록 ── */
-  .archive-list { list-style: none; padding: 0; }
-  .archive-list li { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
-  .archive-list li:last-child { border-bottom: none; }
-  .archive-list a { font-weight: 500; font-size: 1rem; text-decoration: none; }
-  .archive-list a:hover { text-decoration: underline; }
-  .archive-list .date { color: var(--color-muted); font-size: .85rem; margin-top: 2px; }
-
-  /* ── 허브 섹션 카드 (Phase 2/3 활성화) ── */
-  .hub-sections {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .hub-section-card {
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 24px;
-    text-decoration: none;
-    color: var(--color-text);
-    transition: border-color .15s, box-shadow .15s;
-    display: block;
-  }
-  .hub-section-card:hover {
-    border-color: var(--color-blue);
-    box-shadow: 0 2px 8px rgba(0,0,0,.1);
-  }
-  .hub-section-card .section-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
-  .hub-section-card h3 { color: var(--color-navy); margin: 0 0 6px; }
-  .hub-section-card p { color: var(--color-muted); font-size: .9rem; margin: 0; }
-
-  /* ── 푸터 ── */
-  footer {
-    text-align: center;
-    color: var(--color-muted);
-    font-size: .8rem;
-    padding: 24px;
-    border-top: 1px solid var(--color-border);
-  }
-
-  /* ── 반응형 ── */
-  @media (max-width: 600px) {
-    .card { padding: 20px; }
-    header .logo { font-size: 1rem; }
-    .hub-sections { grid-template-columns: 1fr; }
-  }
-"""
-
-
-# ── HTML 컴포넌트 ──────────────────────────────────────────────────────────────
+# ── 내비게이션 HTML ──────────────────────────────────────────────────────────
 
 def nav_html(active_key: str, nav_prefix: str = "") -> str:
-    """활성 섹션에 .active 클래스, disabled 항목은 렌더링 제외.
-    nav_prefix: 하위 폴더 페이지에서 루트 기준 경로 보정 (예: "../")
-    """
     enabled = [s for s in NAV_SECTIONS if s["enabled"]]
     parts = []
     for s in enabled:
@@ -221,8 +80,9 @@ def nav_html(active_key: str, nav_prefix: str = "") -> str:
     return "\n      ".join(parts)
 
 
+# ── 커스텀 테마용 헬퍼 (editorial/terminal/minimal에서 사용) ──────────────────
+
 def hub_sections_html(nav_prefix: str = "") -> str:
-    """허브 페이지용 섹션 카드 그리드. Phase 2/3 활성화 시 표시."""
     active = [s for s in HUB_SECTIONS if s["enabled"]]
     if not active:
         return ""
@@ -251,8 +111,6 @@ def subscribe_card_html(subscribe_url: str) -> str:
   </div>"""
 
 
-# ── 페이지 레이아웃 ────────────────────────────────────────────────────────────
-
 def layout_html(
     title: str,
     body: str,
@@ -263,17 +121,14 @@ def layout_html(
     extra_css: str = "",
     nav_prefix: str = "",
 ) -> str:
-    """
-    완전한 HTML 페이지 생성.
-    extra_css  : 테마별 CSS 오버라이드.
-    nav_prefix : 하위 폴더 페이지의 경로 보정 (예: stock/ 에서 "../").
-    """
+    """커스텀 테마(minimal 등)용 레이아웃 빌더. 표준 렌더러는 Jinja2 템플릿 사용."""
     font_cdn = tokens.get("meta", {}).get("font_cdn", "")
     font_link = (
         f'<link rel="preconnect" href="https://fonts.googleapis.com">\n'
         f'  <link rel="stylesheet" href="{font_cdn}" crossorigin>'
         if font_cdn else ""
     )
+    css_root = css_root_vars(tokens)
     return f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -283,8 +138,8 @@ def layout_html(
   <title>{title} — {site_title}</title>
   {font_link}
   <style>
-  {css_root_vars(tokens)}
-  {common_css()}
+  {css_root}
+  {_COMMON_CSS}
   {extra_css}
   </style>
 </head>
@@ -310,71 +165,151 @@ def layout_html(
 </html>"""
 
 
-# ── 뉴스 렌더 헬퍼 ───────────────────────────────────────────────────────────
-
-_NEWS_EXTRA_CSS = """
-  /* ── 수집 기사 전체 목록 접기/펼치기 ── */
-  .news-list-section h2 { margin-top: 0; }
-  .news-list-section details {
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    margin-bottom: 12px;
-    overflow: hidden;
-  }
-  .news-list-section summary {
-    padding: 13px 18px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: .92rem;
-    color: var(--color-navy);
+_COMMON_CSS = """
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
     background: var(--color-bg);
-    list-style: none;
+    color: var(--color-text);
+    line-height: var(--leading-base);
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    background: var(--color-navy);
+    color: #fff;
+    padding: 0 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    user-select: none;
+    height: 58px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
   }
-  .news-list-section summary::-webkit-details-marker { display: none; }
-  .news-list-section summary::after {
-    content: "▼";
-    font-size: .72rem;
+  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
+  header .logo .accent { color: var(--color-blue-light); }
+  header nav a {
+    color: rgba(255,255,255,.8);
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: .9rem;
+    transition: color .15s;
+  }
+  header nav a:hover,
+  header nav a.active { color: #fff; font-weight: 600; }
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
+       font-weight: 700; line-height: 1.3; }
+  h2 { font-size: 1.2rem; color: var(--color-blue); margin: 2em 0 .6em;
+       padding-bottom: 6px; border-bottom: 2px solid var(--color-border);
+       font-weight: 600; }
+  h3 { font-size: 1rem; color: var(--color-navy); margin: 1.4em 0 .4em;
+       font-weight: 600; }
+  p  { margin-bottom: .9em; }
+  a  { color: var(--color-blue); text-underline-offset: 2px; }
+  ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
+  li { margin-bottom: .3em; }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 2em 0; }
+  code { background: var(--color-code-bg); padding: 2px 6px;
+         border-radius: 4px; font-size: .88em; }
+  blockquote {
+    border-left: 4px solid var(--color-blue);
+    padding: 8px 16px;
+    background: var(--color-blue-50);
+    border-radius: 0 8px 8px 0;
+    margin: 1em 0;
     color: var(--color-muted);
-    transition: transform .2s;
   }
-  .news-list-section details[open] summary::after { transform: rotate(180deg); }
-  .news-list-section details[open] summary {
-    border-bottom: 1px solid var(--color-border);
-  }
-  .news-list-section .news-items {
-    list-style: none;
-    padding: 6px 0;
-    margin: 0;
-  }
-  .news-list-section .news-items li {
-    padding: 6px 18px;
-    border-bottom: 1px solid var(--color-border);
-    font-size: .86rem;
-    line-height: 1.55;
-    margin: 0;
-  }
-  .news-list-section .news-items li:last-child { border-bottom: none; }
-  .news-label {
-    display: inline-block;
-    font-size: .73rem;
+  mark { background: #fef08a; border-radius: 2px; padding: 0 2px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .badge {
     background: var(--color-blue-50);
     color: var(--color-blue);
-    padding: 1px 6px;
-    border-radius: 4px;
-    margin-right: 6px;
+    border: 1px solid var(--color-blue-200);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .78rem;
     font-weight: 500;
-    white-space: nowrap;
+  }
+  .badge-green {
+    background: var(--color-green-50);
+    color: var(--color-green);
+    border: 1px solid var(--color-green-200);
+  }
+  .badge-orange {
+    background: var(--color-orange-50);
+    color: var(--color-orange);
+    border: 1px solid var(--color-orange-200);
+  }
+  .archive-list { list-style: none; padding: 0; }
+  .archive-list li { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
+  .archive-list li:last-child { border-bottom: none; }
+  .archive-list a { font-weight: 500; font-size: 1rem; text-decoration: none; }
+  .archive-list a:hover { text-decoration: underline; }
+  .archive-list .date { color: var(--color-muted); font-size: .85rem; margin-top: 2px; }
+  .hub-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .hub-section-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 24px;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: border-color .15s, box-shadow .15s;
+    display: block;
+  }
+  .hub-section-card:hover {
+    border-color: var(--color-blue);
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  }
+  .hub-section-card .section-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
+  .hub-section-card h3 { color: var(--color-navy); margin: 0 0 6px; }
+  .hub-section-card p { color: var(--color-muted); font-size: .9rem; margin: 0; }
+  footer {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .8rem;
+    padding: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+  @media (max-width: 600px) {
+    .card { padding: 20px; }
+    header .logo { font-size: 1rem; }
+    .hub-sections { grid-template-columns: 1fr; }
   }
 """
 
 
+# ── Jinja2 환경 ───────────────────────────────────────────────────────────────
+
+def _jinja_env():
+    from jinja2 import Environment, FileSystemLoader
+    return Environment(loader=FileSystemLoader(str(_TEMPLATES)), autoescape=False)
+
+
+def _font_link(tokens: dict) -> str:
+    cdn = tokens.get("meta", {}).get("font_cdn", "")
+    if not cdn:
+        return ""
+    return (f'<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+            f'  <link rel="stylesheet" href="{cdn}" crossorigin>')
+
+
+# ── 뉴스 파싱 헬퍼 ────────────────────────────────────────────────────────────
+
 def _split_at_news_list(md_html: str) -> str:
-    """md_html 에서 '## 📋 수집 기사 전체 목록' 이후 부분을 제거하고 반환."""
-    # markdown2 가 생성하는 h2 태그 패턴 (id 여부 무관)
     m = re.search(r'<h2[^>]*>.*?📋.*?수집 기사', md_html)
     if m:
         return md_html[:m.start()]
@@ -382,7 +317,7 @@ def _split_at_news_list(md_html: str) -> str:
 
 
 def _build_news_list_section(news_en: list[dict], news_ko: list[dict]) -> str:
-    """수집 기사 전체 목록 카드 — EN 기본 표시, KO 기본 접힘."""
+    """커스텀 테마(editorial/terminal)에서 직접 뉴스 목록 HTML이 필요할 때 사용."""
     if not news_en and not news_ko:
         return ""
 
@@ -415,478 +350,80 @@ def _build_news_list_section(news_en: list[dict], news_ko: list[dict]) -> str:
   </div>"""
 
 
-# ── 표준 렌더러 (classic / ink / forest 등 토큰 교체형 테마에서 공유) ─────────
+# ── 표준 렌더러 (classic/ink/forest 등 Jinja2 템플릿 사용) ────────────────────
 
 def render_report(ctx: dict, theme_name: str) -> str:
     tokens = get_tokens(theme_name)
-    s = ctx["data"]["stats"]
-    badges = f"""
-    <div class="meta">
-      <span class="badge">📅 {ctx['display_date']}</span>
-      <span class="badge badge-orange">🤖 AI분석 {s['sent_to_ai']}건</span>
-      <span class="badge badge-green">🇰🇷 KO {s['ko']}</span>
-      <span class="badge">🌐 EN {s['en']}</span>
-    </div>"""
-
-    # 분석 섹션만 (## 📋 수집 기사 전체 목록 이후 제거)
-    analysis_html = _split_at_news_list(ctx['md_html'])
-    news_section  = _build_news_list_section(
-        ctx['data'].get('news_en', []),
-        ctx['data'].get('news_ko', []),
+    data   = ctx["data"]
+    tmpl   = _jinja_env().get_template("web_news.html")
+    return tmpl.render(
+        css_root=css_root_vars(tokens),
+        font_link=_font_link(tokens),
+        display_date=ctx["display_date"],
+        date_str=ctx["date_str"],
+        site_title=ctx["site_title"],
+        now=ctx["now"],
+        nav=nav_html("news"),
+        stats=data["stats"],
+        analysis_html=_split_at_news_list(ctx["md_html"]),
+        news_en=data.get("news_en", []),
+        news_ko=data.get("news_ko", []),
+        footer=FOOTER_CONFIG,
+        site_url=ctx.get("site_url", ""),
     )
-
-    body = f"""
-  <div class="card">
-    <h1>📰 Daily News Brief</h1>
-    {badges}
-    {analysis_html}
-  </div>
-  {news_section}"""
-    return layout_html(ctx['display_date'], body, "news",
-                       ctx['site_title'], ctx['now'], tokens,
-                       extra_css=_NEWS_EXTRA_CSS)
 
 
 def render_archive(ctx: dict, theme_name: str) -> str:
     tokens = get_tokens(theme_name)
-    items = "".join(f"""
-    <li>
-      <a href="{it['date']}.html">📄 {it['display']} 리포트</a>
-      <div class="date">{it['date']}</div>
-    </li>""" for it in ctx['items'])
-    body = f"""
-  <div class="card">
-    <h1>📚 전체 리포트 목록</h1>
-    <p style="color:var(--color-muted);margin:.5em 0 1.5em">
-      총 {len(ctx['items'])}개 리포트
-    </p>
-    <ul class="archive-list">{items}</ul>
-  </div>"""
-    return layout_html("전체 목록", body, "archive",
-                       ctx['site_title'], ctx['now'], tokens)
-
-
-# ── 주식 시황 렌더러 ──────────────────────────────────────────────────────────
-
-_TEMP_BADGE_COLORS = {
-    "risk_off": ("orange", "badge-orange"),
-    "neutral":  ("blue",   "badge"),
-    "risk_on":  ("green",  "badge-green"),
-}
-
-_STOCK_EXTRA_CSS = """
-  /* ── 주식 시황 전용 CSS ── */
-  .change-pos { color: var(--color-green); font-weight: 600; }
-  .change-neg { color: var(--color-orange); font-weight: 600; }
-  .temp-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 16px; border-radius: 24px; font-weight: 700;
-    font-size: 1rem; margin-bottom: 16px;
-  }
-  .temp-risk-off { background: var(--color-orange-50); color: var(--color-orange);
-                   border: 1.5px solid var(--color-orange-200); }
-  .temp-neutral  { background: var(--color-blue-50);   color: var(--color-blue);
-                   border: 1.5px solid var(--color-blue-200); }
-  .temp-risk-on  { background: var(--color-green-50);  color: var(--color-green);
-                   border: 1.5px solid var(--color-green-200); }
-"""
+    tmpl   = _jinja_env().get_template("web_archive.html")
+    return tmpl.render(
+        css_root=css_root_vars(tokens),
+        font_link=_font_link(tokens),
+        display_date="전체 목록",
+        site_title=ctx["site_title"],
+        now=ctx["now"],
+        nav=nav_html("archive"),
+        items=ctx["items"],
+        footer=FOOTER_CONFIG,
+    )
 
 
 def render_stock_report(ctx: dict, theme_name: str) -> str:
-    """주식 시황 리포트 전용 렌더러."""
     tokens = get_tokens(theme_name)
     data   = ctx.get("data", {})
     temp   = data.get("temperature", {})
     level  = temp.get("level", "neutral")
-    temp_class = {"risk_off": "temp-risk-off", "neutral": "temp-neutral", "risk_on": "temp-risk-on"}.get(level, "temp-neutral")
-    temp_display = temp.get("display", "🟡 중립")
-
-    badges = f"""
-    <div class="meta">
-      <span class="badge">📅 {ctx['display_date']}</span>
-      <span class="temp-badge {temp_class}">{temp_display}</span>
-    </div>"""
-    body = f"""
-  <div class="card">
-    <h1>📊 주식 시황 브리핑</h1>
-    {badges}
-    {ctx['md_html']}
-  </div>"""
-    return layout_html(
-        ctx['display_date'], body, "stock",
-        ctx['site_title'], ctx['now'], tokens,
-        extra_css=_STOCK_EXTRA_CSS,
-        nav_prefix="../",
+    temp_class = {
+        "risk_off": "temp-risk-off",
+        "neutral":  "temp-neutral",
+        "risk_on":  "temp-risk-on",
+    }.get(level, "temp-neutral")
+    tmpl = _jinja_env().get_template("web_stock.html")
+    return tmpl.render(
+        css_root=css_root_vars(tokens),
+        font_link=_font_link(tokens),
+        display_date=ctx["display_date"],
+        date_str=ctx["date_str"],
+        site_title=ctx["site_title"],
+        now=ctx["now"],
+        nav=nav_html("stock", "../"),
+        md_html=ctx["md_html"],
+        temp_display=temp.get("display", "🟡 중립"),
+        temp_class=temp_class,
+        footer=FOOTER_CONFIG,
     )
 
 
 def render_stock_archive(ctx: dict, theme_name: str) -> str:
-    """주식 시황 아카이브 전용 렌더러."""
     tokens = get_tokens(theme_name)
-    items  = "".join(f"""
-    <li>
-      <a href="{it['date']}.html">📊 {it['display']} 시황</a>
-      <div class="date">{it['date']}</div>
-    </li>""" for it in ctx['items'])
-    body = f"""
-  <div class="card">
-    <h1>📚 주식 시황 전체 목록</h1>
-    <p style="color:var(--color-muted);margin:.5em 0 1.5em">
-      총 {len(ctx['items'])}개 리포트
-    </p>
-    <ul class="archive-list">{items}</ul>
-  </div>"""
-    return layout_html("주식 시황 목록", body, "stock",
-                       ctx['site_title'], ctx['now'], tokens,
-                       nav_prefix="../")
-
-
-def render_stock_email(ctx: dict, theme_name: str) -> str:
-    """주식 시황 이메일 전용 렌더러 (인라인 스타일)."""
-    tokens = get_tokens(theme_name)
-    c = tokens["colors"]
-    t = tokens["typography"]
-    body_html  = ctx.get("email_html", ctx.get("md_html", ""))
-    date_str   = ctx.get("display_date", "")
-    site_url   = ctx.get("site_url", "#")
-    unsub_url  = ctx.get("unsubscribe_url", "")
-    unsub_link = (
-        f'&nbsp;|&nbsp;<a href="{unsub_url}" style="color:{c["muted"]}">구독 취소</a>'
-        if unsub_url else ""
+    tmpl   = _jinja_env().get_template("web_stock_archive.html")
+    return tmpl.render(
+        css_root=css_root_vars(tokens),
+        font_link=_font_link(tokens),
+        display_date="주식 시황 전체 목록",
+        site_title=ctx["site_title"],
+        now=ctx["now"],
+        nav=nav_html("stock", "../"),
+        items=ctx["items"],
+        footer=FOOTER_CONFIG,
     )
-    data  = ctx.get("data", {})
-    temp  = data.get("temperature", {})
-    level = temp.get("level", "neutral")
-    temp_bg  = {"risk_off": c["orange_50"], "neutral": c["blue_50"],  "risk_on": c["green_50"]}.get(level, c["blue_50"])
-    temp_fg  = {"risk_off": c["orange"],    "neutral": c["blue"],     "risk_on": c["green"]}.get(level, c["blue"])
-    temp_bd  = {"risk_off": c["orange_200"],"neutral": c["blue_200"], "risk_on": c["green_200"]}.get(level, c["blue_200"])
-    temp_txt = temp.get("display", "🟡 중립")
-
-    return f"""<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="x-apple-disable-message-reformatting">
-  <style>
-    body {{ margin:0; padding:0; }}
-    a  {{ color:{c['blue']}; }}
-    h2 {{ color:{c['navy']}; }}
-    h3 {{ color:{c['navy']}; }}
-    ul {{ padding-left:1.4em; margin-bottom:.9em; }}
-    li {{ margin-bottom:.3em; }}
-    blockquote {{ border-left:4px solid {c['blue']};padding:8px 16px;
-                  background:{c['blue_50']};border-radius:0 8px 8px 0;
-                  margin:1em 0;color:{c['muted']}; }}
-    table {{ border-collapse:collapse; width:100%; margin:1em 0; }}
-    th, td {{ border:1px solid {c['border']}; padding:8px 12px;
-               text-align:left; font-size:.9rem; }}
-    th {{ background:{c['blue_50']}; color:{c['navy']}; font-weight:600; }}
-  </style>
-</head>
-<body style="margin:0;padding:0;background:{c['bg']};
-             font-family:{t['font_sans']};color:{c['text']};line-height:{t['leading']}">
-  <div style="max-width:650px;margin:0 auto;padding:20px 16px">
-
-    <!-- 헤더 -->
-    <div style="background:{c['navy']};padding:14px 24px;border-radius:12px 12px 0 0">
-      <span style="color:#fff;font-weight:700;font-size:1.05rem">
-        📊 주식 시황 <span style="color:{c['blue_light']}">브리핑</span>
-      </span>
-    </div>
-
-    <!-- 본문 카드 -->
-    <div style="background:{c['card']};border:1px solid {c['border']};
-                border-top:none;border-radius:0 0 12px 12px;padding:28px 32px">
-
-      <!-- 날짜 + 온도계 배지 -->
-      <div style="margin-bottom:20px">
-        <span style="background:{c['blue_50']};color:{c['blue']};
-                     border:1px solid {c['blue_200']};padding:3px 10px;
-                     border-radius:20px;font-size:.78rem;font-weight:500">
-          📅 {date_str}
-        </span>
-        <span style="background:{temp_bg};color:{temp_fg};
-                     border:1.5px solid {temp_bd};padding:4px 12px;
-                     border-radius:20px;font-size:.85rem;font-weight:700;margin-left:8px">
-          {temp_txt}
-        </span>
-      </div>
-
-      <!-- 분석 본문 -->
-      <div style="font-size:15px;line-height:{t['leading']}">
-        {body_html}
-      </div>
-
-      <!-- CTA -->
-      <div style="text-align:center;margin-top:32px;padding-top:24px;
-                  border-top:1px solid {c['border']}">
-        <a href="{site_url}/stock/"
-           style="display:inline-block;background:{c['blue']};color:#fff;
-                  text-decoration:none;padding:11px 28px;border-radius:8px;
-                  font-weight:600;font-size:.95rem">
-          웹에서 전체 시황 보기 →
-        </a>
-      </div>
-    </div>
-
-    <!-- 푸터 -->
-    <p style="text-align:center;color:{c['muted']};font-size:.75rem;margin:14px 0 0">
-      주식 시황 브리핑 — {date_str}{unsub_link}
-    </p>
-    <p style="text-align:center;color:{c['muted']};font-size:.7rem;margin:4px 0 0">
-      ※ 투자 권유 아님. AI 자동 분석 참고용.
-    </p>
-  </div>
-</body>
-</html>"""
-
-
-# ── 이메일 렌더러 ──────────────────────────────────────────────────────────────
-
-def _email_news_rows(items: list[dict], link_color: str, bg: str,
-                     muted: str, border: str, card: str) -> str:
-    """기사 목록 → 이메일용 행 HTML."""
-    rows = []
-    for i, item in enumerate(items):
-        sep = "" if i == len(items) - 1 else f"border-bottom:1px solid {border};"
-        rows.append(
-            f'<div style="padding:8px 18px;font-size:.79rem;line-height:1.55;'
-            f'color:#1e293b;background:{card};{sep}">'
-            f'<span style="display:inline-block;background:{bg};color:{muted};'
-            f'font-size:.67rem;padding:1px 6px;border-radius:3px;'
-            f'margin-right:6px;vertical-align:middle">{item["label"]}</span>'
-            f'<a href="{item["link"]}" style="color:{link_color};text-decoration:none">'
-            f'{item["title"]}</a></div>'
-        )
-    return "\n".join(rows)
-
-
-def render_email(ctx: dict, theme_name: str) -> str:
-    """
-    이메일 전용 HTML — 2단 레이아웃 (테마 토큰 기반, 인라인 스타일).
-    레이아웃:
-      ① 헤더 제목바  (풀 700px · navy)
-      ② 통계 바      (풀 700px · navy 연장)
-      ③ 2단 분석     (EN | KO · 좌우 14px 패딩으로 헤더와 시각적 너비 차별화)
-      ④ 기사 링크    (1단 · 동일 내측 패딩)
-      ⑤ 푸터         (풀 700px · navy)
-
-    ctx 키:
-      analysis_en / analysis_ko  — HTML 문자열 (파싱된 섹션)
-      news_en / news_ko          — [{label, title, link}, ...]
-      stats                      — {total, en, ko, sent_to_ai}
-      display_date / date_str    — "2026년 05월 19일" / "2026-05-19"
-      site_title / site_url / unsubscribe_url
-    """
-    tokens = get_tokens(theme_name)
-    c = tokens["colors"]
-    t = tokens["typography"]
-
-    # ctx 값 추출 (하위 호환: email_html / md_html 폴백)
-    analysis_en  = ctx.get("analysis_en") or ctx.get("email_html") or ctx.get("md_html", "")
-    analysis_ko  = ctx.get("analysis_ko", "")
-    news_en      = ctx.get("news_en", [])
-    news_ko      = ctx.get("news_ko", [])
-    stats        = ctx.get("stats", {"total": 0, "en": 0, "ko": 0, "sent_to_ai": 0})
-    display_date = ctx.get("display_date", "")
-    date_str     = ctx.get("date_str", "")
-    site_title   = ctx.get("site_title", "AI News Daily")
-    site_url     = ctx.get("site_url", "")
-    unsub_url    = ctx.get("unsubscribe_url", "")
-
-    # 구독 취소 링크
-    unsub_html = (
-        f'<a href="{unsub_url}" style="color:rgba(255,255,255,.35);'
-        f'font-size:.70rem;text-decoration:none">구독 취소</a>'
-        if unsub_url else ""
-    )
-    # 사이트 링크
-    site_link_html = (
-        f'<a href="{site_url}" style="color:rgba(255,255,255,.45);'
-        f'font-size:.72rem;text-decoration:none">사이트 보기 ↗</a>'
-        if site_url else ""
-    )
-
-    # 기사 목록 HTML
-    en_rows  = _email_news_rows(news_en, c["blue"],  c["bg"], c["muted"], c["border"], c["card"])
-    ko_rows  = _email_news_rows(news_ko, c["green"], c["bg"], c["muted"], c["border"], c["card"])
-
-    en_list_html = f"""
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="margin-bottom:12px;border-radius:10px;overflow:hidden;
-                  border:1px solid {c['border']};box-shadow:0 1px 4px rgba(0,0,0,.05)">
-      <tr><td>
-        <div style="background:{c['blue_50']};padding:10px 18px;
-                    border-bottom:1px solid {c['border']}">
-          <span style="font-weight:700;font-size:.83rem;color:{c['blue']}">
-            🌐 영어 뉴스 ({len(news_en)}건)
-          </span>
-        </div>
-        {en_rows}
-      </td></tr>
-    </table>""" if news_en else ""
-
-    ko_list_html = f"""
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="border-radius:10px;overflow:hidden;
-                  border:1px solid {c['border']};box-shadow:0 1px 4px rgba(0,0,0,.05)">
-      <tr><td>
-        <div style="background:{c['green_50']};padding:10px 18px;
-                    border-bottom:1px solid {c['border']}">
-          <span style="font-weight:700;font-size:.83rem;color:{c['green']}">
-            🇰🇷 한국어 뉴스 ({len(news_ko)}건)
-          </span>
-        </div>
-        {ko_rows}
-      </td></tr>
-    </table>""" if news_ko else ""
-
-    return f"""<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>{site_title} — {date_str}</title>
-</head>
-<body style="margin:0;padding:0;background:{c['bg']};
-             font-family:{t['font_sans']};-webkit-font-smoothing:antialiased">
-
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-       style="background:{c['bg']};min-width:320px">
-<tr><td align="center" style="padding:24px 12px">
-
-  <table width="700" cellpadding="0" cellspacing="0" border="0"
-         style="max-width:700px;width:100%;border-radius:12px;
-                box-shadow:0 4px 24px rgba(0,0,0,.10)">
-
-    <!-- ① 헤더 제목바 -->
-    <tr>
-      <td style="background:{c['navy']};border-radius:12px 12px 0 0;
-                 padding:22px 28px 14px">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-          <td>
-            <div style="color:#fff;font-size:1.2rem;font-weight:800;
-                        letter-spacing:-.4px;line-height:1.2">
-              📰 {site_title}
-            </div>
-            <div style="color:{c['blue_light']};font-size:.82rem;margin-top:5px">
-              {display_date} 뉴스 브리핑
-            </div>
-          </td>
-          <td align="right" style="vertical-align:top">
-            <div style="background:rgba(255,255,255,.12);border-radius:6px;
-                        padding:4px 10px;color:rgba(255,255,255,.7);
-                        font-size:.75rem;letter-spacing:.05em">{date_str}</div>
-            {"<div style='margin-top:6px;text-align:right'>" + site_link_html + "</div>" if site_link_html else ""}
-          </td>
-        </tr></table>
-      </td>
-    </tr>
-
-    <!-- ② 통계 바 -->
-    <tr>
-      <td style="background:{c['navy']};padding:0 28px 20px">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-          <td align="center" style="background:rgba(255,255,255,.10);
-              border-radius:8px;padding:10px 4px">
-            <div style="color:#fff;font-size:1.1rem;font-weight:700">{stats.get('total',0)}</div>
-            <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">총 기사</div>
-          </td>
-          <td width="10"></td>
-          <td align="center" style="background:rgba(255,255,255,.10);
-              border-radius:8px;padding:10px 4px">
-            <div style="color:{c['blue_light']};font-size:1.1rem;font-weight:700">{stats.get('en',0)}</div>
-            <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">영어</div>
-          </td>
-          <td width="10"></td>
-          <td align="center" style="background:rgba(255,255,255,.10);
-              border-radius:8px;padding:10px 4px">
-            <div style="color:{c['green']};font-size:1.1rem;font-weight:700">{stats.get('ko',0)}</div>
-            <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">한국어</div>
-          </td>
-          <td width="10"></td>
-          <td align="center" style="background:rgba(255,255,255,.10);
-              border-radius:8px;padding:10px 4px">
-            <div style="color:{c['orange']};font-size:1.1rem;font-weight:700">{stats.get('sent_to_ai',0)}</div>
-            <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">AI 분석</div>
-          </td>
-        </tr></table>
-      </td>
-    </tr>
-
-    <!-- ③ 2단 분석 (좌우 14px 패딩 → 헤더/푸터와 시각적 너비 차별화) -->
-    <tr>
-      <td style="background:{c['bg']};padding:20px 14px 12px">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr valign="top">
-
-            <td width="49%" style="background:{c['card']};
-                border:1px solid {c['border']};border-radius:10px;
-                vertical-align:top;box-shadow:0 1px 4px rgba(0,0,0,.05)">
-              <div style="background:{c['blue_50']};border-radius:9px 9px 0 0;
-                          padding:11px 18px;border-bottom:1px solid {c['border']}">
-                <span style="font-weight:700;font-size:.86rem;color:{c['blue']}">
-                  🌐 Global News
-                </span>
-              </div>
-              <div style="padding:16px 18px;font-size:.82rem;
-                          color:{c['text']};line-height:1.68">
-                {analysis_en or '<p style="color:#888">분석 없음</p>'}
-              </div>
-            </td>
-
-            <td width="2%" style="min-width:12px"></td>
-
-            <td width="49%" style="background:{c['card']};
-                border:1px solid {c['border']};border-radius:10px;
-                vertical-align:top;box-shadow:0 1px 4px rgba(0,0,0,.05)">
-              <div style="background:{c['green_50']};border-radius:9px 9px 0 0;
-                          padding:11px 18px;border-bottom:1px solid {c['border']}">
-                <span style="font-weight:700;font-size:.86rem;color:{c['green']}">
-                  🇰🇷 국내 뉴스 분석
-                </span>
-              </div>
-              <div style="padding:16px 18px;font-size:.82rem;
-                          color:{c['text']};line-height:1.68">
-                {analysis_ko or '<p style="color:#888">분석 없음</p>'}
-              </div>
-            </td>
-
-          </tr>
-        </table>
-      </td>
-    </tr>
-
-    <!-- ④ 기사 링크 (1단 · 동일 내측 패딩) -->
-    <tr>
-      <td style="background:{c['bg']};padding:0 14px 20px">
-        {en_list_html}
-        {ko_list_html}
-      </td>
-    </tr>
-
-    <!-- ⑤ 푸터 -->
-    <tr>
-      <td style="background:{c['navy']};border-radius:0 0 12px 12px;
-                 padding:16px 28px">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-          <td style="color:rgba(255,255,255,.45);font-size:.73rem;line-height:1.6">
-            {site_title} · AI 자동 생성 뉴스 브리핑<br>
-            <span style="font-size:.68rem">Powered by GitHub Actions · RSS Feeds</span>
-          </td>
-          <td align="right" style="white-space:nowrap;vertical-align:middle">
-            {unsub_html}
-          </td>
-        </tr></table>
-      </td>
-    </tr>
-
-  </table>
-
-</td></tr>
-</table>
-
-</body>
-</html>"""

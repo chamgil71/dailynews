@@ -26,10 +26,13 @@ from datetime import datetime
 from pathlib import Path
 
 import markdown2
+from dotenv import load_dotenv
 
 _ROOT = str(Path(__file__).parent.parent)
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
+
+load_dotenv()
 
 from config.settings import SITE_BASE_URL
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL

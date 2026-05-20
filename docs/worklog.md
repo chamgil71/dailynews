@@ -6,6 +6,118 @@
 
 ---
 
+## 2026-05-20 — 템플릿 통합 리팩토링 + 테마 전환 적용
+
+### 테마 시스템 동작 확인 및 editorial 적용
+
+#### 1. 테마 전환 방식 정리
+
+| 방식 | 코드 |
+|------|------|
+| 전체 사이트 | `.env` → `SITE_THEME=테마명` |
+| 섹션별 독립 | `.env` → `THEME_NEWS=`, `THEME_STOCK=`, `THEME_EMAIL=` |
+| CI (GitHub Actions) | `news.yml` 빌드 step `env:` 블록에 직접 명시 |
+
+- 표준 테마(`classic/ink/forest`): 같은 HTML 구조, TOKENS 색상·폰트만 교체
+- 커스텀 테마(`editorial/terminal/minimal`): 자체 `render_report()` — 레이아웃 자체가 다름
+
+#### 2. 뉴스 웹 테마 → editorial 변경
+
+- `.env` `THEME_NEWS=editorial` 추가
+- `.github/workflows/news.yml` 빌드 step에 `THEME_NEWS: editorial` 추가
+- editorial 특징: `Noto Serif KR` + `IBM Plex Mono`, 72px 이탤릭 마스트헤드("The Daily Brief"), 크림 배경(`#f4ede0`), 붉은 accent(`#8b2a1f`)
+
+#### 3. 버그 수정 — `build_site.py` load_dotenv 누락
+
+- `build_site.py`만 `load_dotenv()` 없어서 직접 실행 시 `.env`를 읽지 못함
+- `THEME_NEWS` 미인식 → 항상 `classic`으로 폴백되던 문제
+- 다른 스크립트(`run_news.py`, `build_stock_site.py` 등)는 모두 있었으나 `build_site.py`만 누락
+- `import markdown2` 직후 `from dotenv import load_dotenv` + `load_dotenv()` 추가
+
+#### 4. `.env.example` 테마 섹션 추가
+
+```
+# ── 테마 설정 (기본값: classic) ───────────────────────────────────────────────
+# SITE_THEME=classic
+# THEME_NEWS=editorial
+# THEME_STOCK=classic
+# THEME_EMAIL=classic
+```
+
+#### Windows PowerShell 환경변수 인라인 설정 방법
+
+```powershell
+# Linux/bash 방식 (Windows 불가)
+THEME_NEWS=editorial python scripts/build_site.py
+
+# PowerShell 올바른 방식
+$env:THEME_NEWS="editorial"; python scripts/build_site.py --all
+
+# .env에 설정되어 있으면 그냥 실행
+python scripts/build_site.py --all
+```
+
+---
+
+## 2026-05-20 — 템플릿 통합 리팩토링
+
+### 배경
+
+- 이메일 템플릿이 `storage/`(데이터 보관 폴더)에 위치 → 잘못된 위치
+- 이메일은 Jinja2 외부 파일, 웹페이지는 Python f-string으로 방식이 달라 유지보수 혼란
+- `themes/base.py`와 모든 `themes/*.py`에 `render_email()`, `render_stock_email()` 함수가 존재하지만 실제로는 절대 호출되지 않는 dead code (mailer.py는 Jinja2 파일을 직접 사용)
+
+### 변경 내용
+
+#### 1. `templates/` 폴더 신설 — 모든 HTML 템플릿 집중
+
+```
+templates/
+  email_news.html         ← 뉴스 이메일 (storage/email_template.html 이동)
+  email_stock.html        ← 주식 이메일 (storage/stock_email_template.html 이동)
+  web_news.html           ← 뉴스 웹페이지 (themes/base.py f-string → Jinja2 추출)
+  web_stock.html          ← 주식 웹페이지 (신규)
+  web_archive.html        ← 뉴스 아카이브 (신규)
+  web_stock_archive.html  ← 주식 아카이브 (신규)
+```
+
+#### 2. `themes/base.py` — Jinja2 렌더러로 전환
+
+- `render_report()`, `render_archive()`, `render_stock_report()`, `render_stock_archive()` → Jinja2 템플릿 로드 방식으로 재작성
+- `render_email()`, `render_stock_email()` (dead code) 삭제
+- `layout_html()`, `hub_sections_html()`, `subscribe_card_html()` 유지 (커스텀 테마 호환)
+
+#### 3. `themes/*.py` — dead code 정리
+
+- classic, ink, forest, minimal, editorial, terminal 6개 파일에서 `render_email`, `render_stock_email` 함수 및 import 제거
+
+#### 4. `core/shared/mailer.py` — 경로 업데이트
+
+```python
+# 변경 전
+_TEMPLATE_FILE = .../ "storage" / "email_template.html"
+# 변경 후
+_TEMPLATE_FILE = .../ "templates" / "email_news.html"
+```
+
+#### 5. 버그 수정 (`scripts/run_stock.py`)
+
+주식 이메일 발송 시 `template="stock"` 파라미터 누락 → 뉴스 템플릿이 잘못 적용되던 버그 수정
+
+### 수정 파일 기준 (무엇을 고치면 무엇이 바뀌나)
+
+| 수정 목적 | 파일 |
+|----------|------|
+| 뉴스 이메일 HTML 레이아웃 | `templates/email_news.html` |
+| 주식 이메일 HTML 레이아웃 | `templates/email_stock.html` |
+| 뉴스 웹페이지 레이아웃 | `templates/web_news.html` |
+| 주식 웹페이지 레이아웃 | `templates/web_stock.html` |
+| 색상·폰트 (표준 테마) | `themes/{classic\|ink\|forest}.py` → `TOKENS` |
+| 커스텀 테마 레이아웃 | `themes/{editorial\|terminal\|minimal}.py` |
+| 어떤 테마 쓸지 | `config/theme_config.py` → `SECTION_THEMES` |
+
+---
+
 ## 2026-05-19 — 폴더 구조 재편 + 테마 시스템 아키텍처 정립
 
 ### 배경 (docs/test.md 요구사항 요약)
