@@ -106,6 +106,15 @@ def build_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
     email_md   = "\n\n".join(email_parts).strip() or raw
     email_html = markdown2.markdown(email_md, extras=["tables", "fenced-code-blocks"])
 
+    # JSON sidecar 로드 (editorial/terminal 테마 rich UI용)
+    structured: dict = {}
+    json_sidecar = Path(md_path).with_suffix(".json")
+    if json_sidecar.exists():
+        try:
+            structured = json.loads(json_sidecar.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
     try:
         display_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y년 %m월 %d일")
     except ValueError:
@@ -123,6 +132,7 @@ def build_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
         "site_url":        SITE_BASE_URL or "https://chamgil71.github.io/dailynews/",
         "subscribe_url":   SUBSCRIBE_URL,
         "unsubscribe_url": "",
+        "structured":      structured,
     }
 
 

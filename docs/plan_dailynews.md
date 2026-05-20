@@ -1,7 +1,7 @@
 # 데일리 뉴스 브리핑 — 구현계획서
 
-> 작성일: 2026-05-18  
-> 상태: **Phase 1 완료**  
+> 작성일: 2026-05-18 / 최종 갱신: 2026-05-20  
+> 상태: **Phase 1 완료 + UI 개선 + JSON 구조화 파이프라인 완료**  
 > 목적: 현재 구현 상태 기록 및 Phase 2 계획 정의
 
 ---
@@ -55,10 +55,11 @@ core/report.py       ← Jinja2 렌더링 → reports/news_YYYY-MM-DD.md
 
 | 항목 | 구현 내용 |
 |------|----------|
-| 프롬프트 구조 | `### 핵심 이슈 TOP 3` + `### 주목할 트렌드 키워드` (h3 고정) |
-| URL 포함 | title_block에 기사 URL 포함 → AI가 `🔗 출처: [제목](URL)` 작성 |
-| max_tokens | 1500 (키워드 섹션 잘림 방지) |
-| 폴백 | API 실패 시 원문 제목 15건 삽입 |
+| 프롬프트 구조 | `### N. [이슈 제목]` h3 헤더 + 빈줄 분리 → 제목·설명 시각적 구분 |
+| JSON 모드 | `PROMPT_TEMPLATE_JSON` — 항상 활성화; issues/trends/category_stats 구조 출력 |
+| URL 포함 | title_block에 기사 URL 포함 → AI가 `🔗 주요 출처: [제목](URL)` 작성 |
+| JSON 사이드카 | 분석 완료 시 `reports/news_YYYY-MM-DD.json` 자동 저장 |
+| 폴백 | API 실패 시 원문 제목 15건 삽입; JSON 파싱 실패 시 텍스트 fallback |
 
 ### 2-4. 사이트
 
@@ -67,7 +68,10 @@ core/report.py       ← Jinja2 렌더링 → reports/news_YYYY-MM-DD.md
 | 출력 경로 | `publish/` (GitHub Pages 서빙) |
 | 파일 | index.html, archive.html, app.html, YYYY-MM-DD.html |
 | 데이터 파일 | reports.json, reports-data.json (이슈/키워드 구조화) |
-| 테마 | classic / minimal / ink / forest (환경변수 교체) |
+| 테마 | classic / minimal / ink / forest / **editorial** / **terminal** |
+| 분석 레이아웃 | 해외/국내 2-column CSS Grid; 키워드 섹션 분리 카드 |
+| JSON rich UI | editorial: Top Stories 카드 + 카테고리 바 / terminal: Bloomberg 2-column |
+| Vercel 배포 | vercel.json 라우팅 완비 (`/`, `/stock`, `/(날짜)` 등) |
 
 ### 2-5. 이메일
 
@@ -75,7 +79,9 @@ core/report.py       ← Jinja2 렌더링 → reports/news_YYYY-MM-DD.md
 |------|----------|
 | 발송 방식 | Gmail SMTP |
 | 수신자 | RECIPIENT_EMAILS (쉼표 구분, 개별 발송) |
-| 템플릿 | themes/base.py::render_email() (테마 연동) |
+| 템플릿 | `templates/email_news.html` (Jinja2) |
+| 레이아웃 | 해외/국내 2단 컬럼, 키워드 섹션, 통계 바, 웹 버전 바로가기 |
+| 구독취소 | 제거됨 |
 | subject_override | 주식시황 등 다른 제목 사용 가능 |
 
 ---

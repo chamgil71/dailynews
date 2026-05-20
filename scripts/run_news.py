@@ -60,7 +60,7 @@ def main() -> None:
     from core.news.report import generate, save_report
     logger.info("[3/5] 리포트 생성 중...")
     md_content = generate(news_data, analysis)
-    filepath = save_report(md_content)
+    filepath = save_report(md_content, structured=analysis.get("structured"))
     logger.info(f"     → 저장: {filepath}")
 
     from core.shared.db import append_news

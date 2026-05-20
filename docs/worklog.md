@@ -6,7 +6,82 @@
 
 ---
 
-## 2026-05-20 — 템플릿 통합 리팩토링 + 테마 전환 적용
+## 2026-05-20 (3) — HTML/이메일 레이아웃 개선 + JSON 구조화 파이프라인
+
+### 1. 핵심이슈 제목·설명 분리 (`config/prompts.py`)
+
+**문제:** `1. **이슈 제목** — 설명`이 한 줄로 출력되어 가독성 저하
+
+**조치:** `### N.` 헤더 + 빈줄 분리 형식으로 변경
+```
+### 1. [이슈 핵심 제목]
+
+2~3문장 요약. 중요도와 배경 포함.
+
+🔗 주요 출처: [기사제목](링크URL)
+```
+키워드 트렌드도 tight list → loose list (항목 사이 빈줄) 변경 → HTML `<p>` 태그 분리 보장
+
+### 2. 이메일/웹 레이아웃 개선
+
+**`templates/email_news.html`**
+- `<style>` 블록 추가 → `.en-col h3`, `.ko-col h3` 각각 파란/초록 좌측 보더
+- 해외/국내 핵심이슈 2단 컬럼 레이아웃
+- 키워드 매칭 기사 섹션 추가 (`{% if keyword_html %}`)
+- 통계 바에 "🔗 바로가기 / 웹 버전" 셀 추가
+- 구독취소 링크 블록 완전 제거
+
+**`templates/web_news.html`**
+- 해외/국내 분석 2-column CSS Grid (`.analysis-grid`, `grid-template-columns:1fr 1fr`)
+- `.analysis-en` 파란 상단 보더, `.analysis-ko` 초록 상단 보더
+- 키워드 카드 분리 렌더링
+- `@media (max-width:700px)` 단일 컬럼 반응형
+
+**`themes/base.py`**
+- `_split_analysis_sections(md_html)` 신규: md_html을 🌐/🇰🇷/🔍 h2 기준 3분할
+- `render_report()`에 `analysis_en_html`, `analysis_ko_html`, `keyword_section_html` 추가 전달
+
+**`core/shared/mailer.py`**
+- KO 분석 regex 종료 조건에 `## 🔍` 추가 (키워드 섹션 누락 방지)
+- 키워드 섹션 별도 파싱 → `keyword_html` 변수로 템플릿 전달
+
+### 3. Vercel 404 수정
+
+**원인:** `.gitignore publish/*` 패턴으로 `app.html`, `index.html`, `stock/` 미추적
+
+**조치:**
+- `.gitignore` 패턴 변경: 날짜 파일만 제외 (`publish/20??-??-??.html`, `publish/stock/20??-??-??.html`)
+- `vercel.json` 라우팅 추가: `/stock`, `/stock/archive`, `/(YYYY-MM-DD)` 패턴
+- `.github/workflows/news.yml` 커밋 step에 `-f` 강제 추가
+
+### 4. JSON 구조화 출력 파이프라인
+
+**목표:** Editorial/Terminal 테마의 카테고리 바, Top Stories 카드, 컬럼 분리 UI 실현
+
+| 컴포넌트 | 변경 내용 |
+|----------|----------|
+| `config/prompts.py` | `PROMPT_TEMPLATE_JSON` 추가 (lang/issues/trends/category_stats 구조) |
+| `core/news/analyzer.py` | `_parse_json_response()`, `_use_json_mode()`, `_structured_to_markdown()` 추가; GPT/Claude/Gemini 모두 JSON 모드 지원 |
+| `core/news/report.py` | `save_report(structured=)` — `.json` 사이드카 자동 저장 |
+| `scripts/run_news.py` | `save_report(structured=analysis.get("structured"))` 전달 |
+| `scripts/build_site.py` | `build_report_ctx()` — JSON 사이드카 로드 → `ctx["structured"]` |
+| `themes/editorial.py` | `_category_bar_html()`, `_top_stories_html()` 추가; JSON 있을 때 rich UI (2-column 카드) |
+| `themes/terminal.py` | `_cat_bar()`, `_issue_card()`, `_trend_row()`, `_json_body()` 추가; Bloomberg 스타일 2-column |
+
+**JSON 파이프라인 흐름:**
+```
+AI 분석 (PROMPT_TEMPLATE_JSON)
+  → JSON 파싱 → reports/news_YYYY-MM-DD.json 사이드카 저장
+  → build_site.py 로드 → ctx["structured"]
+  → editorial.py / terminal.py rich UI 렌더링
+  (사이드카 없으면 자동 텍스트 fallback)
+```
+
+**`_use_json_mode()` → 항상 `True`:** 테마 무관하게 항상 JSON 사이드카 생성; 테마를 나중에 바꿔도 데이터 재활용 가능
+
+---
+
+## 2026-05-20 (2) — 템플릿 통합 리팩토링 + 테마 전환 적용
 
 ### 테마 시스템 동작 확인 및 editorial 적용
 
@@ -284,7 +359,8 @@ themes/{name}.py 파일 하나만 생성하면 됨:
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| Phase 2: 카드뉴스 | 미시행 | `_parse_issues`, `_parse_keywords` 데이터 준비 완료 |
+| JSON rich UI 실 테스트 | 미완 | editorial/terminal 테마로 파이프라인 1회 실행 확인 필요 |
+| Phase 2: 카드뉴스 | 미시행 | JSON 사이드카 데이터 활용 가능 (구조화 완비) |
 | 주식 Notion 연동 테스트 | 미완 | 루틴 실행 후 확인 필요 |
 | GitHub Secrets 등록 | 미완 | NAVER_CLIENT_ID/SECRET (네이버 API 미보유 시 선택) |
 | stock_build.yml 실 테스트 | 미완 | stock MD push 후 Actions 트리거 확인 필요 |

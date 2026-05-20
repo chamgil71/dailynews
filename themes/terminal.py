@@ -204,14 +204,121 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, date_
 </html>"""
 
 
+def _cat_bar(cat_stats: dict) -> str:
+    if not cat_stats:
+        return ""
+    total = sum(cat_stats.values()) or 1
+    label_map = {
+        "ai_ml": "AI/ML", "technology": "TECH", "economy": "ECON",
+        "global_news": "GLOBAL", "korean_news": "KR-NEWS", "korean_economy": "KR-ECON",
+        "korean_tech": "KR-TECH", "security": "SEC", "startup": "STARTUP",
+    }
+    rows = ""
+    for cat, count in sorted(cat_stats.items(), key=lambda x: -x[1]):
+        if count == 0:
+            continue
+        pct = round(count / total * 100)
+        filled = "█" * (pct // 5)
+        empty  = "░" * (20 - pct // 5)
+        rows += (
+            f'<div style="display:flex;gap:8px;align-items:center;margin-bottom:3px">'
+            f'<span style="width:72px;color:var(--ink-mute);font-size:10px;letter-spacing:.04em">'
+            f'{label_map.get(cat, cat)}</span>'
+            f'<span style="color:var(--amber);font-size:10px">{filled}{empty}</span>'
+            f'<span style="color:var(--ink-mute);font-size:10px;margin-left:4px">{count}</span>'
+            f'</div>'
+        )
+    return rows
+
+
+def _issue_card(issue: dict, accent: str) -> str:
+    imp_label = {"high": "HIGH", "medium": "MED ", "low": "LOW "}
+    imp = imp_label.get(issue.get("importance", "medium"), "MED ")
+    sources_html = ""
+    for src in issue.get("sources", [])[:1]:
+        title_trunc = src["title"][:60] + ("…" if len(src["title"]) > 60 else "")
+        sources_html = (
+            f'<div style="margin-top:8px;font-size:10px;color:var(--ink-mute)">'
+            f'↗ <a href="{src["url"]}" style="color:{accent};text-decoration:none">'
+            f'{title_trunc}</a></div>'
+        )
+    return (
+        f'<div style="background:var(--panel-2);border:1px solid var(--line);'
+        f'padding:12px 14px;margin-bottom:8px">'
+        f'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+        f'<span style="font-size:10px;color:{accent};letter-spacing:.12em">[{imp}] #{issue["rank"]}</span>'
+        f'<span style="font-size:10px;color:var(--ink-mute)">{issue.get("category","")}</span></div>'
+        f'<div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;line-height:1.4">'
+        f'{issue["title"]}</div>'
+        f'<div style="font-size:11px;color:var(--ink-soft);line-height:1.6">{issue["summary"]}</div>'
+        f'{sources_html}</div>'
+    )
+
+
+def _trend_row(t: dict, accent: str) -> str:
+    return (
+        f'<div style="padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:11px">'
+        f'<span style="color:{accent};font-weight:600">[{t["keyword"]}]</span> '
+        f'<span style="color:var(--ink-soft)">{t.get("description","")}</span></div>'
+    )
+
+
+def _json_body(en_data: dict, ko_data: dict) -> str:
+    en_cards = "".join(_issue_card(i, "var(--amber)") for i in en_data.get("issues", [])[:3])
+    ko_cards = "".join(_issue_card(i, "var(--green)") for i in ko_data.get("issues", [])[:3])
+
+    en_trends = "".join(_trend_row(t, "var(--amber)") for t in en_data.get("trends", [])[:3])
+    ko_trends = "".join(_trend_row(t, "var(--green)") for t in ko_data.get("trends", [])[:3])
+
+    cat_stats: dict = {}
+    for d in (en_data, ko_data):
+        for k, v in d.get("category_stats", {}).items():
+            cat_stats[k] = cat_stats.get(k, 0) + v
+    cat_html = _cat_bar(cat_stats)
+
+    no_data = '<div style="color:var(--ink-mute);font-size:11px;padding:12px">데이터 없음</div>'
+    hdr_en = '<div style="font-size:11px;color:var(--amber);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;padding:6px 10px;background:var(--panel-2);border-left:2px solid var(--amber)">▸ GLOBAL TOP STORIES</div>'
+    hdr_ko = '<div style="font-size:11px;color:var(--green);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;padding:6px 10px;background:var(--panel-2);border-left:2px solid var(--green)">▸ KR TOP STORIES</div>'
+
+    return f"""
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>{hdr_en}{en_cards or no_data}</div>
+      <div>{hdr_ko}{ko_cards or no_data}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 220px;gap:12px">
+      <div>
+        <div style="font-size:11px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">GLOBAL TRENDS</div>
+        {en_trends or '<div style="color:var(--ink-mute);font-size:11px">—</div>'}
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">KR TRENDS</div>
+        {ko_trends or '<div style="color:var(--ink-mute);font-size:11px">—</div>'}
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--ink-mute);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">CATEGORY DIST</div>
+        {cat_html or '<div style="color:var(--ink-mute);font-size:11px">—</div>'}
+      </div>
+    </div>"""
+
+
 def render_report(ctx: dict) -> str:
     s = ctx["data"]["stats"]
+    structured = ctx.get("structured", {})
 
     from themes.base import _split_at_news_list, _build_news_list_section
     analysis_html = _split_at_news_list(ctx["md_html"])
     news_section  = _build_news_list_section(
         ctx["data"].get("news_en", []),
         ctx["data"].get("news_ko", []),
+    )
+
+    en_data  = structured.get("en", {})
+    ko_data  = structured.get("ko", {})
+    has_json = bool(en_data or ko_data)
+
+    analysis_body = (
+        _json_body(en_data, ko_data) if has_json
+        else f'<div class="prose">{analysis_html}</div>'
     )
 
     body = f"""
@@ -229,7 +336,7 @@ def render_report(ctx: dict) -> str:
       <div><div class="l">KOREAN</div><div class="n">{s['ko']}</div></div>
       <div><div class="l">ENGLISH</div><div class="n amber">{s['en']}</div></div>
     </div>
-    <div class="prose">{analysis_html}</div>
+    {analysis_body}
     {news_section}"""
     return _layout(ctx["display_date"], body, "news", ctx["site_title"], ctx["now"], ctx["date_str"])
 

@@ -30,14 +30,93 @@ PROMPT_TEMPLATE_KO: str = """\
 {hints}
 **반드시 한국어로 답변하세요.**
 
-출력 형식 (반드시 준수):
+출력 형식 (반드시 준수 — 빈 줄 포함):
+
 ## 핵심 이슈 TOP 3
-1. **이슈 제목** — 2~3문장 요약, 중요도·배경 포함
-2. ...
-3. ...
+
+### 1. [이슈 핵심 제목]
+
+2~3문장 요약. 중요도와 배경 포함.
+
+🔗 주요 출처: [기사제목](링크URL)
+
+### 2. [이슈 제목]
+
+설명.
+
+🔗 주요 출처: [기사제목](링크URL)
+
+### 3. [이슈 제목]
+
+설명.
+
+🔗 주요 출처: [기사제목](링크URL)
 
 ## 주목할 트렌드
-- 공통 키워드·패턴 2~3개를 짧게 서술
+
+1. **[키워드]**
+
+   1~2문장 설명
+
+2. **[키워드]**
+
+   1~2문장 설명
+
+3. **[키워드]**
+
+   1~2문장 설명
+
+뉴스 목록:
+{title_block}
+"""
+
+# ── JSON 구조화 출력 프롬프트 (Editorial/Terminal 테마용) ─────────────────────
+# 사용 조건: THEME_NEWS=editorial 또는 terminal 일 때 analyzer가 선택
+# 반환값: ```json ... ``` 블록 안의 JSON을 파싱해서 data["structured"] 에 저장
+
+PROMPT_TEMPLATE_JSON: str = """\
+당신은 뉴스 분석 AI입니다. 아래 뉴스 목록을 분석하고 **JSON만** 출력하세요.
+{hints}
+**반드시 한국어 텍스트로 작성하고, JSON 외 다른 설명은 출력하지 마세요.**
+
+출력 형식 (```json 블록으로 감싸세요):
+```json
+{{
+  "lang": "{lang}",
+  "issues": [
+    {{
+      "rank": 1,
+      "title": "이슈 핵심 제목",
+      "summary": "2~3문장 요약. 중요도와 배경 포함.",
+      "category": "ai_ml",
+      "importance": "high",
+      "sources": [
+        {{"title": "기사 제목", "url": "https://..."}}
+      ]
+    }},
+    {{"rank": 2, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []}},
+    {{"rank": 3, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []}}
+  ],
+  "trends": [
+    {{"keyword": "키워드1", "description": "1~2문장 설명", "category": "ai_ml"}},
+    {{"keyword": "키워드2", "description": "설명", "category": "technology"}},
+    {{"keyword": "키워드3", "description": "설명", "category": "economy"}}
+  ],
+  "category_stats": {{
+    "ai_ml": 0,
+    "technology": 0,
+    "economy": 0,
+    "global_news": 0,
+    "korean_news": 0,
+    "security": 0,
+    "startup": 0
+  }}
+}}
+```
+
+category 값은 다음 중 하나: ai_ml, technology, economy, global_news, korean_news, korean_economy, korean_tech, security, startup
+importance 값: high, medium, low
+category_stats: 뉴스 목록에서 각 카테고리 기사 수를 카운트
 
 뉴스 목록:
 {title_block}
@@ -50,14 +129,41 @@ PROMPT_TEMPLATE_EN: str = """\
 {hints}
 **반드시 한국어로 답변하세요.**
 
-출력 형식 (반드시 준수):
+출력 형식 (반드시 준수 — 빈 줄 포함):
+
 ## 핵심 이슈 TOP 3
-1. **이슈 제목** — 2~3문장 요약, 중요도·배경 포함
-2. ...
-3. ...
+
+### 1. [이슈 핵심 제목]
+
+2~3문장 요약. 중요도와 배경 포함.
+
+🔗 주요 출처: [기사제목](링크URL)
+
+### 2. [이슈 제목]
+
+설명.
+
+🔗 주요 출처: [기사제목](링크URL)
+
+### 3. [이슈 제목]
+
+설명.
+
+🔗 주요 출처: [기사제목](링크URL)
 
 ## 주목할 트렌드
-- 공통 키워드·패턴 2~3개를 짧게 서술
+
+1. **[키워드]**
+
+   1~2문장 설명
+
+2. **[키워드]**
+
+   1~2문장 설명
+
+3. **[키워드]**
+
+   1~2문장 설명
 
 뉴스 목록:
 {title_block}

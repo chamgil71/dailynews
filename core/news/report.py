@@ -6,6 +6,7 @@ Markdown 리포트 생성 모듈
 - 언어별 섹션 분리 출력
 """
 
+import json
 import logging
 import os
 import re
@@ -50,8 +51,8 @@ def generate(news_data: dict, analysis: dict) -> str:
     )
 
 
-def save_report(md_content: str) -> str:
-    """리포트를 날짜별 파일로 저장. 저장 경로 반환."""
+def save_report(md_content: str, structured: dict | None = None) -> str:
+    """리포트를 날짜별 파일로 저장. structured 데이터가 있으면 JSON 사이드카도 저장."""
     os.makedirs(REPORTS_DIR, exist_ok=True)
     date_tag  = datetime.now().strftime("%Y-%m-%d")
     filename  = REPORT_FILENAME.format(date=date_tag)
@@ -59,6 +60,12 @@ def save_report(md_content: str) -> str:
 
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(md_content)
-
     logger.info(f"[리포트 저장] {filepath}")
+
+    if structured:
+        json_path = filepath.replace(".md", ".json")
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(structured, f, ensure_ascii=False, indent=2)
+        logger.info(f"[구조화 데이터 저장] {json_path}")
+
     return filepath

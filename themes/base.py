@@ -316,6 +316,29 @@ def _split_at_news_list(md_html: str) -> str:
     return md_html
 
 
+def _split_analysis_sections(md_html: str) -> tuple[str, str, str]:
+    """md_html을 해외/국내/키워드 세 섹션으로 분리.
+    Returns: (analysis_en_html, analysis_ko_html, keyword_html)
+    """
+    analysis = _split_at_news_list(md_html)
+
+    en_m  = re.search(r'(<h2[^>]*>.*?🌐.*?</h2>)', analysis)
+    ko_m  = re.search(r'(<h2[^>]*>.*?🇰🇷.*?</h2>)', analysis)
+    kw_m  = re.search(r'(<h2[^>]*>.*?🔍.*?</h2>)', analysis)
+
+    def _slice(start_m, end_m) -> str:
+        if not start_m:
+            return ""
+        s = start_m.start()
+        e = end_m.start() if end_m else len(analysis)
+        return analysis[s:e]
+
+    en_html  = _slice(en_m,  ko_m  or kw_m)
+    ko_html  = _slice(ko_m,  kw_m)
+    kw_html  = _slice(kw_m,  None)
+    return en_html, ko_html, kw_html
+
+
 def _build_news_list_section(news_en: list[dict], news_ko: list[dict]) -> str:
     """커스텀 테마(editorial/terminal)에서 직접 뉴스 목록 HTML이 필요할 때 사용."""
     if not news_en and not news_ko:
@@ -356,6 +379,7 @@ def render_report(ctx: dict, theme_name: str) -> str:
     tokens = get_tokens(theme_name)
     data   = ctx["data"]
     tmpl   = _jinja_env().get_template("web_news.html")
+    en_html, ko_html, kw_html = _split_analysis_sections(ctx["md_html"])
     return tmpl.render(
         css_root=css_root_vars(tokens),
         font_link=_font_link(tokens),
@@ -366,6 +390,9 @@ def render_report(ctx: dict, theme_name: str) -> str:
         nav=nav_html("news"),
         stats=data["stats"],
         analysis_html=_split_at_news_list(ctx["md_html"]),
+        analysis_en_html=en_html,
+        analysis_ko_html=ko_html,
+        keyword_section_html=kw_html,
         news_en=data.get("news_en", []),
         news_ko=data.get("news_ko", []),
         footer=FOOTER_CONFIG,

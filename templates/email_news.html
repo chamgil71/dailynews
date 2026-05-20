@@ -5,6 +5,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>{{ site_title }} — {{ date }}</title>
+<style type="text/css">
+  /* 분석 컬럼 내부 요소 스타일 (Gmail/Outlook 지원) */
+  .en-col h2, .ko-col h2 {
+    font-size:.88rem; font-weight:700; margin:14px 0 6px 0;
+    color:{{ c.navy }}; border-bottom:1px solid {{ c.border }};
+    padding-bottom:4px;
+  }
+  .en-col h3, .ko-col h3 {
+    font-size:.84rem; font-weight:700; margin:12px 0 4px 0;
+    padding:3px 0 3px 8px; line-height:1.4;
+  }
+  .en-col h3 { color:{{ c.blue }}; border-left:3px solid {{ c.blue }}; }
+  .ko-col h3 { color:{{ c.green }}; border-left:3px solid {{ c.green }}; }
+  .en-col p, .ko-col p { margin:4px 0 8px 0; line-height:1.65; }
+  .en-col ol, .ko-col ol { padding-left:1.3em; margin:.3em 0 .8em 0; }
+  .en-col ol li, .ko-col ol li { margin-bottom:.5em; line-height:1.6; }
+  .en-col a, .ko-col a { color:{{ c.blue }}; }
+  .ko-col a { color:{{ c.green }}; }
+  .keyword-section h2 { font-size:.88rem; font-weight:700; color:{{ c.orange }}; margin:0 0 8px 0; }
+  .keyword-section p { margin:4px 0 8px 0; line-height:1.65; }
+  .keyword-section blockquote { margin:4px 0 8px 1em; color:{{ c.muted }}; font-size:.82rem; }
+</style>
 </head>
 <body style="margin:0;padding:0;background:{{ c.bg }};font-family:{{ t.font_sans }};-webkit-font-smoothing:antialiased">
 
@@ -19,7 +41,7 @@
                 box-shadow:0 4px 24px rgba(0,0,0,.10)">
 
     <!-- ══════════════════════════════════════════════
-         HEADER — 제목바 (풀 700px · navy)
+         HEADER — 제목바
     ══════════════════════════════════════════════ -->
     <tr>
       <td style="background:{{ c.navy }};border-radius:12px 12px 0 0;
@@ -46,8 +68,10 @@
               {% if site_url %}
               <div style="margin-top:6px;text-align:right">
                 <a href="{{ site_url }}"
-                   style="color:rgba(255,255,255,.45);font-size:.72rem;
-                          text-decoration:none">사이트 보기 ↗</a>
+                   style="color:{{ c.blue_light }};font-size:.72rem;
+                          text-decoration:none;font-weight:600">
+                  웹에서 전체 보기 ↗
+                </a>
               </div>
               {% endif %}
             </td>
@@ -57,7 +81,7 @@
     </tr>
 
     <!-- ══════════════════════════════════════════════
-         STATS BAR — 통계 (풀 700px · navy 연장)
+         STATS BAR — 통계 + 바로가기
     ══════════════════════════════════════════════ -->
     <tr>
       <td style="background:{{ c.navy }};padding:0 28px 20px">
@@ -68,47 +92,57 @@
               <div style="color:#ffffff;font-size:1.1rem;font-weight:700">{{ stats.total }}</div>
               <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">총 기사</div>
             </td>
-            <td width="10"></td>
+            <td width="8"></td>
             <td align="center"
                 style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
               <div style="color:{{ c.blue_light }};font-size:1.1rem;font-weight:700">{{ stats.en }}</div>
               <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">영어</div>
             </td>
-            <td width="10"></td>
+            <td width="8"></td>
             <td align="center"
                 style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
               <div style="color:{{ c.green }};font-size:1.1rem;font-weight:700">{{ stats.ko }}</div>
               <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">한국어</div>
             </td>
-            <td width="10"></td>
+            <td width="8"></td>
             <td align="center"
                 style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
               <div style="color:{{ c.orange }};font-size:1.1rem;font-weight:700">{{ stats.sent_to_ai }}</div>
               <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">AI 분석</div>
             </td>
+            {% if site_url %}
+            <td width="8"></td>
+            <td align="center"
+                style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px 8px">
+              <a href="{{ site_url }}"
+                 style="color:#ffffff;text-decoration:none;font-size:.78rem;font-weight:700">
+                🔗 바로가기
+              </a>
+              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">웹 버전</div>
+            </td>
+            {% endif %}
           </tr>
         </table>
       </td>
     </tr>
 
     <!-- ══════════════════════════════════════════════
-         2단 분석 — 좌우 14px 패딩으로 헤더/푸터와
-         시각적 너비 차이 연출 (내부 카드 ~672px)
+         2단 분석 — 해외 | 국내 이슈 & 트렌드
     ══════════════════════════════════════════════ -->
     <tr>
       <td style="background:{{ c.bg }};padding:20px 14px 12px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr valign="top">
 
-            <!-- 영어 분석 칼럼 -->
-            <td width="49%"
+            <!-- 해외 분석 칼럼 -->
+            <td width="49%" class="en-col"
                 style="background:{{ c.card }};border:1px solid {{ c.border }};
                        border-radius:10px;vertical-align:top;
                        box-shadow:0 1px 4px rgba(0,0,0,.05)">
               <div style="background:{{ c.blue_50 }};border-radius:9px 9px 0 0;
-                          padding:11px 18px;border-bottom:1px solid {{ c.border }}">
+                          padding:11px 18px;border-bottom:2px solid {{ c.blue }}">
                 <span style="font-weight:700;font-size:.86rem;color:{{ c.blue }}">
-                  🌐 Global News
+                  🌐 해외 핵심이슈 &amp; 트렌드
                 </span>
               </div>
               <div style="padding:16px 18px;font-size:.82rem;
@@ -120,14 +154,14 @@
             <td width="2%" style="min-width:12px"></td>
 
             <!-- 국내 분석 칼럼 -->
-            <td width="49%"
+            <td width="49%" class="ko-col"
                 style="background:{{ c.card }};border:1px solid {{ c.border }};
                        border-radius:10px;vertical-align:top;
                        box-shadow:0 1px 4px rgba(0,0,0,.05)">
               <div style="background:{{ c.green_50 }};border-radius:9px 9px 0 0;
-                          padding:11px 18px;border-bottom:1px solid {{ c.border }}">
+                          padding:11px 18px;border-bottom:2px solid {{ c.green }}">
                 <span style="font-weight:700;font-size:.86rem;color:{{ c.green }}">
-                  🇰🇷 국내 뉴스 분석
+                  🇰🇷 국내 핵심이슈 &amp; 트렌드
                 </span>
               </div>
               <div style="padding:16px 18px;font-size:.82rem;
@@ -142,7 +176,38 @@
     </tr>
 
     <!-- ══════════════════════════════════════════════
-         하단 기사 링크 (1단 · 동일 내측 패딩)
+         키워드 매칭 기사 (있을 경우)
+    ══════════════════════════════════════════════ -->
+    {% if keyword_html %}
+    <tr>
+      <td style="background:{{ c.bg }};padding:0 14px 12px">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="border-radius:10px;overflow:hidden;
+                      border:1px solid {{ c.border }};
+                      box-shadow:0 1px 4px rgba(0,0,0,.05)">
+          <tr>
+            <td>
+              <div style="background:{{ c.orange_50 }};padding:11px 18px;
+                          border-bottom:2px solid {{ c.orange }}">
+                <span style="font-weight:700;font-size:.86rem;color:{{ c.orange }}">
+                  🔍 키워드 매칭 기사
+                </span>
+              </div>
+              <div class="keyword-section"
+                   style="padding:14px 18px;font-size:.82rem;
+                          color:{{ c.text }};line-height:1.68;
+                          background:{{ c.card }}">
+                {{ keyword_html | safe }}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════════
+         하단 기사 링크 (1단)
     ══════════════════════════════════════════════ -->
     <tr>
       <td style="background:{{ c.bg }};padding:0 14px 20px">
@@ -211,7 +276,7 @@
     </tr>
 
     <!-- ══════════════════════════════════════════════
-         FOOTER (풀 700px · navy)
+         FOOTER
     ══════════════════════════════════════════════ -->
     <tr>
       <td style="background:{{ c.navy }};border-radius:0 0 12px 12px;
@@ -222,14 +287,14 @@
               {{ site_title }} · AI 자동 생성 뉴스 브리핑<br>
               <span style="font-size:.68rem">Powered by GitHub Actions · RSS Feeds</span>
             </td>
+            {% if site_url %}
             <td align="right" style="white-space:nowrap;vertical-align:middle">
-              {% if unsubscribe_url %}
-              <a href="{{ unsubscribe_url }}"
-                 style="color:rgba(255,255,255,.35);font-size:.70rem;text-decoration:none">
-                구독 취소
+              <a href="{{ site_url }}"
+                 style="color:{{ c.blue_light }};font-size:.72rem;text-decoration:none">
+                웹사이트 보기 ↗
               </a>
-              {% endif %}
             </td>
+            {% endif %}
           </tr>
         </table>
       </td>

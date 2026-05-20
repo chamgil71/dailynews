@@ -203,8 +203,58 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str) -> st
 </html>"""
 
 
+def _category_bar_html(cat_stats: dict) -> str:
+    """카테고리 분포 바 (JSON structured 데이터 활용)."""
+    if not cat_stats:
+        return ""
+    total = sum(cat_stats.values()) or 1
+    label_map = {
+        "ai_ml": "AI·ML", "technology": "기술", "economy": "경제",
+        "global_news": "글로벌", "korean_news": "국내", "korean_economy": "국내경제",
+        "korean_tech": "국내기술", "security": "보안", "startup": "스타트업",
+    }
+    bars = ""
+    for cat, count in sorted(cat_stats.items(), key=lambda x: -x[1]):
+        if count == 0:
+            continue
+        pct = round(count / total * 100)
+        bars += (
+            f'<div style="margin-bottom:6px">'
+            f'<span style="font-family:IBM Plex Mono,monospace;font-size:10px;'
+            f'color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;'
+            f'display:inline-block;width:80px">{label_map.get(cat, cat)}</span>'
+            f'<span style="display:inline-block;background:var(--accent);height:8px;'
+            f'width:{pct}%;max-width:120px;vertical-align:middle;border-radius:1px"></span>'
+            f'<span style="font-size:10px;color:var(--ink-mute);margin-left:6px">{count}건</span>'
+            f'</div>'
+        )
+    return f'<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;color:var(--ink);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px">카테고리 분포</div>{bars}</div>'
+
+
+def _top_stories_html(issues: list) -> str:
+    """Top Stories 카드 섹션 (JSON issues 데이터 활용)."""
+    if not issues:
+        return ""
+    importance_badge = {"high": "■ 주요", "medium": "□ 일반", "low": "○ 참고"}
+    cards = ""
+    for issue in issues[:3]:
+        badge = importance_badge.get(issue.get("importance", "medium"), "□")
+        sources_html = ""
+        for src in issue.get("sources", [])[:2]:
+            sources_html += f'<a href="{src["url"]}" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ {src["title"][:50]}{"…" if len(src["title"])>50 else ""}</a>'
+        cards += f"""
+        <div style="border-top:1px solid var(--rule-soft);padding:14px 0">
+          <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">{badge} 이슈 {issue['rank']}</div>
+          <h3 style="font-size:16px;font-weight:800;margin:0 0 8px;line-height:1.35">{issue['title']}</h3>
+          <p style="font-size:13px;line-height:1.7;margin:0;color:var(--ink-soft)">{issue['summary']}</p>
+          {sources_html}
+        </div>"""
+    return cards
+
+
 def render_report(ctx: dict) -> str:
     s = ctx["data"]["stats"]
+    structured = ctx.get("structured", {})
 
     from themes.base import _split_at_news_list, _build_news_list_section
     analysis_html = _split_at_news_list(ctx["md_html"])
@@ -213,6 +263,35 @@ def render_report(ctx: dict) -> str:
         ctx["data"].get("news_ko", []),
     )
 
+    # JSON 구조 데이터가 있으면 rich UI 활용
+    en_data  = structured.get("en", {})
+    ko_data  = structured.get("ko", {})
+    has_json = bool(en_data or ko_data)
+
+    cat_stats_merged: dict = {}
+    for d in (en_data, ko_data):
+        for k, v in d.get("category_stats", {}).items():
+            cat_stats_merged[k] = cat_stats_merged.get(k, 0) + v
+
+    cat_bar  = _category_bar_html(cat_stats_merged)
+    en_stories = _top_stories_html(en_data.get("issues", [])) if en_data else ""
+    ko_stories = _top_stories_html(ko_data.get("issues", [])) if ko_data else ""
+
+    if has_json:
+        analysis_body = f"""
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px">
+          <div>
+            <div class="kicker">🌐 글로벌 핵심이슈</div>
+            {en_stories or analysis_html}
+          </div>
+          <div>
+            <div class="kicker">🇰🇷 국내 핵심이슈</div>
+            {ko_stories}
+          </div>
+        </div>"""
+    else:
+        analysis_body = f'<div class="prose">{analysis_html}</div>'
+
     body = f"""
     <div class="brief">
       <div class="brief-stats">
@@ -220,6 +299,7 @@ def render_report(ctx: dict) -> str:
         <div class="brief-stat"><span class="num">{s['total']}</span><span class="lab">건 수집</span></div>
         <div class="brief-stat"><span class="num">{s['sent_to_ai']}</span><span class="lab">AI 분석</span></div>
         <div class="brief-stat"><span class="num">{s['ko']}</span><span class="lab">국내</span></div>
+        {cat_bar}
       </div>
       <div>
         <div class="kicker">에디터 노트 · TODAY'S LEDE</div>
@@ -230,7 +310,7 @@ def render_report(ctx: dict) -> str:
         AI Editor<br>{FOOTER_CONFIG['generator']}<br>─<br>{ctx['date_str']}
       </div>
     </div>
-    <div class="prose">{analysis_html}</div>
+    {analysis_body}
     {news_section}"""
     return _layout(ctx["display_date"], body, "news", ctx["site_title"], ctx["now"])
 

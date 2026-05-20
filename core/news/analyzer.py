@@ -22,13 +22,13 @@ from config.settings import (
 )
 from config.prompts import (
     CATEGORY_PROMPTS, DEFAULT_PROMPT_HINT,
-    PROMPT_TEMPLATE_KO, PROMPT_TEMPLATE_EN,
+    PROMPT_TEMPLATE_KO, PROMPT_TEMPLATE_EN, PROMPT_TEMPLATE_JSON,
 )
 
 logger = logging.getLogger(__name__)
 
 
-def _build_prompt(news: list, lang: str) -> str:
+def _build_prompt(news: list, lang: str, use_json: bool = False) -> str:
     """카테고리 분포를 파악해 프롬프트 힌트를 동적으로 구성."""
     cat_counts = Counter(n["category"] for n in news)
     top_cats   = [c for c, _ in cat_counts.most_common(2)]
@@ -38,12 +38,35 @@ def _build_prompt(news: list, lang: str) -> str:
 
     title_block = "\n".join(
         f"[{n['label']}] {n['title']}"
+        + (f" | {n['link']}" if n.get("link") else "")
         + (f"\n  요약: {n['summary']}" if n.get("summary") else "")
         for n in news
     )
 
+    if use_json:
+        return PROMPT_TEMPLATE_JSON.format(hints=hints, title_block=title_block, lang=lang)
+
     template = PROMPT_TEMPLATE_KO if lang == "ko" else PROMPT_TEMPLATE_EN
     return template.format(hints=hints, title_block=title_block)
+
+
+def _parse_json_response(text: str) -> dict | None:
+    """AI 응답에서 ```json 블록을 추출해 파싱. 실패 시 None."""
+    import json, re
+    m = re.search(r'```json\s*([\s\S]*?)```', text)
+    if m:
+        try:
+            return json.loads(m.group(1).strip())
+        except json.JSONDecodeError:
+            pass
+    try:
+        return json.loads(text.strip())
+    except json.JSONDecodeError:
+        return None
+
+
+def _use_json_mode() -> bool:
+    return True
 
 # ── 베이스 클래스 ─────────────────────────────────────────────────────────────
 
@@ -79,17 +102,30 @@ class GPTAnalyzer(BaseAnalyzer):
         return response.choices[0].message.content.strip()
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
-        results = {"en": "", "ko": "", "combined": ""}
+        results = {"en": "", "ko": "", "combined": "", "structured": {}}
+        json_mode = _use_json_mode()
         if en_news:
             try:
-                results["en"] = self._call(_build_prompt(en_news, "en"), len(en_news))
+                raw = self._call(_build_prompt(en_news, "en", json_mode), len(en_news))
+                if json_mode:
+                    data = _parse_json_response(raw)
+                    results["structured"]["en"] = data or {}
+                    results["en"] = _structured_to_markdown(data) if data else _fallback_summary(en_news, "en")
+                else:
+                    results["en"] = raw
                 logger.info(f"[GPT 분석 완료] 영어 {len(en_news)}건")
             except Exception as e:
                 logger.error(f"[GPT EN 실패] {e}")
                 results["en"] = _fallback_summary(en_news, "en")
         if ko_news:
             try:
-                results["ko"] = self._call(_build_prompt(ko_news, "ko"), len(ko_news))
+                raw = self._call(_build_prompt(ko_news, "ko", json_mode), len(ko_news))
+                if json_mode:
+                    data = _parse_json_response(raw)
+                    results["structured"]["ko"] = data or {}
+                    results["ko"] = _structured_to_markdown(data) if data else _fallback_summary(ko_news, "ko")
+                else:
+                    results["ko"] = raw
                 logger.info(f"[GPT 분석 완료] 한국어 {len(ko_news)}건")
             except Exception as e:
                 logger.error(f"[GPT KO 실패] {e}")
@@ -116,17 +152,30 @@ class ClaudeAnalyzer(BaseAnalyzer):
         return msg.content[0].text.strip()
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
-        results = {"en": "", "ko": "", "combined": ""}
+        results = {"en": "", "ko": "", "combined": "", "structured": {}}
+        json_mode = _use_json_mode()
         if en_news:
             try:
-                results["en"] = self._call(_build_prompt(en_news, "en"), len(en_news))
+                raw = self._call(_build_prompt(en_news, "en", json_mode), len(en_news))
+                if json_mode:
+                    data = _parse_json_response(raw)
+                    results["structured"]["en"] = data or {}
+                    results["en"] = _structured_to_markdown(data) if data else _fallback_summary(en_news, "en")
+                else:
+                    results["en"] = raw
                 logger.info(f"[Claude 분석 완료] 영어 {len(en_news)}건")
             except Exception as e:
                 logger.error(f"[Claude EN 실패] {e}")
                 results["en"] = _fallback_summary(en_news, "en")
         if ko_news:
             try:
-                results["ko"] = self._call(_build_prompt(ko_news, "ko"), len(ko_news))
+                raw = self._call(_build_prompt(ko_news, "ko", json_mode), len(ko_news))
+                if json_mode:
+                    data = _parse_json_response(raw)
+                    results["structured"]["ko"] = data or {}
+                    results["ko"] = _structured_to_markdown(data) if data else _fallback_summary(ko_news, "ko")
+                else:
+                    results["ko"] = raw
                 logger.info(f"[Claude 분석 완료] 한국어 {len(ko_news)}건")
             except Exception as e:
                 logger.error(f"[Claude KO 실패] {e}")
@@ -171,31 +220,67 @@ class GeminiAnalyzer(BaseAnalyzer):
         return response.text.strip()
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
-        results = {"en": "", "ko": "", "combined": ""}
-        
-        # 1. 영어 뉴스 분석 (데이터가 있을 때만)
+        results = {"en": "", "ko": "", "combined": "", "structured": {}}
+        json_mode = _use_json_mode()
+
         if en_news:
             try:
-                results["en"] = self._call(_build_prompt(en_news, "en"), len(en_news))
+                raw = self._call(_build_prompt(en_news, "en", json_mode), len(en_news))
+                if json_mode:
+                    data = _parse_json_response(raw)
+                    results["structured"]["en"] = data or {}
+                    results["en"] = _structured_to_markdown(data) if data else _fallback_summary(en_news, "en")
+                else:
+                    results["en"] = raw
                 logger.info(f"[Gemini 분석 완료] 영어 {len(en_news)}건")
             except Exception as e:
                 logger.error(f"[Gemini EN 실패] {e}")
                 results["en"] = _fallback_summary(en_news, "en")
-        
-        # 2. 한국어 뉴스 분석
-        # 영문 분석이 끝난 상태라면 자동으로 사고 흔적이 포함되어 연속성 유지
+
         if ko_news:
             try:
-                results["ko"] = self._call(_build_prompt(ko_news, "ko"), len(ko_news))
+                raw = self._call(_build_prompt(ko_news, "ko", json_mode), len(ko_news))
+                if json_mode:
+                    data = _parse_json_response(raw)
+                    results["structured"]["ko"] = data or {}
+                    results["ko"] = _structured_to_markdown(data) if data else _fallback_summary(ko_news, "ko")
+                else:
+                    results["ko"] = raw
                 logger.info(f"[Gemini 분석 완료] 한국어 {len(ko_news)}건")
             except Exception as e:
                 logger.error(f"[Gemini KO 실패] {e}")
                 results["ko"] = _fallback_summary(ko_news, "ko")
-        
+
         results["combined"] = _merge(results["en"], results["ko"])
         return results
 
 # ── 헬퍼 및 API ──────────────────────────────────────────────────────────────
+
+def _structured_to_markdown(data: dict) -> str:
+    """JSON 구조 데이터를 마크다운 텍스트로 변환 (MD 리포트 저장용)."""
+    if not data:
+        return ""
+    lines = ["## 핵심 이슈 TOP 3", ""]
+    for issue in data.get("issues", []):
+        lines += [
+            f"### {issue['rank']}. {issue['title']}",
+            "",
+            issue.get("summary", ""),
+            "",
+        ]
+        for src in issue.get("sources", []):
+            lines.append(f"🔗 주요 출처: [{src['title']}]({src['url']})")
+        lines.append("")
+    lines += ["## 주목할 트렌드", ""]
+    for i, trend in enumerate(data.get("trends", []), 1):
+        lines += [
+            f"{i}. **{trend['keyword']}**",
+            "",
+            f"   {trend.get('description', '')}",
+            "",
+        ]
+    return "\n".join(lines).strip()
+
 
 def _fallback_summary(news: list, lang: str) -> str:
     header = "⚠ AI 분석 실패 — 원문 제목 목록" if lang == "ko" \

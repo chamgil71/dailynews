@@ -83,11 +83,15 @@ def _parse_md_for_email(md: str) -> dict:
         stats = {"total": int(m.group(1)), "en": int(m.group(2)),
                  "ko": int(m.group(3)), "sent_to_ai": int(m.group(4))}
 
-    # 분석 섹션 (헤더 내용만, 뉴스 목록 제외)
-    en_m = re.search(r'## 🌐 Global News Analysis\n([\s\S]*?)(?=---\n\n## 🇰🇷|## 📋|$)', md)
-    ko_m = re.search(r'## 🇰🇷 국내 뉴스 분석\n([\s\S]*?)(?=## 📋|$)', md)
-    analysis_en = markdown2.markdown(en_m.group(1).strip(), extras=["tables"]) if en_m else ""
-    analysis_ko = markdown2.markdown(ko_m.group(1).strip(), extras=["tables"]) if ko_m else ""
+    # 분석 섹션 — KO는 키워드 섹션 직전까지, 키워드는 별도 추출
+    en_m      = re.search(r'## 🌐 Global News Analysis\n([\s\S]*?)(?=---\n\n## 🇰🇷|## 🔍|## 📋|$)', md)
+    ko_m      = re.search(r'## 🇰🇷 국내 뉴스 분석\n([\s\S]*?)(?=## 🔍|## 📋|$)', md)
+    keyword_m = re.search(r'## 🔍 키워드 매칭 기사[^\n]*\n([\s\S]*?)(?=---\n\n## 📋|## 📋|$)', md)
+
+    extras = ["tables", "cuddled-lists"]
+    analysis_en  = markdown2.markdown(en_m.group(1).strip(),      extras=extras) if en_m      else ""
+    analysis_ko  = markdown2.markdown(ko_m.group(1).strip(),      extras=extras) if ko_m      else ""
+    keyword_html = markdown2.markdown(keyword_m.group(1).strip(), extras=extras) if keyword_m else ""
 
     # 뉴스 목록 (## 📋 섹션)
     news_en: list[dict] = []
@@ -103,8 +107,8 @@ def _parse_md_for_email(md: str) -> dict:
                 item = {"label": pat.group(1), "title": pat.group(2), "link": pat.group(3)}
                 (news_en if is_en else news_ko).append(item)
 
-    return {"stats": stats, "analysis_en": analysis_en,
-            "analysis_ko": analysis_ko, "news_en": news_en, "news_ko": news_ko}
+    return {"stats": stats, "analysis_en": analysis_en, "analysis_ko": analysis_ko,
+            "keyword_html": keyword_html, "news_en": news_en, "news_ko": news_ko}
 
 
 def _render_email_template(md: str, recipient_email: str, theme_name: str = "classic") -> str | None:
