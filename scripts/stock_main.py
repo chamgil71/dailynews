@@ -46,39 +46,25 @@ def main() -> None:
 
     date_str = datetime.now().strftime("%Y-%m-%d")
 
-    # Primary 경로(Claude 루틴) 실행 여부 — MD 파일이 이미 존재하면 중복 실행
-    _primary_ran = Path(f"reports/stock/stock_{date_str}.md").exists()
-
     # ── 1. 데이터 수집 ──────────────────────────────────────────
-    logger.info("[1/4] 시장 데이터 수집 중...")
+    logger.info("[1/3] 시장 데이터 수집 중...")
     from core.stock_collector import build_stock_data
     stock_data = build_stock_data()
 
     # ── 2. LLM 분석 ────────────────────────────────────────────
-    logger.info("[2/4] LLM 분석 중...")
+    logger.info("[2/3] LLM 분석 중...")
     from core.stock_analyzer import analyze_stock
     analysis = analyze_stock(stock_data)
     logger.info(f"     시장 온도계: {analysis.get('temperature_display','?')}")
 
     # ── 3. MD 생성 및 저장 ──────────────────────────────────────
-    logger.info("[3/4] 리포트 생성 및 저장 중...")
+    logger.info("[3/3] 리포트 생성 및 저장 중...")
     from core.stock_report import generate, save
     md_content = generate(stock_data, analysis)
     filepath   = save(md_content, date_str)
     logger.info(f"     저장: {filepath}")
 
-    # ── 4. 이메일 발송 ──────────────────────────────────────────
-    if _primary_ran:
-        logger.info("[4/4] Primary 경로(루틴) 실행 확인 — 이메일 발송 건너뜀 (중복 방지)")
-    else:
-        logger.info("[4/4] 이메일 발송 중...")
-        from core.mailer import send_email
-        from config.settings import STOCK_EMAIL_SUBJECT
-        ok = send_email(md_content, template="stock", subject_override=STOCK_EMAIL_SUBJECT.format(
-            date=date_str,
-            weekday=_weekday_ko(datetime.now().weekday()),
-        ))
-        logger.info(f"     이메일: {'성공' if ok else '실패(로그 확인)'}")
+    # 이메일 발송은 워크플로의 HTML 빌드 후 step(send_stock_email.py)에서 처리
 
     logger.info("=" * 55)
     logger.info(f"완료 → {filepath}")
