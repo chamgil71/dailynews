@@ -27,8 +27,8 @@ import markdown2
 from dotenv import load_dotenv
 load_dotenv()
 
-from config.settings import SITE_BASE_URL, SUBSCRIBE_URL
-from config.theme_config import SITE_THEME, SITE_TITLE
+from config.settings import SITE_BASE_URL
+from config.theme_config import SITE_THEME, SITE_TITLE, SUBSCRIBE_URL
 from themes import load_theme
 
 STOCK_REPORTS_DIR = "reports/stock"
