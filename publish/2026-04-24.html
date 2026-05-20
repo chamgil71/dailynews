@@ -29,7 +29,7 @@
     --font-sans:         -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
     --leading-base:      1.7;
   }
-  
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: var(--font-sans);
@@ -84,6 +84,15 @@
        font-weight: 600; }
   h3 { font-size: 1rem; color: var(--color-navy); margin: 1.4em 0 .4em;
        font-weight: 600; }
+
+  /* 분석 섹션 — 핵심이슈 h3 카드형 (이슈별 제목 강조) */
+  .card h3 {
+    padding: 4px 0 4px 10px;
+    border-left: 3px solid var(--color-blue);
+    color: var(--color-blue);
+    margin: 1.2em 0 .5em;
+    font-size: .98rem;
+  }
   p  { margin-bottom: .9em; }
   a  { color: var(--color-blue); text-underline-offset: 2px; }
   ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
@@ -100,6 +109,10 @@
     color: var(--color-muted);
   }
   mark { background: #fef08a; border-radius: 2px; padding: 0 2px; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--color-border); padding: 8px 12px;
+           text-align: left; font-size: .9rem; }
+  th { background: var(--color-blue-50); color: var(--color-navy); font-weight: 600; }
 
   /* ── 배지 ── */
   .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
@@ -123,57 +136,7 @@
     border: 1px solid var(--color-orange-200);
   }
 
-  /* ── 아카이브 목록 ── */
-  .archive-list { list-style: none; padding: 0; }
-  .archive-list li { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
-  .archive-list li:last-child { border-bottom: none; }
-  .archive-list a { font-weight: 500; font-size: 1rem; text-decoration: none; }
-  .archive-list a:hover { text-decoration: underline; }
-  .archive-list .date { color: var(--color-muted); font-size: .85rem; margin-top: 2px; }
-
-  /* ── 허브 섹션 카드 (Phase 2/3 활성화) ── */
-  .hub-sections {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .hub-section-card {
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 24px;
-    text-decoration: none;
-    color: var(--color-text);
-    transition: border-color .15s, box-shadow .15s;
-    display: block;
-  }
-  .hub-section-card:hover {
-    border-color: var(--color-blue);
-    box-shadow: 0 2px 8px rgba(0,0,0,.1);
-  }
-  .hub-section-card .section-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
-  .hub-section-card h3 { color: var(--color-navy); margin: 0 0 6px; }
-  .hub-section-card p { color: var(--color-muted); font-size: .9rem; margin: 0; }
-
-  /* ── 푸터 ── */
-  footer {
-    text-align: center;
-    color: var(--color-muted);
-    font-size: .8rem;
-    padding: 24px;
-    border-top: 1px solid var(--color-border);
-  }
-
-  /* ── 반응형 ── */
-  @media (max-width: 600px) {
-    .card { padding: 20px; }
-    header .logo { font-size: 1rem; }
-    .hub-sections { grid-template-columns: 1fr; }
-  }
-
-  
-  /* ── 수집 기사 전체 목록 접기/펼치기 ── */
+  /* ── 뉴스 목록 접기/펼치기 ── */
   .news-list-section h2 { margin-top: 0; }
   .news-list-section details {
     border: 1px solid var(--color-border);
@@ -202,14 +165,8 @@
     transition: transform .2s;
   }
   .news-list-section details[open] summary::after { transform: rotate(180deg); }
-  .news-list-section details[open] summary {
-    border-bottom: 1px solid var(--color-border);
-  }
-  .news-list-section .news-items {
-    list-style: none;
-    padding: 6px 0;
-    margin: 0;
-  }
+  .news-list-section details[open] summary { border-bottom: 1px solid var(--color-border); }
+  .news-list-section .news-items { list-style: none; padding: 6px 0; margin: 0; }
   .news-list-section .news-items li {
     padding: 6px 18px;
     border-bottom: 1px solid var(--color-border);
@@ -230,39 +187,70 @@
     white-space: nowrap;
   }
 
+  /* ── 푸터 ── */
+  footer {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .8rem;
+    padding: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ── 분석 2단 그리드 ── */
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .analysis-en { border-top: 3px solid var(--color-blue); }
+  .analysis-ko { border-top: 3px solid var(--color-green); }
+  .analysis-en h2 { color: var(--color-blue); }
+  .analysis-ko h2 { color: var(--color-green); }
+  .analysis-ko h3 { border-left-color: var(--color-green); color: var(--color-green); }
+  .analysis-ko a  { color: var(--color-green); }
+
+  /* 키워드 섹션 */
+  .card.keyword-card { border-top: 3px solid var(--color-orange); }
+  .card.keyword-card h2 { color: var(--color-orange); }
+
+  /* ── 반응형 ── */
+  @media (max-width: 700px) {
+    .analysis-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .card { padding: 20px; }
+    header .logo { font-size: 1rem; }
+  }
   </style>
 </head>
 <body>
   <header>
     <div class="logo">📰 AI <span class="accent">News</span> Daily</div>
-    <nav>
-      <a href="index.html" class="active">📰 뉴스</a>
+    <nav><a href="index.html" class="active">📰 뉴스</a>
       <a href="stock/index.html">📈 주식</a>
-      <a href="archive.html">📚 전체 목록</a>
-    </nav>
+      <a href="archive.html">📚 전체 목록</a></nav>
   </header>
 
   <div class="container">
-    
-  <div class="card">
-    <h1>📰 Daily News Brief</h1>
-    
-    <div class="meta">
-      <span class="badge">📅 2026년 04월 24일</span>
-      <span class="badge badge-orange">🤖 AI분석 40건</span>
-      <span class="badge badge-green">🇰🇷 KO 61</span>
-      <span class="badge">🌐 EN 0</span>
+    <!-- 헤더 메타 카드 -->
+    <div class="card">
+      <h1>📰 Daily News Brief</h1>
+      <div class="meta">
+        <span class="badge">📅 2026년 04월 24일</span>
+        <span class="badge badge-orange">🤖 AI분석 40건</span>
+        <span class="badge badge-green">🇰🇷 KO 61</span>
+        <span class="badge">🌐 EN 0</span>
+      </div>
     </div>
-    <h1 id="daily-news-brief">Daily News Brief</h1>
 
-<blockquote>
-  <p>📅 생성일시: 2026-04-24 04:52 KST
-  📊 수집: 총 61건 (EN: 0 / KO: 61) | AI 분석: 40건 | 중복 제외: 0건</p>
-</blockquote>
-
-<hr />
-
-<h2 id="국내-뉴스-분석">🇰🇷 국내 뉴스 분석</h2>
+    
+    <!-- 해외 / 국내 2단 분석 -->
+    <div class="analysis-grid">
+      
+      
+      <div class="card analysis-ko" style="margin-bottom:0">
+        <h2 id="국내-뉴스-분석">🇰🇷 국내 뉴스 분석</h2>
 
 <h2 id="핵심-이슈-top-3">핵심 이슈 TOP 3</h2>
 
@@ -283,83 +271,339 @@
 <hr />
 
 
-  </div>
-  
-  <div class="card news-list-section">
-    <h2>📋 수집 기사 전체 목록</h2>
+      </div>
+      
+    </div>
     
-    <details>
-  <summary>🇰🇷 한국어 뉴스 (61건)</summary>
-  <ul class="news-items"><li><span class="news-label">국내 종합</span><a href="https://www.yonhapnewstv.co.kr/news/MYH20260424115134wxA" target="_blank" rel="noopener">4차 최고가격 첫날, 전국 경윳값 2천원 돌파</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.yonhapnewstv.co.kr/news/MYH20260424114226qBI" target="_blank" rel="noopener">이스라엘·레바논 휴전 3주 연장…"이란과는 전쟁 준비"</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.yonhapnewstv.co.kr/news/MYH20260424124320cMG" target="_blank" rel="noopener">쿠팡, 美로비 금액 급증…백악관·밴스 부통령도 포함</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.yonhapnewstv.co.kr/news/MYH202604241242111hR" target="_blank" rel="noopener">특검, '평양 무인기' 尹 징역 30년 구형</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.yonhapnewstv.co.kr/news/MYH2026042411530643x" target="_blank" rel="noopener">이 대통령 "실거주 양도세 감면은 필요…비거주 축소"</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.hani.co.kr/arti/politics/politics_general/1255748.html" target="_blank" rel="noopener">‘빈손 방미’ 논란 장동혁 “물러나는 것 책임 정치 아냐” 사퇴 요구 일축</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.hani.co.kr/arti/politics/bluehouse/1255747.html" target="_blank" rel="noopener">이 대통령, 또럼 베트남 서기장에 민화·스피커 선물</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.hani.co.kr/arti/international/europe/1255746.html" target="_blank" rel="noopener">호르무즈 개방 위한 다국적군 계획 논의…“한국 포함 44개국 참석”</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.hani.co.kr/arti/sports/soccer/1255745.html" target="_blank" rel="noopener">햄스트링 다친 라민 야말 ‘시즌 아웃’…월드컵 스페인대표팀은 가능</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.hani.co.kr/arti/society/society_general/1255744.html" target="_blank" rel="noopener">경찰, 총경도 특진 도입 추진…“타 직종 형평성 고려”</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.hani.co.kr/arti/society/society_general/1255743.html" target="_blank" rel="noopener">특검, ‘평양 무인기’ 윤석열에 징역 30년 구형…“반국민적 범죄”</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.hani.co.kr/arti/area/chungcheong/1255742.html" target="_blank" rel="noopener">경찰도 속인 ‘늑구 가짜 사진’ 40대가 만들어 유포…“재미로 그랬다”</a></li>
-<li><span class="news-label">국내 종합</span><a href="https://www.hani.co.kr/arti/society/society_general/1255741.html" target="_blank" rel="noopener">듀오 43만명 개인정보 유출…경찰도 수사 착수</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.hankyung.com/article/202604244495i" target="_blank" rel="noopener">"차량 문이 로봇 팔 처럼"…양산차부터 콘셉트카까지 장악한 中 [차이나 워치]</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.hankyung.com/article/202604243444i" target="_blank" rel="noopener">'아는 맛이 무서운법'…3년 공들인 '그 라면' 700만개씩 팔렸다 [권 기자의 장바구니]</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.hankyung.com/article/202604243723g" target="_blank" rel="noopener">한 번 충전에 600㎞…中 대륙 겨냥한 현대차 '비밀병기'</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.hankyung.com/article/202604244238i" target="_blank" rel="noopener">KB손보, 엔키화이트햇과 사이버보험 업무협약</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.hankyung.com/article/202604244177i" target="_blank" rel="noopener">"몇 초 만에 완판"…中 개인투자자, 국채 '사재기' 열풍</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.hankyung.com/article/202604244204i" target="_blank" rel="noopener">"창업휴학 4년 제한 푼다"…2030년 '지역 창업도시' 10곳 조성</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.hankyung.com/article/202604244143i" target="_blank" rel="noopener">일감은 산더미 "사람이 없다"…'月 1500만원' 공고까지 등장 [차이나 워치]</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.hankyung.com/article/202604243942i" target="_blank" rel="noopener">수산비나모터, 베트남 신공장 투자 본격화…600억 투입</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/society/12026462" target="_blank" rel="noopener">씨엔티테크, 한국여성경제인협회와 ‘펨테크’ 기업 찾는다</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/economy/12026461" target="_blank" rel="noopener">어디로 튈지 모르는 ‘관세 공포’…美 정부에 ‘절박하다’ 호소한 현대차 [기자24시]</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/society/12026459" target="_blank" rel="noopener">“사고 전 법적 안전조치 다 했다면 처벌 불가”…안전대 풀고 작업 중 추락사 한 사건에 항소심도 ‘무죄’</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/stock/12026458" target="_blank" rel="noopener">PS일렉트로닉스, 교환사채로 220억원 자금조달…고성능 서버 사업 확대 가속</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/economy/12026457" target="_blank" rel="noopener">“지방서 베이징·상하이 바로 간다”… 11개 항공사 ‘알짜 노선’ 확보</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/stock/12026454" target="_blank" rel="noopener">한투운용 ‘글로벌반도체TOP4 Plus’, 순자산 1조2000억원 돌파</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/world/12026450" target="_blank" rel="noopener">자동차 ‘쌩쌩’ 달리는데…한밤중 도로 활보, 민소매녀의 정체</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/economy/12026449" target="_blank" rel="noopener">[속보] 코스닥 장중 1200선 돌파</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411530" target="_blank" rel="noopener">현대로템, 1Q 영업익 2천242억…전망치 부합(상보)</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411529" target="_blank" rel="noopener">KG모빌리티, 1분기 실적 무쏘가 끌었다…영업익 217억·104.7%↑</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411528" target="_blank" rel="noopener">대만 TSMC 주가, 장중 최고치 경신…당국 투자규제 완화</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411527" target="_blank" rel="noopener">현대모비스, 1분기 수주 달성률 '3.5%'…작년처럼 상저하고 뒷심 관건</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411526" target="_blank" rel="noopener">한화큐셀, 美 상호관세 반환 소송…&quot;취소 불능 피해 방지&quot;</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411525" target="_blank" rel="noopener">현대로템, 1Q 영업익 2천242억…전망치 부합</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411524" target="_blank" rel="noopener">유니언 퍼시픽, 실적 호조에 주가 8% 급등</a></li>
-<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411523" target="_blank" rel="noopener">국고 3년 3.2bp↑…GDP 충격파 지속·국제유가 오름세</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260424000204" target="_blank" rel="noopener">중국인 승객 난동에 항공기 1시간 40분 지연…승무원이 말리자 더 흥분, 왜?</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260424000190" target="_blank" rel="noopener">與, 인천 찾아 '원팀' 강조…박찬대·송영길·김남준 띄우기</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260424000169" target="_blank" rel="noopener">장동혁 “美, 정보유출 재발 방지 요구…정동영 해임건의안 제출할 것”</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260424000165" target="_blank" rel="noopener">복면 이란군 나포 장면 공개… “일부 영상은 보도 이후에 촬영”</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260423000396" target="_blank" rel="noopener">원피스·드래곤볼 초판 만화책 8억 거래…유튜버 구매에 '논란'</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260424000145" target="_blank" rel="noopener">'마두로 체포' 참여한 美 특수부대원, 내부정보로 예측베팅 '6억' 챙겼다</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260424000127" target="_blank" rel="noopener">필리핀 중앙은행·세계은행, 토스 방문…디지털 금융 서비스 운영 사례에 관심</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260424000116" target="_blank" rel="noopener">충남 TP, '2026년 충남 기업 성장 사다리 사업' 모집…13억·81곳 지원 추진</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=209679" target="_blank" rel="noopener">MS, 자체 보안 프로그램에 '미소스' 통합 예정..."탐지 성능 크게 향상"</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=209697" target="_blank" rel="noopener">테슬라, 올해 투자액 37조로 상향 조정..."AI·로보택시·로봇에 집중"</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=209698" target="_blank" rel="noopener">MS 공급업체들, 공동 REC 구매로 태양광발전소 준공</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=209699" target="_blank" rel="noopener">로앤컴퍼니, 법률 AI 교육 플랫폼 '슈퍼로이어 아카데미' 출시</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=209703" target="_blank" rel="noopener">제3차 유엔기후변화협약 기후주간, 여수에서 개막</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=209696" target="_blank" rel="noopener">태양광, 사상 처음으로 풍력 발전량 앞질렀다</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=209690" target="_blank" rel="noopener">광양, 전국 3위 ‘미식 여행지’ 부상… 숙소 검색량 28% 급증</a></li>
-<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=209684" target="_blank" rel="noopener">광주, '청년 일자리·돌봄' 두 마리 토끼 잡는다</a></li>
-<li><span class="news-label">국내 증권·투자</span><a href="https://www.hankyung.com/article/2026042441766" target="_blank" rel="noopener">달리던 코스피, 6460선 약보합 '숨고르기'…전력기기株 동반 질주</a></li>
-<li><span class="news-label">국내 증권·투자</span><a href="https://www.hankyung.com/article/2026042440966" target="_blank" rel="noopener">HDC랩스, 1분기 영업익 72억…전년비 142% 증가</a></li>
-<li><span class="news-label">국내 증권·투자</span><a href="https://www.hankyung.com/article/2026042439696" target="_blank" rel="noopener">현대모비스, 1분기 영업익 8026억…전년비 3% 증가</a></li>
-<li><span class="news-label">국내 증권·투자</span><a href="https://www.hankyung.com/article/2026042441056" target="_blank" rel="noopener">비에이치아이 "원자력연차대회 참가해 페르미와 미팅"</a></li>
-<li><span class="news-label">국내 증권·투자</span><a href="https://www.hankyung.com/article/2026042440636" target="_blank" rel="noopener">픽셀플러스, 차량용·CMS 특화 200만 화소 이미지센서 출시</a></li>
-<li><span class="news-label">국내 증권·투자</span><a href="https://www.hankyung.com/article/2026042439776" target="_blank" rel="noopener">'ACE 글로벌반도체TOP4 Plus' ETF, 순자산 1.2兆 돌파…상장 후 수익률 596%</a></li>
-<li><span class="news-label">국내 증권·투자</span><a href="https://www.hankyung.com/article/2026042436936" target="_blank" rel="noopener">OCI홀딩스, 우주 태양광 수요 확대 기대에 15%대 급등</a></li>
-<li><span class="news-label">국내 증권·투자</span><a href="https://www.hankyung.com/article/2026042438826" target="_blank" rel="noopener">한화갤러리아, 신설법인 재상장 적격 판정 소식에 상한가</a></li></ul>
-</details>
-  </div>
+
+    
+
+    
+    <div class="card news-list-section">
+      <h2>📋 수집 기사 전체 목록</h2>
+      
+      
+      <details>
+        <summary>🇰🇷 한국어 뉴스 (61건)</summary>
+        <ul class="news-items">
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.yonhapnewstv.co.kr/news/MYH20260424115134wxA" target="_blank" rel="noopener">4차 최고가격 첫날, 전국 경윳값 2천원 돌파</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.yonhapnewstv.co.kr/news/MYH20260424114226qBI" target="_blank" rel="noopener">이스라엘·레바논 휴전 3주 연장…"이란과는 전쟁 준비"</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.yonhapnewstv.co.kr/news/MYH20260424124320cMG" target="_blank" rel="noopener">쿠팡, 美로비 금액 급증…백악관·밴스 부통령도 포함</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.yonhapnewstv.co.kr/news/MYH202604241242111hR" target="_blank" rel="noopener">특검, '평양 무인기' 尹 징역 30년 구형</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.yonhapnewstv.co.kr/news/MYH2026042411530643x" target="_blank" rel="noopener">이 대통령 "실거주 양도세 감면은 필요…비거주 축소"</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.hani.co.kr/arti/politics/politics_general/1255748.html" target="_blank" rel="noopener">‘빈손 방미’ 논란 장동혁 “물러나는 것 책임 정치 아냐” 사퇴 요구 일축</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.hani.co.kr/arti/politics/bluehouse/1255747.html" target="_blank" rel="noopener">이 대통령, 또럼 베트남 서기장에 민화·스피커 선물</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.hani.co.kr/arti/international/europe/1255746.html" target="_blank" rel="noopener">호르무즈 개방 위한 다국적군 계획 논의…“한국 포함 44개국 참석”</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.hani.co.kr/arti/sports/soccer/1255745.html" target="_blank" rel="noopener">햄스트링 다친 라민 야말 ‘시즌 아웃’…월드컵 스페인대표팀은 가능</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.hani.co.kr/arti/society/society_general/1255744.html" target="_blank" rel="noopener">경찰, 총경도 특진 도입 추진…“타 직종 형평성 고려”</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.hani.co.kr/arti/society/society_general/1255743.html" target="_blank" rel="noopener">특검, ‘평양 무인기’ 윤석열에 징역 30년 구형…“반국민적 범죄”</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.hani.co.kr/arti/area/chungcheong/1255742.html" target="_blank" rel="noopener">경찰도 속인 ‘늑구 가짜 사진’ 40대가 만들어 유포…“재미로 그랬다”</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 종합</span>
+            <a href="https://www.hani.co.kr/arti/society/society_general/1255741.html" target="_blank" rel="noopener">듀오 43만명 개인정보 유출…경찰도 수사 착수</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.hankyung.com/article/202604244495i" target="_blank" rel="noopener">"차량 문이 로봇 팔 처럼"…양산차부터 콘셉트카까지 장악한 中 [차이나 워치]</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.hankyung.com/article/202604243444i" target="_blank" rel="noopener">'아는 맛이 무서운법'…3년 공들인 '그 라면' 700만개씩 팔렸다 [권 기자의 장바구니]</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.hankyung.com/article/202604243723g" target="_blank" rel="noopener">한 번 충전에 600㎞…中 대륙 겨냥한 현대차 '비밀병기'</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.hankyung.com/article/202604244238i" target="_blank" rel="noopener">KB손보, 엔키화이트햇과 사이버보험 업무협약</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.hankyung.com/article/202604244177i" target="_blank" rel="noopener">"몇 초 만에 완판"…中 개인투자자, 국채 '사재기' 열풍</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.hankyung.com/article/202604244204i" target="_blank" rel="noopener">"창업휴학 4년 제한 푼다"…2030년 '지역 창업도시' 10곳 조성</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.hankyung.com/article/202604244143i" target="_blank" rel="noopener">일감은 산더미 "사람이 없다"…'月 1500만원' 공고까지 등장 [차이나 워치]</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.hankyung.com/article/202604243942i" target="_blank" rel="noopener">수산비나모터, 베트남 신공장 투자 본격화…600억 투입</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.mk.co.kr/news/society/12026462" target="_blank" rel="noopener">씨엔티테크, 한국여성경제인협회와 ‘펨테크’ 기업 찾는다</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.mk.co.kr/news/economy/12026461" target="_blank" rel="noopener">어디로 튈지 모르는 ‘관세 공포’…美 정부에 ‘절박하다’ 호소한 현대차 [기자24시]</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.mk.co.kr/news/society/12026459" target="_blank" rel="noopener">“사고 전 법적 안전조치 다 했다면 처벌 불가”…안전대 풀고 작업 중 추락사 한 사건에 항소심도 ‘무죄’</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.mk.co.kr/news/stock/12026458" target="_blank" rel="noopener">PS일렉트로닉스, 교환사채로 220억원 자금조달…고성능 서버 사업 확대 가속</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.mk.co.kr/news/economy/12026457" target="_blank" rel="noopener">“지방서 베이징·상하이 바로 간다”… 11개 항공사 ‘알짜 노선’ 확보</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.mk.co.kr/news/stock/12026454" target="_blank" rel="noopener">한투운용 ‘글로벌반도체TOP4 Plus’, 순자산 1조2000억원 돌파</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.mk.co.kr/news/world/12026450" target="_blank" rel="noopener">자동차 ‘쌩쌩’ 달리는데…한밤중 도로 활보, 민소매녀의 정체</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://www.mk.co.kr/news/economy/12026449" target="_blank" rel="noopener">[속보] 코스닥 장중 1200선 돌파</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411530" target="_blank" rel="noopener">현대로템, 1Q 영업익 2천242억…전망치 부합(상보)</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411529" target="_blank" rel="noopener">KG모빌리티, 1분기 실적 무쏘가 끌었다…영업익 217억·104.7%↑</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411528" target="_blank" rel="noopener">대만 TSMC 주가, 장중 최고치 경신…당국 투자규제 완화</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411527" target="_blank" rel="noopener">현대모비스, 1분기 수주 달성률 '3.5%'…작년처럼 상저하고 뒷심 관건</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411526" target="_blank" rel="noopener">한화큐셀, 美 상호관세 반환 소송…&quot;취소 불능 피해 방지&quot;</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411525" target="_blank" rel="noopener">현대로템, 1Q 영업익 2천242억…전망치 부합</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411524" target="_blank" rel="noopener">유니언 퍼시픽, 실적 호조에 주가 8% 급등</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 경제</span>
+            <a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4411523" target="_blank" rel="noopener">국고 3년 3.2bp↑…GDP 충격파 지속·국제유가 오름세</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.etnews.com/20260424000204" target="_blank" rel="noopener">중국인 승객 난동에 항공기 1시간 40분 지연…승무원이 말리자 더 흥분, 왜?</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.etnews.com/20260424000190" target="_blank" rel="noopener">與, 인천 찾아 '원팀' 강조…박찬대·송영길·김남준 띄우기</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.etnews.com/20260424000169" target="_blank" rel="noopener">장동혁 “美, 정보유출 재발 방지 요구…정동영 해임건의안 제출할 것”</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.etnews.com/20260424000165" target="_blank" rel="noopener">복면 이란군 나포 장면 공개… “일부 영상은 보도 이후에 촬영”</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.etnews.com/20260423000396" target="_blank" rel="noopener">원피스·드래곤볼 초판 만화책 8억 거래…유튜버 구매에 '논란'</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.etnews.com/20260424000145" target="_blank" rel="noopener">'마두로 체포' 참여한 美 특수부대원, 내부정보로 예측베팅 '6억' 챙겼다</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.etnews.com/20260424000127" target="_blank" rel="noopener">필리핀 중앙은행·세계은행, 토스 방문…디지털 금융 서비스 운영 사례에 관심</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.etnews.com/20260424000116" target="_blank" rel="noopener">충남 TP, '2026년 충남 기업 성장 사다리 사업' 모집…13억·81곳 지원 추진</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.aitimes.com/news/articleView.html?idxno=209679" target="_blank" rel="noopener">MS, 자체 보안 프로그램에 '미소스' 통합 예정..."탐지 성능 크게 향상"</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.aitimes.com/news/articleView.html?idxno=209697" target="_blank" rel="noopener">테슬라, 올해 투자액 37조로 상향 조정..."AI·로보택시·로봇에 집중"</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.aitimes.com/news/articleView.html?idxno=209698" target="_blank" rel="noopener">MS 공급업체들, 공동 REC 구매로 태양광발전소 준공</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.aitimes.com/news/articleView.html?idxno=209699" target="_blank" rel="noopener">로앤컴퍼니, 법률 AI 교육 플랫폼 '슈퍼로이어 아카데미' 출시</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.aitimes.com/news/articleView.html?idxno=209703" target="_blank" rel="noopener">제3차 유엔기후변화협약 기후주간, 여수에서 개막</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.aitimes.com/news/articleView.html?idxno=209696" target="_blank" rel="noopener">태양광, 사상 처음으로 풍력 발전량 앞질렀다</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.aitimes.com/news/articleView.html?idxno=209690" target="_blank" rel="noopener">광양, 전국 3위 ‘미식 여행지’ 부상… 숙소 검색량 28% 급증</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 IT·기술</span>
+            <a href="https://www.aitimes.com/news/articleView.html?idxno=209684" target="_blank" rel="noopener">광주, '청년 일자리·돌봄' 두 마리 토끼 잡는다</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 증권·투자</span>
+            <a href="https://www.hankyung.com/article/2026042441766" target="_blank" rel="noopener">달리던 코스피, 6460선 약보합 '숨고르기'…전력기기株 동반 질주</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 증권·투자</span>
+            <a href="https://www.hankyung.com/article/2026042440966" target="_blank" rel="noopener">HDC랩스, 1분기 영업익 72억…전년비 142% 증가</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 증권·투자</span>
+            <a href="https://www.hankyung.com/article/2026042439696" target="_blank" rel="noopener">현대모비스, 1분기 영업익 8026억…전년비 3% 증가</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 증권·투자</span>
+            <a href="https://www.hankyung.com/article/2026042441056" target="_blank" rel="noopener">비에이치아이 "원자력연차대회 참가해 페르미와 미팅"</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 증권·투자</span>
+            <a href="https://www.hankyung.com/article/2026042440636" target="_blank" rel="noopener">픽셀플러스, 차량용·CMS 특화 200만 화소 이미지센서 출시</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 증권·투자</span>
+            <a href="https://www.hankyung.com/article/2026042439776" target="_blank" rel="noopener">'ACE 글로벌반도체TOP4 Plus' ETF, 순자산 1.2兆 돌파…상장 후 수익률 596%</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 증권·투자</span>
+            <a href="https://www.hankyung.com/article/2026042436936" target="_blank" rel="noopener">OCI홀딩스, 우주 태양광 수요 확대 기대에 15%대 급등</a>
+          </li>
+          
+          <li>
+            <span class="news-label">국내 증권·투자</span>
+            <a href="https://www.hankyung.com/article/2026042438826" target="_blank" rel="noopener">한화갤러리아, 신설법인 재상장 적격 판정 소식에 상한가</a>
+          </li>
+          
+        </ul>
+      </details>
+      
+    </div>
+    
   </div>
 
   <footer>
     GitHub Actions · RSS Feeds · 매일 자동 업데이트<br>
     Generated by Gemini 2.0 Flash ·
     <a href="https://github.com/chamgil71/dailynews" style="color:inherit">chamgil71/dailynews</a>
-    · 생성: 2026-05-20 06:03 KST
+    · 생성: 2026-05-20 17:44 KST
   </footer>
 </body>
 </html>
