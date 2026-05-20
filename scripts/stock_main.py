@@ -46,40 +46,25 @@ def main() -> None:
 
     date_str = datetime.now().strftime("%Y-%m-%d")
 
-    # Primary 경로(Claude 루틴) 실행 여부 — MD 파일이 이미 존재하면 중복 실행
-    _primary_ran = Path(f"reports/stock/stock_{date_str}.md").exists()
-
     # ── 1. 데이터 수집 ──────────────────────────────────────────
-    logger.info("[1/4] 시장 데이터 수집 중...")
+    logger.info("[1/3] 시장 데이터 수집 중...")
     from core.stock_collector import build_stock_data
     stock_data = build_stock_data()
 
     # ── 2. LLM 분석 ────────────────────────────────────────────
-    logger.info("[2/4] LLM 분석 중...")
+    logger.info("[2/3] LLM 분석 중...")
     from core.stock_analyzer import analyze_stock
     analysis = analyze_stock(stock_data)
     logger.info(f"     시장 온도계: {analysis.get('temperature_display','?')}")
 
     # ── 3. MD 생성 및 저장 ──────────────────────────────────────
-    logger.info("[3/4] 리포트 생성 및 저장 중...")
+    logger.info("[3/3] 리포트 생성 및 저장 중...")
     from core.stock_report import generate, save
     md_content = generate(stock_data, analysis)
     filepath   = save(md_content, date_str)
     logger.info(f"     저장: {filepath}")
 
-    # ── 4. 이메일 발송 ──────────────────────────────────────────
-    if _primary_ran:
-        logger.info("[4/4] Primary 경로(루틴) 실행 확인 — 이메일 발송 건너뜀 (중복 방지)")
-    else:
-        logger.info("[4/4] 이메일 발송 중...")
-        from core.mailer import send_email
-        from config.settings import STOCK_EMAIL_SUBJECT
-        email_md = _build_email_body(analysis, date_str)
-        ok = send_email(email_md, subject_override=STOCK_EMAIL_SUBJECT.format(
-            date=date_str,
-            weekday=_weekday_ko(datetime.now().weekday()),
-        ))
-        logger.info(f"     이메일: {'성공' if ok else '실패(로그 확인)'}")
+    # 이메일 발송은 워크플로의 HTML 빌드 후 step(send_stock_email.py)에서 처리
 
     logger.info("=" * 55)
     logger.info(f"완료 → {filepath}")
@@ -88,22 +73,6 @@ def main() -> None:
 
 def _weekday_ko(wd: int) -> str:
     return ["월","화","수","목","금","토","일"][wd]
-
-
-def _build_email_body(analysis: dict, date_str: str) -> str:
-    """이메일용 축약 MD (핵심 요약 + 키워드 + 온도계만)."""
-    parts = [f"# 📊 주식 시황 브리핑 — {date_str}"]
-    if analysis.get("summary"):
-        parts += ["\n## ■ 핵심 요약 (3줄)", analysis["summary"]]
-    if analysis.get("keywords"):
-        parts += ["\n## 3. 핵심 키워드 TOP 5", analysis["keywords"]]
-    if analysis.get("lt_comment"):
-        parts += ["\n## 6. 장기투자 관점 코멘트", analysis["lt_comment"]]
-    temp = analysis.get("temperature_display", "🟡 중립")
-    reason = analysis.get("temperature_reason", "")
-    parts += [f"\n## 시장 온도계: {temp}", f"> {reason}"]
-    parts += ["\n---\n※ 투자 권유 아님."]
-    return "\n\n".join(parts)
 
 
 if __name__ == "__main__":

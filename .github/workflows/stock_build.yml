@@ -2,7 +2,7 @@ name: Stock Briefing Build
 
 # ── 트리거 ──────────────────────────────────────────────────────────────────
 # 주 경로: Claude Code 루틴이 stock MD 파일을 push 하면 자동 실행
-# 백업 경로: 매주 월~금 KST 16:45 (UTC 07:45) 스케줄 — yfinance 자동화
+# 백업 경로: 매주 월~금 KST 23:40 (UTC 14:40) 스케줄 — 루틴 미실행 시에만 가동
 # 수동: workflow_dispatch 로 언제든지 실행 가능
 
 on:
@@ -10,7 +10,7 @@ on:
     paths:
       - 'reports/stock/**.md'   # Claude 루틴이 MD 파일 push 시 자동 실행
   schedule:
-    - cron: '45 07 * * 1-5'    # UTC 07:45 = KST 16:45 (월~금, 백업 자동화)
+    - cron: '40 14 * * 1-5'    # UTC 14:40 = KST 23:40 (월~금, 루틴 실패 시 백업)
   workflow_dispatch:
     inputs:
       mode:
@@ -45,34 +45,34 @@ jobs:
       - name: 패키지 설치
         run: pip install -r requirements.txt
 
-      # ── 백업 자동화 경로 (스케줄 or full 모드) ─────────────────────────────
+      # ── 오늘 리포트 존재 여부 확인 (백업 경로 조건 분기용) ───────────────────
+      - name: 오늘 리포트 존재 여부 확인
+        id: check_md
+        run: |
+          TODAY=$(TZ=Asia/Seoul date +%Y-%m-%d)
+          if [ -f "reports/stock/stock_${TODAY}.md" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "오늘 MD 파일 존재 — 백업 경로 건너뜀"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "오늘 MD 파일 없음 — 백업 경로 실행"
+          fi
+
+      # ── 백업 자동화 경로 (스케줄 or full 모드, 오늘 MD 없을 때만) ──────────
       - name: 주식 데이터 수집 및 리포트 생성 (백업 경로)
         if: |
-          github.event_name == 'schedule' ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'full')
+          steps.check_md.outputs.exists == 'false' && (
+            github.event_name == 'schedule' ||
+            (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'full'))
         run: python scripts/stock_main.py
         env:
           LLM_PROVIDER:         ${{ secrets.LLM_PROVIDER }}
           GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY:       ${{ secrets.OPENAI_API_KEY }}
-          GMAIL_USER:           ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD:   ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS:     ${{ secrets.RECIPIENT_EMAILS }}
-          SITE_BASE_URL:        ${{ secrets.SITE_BASE_URL }}
           NAVER_CLIENT_ID:      ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET:  ${{ secrets.NAVER_CLIENT_SECRET }}
-
-      # ── 이메일 발송 (push 트리거 경로: MD 파일이 이미 있을 때) ────────────
-      - name: 이메일 발송 (Claude 루틴 경로)
-        if: github.event_name == 'push'
-        run: python scripts/send_stock_email.py
-        env:
-          GMAIL_USER:          ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
-          SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
-          SITE_THEME:          ${{ secrets.SITE_THEME }}
+          SITE_BASE_URL:        ${{ secrets.SITE_BASE_URL }}
 
       # ── 티커 이력 업데이트 (모든 경로 공통) ──────────────────────────────────
       - name: 티커 이력 업데이트
@@ -93,6 +93,23 @@ jobs:
         env:
           SITE_THEME:    ${{ secrets.SITE_THEME }}
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+
+      # ── 이메일 발송 (HTML 빌드 완료 후) ────────────────────────────────────
+      # push 경로: 루틴이 MD를 push했을 때
+      # 백업 경로: 오늘 MD가 없어서 stock_main.py가 새로 생성했을 때
+      - name: 이메일 발송
+        if: |
+          github.event_name == 'push' ||
+          (steps.check_md.outputs.exists == 'false' && (
+            github.event_name == 'schedule' ||
+            (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'full')))
+        run: python scripts/send_stock_email.py
+        env:
+          GMAIL_USER:          ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
+          SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
+          SITE_THEME:          ${{ secrets.SITE_THEME }}
 
       # ── 커밋 + 푸시 ────────────────────────────────────────────────────────
       - name: 리포트 + 사이트 커밋
