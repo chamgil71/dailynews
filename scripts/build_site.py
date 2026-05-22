@@ -65,11 +65,19 @@ def parse_md_for_json(md_path: str, date_str: str) -> dict:
         is_ko = sec.startswith("🇰🇷 한국어")
         if not is_en and not is_ko:
             continue
-        for line in sec.split("\n"):
-            m = re.match(r'^- \*\*\[(.+?)\]\*\* \[(.+?)\]\((.+?)\)', line)
-            if m:
-                item = {"label": m.group(1), "title": m.group(2), "link": m.group(3)}
-                (news_en if is_en else news_ko).append(item)
+        
+        # 기사 제목/링크와 그 다음 줄의 요약문(선택적)을 정규식으로 안전하게 매칭
+        # 윈도우(\r\n)와 리눅스(\n) 줄바꿈을 모두 포용하도록 \r?\n 사용
+        pattern = r'^- \*\*\[(.+?)\]\*\* \[(.+?)\]\((.+?)\)(?:\r?\n\s*>\s*(.+))?'
+        matches = re.finditer(pattern, sec, re.MULTILINE)
+        for m in matches:
+            item = {
+                "label": m.group(1).strip(),
+                "title": m.group(2).strip(),
+                "link": m.group(3).strip(),
+                "summary": m.group(4).strip() if m.group(4) else ""
+            }
+            (news_en if is_en else news_ko).append(item)
 
     # 분석 섹션 (combined: 뉴스 목록 제외, 섹션 헤더 포함)
     en_match = re.search(r'## 🌐 Global News Analysis\n([\s\S]*?)(?=---\n\n## 🇰🇷|## 📋|$)', raw)

@@ -690,9 +690,10 @@ function renderReport(report) {
     const flag  = lang==="en" ? "🌐" : "🇰🇷";
     const label = lang==="en" ? "영어 뉴스" : "한국어 뉴스";
     const rows  = items.map(n => `
-      <div class="news-item">
+      <div class="news-item" style="padding: 10px 13px;">
         <span class="cat">${esc(n.label)}</span>
-        <a href="${esc(n.link)}" target="_blank" rel="noopener">${hi(esc(n.title),q)}</a>
+        <a href="${esc(n.link)}" target="_blank" rel="noopener" style="font-weight: 500;">${hi(esc(n.title),q)}</a>
+        ${n.summary ? `<div class="news-summary" style="margin-top: 6px; font-size: 0.82rem; color: var(--muted); line-height: 1.5; padding-left: 8px; border-left: 2px solid var(--border);">${hi(esc(n.summary),q)}</div>` : ""}
       </div>`).join("");
     const id = `nl-${lang}-${date}`;
     return `

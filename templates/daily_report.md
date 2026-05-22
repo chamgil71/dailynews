@@ -25,7 +25,8 @@
 ### 🌐 영어 뉴스 ({{ news_en | length }}건)
 
 {% for n in news_en %}
-- **[{{ n.label }}]** [{{ n.title }}]({{ n.link }})
+- **[{{ n.label }}]** [{{ n.title }}]({{ n.link }}){% if n.summary %}
+  > {{ n.summary }}{% endif %}
 {% endfor %}
 
 ---
@@ -33,7 +34,8 @@
 ### 🇰🇷 한국어 뉴스 ({{ news_ko | length }}건)
 
 {% for n in news_ko %}
-- **[{{ n.label }}]** [{{ n.title }}]({{ n.link }})
+- **[{{ n.label }}]** [{{ n.title }}]({{ n.link }}){% if n.summary %}
+  > {{ n.summary }}{% endif %}
 {% endfor %}
 
 ---
