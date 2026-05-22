@@ -46,18 +46,44 @@ def _clean_summary(raw: str) -> str:
 # ── 캐시 ──────────────────────────────────────────────────────────────────────
 
 def _load_cache() -> set:
-    """전일 URL 캐시 로드 (TTL 초과 항목 자동 제거)"""
-    if not CACHE_ENABLED or not os.path.exists(CACHE_FILE):
-        return set()
-    try:
-        with open(CACHE_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        cutoff = datetime.utcnow() - timedelta(hours=CACHE_TTL_HOURS)
-        return {url for url, ts in data.items()
-                if datetime.fromisoformat(ts) > cutoff}
-    except Exception as e:
-        logger.warning(f"[캐시 로드 실패] {e}")
-        return set()
+    """전일 URL 캐시 로드 및 reports-data.json의 기존 URL 자동 로드 (캐시 미지속 완벽 해결)"""
+    urls = set()
+    
+    # 1. 기존 .cache/last_urls.json 로컬 캐시 로드
+    if CACHE_ENABLED and os.path.exists(CACHE_FILE):
+        try:
+            with open(CACHE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            cutoff = datetime.utcnow() - timedelta(hours=CACHE_TTL_HOURS)
+            urls.update({url for url, ts in data.items()
+                         if datetime.fromisoformat(ts) > cutoff})
+        except Exception as e:
+            logger.warning(f"[캐시 로드 실패] {e}")
+
+    # 2. publish/reports-data.json에서 수집 이력 URL 자동 추출
+    # GitHub Actions 등 매번 초기화되는 가상 머신 환경에서도 Git Checkout된 JSON 데이터를 읽어 중복 수집 원천 방지
+    reports_data_file = "publish/reports-data.json"
+    if os.path.exists(reports_data_file):
+        try:
+            with open(reports_data_file, "r", encoding="utf-8") as f:
+                reports = json.load(f)
+            
+            # 너무 오래된 기사까지 중복 필터링되는 것을 막기 위해 최근 3개 리포트(3일치)에서만 URL 추출
+            loaded_count = 0
+            for report in reports[:3]:
+                for item in report.get("news_en", []):
+                    if item.get("link"):
+                        urls.add(item["link"])
+                        loaded_count += 1
+                for item in report.get("news_ko", []):
+                    if item.get("link"):
+                        urls.add(item["link"])
+                        loaded_count += 1
+            logger.info(f"[reports-data.json] 최근 리포트에서 {loaded_count}개 기존 뉴스 URL 동적 캡처 완료")
+        except Exception as e:
+            logger.warning(f"[reports-data.json 로드 실패] {e}")
+            
+    return urls
 
 
 def _save_cache(new_urls: set):
