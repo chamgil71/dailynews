@@ -1,5 +1,8 @@
 # themes/classic.py
-"""Classic Navy 테마 — 남색 헤더, 카드 레이아웃, 시스템 폰트."""
+"""Classic Navy 테마 — 남색 헤더, 카드 레이아웃, 시스템 폰트.
+
+[표준 테마] base.py + templates/web_*.html 경유. 레이아웃 수정 → templates/, 색상 수정 → TOKENS.
+"""
 
 TOKENS = {
     "meta": {

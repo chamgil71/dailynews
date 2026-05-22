@@ -21,6 +21,7 @@ CLAUDE_MINI_THRESHOLD = 20
 GEMINI_MODEL_FULL  = "gemini-3.1-flash-lite"
 GEMINI_MODEL_MINI  = "gemini-3.1-flash-lite"
 GEMINI_MINI_THRESHOLD = 40
+LLM_MAX_TOKENS        = 4000
 
 # ── 수집 설정 ─────────────────────────────────────────────────────────────────
 MAX_ENTRIES_PER_FEED    = 8

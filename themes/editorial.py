@@ -1,5 +1,9 @@
 # themes/editorial.py
-"""Editorial 테마 — 신문 마스트헤드, Noto Serif KR, 드롭캡."""
+"""Editorial 테마 — 신문 마스트헤드, Noto Serif KR, 드롭캡.
+
+[커스텀 레이아웃 테마] base.py 미사용. render_*() 함수가 Python f-string으로 HTML 직접 생성.
+레이아웃·색상 모두 이 파일에서 수정. templates/web_*.html 은 이 테마에서 사용 안 함.
+"""
 from __future__ import annotations
 import sys
 from pathlib import Path
@@ -16,12 +20,22 @@ TOKENS = {
         "font_family": "'Noto Serif KR', 'Source Serif Pro', Georgia, serif",
     },
     "colors": {
-        "bg":     "#f4ede0",
-        "card":   "#ece2cf",
-        "text":   "#1a1612",
-        "muted":  "#8a7e6f",
-        "accent": "#8b2a1f",
-        "rule":   "#2b231a",
+        "bg":         "#f4ede0",
+        "card":       "#ece2cf",
+        "text":       "#1a1612",
+        "muted":      "#8a7e6f",
+        "accent":     "#8b2a1f",
+        "rule":       "#2b231a",
+        # base.py 표준 렌더러(stock) 호환 alias
+        "navy":       "#2b231a",
+        "blue":       "#8b2a1f",
+        "blue_light": "#c4735a",
+        "blue_50":    "#fdf4ee",
+        "blue_200":   "#e8c9b8",
+        "border":     "#c8bda7",
+        "code_bg":    "#ece2cf",
+        "green":      "#4a6741",
+        "orange":     "#8b5a2a",
     },
     "typography": {
         "font_sans": "'Noto Serif KR', Georgia, serif",
@@ -156,7 +170,7 @@ _CSS = """
 """
 
 
-def _layout(title: str, body: str, active: str, site_title: str, now: str) -> str:
+def _layout(title: str, body: str, active: str, site_title: str, now: str, site_url: str = "") -> str:
     nav_items = [
         ("news",    "index.html",   "최신 리포트"),
         ("stock",   "../stock/",    "주식시황"),
@@ -185,7 +199,9 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str) -> st
         <span>{title}</span>
         <span>KST 08:00</span>
       </div>
-      <h1 class="mh-title">The Daily <em>Brief</em></h1>
+      <a href="{site_url}" style="text-decoration:none;color:inherit">
+        <h1 class="mh-title">The Daily <em>Brief</em></h1>
+      </a>
       <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
       <div class="mh-nav">{nav_html}</div>
     </div>
@@ -312,7 +328,7 @@ def render_report(ctx: dict) -> str:
     </div>
     {analysis_body}
     {news_section}"""
-    return _layout(ctx["display_date"], body, "news", ctx["site_title"], ctx["now"])
+    return _layout(ctx["display_date"], body, "news", ctx["site_title"], ctx["now"], ctx.get("site_url", ""))
 
 
 def render_archive(ctx: dict) -> str:
@@ -327,14 +343,14 @@ def render_archive(ctx: dict) -> str:
       <p class="count">LEDGER · 총 {len(ctx['items'])}호 발행</p>
       <ul>{items}</ul>
     </div>"""
-    return _layout("아카이브", body, "archive", ctx["site_title"], ctx["now"])
+    return _layout("아카이브", body, "archive", ctx["site_title"], ctx["now"], ctx.get("site_url", ""))
 
 
 def render_stock_report(ctx: dict) -> str:
     from themes.base import render_stock_report as _base
-    return _base(ctx, "classic")
+    return _base(ctx, "editorial")
 
 
 def render_stock_archive(ctx: dict) -> str:
     from themes.base import render_stock_archive as _base
-    return _base(ctx, "classic")
+    return _base(ctx, "editorial")

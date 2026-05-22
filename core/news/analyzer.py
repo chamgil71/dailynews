@@ -19,6 +19,7 @@ from config.settings import (
     OPENAI_API_KEY, GPT_MODEL_FULL, GPT_MODEL_MINI, GPT_MINI_THRESHOLD,
     ANTHROPIC_KEY,  CLAUDE_MODEL_FULL, CLAUDE_MODEL_MINI, CLAUDE_MINI_THRESHOLD,
     GEMINI_API_KEY, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD,
+    LLM_MAX_TOKENS,
 )
 from config.prompts import (
     CATEGORY_PROMPTS, DEFAULT_PROMPT_HINT,
@@ -96,7 +97,7 @@ class GPTAnalyzer(BaseAnalyzer):
         response = self.client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=800,
+            max_tokens=LLM_MAX_TOKENS,
             temperature=0.3,
         )
         return response.choices[0].message.content.strip()
@@ -146,7 +147,7 @@ class ClaudeAnalyzer(BaseAnalyzer):
         )
         msg = self.client.messages.create(
             model=model,
-            max_tokens=800,
+            max_tokens=LLM_MAX_TOKENS,
             messages=[{"role": "user", "content": prompt}],
         )
         return msg.content[0].text.strip()
@@ -198,7 +199,7 @@ class GeminiAnalyzer(BaseAnalyzer):
         )
         
         config_params = {
-            "max_output_tokens": 800,
+            "max_output_tokens": LLM_MAX_TOKENS,
             "temperature": 0.3,
         }
 

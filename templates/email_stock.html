@@ -6,11 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>📊 주식 시황 브리핑 — {{ date }}</title>
 </head>
-<body style="margin:0;padding:0;background:#f0f2f5;font-family:{{ t.font_sans }};-webkit-font-smoothing:antialiased">
+<body style="margin:0;padding:0;background:{{ c.bg }};font-family:{{ t.font_sans }};-webkit-font-smoothing:antialiased">
 
 <!--[if mso]><table width="700" align="center"><tr><td><![endif]-->
 <table width="100%" cellpadding="0" cellspacing="0" border="0"
-       style="background:#f0f2f5;min-width:320px">
+       style="background:{{ c.bg }};min-width:320px">
 <tr><td align="center" style="padding:24px 12px">
 
   <table width="700" cellpadding="0" cellspacing="0" border="0"
@@ -18,10 +18,10 @@
                 box-shadow:0 4px 24px rgba(0,0,0,.13)">
 
     <!-- ══════════════════════════════════════════════
-         HEADER — 다크 차콜 (뉴스의 navy와 구분)
+         HEADER
     ══════════════════════════════════════════════ -->
     <tr>
-      <td style="background:#1C2333;border-radius:12px 12px 0 0;padding:22px 28px 18px">
+      <td style="background:{{ c.navy }};border-radius:12px 12px 0 0;padding:22px 28px 18px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td>
@@ -29,7 +29,7 @@
                           letter-spacing:-.4px;line-height:1.2">
                 📊 주식 시황 브리핑
               </div>
-              <div style="color:#94a3b8;font-size:.82rem;margin-top:5px;letter-spacing:.02em">
+              <div style="color:{{ c.blue_light }};font-size:.82rem;margin-top:5px;letter-spacing:.02em">
                 {{ display_date }} 장 마감 기준
               </div>
             </td>
@@ -57,8 +57,9 @@
     <!-- 온도계 근거 바 -->
     {% if temperature_reason %}
     <tr>
-      <td style="background:#252d3f;padding:10px 28px">
-        <div style="color:#94a3b8;font-size:.78rem;line-height:1.55;font-style:italic">
+      <td style="background:{{ c.navy }};padding:10px 28px;
+                 border-top:1px solid rgba(255,255,255,.08)">
+        <div style="color:{{ c.blue_light }};font-size:.78rem;line-height:1.55;font-style:italic">
           {{ temperature_reason }}
         </div>
       </td>
@@ -69,18 +70,18 @@
          핵심 요약
     ══════════════════════════════════════════════ -->
     <tr>
-      <td style="background:#ffffff;padding:20px 20px 0">
+      <td style="background:{{ c.card }};padding:20px 20px 0">
         <table width="100%" cellpadding="0" cellspacing="0" border="0"
-               style="border-radius:10px;border:1px solid #e2e8f0;
+               style="border-radius:10px;border:1px solid {{ c.border }};
                       box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden">
           <tr>
             <td>
-              <div style="background:#1C2333;padding:11px 18px">
+              <div style="background:{{ c.navy }};padding:11px 18px">
                 <span style="font-weight:700;font-size:.86rem;color:#ffffff">
                   ■ 핵심 요약
                 </span>
               </div>
-              <div style="padding:16px 18px;font-size:.83rem;color:#334155;line-height:1.75">
+              <div style="padding:16px 18px;font-size:.83rem;color:{{ c.text }};line-height:1.75">
                 {{ summary_html | safe }}
               </div>
             </td>
@@ -94,18 +95,18 @@
     ══════════════════════════════════════════════ -->
     {% if keywords_html %}
     <tr>
-      <td style="background:#ffffff;padding:14px 20px 0">
+      <td style="background:{{ c.card }};padding:14px 20px 0">
         <table width="100%" cellpadding="0" cellspacing="0" border="0"
-               style="border-radius:10px;border:1px solid #e2e8f0;
+               style="border-radius:10px;border:1px solid {{ c.border }};
                       box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden">
           <tr>
             <td>
-              <div style="background:#0f4c81;padding:11px 18px">
+              <div style="background:{{ c.blue }};padding:11px 18px">
                 <span style="font-weight:700;font-size:.86rem;color:#ffffff">
                   🔑 핵심 키워드 TOP 5
                 </span>
               </div>
-              <div style="padding:16px 18px;font-size:.82rem;color:#334155;line-height:1.72">
+              <div style="padding:16px 18px;font-size:.82rem;color:{{ c.text }};line-height:1.72">
                 {{ keywords_html | safe }}
               </div>
             </td>
@@ -120,18 +121,18 @@
     ══════════════════════════════════════════════ -->
     {% if lt_comment_html %}
     <tr>
-      <td style="background:#ffffff;padding:14px 20px 20px">
+      <td style="background:{{ c.card }};padding:14px 20px 20px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0"
-               style="border-radius:10px;border:1px solid #e2e8f0;
+               style="border-radius:10px;border:1px solid {{ c.border }};
                       box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden">
           <tr>
             <td>
-              <div style="background:#064e3b;padding:11px 18px">
+              <div style="background:{{ c.green }};padding:11px 18px">
                 <span style="font-weight:700;font-size:.86rem;color:#ffffff">
                   🌱 장기투자 관점
                 </span>
               </div>
-              <div style="padding:16px 18px;font-size:.82rem;color:#334155;line-height:1.72;
+              <div style="padding:16px 18px;font-size:.82rem;color:{{ c.text }};line-height:1.72;
                           font-style:italic">
                 {{ lt_comment_html | safe }}
               </div>
@@ -146,7 +147,7 @@
          FOOTER
     ══════════════════════════════════════════════ -->
     <tr>
-      <td style="background:#1C2333;border-radius:0 0 12px 12px;padding:16px 28px">
+      <td style="background:{{ c.navy }};border-radius:0 0 12px 12px;padding:16px 28px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td style="color:rgba(255,255,255,.4);font-size:.73rem;line-height:1.6">

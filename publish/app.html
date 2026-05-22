@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="AI가 매일 자동으로 수집·분석하는 글로벌 뉴스 브리핑">
   <title>AI News Daily</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ── CSS 변수 (테마 토큰) ── */
     :root {
@@ -19,6 +22,7 @@
       --orange:   #ea580c;
       --accent:   #60a5fa;
       --header-h: 58px;
+      --font-family: -apple-system, "Segoe UI", "Apple SD Gothic Neo", sans-serif;
     }
     /* Minimal 테마 */
     [data-theme="minimal"] {
@@ -35,10 +39,38 @@
       --blue:#047857; --navy:#064e3b; --bg:#f6faf8; --card:#ffffff;
       --border:#d1e7dc; --text:#0f2922; --muted:#4b6b5e; --accent:#6ee7b7;
     }
+    /* Editorial 테마 */
+    [data-theme="editorial"] {
+      --blue:     #8b2a1f;
+      --navy:     #2b231a;
+      --bg:       #f4ede0;
+      --card:     #ece2cf;
+      --border:   #c8bda7;
+      --text:     #1a1612;
+      --muted:    #8a7e6f;
+      --green:    #4a6741;
+      --orange:   #8b5a2a;
+      --accent:   #8b2a1f;
+      --font-family: 'Noto Serif KR', Georgia, serif;
+    }
+    /* Terminal 테마 */
+    [data-theme="terminal"] {
+      --blue:     #f5a524;
+      --navy:     #11161e;
+      --bg:       #0a0d12;
+      --card:     #161c25;
+      --border:   #1f2733;
+      --text:     #e8eef5;
+      --muted:    #a8b3c2;
+      --green:    #2cb67d;
+      --orange:   #e5484d;
+      --accent:   #f5a524;
+      --font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+      font-family: var(--font-family);
       background: var(--bg);
       color: var(--text);
       line-height: 1.7;
@@ -572,6 +604,16 @@
       <div class="chip-swatch" style="background:linear-gradient(90deg,#064e3b,#047857)"></div>
       <div class="chip-name">Forest</div>
       <div class="chip-desc">핀테크 그린</div>
+    </div>
+    <div class="theme-chip" onclick="applyTheme('editorial')" id="chip-editorial">
+      <div class="chip-swatch" style="background:linear-gradient(90deg,#2b231a,#8b2a1f)"></div>
+      <div class="chip-name">Editorial</div>
+      <div class="chip-desc">신문 스타일, 명조</div>
+    </div>
+    <div class="theme-chip" onclick="applyTheme('terminal')" id="chip-terminal">
+      <div class="chip-swatch" style="background:linear-gradient(90deg,#11161e,#f5a524)"></div>
+      <div class="chip-name">Terminal Dark</div>
+      <div class="chip-desc">다크 모노스페이스</div>
     </div>
   </div>
 

@@ -46,14 +46,12 @@ jobs:
 
       - name: 사이트 빌드 (MD → HTML)
         run: python scripts/build_site.py
-        env:
-          THEME_NEWS: editorial
 
       - name: 리포트 + 사이트 + DB 커밋
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "actions@github.com"
-          git add reports/ storage/
+          git add reports/
           # 날짜별 HTML (gitignore 대상이므로 -f 강제 추가)
           git add -f publish/$(date +'%Y-%m-%d').html 2>/dev/null || true
           # Vercel 필수 정적 파일 (항상 최신 상태 유지)

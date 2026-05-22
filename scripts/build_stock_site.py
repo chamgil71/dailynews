@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from config.settings import SITE_BASE_URL
-from config.theme_config import SITE_THEME, SITE_TITLE, SUBSCRIBE_URL
+from config.theme_config import SECTION_THEMES, SITE_THEME, SITE_TITLE, SUBSCRIBE_URL
 from themes import load_theme
 
 STOCK_REPORTS_DIR = "reports/stock"
@@ -162,7 +162,7 @@ def build_stock_archive_ctx(pages: list[tuple[str, str]]) -> dict:
 # ── 메인 빌드 ─────────────────────────────────────────────────────────────────
 
 def build(theme_name: str | None = None) -> None:
-    active_theme = theme_name or SITE_THEME
+    active_theme = theme_name or SECTION_THEMES.get("stock", SITE_THEME)
     theme = load_theme(active_theme)
     print(f"[stock-build] theme={active_theme}")
 

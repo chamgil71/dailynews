@@ -8,7 +8,7 @@ CSS·폰트·색상 등 렌더링 데이터는 themes/{name}.py의 TOKENS에 정
   themes/{name}.py        → CSS·폰트·레이아웃 렌더링 코드 (구현)
 
 환경변수:
-  SITE_THEME       : classic | minimal | ink | forest | editorial | terminal (기본: classic)
+  SITE_THEME       : classic | minimal | ink | forest | editorial | terminal (기본: editorial)
   SITE_TITLE       : 사이트 표시 이름
   SUBSCRIBE_URL    : 구독 폼 URL
   THEME_NEWS       : 뉴스브리핑 테마  (기본: SITE_THEME)
@@ -18,16 +18,24 @@ CSS·폰트·색상 등 렌더링 데이터는 themes/{name}.py의 TOKENS에 정
 """
 import os
 
-# ── 기본 테마 ──────────────────────────────────────────────────────────────────
-SITE_THEME    = os.getenv("SITE_THEME", "classic")
+# ── 기본 테마 설정 (한 곳에서 변경하면 전체 반영) ──────────────────────────────
+# 💡 팁: 로컬 .env 환경변수가 우선 적용되며, 환경변수가 없을 경우 아래의 문자열 기본값이 적용됩니다.
+# 💡 깃허브 액션은 .env가 없으므로 아래의 문자열 기본값을 수정하여 커밋하면 워크플로우 하드코딩 없이 전체 반영됩니다!
+
+SITE_THEME_DEFAULT    = "editorial"  # classic | minimal | ink | forest | editorial | terminal
+THEME_NEWS_DEFAULT    = "editorial"  # 뉴스브리핑 개별 테마 (기본: SITE_THEME_DEFAULT)
+THEME_STOCK_DEFAULT   = "classic"    # 주식시황 개별 테마 (기본: SITE_THEME_DEFAULT)
+THEME_EMAIL_DEFAULT   = "classic"    # 메일링뉴스 개별 테마 (기본: SITE_THEME_DEFAULT)
+
+SITE_THEME    = os.getenv("SITE_THEME", SITE_THEME_DEFAULT)
 SITE_TITLE    = os.getenv("SITE_TITLE", "AI News Daily")
 SUBSCRIBE_URL = os.getenv("SUBSCRIBE_URL", "https://forms.gle/REPLACE_WITH_GOOGLE_FORM_ID")
 
 # ── 섹션별 테마 (섹션마다 독립 설정 가능) ──────────────────────────────────────
 SECTION_THEMES: dict[str, str] = {
-    "news":  os.getenv("THEME_NEWS",   SITE_THEME),   # 뉴스브리핑 본문
-    "stock": os.getenv("THEME_STOCK",  SITE_THEME),   # 주식시황 본문
-    "email": os.getenv("THEME_EMAIL",  SITE_THEME),   # 메일링뉴스
+    "news":  os.getenv("THEME_NEWS",   THEME_NEWS_DEFAULT or SITE_THEME),   # 뉴스브리핑 본문
+    "stock": os.getenv("THEME_STOCK",  THEME_STOCK_DEFAULT or SITE_THEME),  # 주식시황 본문
+    "email": os.getenv("THEME_EMAIL",  THEME_EMAIL_DEFAULT or SITE_THEME),  # 메일링뉴스 (email_news.html은 classic 컬러키 전용)
 }
 
 # ── 푸터 설정 ──────────────────────────────────────────────────────────────────

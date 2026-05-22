@@ -234,8 +234,13 @@ def build(theme_name: str | None = None,
     app_src = Path(DOCS_DIR, "app.html")
     app_dst = Path(DOCS_DIR, "index.html")
     if app_src.exists():
-        shutil.copy2(app_src, app_dst)
-        print("  + index.html (← app.html)")
+        app_html = app_src.read_text(encoding="utf-8")
+        # 디폴트 body data-theme 교체
+        app_html = app_html.replace('<body data-theme="classic">', f'<body data-theme="{active_theme}">')
+        # localStorage fallback 테마 교체
+        app_html = app_html.replace('localStorage.getItem("site-theme") || "classic"', f'localStorage.getItem("site-theme") || "{active_theme}"')
+        app_dst.write_text(app_html, encoding="utf-8")
+        print(f"  + index.html (← app.html, default_theme: {active_theme})")
     else:
         print("  ⚠ app.html 없음: index.html 미생성")
 
