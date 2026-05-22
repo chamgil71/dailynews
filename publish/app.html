@@ -415,6 +415,189 @@
       border-top: 1px solid var(--border);
     }
     footer a { color: var(--muted); }
+
+    /* ── 데일리 카드뉴스 스타일 ── */
+    .card-news-wrapper {
+      margin: 8px 0 20px 0;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .card-news-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-news-container {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 4px 4px 12px 4px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    /* 스크롤바 커스텀 */
+    .card-news-container::-webkit-scrollbar {
+      height: 6px;
+    }
+    .card-news-container::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 10px;
+    }
+    .card-news-container::-webkit-scrollbar-thumb {
+      background: var(--blue);
+      opacity: 0.4;
+      border-radius: 10px;
+    }
+    .card-news-container::-webkit-scrollbar-thumb:hover {
+      background: var(--navy);
+    }
+    
+    .news-card {
+      flex: 0 0 280px;
+      scroll-snap-align: start;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      position: relative;
+    }
+    
+    body[data-theme="terminal"] .news-card {
+      background: rgba(18, 22, 30, 0.7);
+      border: 1px solid rgba(0, 255, 102, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 255, 102, 0.03);
+    }
+    body[data-theme="ink"] .news-card {
+      background: #faf9f6;
+      border: 1px solid #dcdad5;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    body[data-theme="minimal"] .news-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+    
+    .news-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.1);
+      border-color: var(--blue);
+    }
+    body[data-theme="terminal"] .news-card:hover {
+      box-shadow: 0 6px 16px rgba(0, 255, 102, 0.1);
+    }
+    
+    .card-badge {
+      align-self: flex-start;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--blue);
+    }
+    body[data-theme="terminal"] .card-badge {
+      background: rgba(0, 255, 102, 0.08);
+      color: var(--green);
+    }
+    body[data-theme="ink"] .card-badge {
+      border: 1px solid #000;
+      background: none;
+      color: #000;
+      border-radius: 0;
+    }
+    
+    .card-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-summary {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-bottom: 10px;
+      flex-grow: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+    }
+    .card-rank {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--blue);
+      font-style: italic;
+    }
+    body[data-theme="terminal"] .card-rank {
+      color: var(--green);
+    }
+    .card-link-btn {
+      font-size: 0.72rem;
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .card-link-btn:hover {
+      text-decoration: underline;
+    }
+    
+    .trend-card {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.03), rgba(96, 165, 250, 0.03));
+    }
+    body[data-theme="terminal"] .trend-card {
+      background: linear-gradient(135deg, rgba(0, 255, 102, 0.02), rgba(0, 255, 102, 0.06));
+    }
+    .trend-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .trend-tag {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(37, 99, 235, 0.06);
+      color: var(--blue);
+      font-weight: 600;
+    }
+    body[data-theme="terminal"] .trend-tag {
+      background: rgba(0, 255, 102, 0.08);
+      color: var(--green);
+    }
   </style>
 </head>
 <body data-theme="classic">
@@ -673,6 +856,78 @@ async function loadStockReports() {
 }
 
 // ── 뉴스 렌더 ────────────────────────────────────────────────────────────────
+function cardNewsHtml(report) {
+  if (!report || !report.structured) return "";
+  
+  // 구조화 데이터 추출 (ko 우선)
+  let data = null;
+  if (report.structured.ko && report.structured.ko.issues) {
+    data = report.structured.ko;
+  } else if (report.structured.en && report.structured.en.issues) {
+    data = report.structured.en;
+  } else if (report.structured.issues) {
+    data = report.structured;
+  }
+  
+  if (!data || !data.issues || !data.issues.length) return "";
+  
+  const issues = data.issues || [];
+  const trends = data.trends || [];
+  
+  const cardRows = issues.map(issue => {
+    const title = esc(issue.title);
+    const summary = esc(issue.summary);
+    const category = esc(issue.category || "General");
+    const rank = issue.rank || 1;
+    const sources = issue.sources || [];
+    const sourceLink = sources.length && sources[0].url
+      ? `<a href="${esc(sources[0].url)}" target="_blank" rel="noopener" class="card-link-btn">🔗 출처</a>`
+      : "";
+      
+    return `
+      <div class="news-card">
+        <div>
+          <span class="card-badge">${category}</span>
+          <h4 class="card-title">${title}</h4>
+          <p class="card-summary">${summary}</p>
+        </div>
+        <div class="card-footer">
+          <span class="card-rank">#${rank}</span>
+          ${sourceLink}
+        </div>
+      </div>
+    `;
+  }).join("");
+  
+  // 트렌드 카드 (4번째 카드) 추가
+  let trendCard = "";
+  if (trends && trends.length) {
+    const trendTags = trends.map(t => `<span class="trend-tag">#${esc(t.keyword)}</span>`).join("");
+    trendCard = `
+      <div class="news-card trend-card">
+        <div>
+          <span class="card-badge">Trend</span>
+          <h4 class="card-title">오늘의 주목할 키워드</h4>
+          <p class="card-summary" style="font-size:0.75rem;">주요 뉴스 데이터와 소셜 미디어에서 포착된 핵심 기술/경제 트렌드 키워드 목록입니다.</p>
+        </div>
+        <div class="trend-keywords">
+          ${trendTags}
+        </div>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="card-news-wrapper">
+      <div class="card-news-title">🃏 가로 스크롤 카드뉴스</div>
+      <div class="card-news-container">
+        ${cardRows}
+        ${trendCard}
+      </div>
+    </div>
+  `;
+}
+
 function renderReport(report) {
   if (!report) return `<div class="report-card"><div class="empty">⚠️ 리포트 없음</div></div>`;
   const {date, analysis_en, analysis_ko, combined, news_en=[], news_ko=[], stats={}} = report;
@@ -714,6 +969,7 @@ function renderReport(report) {
         <span class="badge badge-orange">AI ${stats.sent_to_ai||0}</span>
       </div>
     </div>
+    ${cardNewsHtml(report)}
     <div class="analysis">${md2html(analysis)}</div>
     ${newsHtml(fEn,"en")}
     ${newsHtml(fKo,"ko")}

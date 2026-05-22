@@ -80,6 +80,16 @@ def main() -> None:
     ok = send_email(md_content)
     logger.info(f"     → {'성공' if ok else '실패(로그 확인)'}")
 
+    # [6/6] 텔레그램 카드뉴스 발송
+    structured_data = analysis.get("structured")
+    if structured_data:
+        from core.shared.telegram import send_telegram_cardnews
+        logger.info("[6/6] 텔레그램 카드뉴스 발송 중...")
+        tg_ok = send_telegram_cardnews(structured_data, date_tag)
+        logger.info(f"     → {'성공' if tg_ok else '실패(로그 확인)'}")
+    else:
+        logger.info("[6/6] 구조화된 분석 데이터가 없어 텔레그램 발송을 건너뜁니다.")
+
     elapsed = (datetime.now() - start).seconds
     logger.info("=" * 60)
     logger.info(f"완료! 소요 시간: {elapsed}초")

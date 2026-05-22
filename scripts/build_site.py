@@ -89,6 +89,15 @@ def parse_md_for_json(md_path: str, date_str: str) -> dict:
     if not combined:
         combined = raw.split("## 📋")[0].strip() if "## 📋" in raw else raw.strip()
 
+    # JSON sidecar 로드
+    structured = {}
+    json_sidecar = Path(md_path).with_suffix(".json")
+    if json_sidecar.exists():
+        try:
+            structured = json.loads(json_sidecar.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
     return {
         "date":        date_str,
         "analysis_en": en_match.group(1).strip() if en_match else "",
@@ -97,6 +106,7 @@ def parse_md_for_json(md_path: str, date_str: str) -> dict:
         "news_en":     news_en,
         "news_ko":     news_ko,
         "stats":       stats,
+        "structured":  structured,
     }
 
 
