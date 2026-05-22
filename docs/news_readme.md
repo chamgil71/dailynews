@@ -120,6 +120,23 @@ Repository → Settings → Pages → Source: GitHub Actions
 
 ---
 
+## 배포 아키텍처 및 웹 UX
+
+### 1. 듀얼 배포 파이프라인 (Vercel & GitHub Pages)
+본 뉴스레터 시스템은 정적 페이지의 안정성과 서버리스 API의 유연함을 모두 갖춘 **듀얼 배포 시스템**을 채택하고 있습니다.
+* **Vercel (`https://ms-dailynews.vercel.app/`) [메인 호스팅]**:
+  - `vercel.json`을 기반으로 정적 호스팅과 `/api/unsubscribe` 경로의 **파이썬 서버리스 API (`api/unsubscribe.py`)**를 원활히 구동합니다.
+  - 이메일 뉴스레터 하단 및 시스템 환경 변수 `SITE_BASE_URL`은 기본적으로 Vercel 호스트를 가리키도록 설정되어 실시간 구독 해지 및 대시보드 접근성을 제공합니다.
+* **GitHub Pages (`https://chamgil71.github.io/dailynews/`) [백업 호스팅]**:
+  - GitHub Actions 워크플로우 (`news.yml`)에 의해 빌드 결과물(`publish/`)이 GitHub 정적 서버로 자동 퍼블리싱되며, 고가용성의 보조 배포 채널 역할을 훌륭히 수행합니다.
+
+### 2. 고품격 아코디언 UX 및 요약문(Summary) 렌더링
+* **기사 목록 기본 접힘 상태**: 대시보드의 압도적이고 심플한 첫인상을 위해 최초 로드 시 개별 기사 목록은 접힘 상태(`display: none;`)로 서빙됩니다.
+* **아코디언 토글**: 사용자가 `▼ 영어/한국어 뉴스 [N]건` 버튼을 탭하면 목록이 확장됩니다.
+* **150자 요약문(Summary)**: 각 기사 카드 하단에 회색의 차분하고 기품 있는 좌측 보더 인용구 스타일(`.news-summary`)로 100~200자 내외의 요약문이 아름답게 렌더링됩니다. 검색 필터 사용 시 요약문 내부까지 키워드 하이라이팅 마킹(`mark` 태그)이 작동합니다.
+
+---
+
 ## 테마 선택
 
 ### 레이아웃 테마 (전체 레이아웃·폰트 변경)
