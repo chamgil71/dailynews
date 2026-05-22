@@ -16,6 +16,8 @@ TOKENS = {
     "meta": {
         "name":     "editorial",
         "label":    "Editorial",
+        "desc":     "전통 영문 신문 스타일, 고풍 명조",
+        "swatch_colors": ["#2b231a", "#8b2a1f"],
         "font_cdn": "https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap",
         "font_family": "'Noto Serif KR', 'Source Serif Pro', Georgia, serif",
     },

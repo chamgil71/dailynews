@@ -7,7 +7,9 @@
 TOKENS = {
     "meta": {
         "name":     "ink",
-        "label":    "Ink (신문)",
+        "label":    "Ink",
+        "desc":     "신문 인쇄 스타일, 묵직함과 레드",
+        "swatch_colors": ["#1a1a1a", "#b91c1c"],
         "font_cdn": "",
         "font_family": "-apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif",
     },

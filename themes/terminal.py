@@ -16,6 +16,8 @@ TOKENS = {
     "meta": {
         "name":     "terminal",
         "label":    "Terminal Dark",
+        "desc":     "Bloomberg 터미널 스타일, 다크 모노",
+        "swatch_colors": ["#11161e", "#f5a524"],
         "font_cdn": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap",
         "font_family": "'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace",
     },

@@ -8,6 +8,8 @@ TOKENS = {
     "meta": {
         "name":     "classic",
         "label":    "Classic Navy",
+        "desc":     "남색 헤더, 깔끔한 카드 레이아웃",
+        "swatch_colors": ["#1e3a5f", "#2563eb"],
         "font_cdn": "",
         "font_family": "-apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif",
     },

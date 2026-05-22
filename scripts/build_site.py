@@ -235,12 +235,88 @@ def build(theme_name: str | None = None,
     app_dst = Path(DOCS_DIR, "index.html")
     if app_src.exists():
         app_html = app_src.read_text(encoding="utf-8")
-        # 디폴트 body data-theme 교체
+        
+        # ── 모든 테마 동적 컴파일 파이프라인 ──
+        theme_fonts = []
+        theme_css = []
+        theme_chips = []
+        
+        themes_dir = Path(Path(__file__).parent.parent, "themes")
+        import importlib
+        
+        # 일관된 순서 지정을 위한 정렬 기준
+        theme_order = ["classic", "minimal", "ink", "forest", "editorial", "terminal"]
+        found_themes = []
+        
+        for p in themes_dir.glob("*.py"):
+            name = p.stem
+            if name in ["base", "__init__"]:
+                continue
+            try:
+                # 임포트 시 충돌 방지 및 정상 탑재
+                mod = importlib.import_module(f"themes.{name}")
+                if hasattr(mod, "TOKENS"):
+                    found_themes.append((name, mod.TOKENS))
+            except Exception as e:
+                print(f"  ⚠ 테마 '{name}' 로드 에러: {e}")
+                
+        # 순서 정렬
+        found_themes.sort(key=lambda x: theme_order.index(x[0]) if x[0] in theme_order else 999)
+        
+        for name, tokens in found_themes:
+            meta = tokens.get("meta", {})
+            colors = tokens.get("colors", {})
+            font_family = meta.get("font_family", "")
+            
+            # 1. 폰트 CDN 취합
+            font_cdn = meta.get("font_cdn", "")
+            if font_cdn:
+                font_tag = f'  <link href="{font_cdn}" rel="stylesheet">'
+                if font_tag not in theme_fonts:
+                    theme_fonts.append(font_tag)
+                    
+            # 2. CSS 변수 코드 빌드 (언더스코어를 대시로 변환)
+            css_vars = []
+            for k, v in colors.items():
+                css_key = k.replace("_", "-")
+                css_vars.append(f"      --{css_key}: {v};")
+            if font_family:
+                css_vars.append(f"      --font-family: {font_family};")
+                
+            css_block = f'    [data-theme="{name}"] {{\n' + "\n".join(css_vars) + "\n    }"
+            theme_css.append(css_block)
+            
+            # 3. 테마 선택 칩 HTML 생성
+            label = meta.get("label", name.capitalize())
+            desc = meta.get("desc", "")
+            swatch = meta.get("swatch_colors", ["#ccc", "#999"])
+            grad_val = ",".join(swatch)
+            if len(swatch) == 1:
+                grad_val = f"{swatch[0]},{swatch[0]}"
+                
+            is_active = " active" if name == active_theme else ""
+            chip_html = f"""    <div class="theme-chip{is_active}" onclick="applyTheme('{name}')" id="chip-{name}">
+      <div class="chip-swatch" style="background:linear-gradient(90deg,{grad_val})"></div>
+      <div class="chip-name">{label}</div>
+      <div class="chip-desc">{desc}</div>
+    </div>"""
+            theme_chips.append(chip_html)
+            
+        # 플레이스홀더들 동적 교체
+        if theme_fonts:
+            pre_connect = """  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>"""
+            app_html = app_html.replace('<!-- DYNAMIC_THEME_FONTS -->', f"{pre_connect}\n" + "\n".join(theme_fonts))
+            
+        app_html = app_html.replace('/* DYNAMIC_THEME_CSS */', "\n\n".join(theme_css))
+        app_html = app_html.replace('<!-- DYNAMIC_THEME_CHIPS -->', "\n".join(theme_chips))
+        
+        # 디폴트 body data-theme 및 localstorage 치환
         app_html = app_html.replace('<body data-theme="classic">', f'<body data-theme="{active_theme}">')
-        # localStorage fallback 테마 교체
         app_html = app_html.replace('localStorage.getItem("site-theme") || "classic"', f'localStorage.getItem("site-theme") || "{active_theme}"')
+        
         app_dst.write_text(app_html, encoding="utf-8")
-        print(f"  + index.html (← app.html, default_theme: {active_theme})")
+        print(f"  + index.html (← app.html, dynamic compiled {len(found_themes)} themes, default_theme: {active_theme})")
     else:
         print("  ⚠ app.html 없음: index.html 미생성")
 

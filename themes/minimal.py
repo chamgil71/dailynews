@@ -9,6 +9,8 @@ TOKENS = {
     "meta": {
         "name":     "minimal",
         "label":    "Minimal",
+        "desc":     "넓은 여백, 깔끔한 오렌지 포인트",
+        "swatch_colors": ["#ffffff", "#ff5a1f"],
         "font_cdn": "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css",
         "font_family": "'Pretendard Variable', 'Pretendard', -apple-system, sans-serif",
     },

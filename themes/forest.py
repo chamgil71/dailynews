@@ -7,10 +7,12 @@
 TOKENS = {
     "meta": {
         "name":     "forest",
-        "label":    "Forest",
+        "label":    "Forest Green",
+        "desc":     "에메랄드 그린, 편안한 녹색조",
+        "swatch_colors": ["#064e3b", "#047857"],
         "font_cdn": "",
         "font_family": "-apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif",
-    },
+     },
     "colors": {
         "blue":         "#047857",
         "blue_light":   "#6ee7b7",
