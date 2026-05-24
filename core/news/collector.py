@@ -107,7 +107,7 @@ def _save_cache(new_urls: set):
 # ── 단일 피드 수집 ────────────────────────────────────────────────────────────
 
 def _fetch_feed(url: str, category: str, lang: str, label: str,
-                seen_urls: set) -> list:
+                seen_urls: set, lock = None) -> list:
     """단일 RSS 피드 파싱. 실패 시 빈 리스트 반환 (장애 격리)."""
     results = []
     old_timeout = socket.getdefaulttimeout()
@@ -126,9 +126,20 @@ def _fetch_feed(url: str, category: str, lang: str, label: str,
                 break
             link  = getattr(entry, "link",  "").strip()
             title = getattr(entry, "title", "").strip()
-            if not link or not title or link in seen_urls:
+            if not link or not title:
                 continue
-            seen_urls.add(link)
+
+            # seen_urls 경쟁 상태 보호 (락 동기화)
+            if lock:
+                with lock:
+                    if link in seen_urls:
+                        continue
+                    seen_urls.add(link)
+            else:
+                if link in seen_urls:
+                    continue
+                seen_urls.add(link)
+
             results.append({
                 "category":  category,
                 "label":     label,
@@ -166,12 +177,30 @@ def collect_news() -> dict:
     seen_urls   = set(cached_urls)
     all_news: list = []
 
+    # 스레드 안전성 락 및 ThreadPoolExecutor 병렬 채집
+    import threading
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    lock = threading.Lock()
+
+    tasks = []
     for category, meta in RSS_FEEDS.items():
         lang, label = meta["lang"], meta["label"]
         for url in meta["feeds"]:
-            items = _fetch_feed(url, category, lang, label, seen_urls)
-            all_news.extend(items)
-            time.sleep(0.3)   # 서버 부하 방지
+            tasks.append((url, category, lang, label))
+
+    logger.info(f"[병렬 수집 개시] 총 {len(tasks)}개 피드 병렬 채집 가동 (최대 8개 스레드)")
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {
+            executor.submit(_fetch_feed, url, category, lang, label, seen_urls, lock): url
+            for url, category, lang, label in tasks
+        }
+        for future in as_completed(futures):
+            try:
+                items = future.result()
+                all_news.extend(items)
+            except Exception as e:
+                logger.error(f"[병렬 태스크 오류] {e}")
 
     # 감시 키워드 분리 (분석 제외, 리포트 별도 섹션)
     keyword_news  = [n for n in all_news if _matches_keywords(n)]

@@ -48,14 +48,13 @@ _UNSUB_FILE = Path(__file__).parent.parent / "storage" / "unsubscribed.txt"
 
 
 def _get_unsubscribed() -> set[str]:
-    if not _UNSUB_FILE.exists():
-        return set()
-    return {line.strip().lower() for line in _UNSUB_FILE.read_text(encoding="utf-8").splitlines() if line.strip()}
+    # 구독 취소 비활성화 (공식 대시보드 방문 대체)
+    return set()
 
 
 def _get_recipients() -> list[str]:
-    unsubscribed = _get_unsubscribed()
-    return [e for e in RECIPIENT_EMAILS if e.lower() not in unsubscribed]
+    # 구독 취소 필터링 없이 전체 수신자 목록 다이렉트 반환
+    return RECIPIENT_EMAILS
 
 
 def _make_token(email: str) -> str:
@@ -70,7 +69,8 @@ def _connect_smtp() -> smtplib.SMTP:
         smtp.ehlo()
         smtp.starttls()
         return smtp
-    except Exception:
+    except Exception as e:
+        logger.info(f"[SMTP] Port 587 STARTTLS 연결 실패({e}) → 465 SSL 폴백 연결 개시")
         return smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15)
 
 
@@ -129,12 +129,8 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
         c = tokens["colors"]
         t = tokens["typography"]
 
-        # 구독 취소 URL (수신자별)
-        unsubscribe_url = ""
-        if SITE_BASE_URL:
-            token = _make_token(recipient_email)
-            encoded = urllib.parse.quote(recipient_email)
-            unsubscribe_url = f"{SITE_BASE_URL}/api/unsubscribe?email={encoded}&token={token}"
+        # 구독 취소 URL (백엔드 제거에 따라 홈페이지 바로가기 링크로 우회 대체)
+        unsubscribe_url = SITE_BASE_URL or ""
 
         sections = _parse_md_for_email(md)
         now = datetime.now()
@@ -206,11 +202,7 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
         c = tokens["colors"]
         t = tokens["typography"]
 
-        unsubscribe_url = ""
-        if SITE_BASE_URL:
-            token = _make_token(recipient_email)
-            encoded = urllib.parse.quote(recipient_email)
-            unsubscribe_url = f"{SITE_BASE_URL}/api/unsubscribe?email={encoded}&token={token}"
+        unsubscribe_url = SITE_BASE_URL or ""
 
         sections = _parse_md_for_stock_email(md)
         now = datetime.now()
@@ -236,10 +228,7 @@ def _md_to_html(md: str, recipient_email: str) -> str:
     body = markdown2.markdown(md, extras=["tables", "fenced-code-blocks"])
 
     if SITE_BASE_URL:
-        token = _make_token(recipient_email)
-        encoded = urllib.parse.quote(recipient_email)
-        unsubscribe_url = f"{SITE_BASE_URL}/api/unsubscribe?email={encoded}&token={token}"
-        unsub_link = f'<a href="{unsubscribe_url}" style="color:#aaa">구독 취소</a>'
+        unsub_link = f'<a href="{SITE_BASE_URL}" style="color:#aaa">AI News Daily 대시보드 바로가기</a>'
     else:
         unsub_link = ""
 
@@ -279,29 +268,32 @@ def send_email(md_content: str, html_content: str | None = None,
         with smtp:
             smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
             for email in recipients:
-                msg = MIMEMultipart("alternative")
-                msg["Subject"] = subject
-                msg["From"] = GMAIL_USER
-                msg["To"] = email
-                if html_content:
-                    body = html_content
-                elif template == "stock":
-                    _theme = theme_name or _get_email_theme()
-                    body = (_render_stock_email_template(md_content, email, _theme)
-                            or _md_to_html(md_content, email))
-                else:
-                    _theme = theme_name or _get_email_theme()
-                    body = (_render_email_template(md_content, email, _theme)
-                            or _md_to_html(md_content, email))
-                msg.attach(MIMEText(body, "html", "utf-8"))
-                smtp.sendmail(GMAIL_USER, email, msg.as_string())
-                success_count += 1
-                logger.info(f"[이메일 발송] → {email}")
+                try:
+                    msg = MIMEMultipart("alternative")
+                    msg["Subject"] = subject
+                    msg["From"] = GMAIL_USER
+                    msg["To"] = email
+                    if html_content:
+                        body = html_content
+                    elif template == "stock":
+                        _theme = theme_name or _get_email_theme()
+                        body = (_render_stock_email_template(md_content, email, _theme)
+                                or _md_to_html(md_content, email))
+                    else:
+                        _theme = theme_name or _get_email_theme()
+                        body = (_render_email_template(md_content, email, _theme)
+                                or _md_to_html(md_content, email))
+                    msg.attach(MIMEText(body, "html", "utf-8"))
+                    smtp.sendmail(GMAIL_USER, email, msg.as_string())
+                    success_count += 1
+                    logger.info(f"[이메일 발송] → {email}")
+                except Exception as ex:
+                    logger.error(f"[이메일 개별 발송 실패] 대상: {email}, 오류: {ex}")
     except smtplib.SMTPAuthenticationError:
         logger.error("[이메일 발송 실패] Gmail 인증 오류 — 앱 비밀번호를 확인하세요")
         return False
     except Exception as e:
-        logger.error(f"[이메일 발송 오류] {e}")
+        logger.error(f"[이메일 연결/로그인 오류] {e}")
         return False
 
     logger.info(f"[이메일 발송] 완료 → {success_count}/{len(recipients)}명")

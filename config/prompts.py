@@ -21,12 +21,13 @@ CATEGORY_PROMPTS: dict[str, str] = {
 
 DEFAULT_PROMPT_HINT: str = "핵심 이슈와 공통 트렌드 중심으로 분석하세요."
 
-# ── 한국어 뉴스 분석 프롬프트 템플릿 ─────────────────────────────────────────
+# ── 뉴스 분석 공통 프롬프트 템플릿 ─────────────────────────────────────────
 # {hints}      : 카테고리 힌트 문구 (자동 삽입)
+# {lang_label} : "한국어" 또는 "영어" (자동 삽입)
 # {title_block}: 기사 제목+요약 목록 (자동 삽입)
 
-PROMPT_TEMPLATE_KO: str = """\
-당신은 뉴스 분석 전문가입니다. 아래 한국어 뉴스 제목을 분석하세요.
+PROMPT_TEMPLATE: str = """\
+당신은 뉴스 분석 전문가입니다. 아래 {lang_label} 뉴스 제목을 분석하세요.
 {hints}
 **반드시 한국어로 답변하세요.**
 
@@ -81,28 +82,28 @@ PROMPT_TEMPLATE_JSON: str = """\
 
 출력 형식 (```json 블록으로 감싸세요):
 ```json
-{{
+{
   "lang": "{lang}",
   "issues": [
-    {{
+    {
       "rank": 1,
       "title": "이슈 핵심 제목",
       "summary": "2~3문장 요약. 중요도와 배경 포함.",
       "category": "ai_ml",
       "importance": "high",
       "sources": [
-        {{"title": "기사 제목", "url": "https://..."}}
+        {"title": "기사 제목", "url": "https://..."}
       ]
-    }},
-    {{"rank": 2, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []}},
-    {{"rank": 3, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []}}
+    },
+    {"rank": 2, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []},
+    {"rank": 3, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []}
   ],
   "trends": [
-    {{"keyword": "키워드1", "description": "1~2문장 설명", "category": "ai_ml"}},
-    {{"keyword": "키워드2", "description": "설명", "category": "technology"}},
-    {{"keyword": "키워드3", "description": "설명", "category": "economy"}}
+    {"keyword": "키워드1", "description": "1~2문장 설명", "category": "ai_ml"},
+    {"keyword": "키워드2", "description": "설명", "category": "technology"},
+    {"keyword": "키워드3", "description": "설명", "category": "economy"}
   ],
-  "category_stats": {{
+  "category_stats": {
     "ai_ml": 0,
     "technology": 0,
     "economy": 0,
@@ -110,60 +111,13 @@ PROMPT_TEMPLATE_JSON: str = """\
     "korean_news": 0,
     "security": 0,
     "startup": 0
-  }}
-}}
+  }
+}
 ```
 
 category 값은 다음 중 하나: ai_ml, technology, economy, global_news, korean_news, korean_economy, korean_tech, security, startup
 importance 값: high, medium, low
 category_stats: 뉴스 목록에서 각 카테고리 기사 수를 카운트
-
-뉴스 목록:
-{title_block}
-"""
-
-# ── 영어 뉴스 분석 프롬프트 템플릿 ───────────────────────────────────────────
-
-PROMPT_TEMPLATE_EN: str = """\
-당신은 뉴스 분석 전문가입니다. 아래 영어 뉴스 제목을 분석하세요.
-{hints}
-**반드시 한국어로 답변하세요.**
-
-출력 형식 (반드시 준수 — 빈 줄 포함):
-
-## 핵심 이슈 TOP 3
-
-### 1. [이슈 핵심 제목]
-
-2~3문장 요약. 중요도와 배경 포함.
-
-🔗 주요 출처: [기사제목](링크URL)
-
-### 2. [이슈 제목]
-
-설명.
-
-🔗 주요 출처: [기사제목](링크URL)
-
-### 3. [이슈 제목]
-
-설명.
-
-🔗 주요 출처: [기사제목](링크URL)
-
-## 주목할 트렌드
-
-1. **[키워드]**
-
-   1~2문장 설명
-
-2. **[키워드]**
-
-   1~2문장 설명
-
-3. **[키워드]**
-
-   1~2문장 설명
 
 뉴스 목록:
 {title_block}

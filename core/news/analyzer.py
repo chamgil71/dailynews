@@ -23,7 +23,7 @@ from config.settings import (
 )
 from config.prompts import (
     CATEGORY_PROMPTS, DEFAULT_PROMPT_HINT,
-    PROMPT_TEMPLATE_KO, PROMPT_TEMPLATE_EN, PROMPT_TEMPLATE_JSON,
+    PROMPT_TEMPLATE, PROMPT_TEMPLATE_JSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,8 @@ def _build_prompt(news: list, lang: str, use_json: bool = False) -> str:
     if use_json:
         return PROMPT_TEMPLATE_JSON.format(hints=hints, title_block=title_block, lang=lang)
 
-    template = PROMPT_TEMPLATE_KO if lang == "ko" else PROMPT_TEMPLATE_EN
-    return template.format(hints=hints, title_block=title_block)
+    lang_label = "한국어" if lang == "ko" else "영어"
+    return PROMPT_TEMPLATE.format(hints=hints, title_block=title_block, lang_label=lang_label)
 
 
 def _parse_json_response(text: str) -> dict | None:
@@ -64,10 +64,6 @@ def _parse_json_response(text: str) -> dict | None:
         return json.loads(text.strip())
     except json.JSONDecodeError:
         return None
-
-
-def _use_json_mode() -> bool:
-    return True
 
 # ── 베이스 클래스 ─────────────────────────────────────────────────────────────
 
@@ -104,7 +100,7 @@ class GPTAnalyzer(BaseAnalyzer):
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
         results = {"en": "", "ko": "", "combined": "", "structured": {}}
-        json_mode = _use_json_mode()
+        json_mode = True
         if en_news:
             try:
                 raw = self._call(_build_prompt(en_news, "en", json_mode), len(en_news))
@@ -154,7 +150,7 @@ class ClaudeAnalyzer(BaseAnalyzer):
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
         results = {"en": "", "ko": "", "combined": "", "structured": {}}
-        json_mode = _use_json_mode()
+        json_mode = True
         if en_news:
             try:
                 raw = self._call(_build_prompt(en_news, "en", json_mode), len(en_news))
@@ -222,7 +218,7 @@ class GeminiAnalyzer(BaseAnalyzer):
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
         results = {"en": "", "ko": "", "combined": "", "structured": {}}
-        json_mode = _use_json_mode()
+        json_mode = True
 
         if en_news:
             try:

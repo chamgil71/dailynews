@@ -87,7 +87,7 @@ def collect_news_ko(query: str = "코스피 오늘 증시 시황") -> list[dict]
     NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 환경변수 필요.
     미설정 시 빈 리스트 반환 (프로세스 중단 없음).
     """
-    import os, requests
+    import os, requests, re, html
     client_id     = os.getenv("NAVER_CLIENT_ID", "")
     client_secret = os.getenv("NAVER_CLIENT_SECRET", "")
     if not client_id or not client_secret:
@@ -105,11 +105,18 @@ def collect_news_ko(query: str = "코스피 오늘 증시 시황") -> list[dict]
         )
         resp.raise_for_status()
         items = resp.json().get("items", [])
+
+        def clean_naver_title(raw_title: str) -> str:
+            # 모든 HTML 태그 제거
+            cleaned = re.sub(r'<[^>]+>', '', raw_title)
+            # HTML 엔터티 (&amp;, &#039; 등) 완벽 복원
+            return html.unescape(cleaned).strip()
+
         return [
             {
-                "title":   item.get("title", "").replace("<b>","").replace("</b>",""),
+                "title":   clean_naver_title(item.get("title", "")),
                 "url":     item.get("originallink") or item.get("link", ""),
-                "source":  item.get("description", "")[:80],
+                "source":  clean_naver_title(item.get("description", ""))[:80],
             }
             for item in items
         ]

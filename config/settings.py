@@ -13,7 +13,7 @@ GPT_MODEL_MINI     = "gpt-4o-mini"
 GPT_MINI_THRESHOLD = 20          # 뉴스 ≤ 20건이면 mini 자동 선택
 
 # ── Claude 모델 설정 ──────────────────────────────────────────────────────────
-CLAUDE_MODEL_FULL  = "claude-opus-4-5"
+CLAUDE_MODEL_FULL  = "claude-sonnet-4-6"
 CLAUDE_MODEL_MINI  = "claude-haiku-4-5-20251001"
 CLAUDE_MINI_THRESHOLD = 20
 

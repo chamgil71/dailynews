@@ -21,11 +21,7 @@ _ROOT = str(Path(__file__).parent.parent)
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-import ssl
-try:
-    ssl._create_default_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
+# SSL 검증 복원 완료 (안전화)
 
 from dotenv import load_dotenv
 load_dotenv()

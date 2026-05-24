@@ -26,63 +26,78 @@ def send_telegram_cardnews(structured_data: dict, date_str: str = None) -> bool:
     if not date_str:
         date_str = datetime.now().strftime("%Y-%m-%d")
 
-    # structured 데이터가 ko 또는 en 아래에 감싸져 있는 경우가 대부분이므로 추출 로직 고도화
-    data = None
-    if "ko" in structured_data and isinstance(structured_data["ko"], dict) and "issues" in structured_data["ko"]:
-        data = structured_data["ko"]
-    elif "en" in structured_data and isinstance(structured_data["en"], dict) and "issues" in structured_data["en"]:
-        data = structured_data["en"]
-    elif "issues" in structured_data:
-        data = structured_data
-    else:
-        # structured_data 자체가 비어있거나 올바른 형식이 아닐 경우
+    # structured 데이터 내 ko(국내) 및 en(글로벌) 데이터 동시 추출
+    ko_data = structured_data.get("ko") if isinstance(structured_data.get("ko"), dict) else None
+    en_data = structured_data.get("en") if isinstance(structured_data.get("en"), dict) else None
+    
+    # 껍데기 없이 최상위에 직접 있는 경우 폴백
+    if not ko_data and not en_data and "issues" in structured_data:
+        if structured_data.get("lang") == "ko":
+            ko_data = structured_data
+        else:
+            en_data = structured_data
+
+    if not ko_data and not en_data:
         logger.warning("[Telegram] 올바른 구조화(structured) 데이터를 찾을 수 없어 텔레그램 카드뉴스 발송을 취소합니다.")
         return False
 
-    issues = data.get("issues", [])
-    trends = data.get("trends", [])
-
-    if not issues:
-        logger.warning("[Telegram] 구조화된 이슈 목록이 없어 발송하지 않습니다.")
-        return False
-
     # HTML 마크업 생성
-    # 텔레그램 HTML 파싱 에러 방지를 위해 html.escape를 세심히 적용
     msg_lines = []
     msg_lines.append(f"📅 <b>Daily News Brief - {date_str}</b>\n")
-    msg_lines.append("🔥 <b>오늘의 핵심 이슈 TOP 3</b>\n")
 
     emoji_ranks = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣"}
+    all_trends = []
 
-    for issue in issues[:3]:
-        rank = issue.get("rank", 1)
-        rank_emoji = emoji_ranks.get(rank, "🔹")
-        title = html.escape(issue.get("title", "이슈"))
-        summary = html.escape(issue.get("summary", ""))
-        
-        msg_lines.append(f"{rank_emoji} <b>{title}</b>")
-        if summary:
-            msg_lines.append(f"➔ {summary}")
-            
-        # 첫 번째 소스 가져오기
-        sources = issue.get("sources", [])
-        if sources:
-            src = sources[0]
-            src_title = html.escape(src.get("title", "원문 보기"))
-            src_url = src.get("url", "")
-            if src_url:
-                msg_lines.append(f"🔗 주요 출처: <a href=\"{src_url}\">{src_title}</a>")
-        msg_lines.append("")  # 공백 라인 추가
+    # 1. 글로벌 핵심 이슈 (EN) 송출
+    if en_data and en_data.get("issues"):
+        msg_lines.append("🌐 <b>글로벌 핵심 이슈 TOP 3</b>")
+        for issue in en_data.get("issues", [])[:3]:
+            rank = issue.get("rank", 1)
+            rank_emoji = emoji_ranks.get(rank, "🔹")
+            title = html.escape(issue.get("title", "이슈"))
+            summary = html.escape(issue.get("summary", ""))
+            msg_lines.append(f"{rank_emoji} <b>{title}</b>")
+            if summary:
+                msg_lines.append(f"➔ {summary}")
+            sources = issue.get("sources", [])
+            if sources and sources[0].get("url"):
+                src = sources[0]
+                src_title = html.escape(src.get("title", "원문 보기"))
+                msg_lines.append(f"🔗 주요 출처: <a href=\"{src['url']}\">{src_title}</a>")
+            msg_lines.append("")
+        all_trends.extend(en_data.get("trends", []))
 
-    if trends:
+    # 2. 국내 핵심 이슈 (KO) 송출
+    if ko_data and ko_data.get("issues"):
+        msg_lines.append("🇰🇷 <b>국내 핵심 이슈 TOP 3</b>")
+        for issue in ko_data.get("issues", [])[:3]:
+            rank = issue.get("rank", 1)
+            rank_emoji = emoji_ranks.get(rank, "🔹")
+            title = html.escape(issue.get("title", "이슈"))
+            summary = html.escape(issue.get("summary", ""))
+            msg_lines.append(f"{rank_emoji} <b>{title}</b>")
+            if summary:
+                msg_lines.append(f"➔ {summary}")
+            sources = issue.get("sources", [])
+            if sources and sources[0].get("url"):
+                src = sources[0]
+                src_title = html.escape(src.get("title", "원문 보기"))
+                msg_lines.append(f"🔗 주요 출처: <a href=\"{src['url']}\">{src_title}</a>")
+            msg_lines.append("")
+        all_trends.extend(ko_data.get("trends", []))
+
+    # 3. 해시태그 트렌드 통합 송출
+    if all_trends:
         msg_lines.append("🔍 <b>오늘의 주목할 트렌드</b>")
+        seen_kws = set()
         kw_tags = []
-        for trend in trends[:5]:
-            keyword = trend.get("keyword", "").replace(" ", "_")
-            if keyword:
+        for trend in all_trends:
+            keyword = trend.get("keyword", "").strip().replace(" ", "_")
+            if keyword and keyword.lower() not in seen_kws:
+                seen_kws.add(keyword.lower())
                 kw_tags.append(f"#{html.escape(keyword)}")
         if kw_tags:
-            msg_lines.append(" ".join(kw_tags))
+            msg_lines.append(" ".join(kw_tags[:8]))  # 가독성을 위해 최대 8개 제한
         msg_lines.append("")
 
     # 카드뉴스 및 대시보드 바로가기 링크

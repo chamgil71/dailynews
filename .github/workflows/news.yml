@@ -5,6 +5,11 @@ on:
     - cron: '15 23 * * *'   # UTC 23:15 = KST 08:15 (혼잡 피하고 이른 아침 전송)
   workflow_dispatch:
 
+# Pages 배포 동시 경합 방지
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
 # GitHub Pages 배포에 필요한 권한
 permissions:
   contents: write

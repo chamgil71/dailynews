@@ -57,6 +57,11 @@ def append_news(news_items: list, date_str: str) -> int:
     date_str:   "YYYY-MM-DD"
     반환:       실제로 추가된 행 수
     """
+    import os
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        logger.info("[DB 저장] GitHub Actions 환경 — 로컬 xlsx DB 쓰기 생략 (reports-data.json 캐시 필터로 대체)")
+        return 0
+
     if not news_items:
         return 0
 
