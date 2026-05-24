@@ -92,6 +92,9 @@ Repository → Settings → Secrets and variables → Actions
 | `SITE_THEME` | 선택 | classic |
 | `NAVER_CLIENT_ID` | 선택 | Naver API 보유 시 |
 | `NAVER_CLIENT_SECRET` | 선택 | Naver API 보유 시 |
+| `VERCEL_TOKEN` | 필수(배포) | Vercel API Token |
+| `VERCEL_ORG_ID` | 필수(배포) | Vercel Org/Team ID |
+| `VERCEL_PROJECT_ID` | 필수(배포) | Vercel Project ID |
 
 ### 워크플로우 트리거
 

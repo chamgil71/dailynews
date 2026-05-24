@@ -187,36 +187,10 @@ publish/
     "issues_ko":   [...],
     "keywords_en": [{"keyword": ..., "desc": ...}],
     "keywords_ko": [...],
-    "structured":  {...}  # [2026-05-24 추가] 사이드카 JSON 메타데이터 병합 탑재
 }
 ```
 
----
-
-### 5-2. [2026-05-24 추가] Marked.js & 테마 연동 클라이언트 렌더링 파이프라인 (순서도)
-
-마 마크다운 파서 깨짐 및 단락 붕괴 장애를 원천 퇴치하고, 하드코딩 없는 테마 동적 연동을 이루는 정교한 렌더링 파이프라인은 아래 순서도로 구동됩니다.
-
-```mermaid
-flowchart TD
-    A[reports/news_YYYY-MM-DD.md MD 파일] -->|1. build_site.py 빌드| B[YYYY-MM-DD.html 정적 파일]
-    A -->|2. 사이드카 JSON 메타데이터 머지| C[reports-data.json 데이터베이스]
-    C -->|3. SPA app.html이 fetch 수신| D[index.html SPA 브라우저 렌더]
-    
-    subgraph Client SPA Engine
-        D -->|4. marked.min.js CDN 연동| E[마크다운 본문 DOM 파싱]
-        E -->|5. cardNewsHtml 생성| F[◀ / ▶ 내비게이션 단추 장착 카드뉴스 렌더]
-        F -->|6. applyTheme 변수 맵 바인딩| G[editorial/terminal 테마 즉시 적용]
-    end
-
-    style B fill:#f9f,stroke:#333,stroke-width:2px
-    style D fill:#bbf,stroke:#333,stroke-width:2px
-    style G fill:#dfd,stroke:#333,stroke-width:2px
-```
-
-* **MARKED.JS 파서 연동 원리**: SPA 내부의 버그성 정규식 치환 `md2html`을 배제하고 글로벌 표준 마크다운 렌더러인 `marked.js` CDN을 주입해, 굵은 글씨(`**`)와 복잡한 줄바꿈이 한 치의 깨짐도 없이 완벽하게 복구되도록 인코딩 환경을 보강했습니다.
-* **하드코딩 배제 설정 테마**: 서버 템플릿의 색상 토큰을 SPA `:root` 내의 `[data-theme="..."]` CSS 변수 맵으로 이식하여, 브라우저 드롭다운 패널 선택 및 칩 클릭에 하드코딩 없이 즉각 스타일시트가 동기화 변경됩니다.
-
+Phase 2 카드뉴스 생성에서 이 데이터를 활용한다.
 
 ---
 

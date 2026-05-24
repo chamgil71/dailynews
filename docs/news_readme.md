@@ -111,6 +111,9 @@ Repository → Settings → Secrets and variables → Actions
 | `RECIPIENT_EMAILS` | email1,email2 |
 | `SITE_BASE_URL` | https://chamgil71.github.io/dailynews |
 | `SITE_THEME` | classic (또는 minimal/ink/forest) |
+| `VERCEL_TOKEN` | Vercel API Token (명시적 배포용) |
+| `VERCEL_ORG_ID` | Vercel Org/Team ID |
+| `VERCEL_PROJECT_ID` | Vercel Project ID |
 
 ### GitHub Pages 설정 (최초 1회)
 

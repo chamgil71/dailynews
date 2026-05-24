@@ -2,7 +2,7 @@ name: Daily News Report
 
 on:
   schedule:
-    - cron: '15 23 * * *'   # UTC 23:15 = KST 08:15 (혼잡 피하고 이른 아침 전송)
+    - cron: '0 02 * * *'   # UTC 02:00 = KST 11:00
   workflow_dispatch:
 
 # GitHub Pages 배포에 필요한 권한
@@ -43,17 +43,17 @@ jobs:
           RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
           UNSUBSCRIBE_SECRET:  ${{ secrets.UNSUBSCRIBE_SECRET }}
           SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
-          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
 
       - name: 사이트 빌드 (MD → HTML)
         run: python scripts/build_site.py
+        env:
+          THEME_NEWS: editorial
 
       - name: 리포트 + 사이트 + DB 커밋
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "actions@github.com"
-          git add reports/
+          git add reports/ storage/
           # 날짜별 HTML (gitignore 대상이므로 -f 강제 추가)
           git add -f publish/$(date +'%Y-%m-%d').html 2>/dev/null || true
           # Vercel 필수 정적 파일 (항상 최신 상태 유지)
@@ -72,10 +72,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
-
-      # ── Vercel 강제 프로덕션 배포 ──────────────────────────────────────────
-      - name: Vercel 프로덕션 강제 배포
-        run: npx vercel --token=${{ secrets.VERCEL_TOKEN }} --prod --yes
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

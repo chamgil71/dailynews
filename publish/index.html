@@ -146,6 +146,18 @@
       --code-bg: #161c25;
       --font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
     }
+    /* Editorial 테마 */
+    [data-theme="editorial"] {
+      --blue:#8b2a1f; --navy:#2b231a; --bg:#f4ede0; --card:#ece2cf;
+      --border:#2b231a; --text:#1a1612; --muted:#8a7e6f; --accent:#8b2a1f;
+      font-family: 'Noto Serif KR', Georgia, serif !important;
+    }
+    /* Terminal 테마 */
+    [data-theme="terminal"] {
+      --blue:#00ff66; --navy:#0c0f12; --bg:#0c0f12; --card:#161b22;
+      --border:#30363d; --text:#00ff66; --muted:#58a6ff; --accent:#00ff66;
+      font-family: 'IBM Plex Mono', 'Courier New', monospace !important;
+    }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -539,6 +551,7 @@
     }
     footer a { color: var(--muted); }
 
+<<<<<<< Updated upstream
     /* ── 데일리 카드뉴스 스타일 ── */
     .card-news-wrapper {
       margin: 8px 0 20px 0;
@@ -550,10 +563,27 @@
       font-weight: 700;
       color: var(--blue);
       margin-bottom: 10px;
+=======
+    /* ── 카드뉴스 슬라이더 컴포넌트 ── */
+    .card-news-section {
+      position: relative;
+      margin-bottom: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+    .card-news-section h3 {
+      font-size: .95rem;
+      color: var(--navy);
+      margin-bottom: 14px;
+>>>>>>> Stashed changes
       display: flex;
       align-items: center;
       gap: 6px;
     }
+<<<<<<< Updated upstream
     .card-news-container {
       display: flex;
       gap: 14px;
@@ -720,8 +750,119 @@
     body[data-theme="terminal"] .trend-tag {
       background: rgba(0, 255, 102, 0.08);
       color: var(--green);
+=======
+    .card-news-viewport {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 2px;
+    }
+    .card-news-viewport::-webkit-scrollbar {
+      display: none; /* 스크롤바 숨김 */
+    }
+    .news-slide-card {
+      flex: 0 0 320px;
+      scroll-snap-align: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 5px rgba(0,0,0,.03);
+      transition: transform .2s;
+    }
+    .news-slide-card:hover {
+      transform: translateY(-2px);
+    }
+    .slide-header {
+      padding: 12px 14px;
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      color: #fff;
+      font-weight: 700;
+      font-size: .84rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .slide-body {
+      padding: 14px;
+      font-size: .84rem;
+      color: var(--text);
+      line-height: 1.6;
+      flex: 1;
+    }
+    .slide-body h4 {
+      font-size: .9rem;
+      margin-bottom: 8px;
+      color: var(--navy);
+    }
+    .slide-footer {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--card);
+      font-size: .76rem;
+      text-align: right;
+    }
+    .slide-footer a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .slide-footer a:hover {
+      text-decoration: underline;
+    }
+    
+    /* 슬라이더 내비게이션 버튼 */
+    .slide-nav-btn {
+      position: absolute;
+      top: 55%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,.15);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      font-size: .8rem;
+      color: var(--text);
+      transition: all .2s;
+      outline: none;
+    }
+    .slide-nav-btn:hover {
+      background: var(--bg);
+      transform: translateY(-50%) scale(1.08);
+    }
+    .slide-nav-btn.prev { left: -12px; }
+    .slide-nav-btn.next { right: -12px; }
+    
+    @media (max-width: 600px) {
+      .news-slide-card {
+        flex: 0 0 100%; /* 모바일에서는 가득 차게 */
+      }
+      .slide-nav-btn {
+        display: none; /* 모바일은 스와이프 터치가 기본이므로 버튼 숨김 */
+      }
+>>>>>>> Stashed changes
     }
   </style>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    // Marked.js 기본 구성
+    marked.setOptions({
+      breaks: true,
+      gfm: true
+    });
+  </script>
 </head>
 <body data-theme="editorial">
 
@@ -877,6 +1018,16 @@
       <div class="chip-name">Terminal Dark</div>
       <div class="chip-desc">Bloomberg 터미널 스타일, 다크 모노</div>
     </div>
+    <div class="theme-chip" onclick="applyTheme('editorial')" id="chip-editorial">
+      <div class="chip-swatch" style="background:linear-gradient(90deg,#2b231a,#8b2a1f)"></div>
+      <div class="chip-name">Editorial</div>
+      <div class="chip-desc">신문 마스트헤드, 미색</div>
+    </div>
+    <div class="theme-chip" onclick="applyTheme('terminal')" id="chip-terminal">
+      <div class="chip-swatch" style="background:linear-gradient(90deg,#0c0f12,#00ff66)"></div>
+      <div class="chip-name">Terminal Dark</div>
+      <div class="chip-desc">Bloomberg 다크 그린</div>
+    </div>
   </div>
 
   <h3>섹션별 빌드 테마</h3>
@@ -963,22 +1114,15 @@ function hi(text, q) {
   const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi");
   return text.replace(re, "<mark>$1</mark>");
 }
+function scrollSlider(id, dir) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const offset = el.offsetWidth * 0.85; // 슬라이드 폭의 85% 만큼 스무스하게 이동
+  el.scrollBy({ left: dir * offset, behavior: 'smooth' });
+}
 function md2html(md) {
   if (!md) return "";
-  let h = md
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.+)$/gm,  "<h2>$1</h2>")
-    .replace(/^# (.+)$/gm,   "<h1>$1</h1>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g,     "<em>$1</em>")
-    .replace(/^> (.+)$/gm,    "<blockquote>$1</blockquote>")
-    .replace(/^---$/gm,       "<hr>")
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-    .replace(/^- (.+)$/gm,    "<li>$1</li>")
-    .replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
-    .replace(/\n\n+/g,        "</p><p>")
-    .replace(/^(?!<[hbup\/])/gm, "");
-  return `<p>${h}</p>`;
+  return marked.parse(md);
 }
 
 // ── 데이터 로드 ───────────────────────────────────────────────────────────────
@@ -1111,8 +1255,52 @@ function renderReport(report) {
       <div class="news-list" id="${id}">${rows}</div>`;
   }
 
+  // 카드뉴스 슬라이드 생성
+  let cardNewsHtml = "";
+  if (report.structured) {
+    const enIssues = report.structured.en?.issues || [];
+    const koIssues = report.structured.ko?.issues || [];
+    const issues = [
+      ...enIssues.map((it, idx) => ({ ...it, lang: "🌐 Global", icon: ["🔥", "📢", "💡"][idx] || "🔥" })),
+      ...koIssues.map((it, idx) => ({ ...it, lang: "🇰🇷 국내", icon: ["🔥", "📢", "💡"][idx] || "🔥" }))
+    ];
+    
+    if (issues.length > 0) {
+      const slides = issues.map((issue, idx) => {
+        const sourceHtml = (issue.sources || []).slice(0, 1).map(src => 
+          `<a href="${esc(src.url)}" target="_blank" rel="noopener">↗ 원문</a>`
+        ).join("") || (issue.url ? `<a href="${esc(issue.url)}" target="_blank" rel="noopener">↗ 원문</a>` : "");
+        
+        return `
+        <div class="news-slide-card">
+          <div class="slide-header">
+            <span>${issue.icon} ${esc(issue.lang)} 이슈 ${idx + 1}</span>
+            <span style="font-size:.7rem;opacity:.8">${issue.importance === "high" ? "■ 주요" : "□ 일반"}</span>
+          </div>
+          <div class="slide-body">
+            <h4>${esc(issue.title)}</h4>
+            <p>${esc(issue.summary || issue.body || "")}</p>
+          </div>
+          ${sourceHtml ? `<div class="slide-footer">${sourceHtml}</div>` : ""}
+        </div>`;
+      }).join("");
+      
+      const sliderId = `slider-${date}`;
+      cardNewsHtml = `
+      <div class="card-news-section">
+        <h3>🃏 오늘의 핵심 카드뉴스</h3>
+        <button class="slide-nav-btn prev" onclick="scrollSlider('${sliderId}', -1)">◀</button>
+        <button class="slide-nav-btn next" onclick="scrollSlider('${sliderId}', 1)">▶</button>
+        <div class="card-news-viewport" id="${sliderId}">
+          ${slides}
+        </div>
+      </div>`;
+    }
+  }
+
   return `
   <div class="report-card">
+    ${cardNewsHtml}
     <div class="report-header">
       <div class="report-date">📰 ${y}년 ${m}월 ${d}일 브리핑</div>
       <div class="badges">
