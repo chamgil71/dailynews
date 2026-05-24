@@ -28,7 +28,13 @@
       "PowerShell(Get-Command *)",
       "Bash(git -C C:\\\\ai\\\\dailynews check-ignore publish/)",
       "Bash(git -C C:\\\\ai\\\\dailynews ls-files publish/)",
-      "PowerShell(Set-Location C:\\\\ai\\\\dailynews; \\(git ls-files publish/\\).Count; git ls-files | Select-String \"app.html\")"
+      "PowerShell(Set-Location C:\\\\ai\\\\dailynews; \\(git ls-files publish/\\).Count; git ls-files | Select-String \"app.html\")",
+      "Bash(Get-Item \"C:\\\\coding\\\\README.md\")",
+      "Bash(Select-Object Name, LastWriteTime, Length)",
+      "PowerShell(Get-ChildItem \"C:\\\\ai\\\\mywiki\" -Recurse -Depth 3 | Where-Object { $_.Name -notmatch \"^\\(node_modules|\\\\.git|__pycache__|\\\\.next|dist|build\\)$\" } | Select-Object FullName, Length | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem \"C:\\\\ai\\\\mywiki\\\\.github\" -Recurse | Select-Object @{N='Path';E={$_.FullName -replace [regex]::Escape\\('C:\\\\ai\\\\mywiki\\\\'\\),''}} | Format-Table -AutoSize)",
+      "PowerShell(Get-Item \"C:\\\\ai\\\\mywiki\\\\README.md\" | Select-Object Name, LastWriteTime, @{N='Size';E={\"$\\([math]::Round\\($_.Length/1KB,1\\)\\) KB\"}})",
+      "PowerShell($f = Get-Item \"C:\\\\ai\\\\mywiki\\\\README.md\"; Write-Output \"$\\($f.Name\\) | $\\([math]::Round\\($f.Length/1KB,1\\)\\) KB | $\\($f.LastWriteTime\\)\")"
     ]
   }
 }
