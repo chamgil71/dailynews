@@ -52,7 +52,9 @@ jobs:
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
 
       - name: 사이트 빌드 (MD → HTML)
-        run: python scripts/build_site.py
+        run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
+        # 테마/디자인 변경 시 아래 주석 해제 후 커밋 (config 수정과 함께)
+        # run: python scripts/build_site.py --all
 
       - name: 리포트 + 사이트 + DB 커밋
         run: |
