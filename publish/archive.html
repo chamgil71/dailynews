@@ -3,134 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="AI가 매일 자동으로 수집·분석하는 글로벌 뉴스 브리핑">
-  <title>아카이브 — AI News Daily</title>
+  <title>전체 목록 — AI News Daily</title>
   
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
   <style>
+  
   :root {
-    --ink:#1a1612; --ink-soft:#4a4036; --ink-mute:#8a7e6f;
-    --paper:#f4ede0; --paper-2:#ece2cf;
-    --rule:#2b231a; --rule-soft:#c8bda7; --accent:#8b2a1f;
+    --color-blue:        #2563eb;
+    --color-blue-light:  #60a5fa;
+    --color-blue-50:     #eff6ff;
+    --color-blue-200:    #bfdbfe;
+    --color-navy:        #1e3a5f;
+    --color-bg:          #f8fafc;
+    --color-card:        #ffffff;
+    --color-border:      #e2e8f0;
+    --color-text:        #1e293b;
+    --color-muted:       #64748b;
+    --color-code-bg:     #f1f5f9;
+    --color-green:       #16a34a;
+    --color-green-50:    #f0fdf4;
+    --color-green-200:   #bbf7d0;
+    --color-orange:      #ea580c;
+    --color-orange-50:   #fff7ed;
+    --color-orange-200:  #fed7aa;
+    --font-sans:         -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    --leading-base:      1.7;
   }
-  *,*::before,*::after { box-sizing:border-box; }
-  body { margin:0; background:var(--paper); color:var(--ink); line-height:1.65;
-    font-family:'Noto Serif KR','Source Serif Pro',Georgia,serif; }
 
-  .wrap { max-width:980px; margin:0 auto; padding:32px 32px 56px; }
-
-  .masthead { border-top:6px solid var(--rule); border-bottom:1px solid var(--rule);
-    padding:14px 0 12px; margin-bottom:22px; }
-  .mh-top { display:flex; justify-content:space-between; align-items:baseline;
-    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em;
-    color:var(--ink-soft); text-transform:uppercase;
-    border-bottom:1px solid var(--rule-soft); padding-bottom:8px; margin-bottom:14px; }
-  .mh-title { font-weight:900; font-size:72px; letter-spacing:-.04em;
-    line-height:.92; text-align:center; margin:6px 0 2px; font-style:italic; }
-  .mh-title em { color:var(--accent); }
-  .mh-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.3em;
-    text-align:center; color:var(--ink-soft); text-transform:uppercase;
-    padding-top:6px; border-top:1px solid var(--rule-soft); margin-top:10px; }
-  .mh-nav { display:flex; justify-content:center; gap:32px; margin-top:14px;
-    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.08em;
-    text-transform:uppercase; }
-  .mh-nav a { color:var(--ink-soft); text-decoration:none; }
-  .mh-nav a.on { color:var(--accent); font-weight:700;
-    border-bottom:2px solid var(--accent); padding-bottom:2px; }
-
-  .brief { display:grid; grid-template-columns:200px 1fr 160px; gap:24px;
-    border-bottom:1px solid var(--rule); padding:18px 0 22px; margin-bottom:28px; }
-  .brief-stats { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
-  .brief-stats .lbl { color:var(--ink); font-weight:700; display:block;
-    margin-bottom:8px; letter-spacing:.08em; }
-  .brief-stat { display:flex; gap:14px; align-items:baseline; margin-top:10px; }
-  .brief-stat .num { font-family:'Noto Serif KR',serif; font-size:24px;
-    font-weight:700; font-style:italic; }
-  .brief-stat .lab { font-size:10px; letter-spacing:.15em;
-    color:var(--ink-mute); text-transform:uppercase; }
-  .kicker { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em;
-    text-transform:uppercase; color:var(--accent); margin-bottom:8px;
-    border-left:3px solid var(--accent); padding-left:12px; }
-  .lede { font-size:20px; line-height:1.4; font-weight:500; text-wrap:balance; }
-  .byline { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-mute);
-    text-align:right; line-height:1.7; border-left:1px solid var(--rule-soft); padding-left:14px; }
-
-  .prose { font-size:16px; line-height:1.8; }
-  .prose h1 { display:none; }
-  .prose h2 { font-family:'Noto Serif KR',serif; font-size:22px; font-weight:800;
-    letter-spacing:-.015em; margin:36px 0 14px; padding-bottom:6px;
-    border-bottom:2px solid var(--rule); }
-  .prose h3 { font-size:17px; font-weight:700; margin:24px 0 8px; }
-  .prose p { margin:0 0 14px; }
-  .prose a { color:var(--accent); text-decoration:none;
-    border-bottom:1px solid var(--rule-soft); }
-  .prose a:hover { border-bottom-color:var(--accent); }
-  .prose strong { color:var(--ink); font-weight:700; }
-  .prose ul { padding-left:0; list-style:none; columns:2; column-gap:32px;
-    column-rule:1px solid var(--rule-soft); margin:0 0 18px; }
-  .prose ul li { break-inside:avoid; padding:8px 0 8px 20px; position:relative;
-    border-bottom:1px dotted var(--rule-soft); font-size:14px; line-height:1.55; }
-  .prose ul li::before { content:'§'; position:absolute; left:0; top:8px;
-    color:var(--accent); font-weight:700; font-family:serif; }
-  .prose ol { padding-left:1.4em; margin:0 0 18px; }
-  .prose ol li { margin-bottom:6px; }
-  .prose blockquote { font-family:'IBM Plex Mono',monospace; font-size:12px;
-    border-left:3px solid var(--accent); padding:8px 16px; margin:14px 0;
-    background:rgba(139,42,31,.04); color:var(--ink-soft); }
-  .prose blockquote p { margin:0; }
-  .prose hr { border:none; border-top:3px double var(--rule); margin:32px 0; }
-  .prose code { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
-    padding:2px 6px; border-radius:3px; font-size:.85em; }
-
-  /* 뉴스 목록 접기/펼치기 */
-  .news-list-section { margin-top:32px; border-top:3px double var(--rule); padding-top:20px; }
-  .news-list-section h2 { font-family:'IBM Plex Mono',monospace; font-size:13px;
-    letter-spacing:.15em; text-transform:uppercase; color:var(--ink-soft);
-    margin:0 0 12px; }
-  .news-list-section details { border:1px solid var(--rule-soft); margin-bottom:10px; }
-  .news-list-section summary { padding:10px 14px; cursor:pointer; font-weight:600;
-    font-size:.9rem; color:var(--ink); background:var(--paper-2);
-    list-style:none; display:flex; justify-content:space-between; }
-  .news-list-section summary::-webkit-details-marker { display:none; }
-  .news-list-section summary::after { content:"▼"; font-size:.7rem; color:var(--ink-mute); }
-  .news-list-section details[open] summary::after { content:"▲"; }
-  .news-items { list-style:none; padding:6px 0; margin:0; }
-  .news-items li { padding:6px 14px; border-bottom:1px solid var(--rule-soft);
-    font-size:.84rem; line-height:1.5; margin:0; }
-  .news-items li:last-child { border-bottom:none; }
-  .news-label { display:inline-block; font-family:'IBM Plex Mono',monospace;
-    font-size:.7rem; background:var(--paper-2); color:var(--ink-mute);
-    padding:1px 6px; border-radius:3px; margin-right:6px; }
-
-  /* 아카이브 */
-  .arch h1 { font-size:32px; font-weight:900; margin:18px 0 6px; }
-  .arch p.count { font-family:'IBM Plex Mono',monospace; font-size:12px;
-    color:var(--ink-mute); letter-spacing:.1em; text-transform:uppercase; margin:0 0 24px; }
-  .arch ul { list-style:none; padding:0; margin:0;
-    columns:2; column-gap:32px; column-rule:1px solid var(--rule-soft); }
-  .arch li { break-inside:avoid; padding:14px 0; border-bottom:1px solid var(--rule-soft); }
-  .arch a { color:var(--ink); text-decoration:none; font-weight:600; font-size:16px; }
-  .arch a:hover { color:var(--accent); }
-  .arch .d { font-family:'IBM Plex Mono',monospace; font-size:11px;
-    color:var(--ink-mute); margin-top:3px; letter-spacing:.04em; }
-
-  .foot { border-top:6px solid var(--rule); margin-top:32px; padding-top:14px;
-    display:flex; justify-content:space-between; align-items:baseline;
-    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-mute);
-    letter-spacing:.12em; text-transform:uppercase; flex-wrap:wrap; gap:8px; }
-
-  @media (max-width:720px) {
-    .mh-title { font-size:48px; }
-    .brief { grid-template-columns:1fr; gap:18px; }
-    .brief-stats, .byline { border-left:none; padding-left:0; }
-    .prose ul, .arch ul { columns:1; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: var(--leading-base);
+    -webkit-font-smoothing: antialiased;
   }
-</style>
+  header {
+    background: var(--color-navy);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
+  header .logo .accent { color: var(--color-blue-light); }
+  header nav a {
+    color: rgba(255,255,255,.8);
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: .9rem;
+    transition: color .15s;
+  }
+  header nav a:hover,
+  header nav a.active { color: #fff; font-weight: 600; }
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
+       font-weight: 700; line-height: 1.3; }
+  a  { color: var(--color-blue); text-underline-offset: 2px; }
+
+  /* ── 아카이브 목록 ── */
+  .archive-list { list-style: none; padding: 0; }
+  .archive-list li { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
+  .archive-list li:last-child { border-bottom: none; }
+  .archive-list a { font-weight: 500; font-size: 1rem; text-decoration: none; }
+  .archive-list a:hover { text-decoration: underline; }
+  .archive-list .date { color: var(--color-muted); font-size: .85rem; margin-top: 2px; }
+
+  footer {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .8rem;
+    padding: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+  </style>
 </head>
 <body>
+<<<<<<< Updated upstream
   <div class="wrap">
     <div class="masthead">
       <div class="mh-top">
@@ -161,284 +121,373 @@
         <li>
           <a href="2026-05-21.html">2026년 05월 21일 (Thu)</a>
           <div class="d">2026-05-21</div>
+=======
+  <header>
+    <div class="logo">📰 AI <span class="accent">News</span> Daily</div>
+    <nav><a href="index.html">📰 뉴스</a>
+      <a href="stock/index.html">📈 주식</a>
+      <a href="archive.html" class="active">📚 전체 목록</a></nav>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h1>📚 전체 리포트 목록</h1>
+      <p style="color:var(--color-muted);margin:.5em 0 1.5em">총 72개 리포트</p>
+      <ul class="archive-list">
+        
+        <li>
+          <a href="2026-05-24.html">📄 2026년 05월 24일 (Sun) 리포트</a>
+          <div class="date">2026-05-24</div>
+>>>>>>> Stashed changes
         </li>
+        
         <li>
-          <a href="2026-05-20.html">2026년 05월 20일 (Wed)</a>
-          <div class="d">2026-05-20</div>
+          <a href="2026-05-21.html">📄 2026년 05월 21일 (Thu) 리포트</a>
+          <div class="date">2026-05-21</div>
         </li>
+        
         <li>
-          <a href="2026-05-19.html">2026년 05월 19일 (Tue)</a>
-          <div class="d">2026-05-19</div>
+          <a href="2026-05-20.html">📄 2026년 05월 20일 (Wed) 리포트</a>
+          <div class="date">2026-05-20</div>
         </li>
+        
         <li>
-          <a href="2026-05-18.html">2026년 05월 18일 (Mon)</a>
-          <div class="d">2026-05-18</div>
+          <a href="2026-05-19.html">📄 2026년 05월 19일 (Tue) 리포트</a>
+          <div class="date">2026-05-19</div>
         </li>
+        
         <li>
-          <a href="2026-05-17.html">2026년 05월 17일 (Sun)</a>
-          <div class="d">2026-05-17</div>
+          <a href="2026-05-18.html">📄 2026년 05월 18일 (Mon) 리포트</a>
+          <div class="date">2026-05-18</div>
         </li>
+        
         <li>
-          <a href="2026-05-16.html">2026년 05월 16일 (Sat)</a>
-          <div class="d">2026-05-16</div>
+          <a href="2026-05-17.html">📄 2026년 05월 17일 (Sun) 리포트</a>
+          <div class="date">2026-05-17</div>
         </li>
+        
         <li>
-          <a href="2026-05-15.html">2026년 05월 15일 (Fri)</a>
-          <div class="d">2026-05-15</div>
+          <a href="2026-05-16.html">📄 2026년 05월 16일 (Sat) 리포트</a>
+          <div class="date">2026-05-16</div>
         </li>
+        
         <li>
-          <a href="2026-05-14.html">2026년 05월 14일 (Thu)</a>
-          <div class="d">2026-05-14</div>
+          <a href="2026-05-15.html">📄 2026년 05월 15일 (Fri) 리포트</a>
+          <div class="date">2026-05-15</div>
         </li>
+        
         <li>
-          <a href="2026-05-13.html">2026년 05월 13일 (Wed)</a>
-          <div class="d">2026-05-13</div>
+          <a href="2026-05-14.html">📄 2026년 05월 14일 (Thu) 리포트</a>
+          <div class="date">2026-05-14</div>
         </li>
+        
         <li>
-          <a href="2026-05-12.html">2026년 05월 12일 (Tue)</a>
-          <div class="d">2026-05-12</div>
+          <a href="2026-05-13.html">📄 2026년 05월 13일 (Wed) 리포트</a>
+          <div class="date">2026-05-13</div>
         </li>
+        
         <li>
-          <a href="2026-05-11.html">2026년 05월 11일 (Mon)</a>
-          <div class="d">2026-05-11</div>
+          <a href="2026-05-12.html">📄 2026년 05월 12일 (Tue) 리포트</a>
+          <div class="date">2026-05-12</div>
         </li>
+        
         <li>
-          <a href="2026-05-10.html">2026년 05월 10일 (Sun)</a>
-          <div class="d">2026-05-10</div>
+          <a href="2026-05-11.html">📄 2026년 05월 11일 (Mon) 리포트</a>
+          <div class="date">2026-05-11</div>
         </li>
+        
         <li>
-          <a href="2026-05-09.html">2026년 05월 09일 (Sat)</a>
-          <div class="d">2026-05-09</div>
+          <a href="2026-05-10.html">📄 2026년 05월 10일 (Sun) 리포트</a>
+          <div class="date">2026-05-10</div>
         </li>
+        
         <li>
-          <a href="2026-05-08.html">2026년 05월 08일 (Fri)</a>
-          <div class="d">2026-05-08</div>
+          <a href="2026-05-09.html">📄 2026년 05월 09일 (Sat) 리포트</a>
+          <div class="date">2026-05-09</div>
         </li>
+        
         <li>
-          <a href="2026-05-07.html">2026년 05월 07일 (Thu)</a>
-          <div class="d">2026-05-07</div>
+          <a href="2026-05-08.html">📄 2026년 05월 08일 (Fri) 리포트</a>
+          <div class="date">2026-05-08</div>
         </li>
+        
         <li>
-          <a href="2026-05-06.html">2026년 05월 06일 (Wed)</a>
-          <div class="d">2026-05-06</div>
+          <a href="2026-05-07.html">📄 2026년 05월 07일 (Thu) 리포트</a>
+          <div class="date">2026-05-07</div>
         </li>
+        
         <li>
-          <a href="2026-05-05.html">2026년 05월 05일 (Tue)</a>
-          <div class="d">2026-05-05</div>
+          <a href="2026-05-06.html">📄 2026년 05월 06일 (Wed) 리포트</a>
+          <div class="date">2026-05-06</div>
         </li>
+        
         <li>
-          <a href="2026-05-04.html">2026년 05월 04일 (Mon)</a>
-          <div class="d">2026-05-04</div>
+          <a href="2026-05-05.html">📄 2026년 05월 05일 (Tue) 리포트</a>
+          <div class="date">2026-05-05</div>
         </li>
+        
         <li>
-          <a href="2026-05-03.html">2026년 05월 03일 (Sun)</a>
-          <div class="d">2026-05-03</div>
+          <a href="2026-05-04.html">📄 2026년 05월 04일 (Mon) 리포트</a>
+          <div class="date">2026-05-04</div>
         </li>
+        
         <li>
-          <a href="2026-05-02.html">2026년 05월 02일 (Sat)</a>
-          <div class="d">2026-05-02</div>
+          <a href="2026-05-03.html">📄 2026년 05월 03일 (Sun) 리포트</a>
+          <div class="date">2026-05-03</div>
         </li>
+        
         <li>
-          <a href="2026-05-01.html">2026년 05월 01일 (Fri)</a>
-          <div class="d">2026-05-01</div>
+          <a href="2026-05-02.html">📄 2026년 05월 02일 (Sat) 리포트</a>
+          <div class="date">2026-05-02</div>
         </li>
+        
         <li>
-          <a href="2026-04-30.html">2026년 04월 30일 (Thu)</a>
-          <div class="d">2026-04-30</div>
+          <a href="2026-05-01.html">📄 2026년 05월 01일 (Fri) 리포트</a>
+          <div class="date">2026-05-01</div>
         </li>
+        
         <li>
-          <a href="2026-04-29.html">2026년 04월 29일 (Wed)</a>
-          <div class="d">2026-04-29</div>
+          <a href="2026-04-30.html">📄 2026년 04월 30일 (Thu) 리포트</a>
+          <div class="date">2026-04-30</div>
         </li>
+        
         <li>
-          <a href="2026-04-27.html">2026년 04월 27일 (Mon)</a>
-          <div class="d">2026-04-27</div>
+          <a href="2026-04-29.html">📄 2026년 04월 29일 (Wed) 리포트</a>
+          <div class="date">2026-04-29</div>
         </li>
+        
         <li>
-          <a href="2026-04-26.html">2026년 04월 26일 (Sun)</a>
-          <div class="d">2026-04-26</div>
+          <a href="2026-04-27.html">📄 2026년 04월 27일 (Mon) 리포트</a>
+          <div class="date">2026-04-27</div>
         </li>
+        
         <li>
-          <a href="2026-04-25.html">2026년 04월 25일 (Sat)</a>
-          <div class="d">2026-04-25</div>
+          <a href="2026-04-26.html">📄 2026년 04월 26일 (Sun) 리포트</a>
+          <div class="date">2026-04-26</div>
         </li>
+        
         <li>
-          <a href="2026-04-24.html">2026년 04월 24일 (Fri)</a>
-          <div class="d">2026-04-24</div>
+          <a href="2026-04-25.html">📄 2026년 04월 25일 (Sat) 리포트</a>
+          <div class="date">2026-04-25</div>
         </li>
+        
         <li>
-          <a href="2026-04-23.html">2026년 04월 23일 (Thu)</a>
-          <div class="d">2026-04-23</div>
+          <a href="2026-04-24.html">📄 2026년 04월 24일 (Fri) 리포트</a>
+          <div class="date">2026-04-24</div>
         </li>
+        
         <li>
-          <a href="2026-04-22.html">2026년 04월 22일 (Wed)</a>
-          <div class="d">2026-04-22</div>
+          <a href="2026-04-23.html">📄 2026년 04월 23일 (Thu) 리포트</a>
+          <div class="date">2026-04-23</div>
         </li>
+        
         <li>
-          <a href="2026-04-21.html">2026년 04월 21일 (Tue)</a>
-          <div class="d">2026-04-21</div>
+          <a href="2026-04-22.html">📄 2026년 04월 22일 (Wed) 리포트</a>
+          <div class="date">2026-04-22</div>
         </li>
+        
         <li>
-          <a href="2026-04-20.html">2026년 04월 20일 (Mon)</a>
-          <div class="d">2026-04-20</div>
+          <a href="2026-04-21.html">📄 2026년 04월 21일 (Tue) 리포트</a>
+          <div class="date">2026-04-21</div>
         </li>
+        
         <li>
-          <a href="2026-04-19.html">2026년 04월 19일 (Sun)</a>
-          <div class="d">2026-04-19</div>
+          <a href="2026-04-20.html">📄 2026년 04월 20일 (Mon) 리포트</a>
+          <div class="date">2026-04-20</div>
         </li>
+        
         <li>
-          <a href="2026-04-18.html">2026년 04월 18일 (Sat)</a>
-          <div class="d">2026-04-18</div>
+          <a href="2026-04-19.html">📄 2026년 04월 19일 (Sun) 리포트</a>
+          <div class="date">2026-04-19</div>
         </li>
+        
         <li>
-          <a href="2026-04-17.html">2026년 04월 17일 (Fri)</a>
-          <div class="d">2026-04-17</div>
+          <a href="2026-04-18.html">📄 2026년 04월 18일 (Sat) 리포트</a>
+          <div class="date">2026-04-18</div>
         </li>
+        
         <li>
-          <a href="2026-04-16.html">2026년 04월 16일 (Thu)</a>
-          <div class="d">2026-04-16</div>
+          <a href="2026-04-17.html">📄 2026년 04월 17일 (Fri) 리포트</a>
+          <div class="date">2026-04-17</div>
         </li>
+        
         <li>
-          <a href="2026-04-15.html">2026년 04월 15일 (Wed)</a>
-          <div class="d">2026-04-15</div>
+          <a href="2026-04-16.html">📄 2026년 04월 16일 (Thu) 리포트</a>
+          <div class="date">2026-04-16</div>
         </li>
+        
         <li>
-          <a href="2026-04-14.html">2026년 04월 14일 (Tue)</a>
-          <div class="d">2026-04-14</div>
+          <a href="2026-04-15.html">📄 2026년 04월 15일 (Wed) 리포트</a>
+          <div class="date">2026-04-15</div>
         </li>
+        
         <li>
-          <a href="2026-04-13.html">2026년 04월 13일 (Mon)</a>
-          <div class="d">2026-04-13</div>
+          <a href="2026-04-14.html">📄 2026년 04월 14일 (Tue) 리포트</a>
+          <div class="date">2026-04-14</div>
         </li>
+        
         <li>
-          <a href="2026-04-12.html">2026년 04월 12일 (Sun)</a>
-          <div class="d">2026-04-12</div>
+          <a href="2026-04-13.html">📄 2026년 04월 13일 (Mon) 리포트</a>
+          <div class="date">2026-04-13</div>
         </li>
+        
         <li>
-          <a href="2026-04-11.html">2026년 04월 11일 (Sat)</a>
-          <div class="d">2026-04-11</div>
+          <a href="2026-04-12.html">📄 2026년 04월 12일 (Sun) 리포트</a>
+          <div class="date">2026-04-12</div>
         </li>
+        
         <li>
-          <a href="2026-04-10.html">2026년 04월 10일 (Fri)</a>
-          <div class="d">2026-04-10</div>
+          <a href="2026-04-11.html">📄 2026년 04월 11일 (Sat) 리포트</a>
+          <div class="date">2026-04-11</div>
         </li>
+        
         <li>
-          <a href="2026-04-09.html">2026년 04월 09일 (Thu)</a>
-          <div class="d">2026-04-09</div>
+          <a href="2026-04-10.html">📄 2026년 04월 10일 (Fri) 리포트</a>
+          <div class="date">2026-04-10</div>
         </li>
+        
         <li>
-          <a href="2026-04-08.html">2026년 04월 08일 (Wed)</a>
-          <div class="d">2026-04-08</div>
+          <a href="2026-04-09.html">📄 2026년 04월 09일 (Thu) 리포트</a>
+          <div class="date">2026-04-09</div>
         </li>
+        
         <li>
-          <a href="2026-04-07.html">2026년 04월 07일 (Tue)</a>
-          <div class="d">2026-04-07</div>
+          <a href="2026-04-08.html">📄 2026년 04월 08일 (Wed) 리포트</a>
+          <div class="date">2026-04-08</div>
         </li>
+        
         <li>
-          <a href="2026-04-06.html">2026년 04월 06일 (Mon)</a>
-          <div class="d">2026-04-06</div>
+          <a href="2026-04-07.html">📄 2026년 04월 07일 (Tue) 리포트</a>
+          <div class="date">2026-04-07</div>
         </li>
+        
         <li>
-          <a href="2026-04-05.html">2026년 04월 05일 (Sun)</a>
-          <div class="d">2026-04-05</div>
+          <a href="2026-04-06.html">📄 2026년 04월 06일 (Mon) 리포트</a>
+          <div class="date">2026-04-06</div>
         </li>
+        
         <li>
-          <a href="2026-04-04.html">2026년 04월 04일 (Sat)</a>
-          <div class="d">2026-04-04</div>
+          <a href="2026-04-05.html">📄 2026년 04월 05일 (Sun) 리포트</a>
+          <div class="date">2026-04-05</div>
         </li>
+        
         <li>
-          <a href="2026-04-03.html">2026년 04월 03일 (Fri)</a>
-          <div class="d">2026-04-03</div>
+          <a href="2026-04-04.html">📄 2026년 04월 04일 (Sat) 리포트</a>
+          <div class="date">2026-04-04</div>
         </li>
+        
         <li>
-          <a href="2026-04-02.html">2026년 04월 02일 (Thu)</a>
-          <div class="d">2026-04-02</div>
+          <a href="2026-04-03.html">📄 2026년 04월 03일 (Fri) 리포트</a>
+          <div class="date">2026-04-03</div>
         </li>
+        
         <li>
-          <a href="2026-04-01.html">2026년 04월 01일 (Wed)</a>
-          <div class="d">2026-04-01</div>
+          <a href="2026-04-02.html">📄 2026년 04월 02일 (Thu) 리포트</a>
+          <div class="date">2026-04-02</div>
         </li>
+        
         <li>
-          <a href="2026-03-31.html">2026년 03월 31일 (Tue)</a>
-          <div class="d">2026-03-31</div>
+          <a href="2026-04-01.html">📄 2026년 04월 01일 (Wed) 리포트</a>
+          <div class="date">2026-04-01</div>
         </li>
+        
         <li>
-          <a href="2026-03-30.html">2026년 03월 30일 (Mon)</a>
-          <div class="d">2026-03-30</div>
+          <a href="2026-03-31.html">📄 2026년 03월 31일 (Tue) 리포트</a>
+          <div class="date">2026-03-31</div>
         </li>
+        
         <li>
-          <a href="2026-03-29.html">2026년 03월 29일 (Sun)</a>
-          <div class="d">2026-03-29</div>
+          <a href="2026-03-30.html">📄 2026년 03월 30일 (Mon) 리포트</a>
+          <div class="date">2026-03-30</div>
         </li>
+        
         <li>
-          <a href="2026-03-28.html">2026년 03월 28일 (Sat)</a>
-          <div class="d">2026-03-28</div>
+          <a href="2026-03-29.html">📄 2026년 03월 29일 (Sun) 리포트</a>
+          <div class="date">2026-03-29</div>
         </li>
+        
         <li>
-          <a href="2026-03-27.html">2026년 03월 27일 (Fri)</a>
-          <div class="d">2026-03-27</div>
+          <a href="2026-03-28.html">📄 2026년 03월 28일 (Sat) 리포트</a>
+          <div class="date">2026-03-28</div>
         </li>
+        
         <li>
-          <a href="2026-03-26.html">2026년 03월 26일 (Thu)</a>
-          <div class="d">2026-03-26</div>
+          <a href="2026-03-27.html">📄 2026년 03월 27일 (Fri) 리포트</a>
+          <div class="date">2026-03-27</div>
         </li>
+        
         <li>
-          <a href="2026-03-25.html">2026년 03월 25일 (Wed)</a>
-          <div class="d">2026-03-25</div>
+          <a href="2026-03-26.html">📄 2026년 03월 26일 (Thu) 리포트</a>
+          <div class="date">2026-03-26</div>
         </li>
+        
         <li>
-          <a href="2026-03-24.html">2026년 03월 24일 (Tue)</a>
-          <div class="d">2026-03-24</div>
+          <a href="2026-03-25.html">📄 2026년 03월 25일 (Wed) 리포트</a>
+          <div class="date">2026-03-25</div>
         </li>
+        
         <li>
-          <a href="2026-03-23.html">2026년 03월 23일 (Mon)</a>
-          <div class="d">2026-03-23</div>
+          <a href="2026-03-24.html">📄 2026년 03월 24일 (Tue) 리포트</a>
+          <div class="date">2026-03-24</div>
         </li>
+        
         <li>
-          <a href="2026-03-22.html">2026년 03월 22일 (Sun)</a>
-          <div class="d">2026-03-22</div>
+          <a href="2026-03-23.html">📄 2026년 03월 23일 (Mon) 리포트</a>
+          <div class="date">2026-03-23</div>
         </li>
+        
         <li>
-          <a href="2026-03-21.html">2026년 03월 21일 (Sat)</a>
-          <div class="d">2026-03-21</div>
+          <a href="2026-03-22.html">📄 2026년 03월 22일 (Sun) 리포트</a>
+          <div class="date">2026-03-22</div>
         </li>
+        
         <li>
-          <a href="2026-03-20.html">2026년 03월 20일 (Fri)</a>
-          <div class="d">2026-03-20</div>
+          <a href="2026-03-21.html">📄 2026년 03월 21일 (Sat) 리포트</a>
+          <div class="date">2026-03-21</div>
         </li>
+        
         <li>
-          <a href="2026-03-19.html">2026년 03월 19일 (Thu)</a>
-          <div class="d">2026-03-19</div>
+          <a href="2026-03-20.html">📄 2026년 03월 20일 (Fri) 리포트</a>
+          <div class="date">2026-03-20</div>
         </li>
+        
         <li>
-          <a href="2026-03-18.html">2026년 03월 18일 (Wed)</a>
-          <div class="d">2026-03-18</div>
+          <a href="2026-03-19.html">📄 2026년 03월 19일 (Thu) 리포트</a>
+          <div class="date">2026-03-19</div>
         </li>
+        
         <li>
-          <a href="2026-03-17.html">2026년 03월 17일 (Tue)</a>
-          <div class="d">2026-03-17</div>
+          <a href="2026-03-18.html">📄 2026년 03월 18일 (Wed) 리포트</a>
+          <div class="date">2026-03-18</div>
         </li>
+        
         <li>
-          <a href="2026-03-16.html">2026년 03월 16일 (Mon)</a>
-          <div class="d">2026-03-16</div>
+          <a href="2026-03-17.html">📄 2026년 03월 17일 (Tue) 리포트</a>
+          <div class="date">2026-03-17</div>
         </li>
+        
         <li>
-          <a href="2026-03-15.html">2026년 03월 15일 (Sun)</a>
-          <div class="d">2026-03-15</div>
+          <a href="2026-03-16.html">📄 2026년 03월 16일 (Mon) 리포트</a>
+          <div class="date">2026-03-16</div>
         </li>
+        
         <li>
-          <a href="2026-03-14.html">2026년 03월 14일 (Sat)</a>
-          <div class="d">2026-03-14</div>
+          <a href="2026-03-15.html">📄 2026년 03월 15일 (Sun) 리포트</a>
+          <div class="date">2026-03-15</div>
         </li>
+        
         <li>
-          <a href="2026-03-12.html">2026년 03월 12일 (Thu)</a>
-          <div class="d">2026-03-12</div>
+          <a href="2026-03-14.html">📄 2026년 03월 14일 (Sat) 리포트</a>
+          <div class="date">2026-03-14</div>
         </li>
+        
         <li>
-          <a href="2026-03-11.html">2026년 03월 11일 (Wed)</a>
-          <div class="d">2026-03-11</div>
+          <a href="2026-03-12.html">📄 2026년 03월 12일 (Thu) 리포트</a>
+          <div class="date">2026-03-12</div>
         </li>
+        
         <li>
+<<<<<<< Updated upstream
           <a href="2026-03-10.html">2026년 03월 10일 (Tue)</a>
           <div class="d">2026-03-10</div>
         </li></ul>
@@ -449,7 +498,26 @@
       <span>Generated by Gemini 2.0 Flash</span>
       <span>chamgil71/dailynews</span>
       <span>생성 2026-05-24 05:58 KST</span>
+=======
+          <a href="2026-03-11.html">📄 2026년 03월 11일 (Wed) 리포트</a>
+          <div class="date">2026-03-11</div>
+        </li>
+        
+        <li>
+          <a href="2026-03-10.html">📄 2026년 03월 10일 (Tue) 리포트</a>
+          <div class="date">2026-03-10</div>
+        </li>
+        
+      </ul>
+>>>>>>> Stashed changes
     </div>
   </div>
+
+  <footer>
+    GitHub Actions · RSS Feeds · 매일 자동 업데이트<br>
+    Generated by Gemini 2.0 Flash ·
+    <a href="https://github.com/chamgil71/dailynews" style="color:inherit">chamgil71/dailynews</a>
+    · 생성: 2026-05-24 17:50 KST
+  </footer>
 </body>
 </html>
