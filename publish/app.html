@@ -760,6 +760,9 @@
 </div>
 
 <script>
+// ── 섹션별 기본 테마 (build_site.py 가 config/theme_config.py 에서 주입) ───────
+const SECTION_DEFAULTS = {"news":"classic","stock":"classic"}; /* BUILD_SECTION_DEFAULTS */
+
 // ── 상태 ──────────────────────────────────────────────────────────────────────
 const state = {
   reports:        [],
@@ -770,7 +773,10 @@ const state = {
   searchQuery:    "",
   activeSection:  "news",
   arcGroup:       "news",
-  theme:          localStorage.getItem("site-theme") || "classic",
+  // 섹션별 테마: localStorage 저장값 우선, 없으면 config 기본값
+  newsTheme:  localStorage.getItem("theme-news")  || SECTION_DEFAULTS.news,
+  stockTheme: localStorage.getItem("theme-stock") || SECTION_DEFAULTS.stock,
+  theme:      localStorage.getItem("theme-news")  || SECTION_DEFAULTS.news,
   newsCache:      {},   // date → {news_en, news_ko} lazy-loaded
 };
 
@@ -1178,6 +1184,8 @@ function selectStock(date) {
 
 function switchSection(section) {
   state.activeSection = section;
+  // 섹션 전환 시 해당 섹션의 테마 적용
+  _applyThemeDOM(section === "stock" ? state.stockTheme : state.newsTheme);
   document.querySelectorAll(".hnav-tab").forEach(t=>t.classList.remove("active"));
   document.querySelector(`[data-section="${section}"]`).classList.add("active");
   document.getElementById("newsSection").style.display    = section==="news"    ? "" : "none";
@@ -1231,14 +1239,25 @@ document.getElementById("searchInput").addEventListener("input", e => {
 });
 
 // ── 테마 시스템 ───────────────────────────────────────────────────────────────
-function applyTheme(name) {
+// DOM만 업데이트 (저장 없음) — 섹션 전환 내부에서 사용
+function _applyThemeDOM(name) {
   state.theme = name;
   document.body.setAttribute("data-theme", name);
-  localStorage.setItem("site-theme", name);
   document.querySelectorAll(".theme-chip").forEach(c=>c.classList.remove("active"));
   const chip = document.getElementById("chip-" + name);
   if (chip) chip.classList.add("active");
   updateCmdBox();
+}
+// 사용자가 칩 클릭 → 현재 섹션에 저장
+function applyTheme(name) {
+  _applyThemeDOM(name);
+  if (state.activeSection === "stock") {
+    state.stockTheme = name;
+    localStorage.setItem("theme-stock", name);
+  } else {
+    state.newsTheme = name;
+    localStorage.setItem("theme-news", name);
+  }
 }
 
 function openThemePanel() {
@@ -1292,7 +1311,7 @@ function copyCmdStock() {
 
 // ── 초기 로드 ─────────────────────────────────────────────────────────────────
 (async () => {
-  applyTheme(state.theme);
+  _applyThemeDOM(state.newsTheme);  // 초기 섹션은 뉴스
   document.getElementById("buildFromDate").max = new Date().toISOString().split("T")[0];
 
   const [newsData, stockData] = await Promise.all([loadReports(), loadStockReports()]);

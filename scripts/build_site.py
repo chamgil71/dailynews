@@ -328,7 +328,7 @@ def build(theme_name: str | None = None,
             if len(swatch) == 1:
                 grad_val = f"{swatch[0]},{swatch[0]}"
                 
-            is_active = " active" if name == active_theme else ""
+            is_active = " active" if name == SECTION_THEMES.get("news", active_theme) else ""
             chip_html = f"""    <div class="theme-chip{is_active}" onclick="applyTheme('{name}')" id="chip-{name}">
       <div class="chip-swatch" style="background:linear-gradient(90deg,{grad_val})"></div>
       <div class="chip-name">{label}</div>
@@ -341,13 +341,22 @@ def build(theme_name: str | None = None,
             pre_connect = """  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>"""
             app_html = app_html.replace('<!-- DYNAMIC_THEME_FONTS -->', f"{pre_connect}\n" + "\n".join(theme_fonts))
-            
+
         app_html = app_html.replace('/* DYNAMIC_THEME_CSS */', "\n\n".join(theme_css))
         app_html = app_html.replace('<!-- DYNAMIC_THEME_CHIPS -->', "\n".join(theme_chips))
-        
-        # 디폴트 body data-theme 및 localstorage 치환
-        app_html = app_html.replace('<body data-theme="classic">', f'<body data-theme="{active_theme}">')
-        app_html = app_html.replace('localStorage.getItem("site-theme") || "classic"', f'localStorage.getItem("site-theme") || "{active_theme}"')
+
+        # 섹션별 기본 테마 주입 (config/theme_config.py → SECTION_DEFAULTS JS 상수)
+        news_theme  = SECTION_THEMES.get("news",  "classic")
+        stock_theme = SECTION_THEMES.get("stock", "classic")
+        section_defaults_js = json.dumps({"news": news_theme, "stock": stock_theme})
+        app_html = re.sub(
+            r'const SECTION_DEFAULTS = \{[^}]*\}; /\* BUILD_SECTION_DEFAULTS \*/',
+            f'const SECTION_DEFAULTS = {section_defaults_js}; /* BUILD_SECTION_DEFAULTS */',
+            app_html
+        )
+
+        # body 초기 data-theme = 뉴스 테마 (초기 섹션이 뉴스이므로)
+        app_html = app_html.replace('<body data-theme="classic">', f'<body data-theme="{news_theme}">')
         
         app_dst.write_text(app_html, encoding="utf-8")
         print(f"  + index.html (← app.html, dynamic compiled {len(found_themes)} themes, default_theme: {active_theme})")
