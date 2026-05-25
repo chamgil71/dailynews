@@ -92,8 +92,11 @@ jobs:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
 
       # ── 뉴스 사이트도 함께 빌드 (통합 배포) ───────────────────────────────
+      # 평소: 오늘 날짜 뉴스만 빌드 (빠름)
+      # 테마/디자인 변경 시: 아래 --from 줄을 주석, --all 줄을 해제
       - name: 뉴스 사이트 HTML 빌드
-        run: python scripts/build_site.py
+        run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
+        # run: python scripts/build_site.py --all
         env:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
 
@@ -120,7 +123,9 @@ jobs:
           git config user.email "actions@github.com"
           git add reports/stock/ reports/history/
           # 날짜별 stock HTML (gitignore 대상이므로 -f 강제 추가)
+          # 평소: 오늘 것만 추가 (빠름) — 아래 두 줄 중 한 줄만 활성화
           git add -f publish/stock/$(TZ=Asia/Seoul date +'%Y-%m-%d').html 2>/dev/null || true
+          # git add -f publish/stock/20??-??-??.html 2>/dev/null || true  # 전체 재빌드 시 사용
           # Vercel 필수 정적 파일
           git add -f publish/stock/index.html publish/stock/archive.html \
                      publish/stock/stock-data.json 2>/dev/null || true
