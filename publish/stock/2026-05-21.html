@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI 자동 생성 주식 시황 브리핑">
+  <title>2026년 05월 21일 주식시황 — AI News Daily</title>
+  
+  <style>
+  
+  :root {
+    --color-blue:        #2563eb;
+    --color-blue-light:  #60a5fa;
+    --color-blue-50:     #eff6ff;
+    --color-blue-200:    #bfdbfe;
+    --color-navy:        #1e3a5f;
+    --color-bg:          #f8fafc;
+    --color-card:        #ffffff;
+    --color-border:      #e2e8f0;
+    --color-text:        #1e293b;
+    --color-muted:       #64748b;
+    --color-code-bg:     #f1f5f9;
+    --color-green:       #16a34a;
+    --color-green-50:    #f0fdf4;
+    --color-green-200:   #bbf7d0;
+    --color-orange:      #ea580c;
+    --color-orange-50:   #fff7ed;
+    --color-orange-200:  #fed7aa;
+    --font-sans:         -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    --leading-base:      1.7;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: var(--leading-base);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    background: var(--color-navy);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
+  header .logo .accent { color: var(--color-blue-light); }
+  header nav a {
+    color: rgba(255,255,255,.8);
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: .9rem;
+    transition: color .15s;
+  }
+  header nav a:hover,
+  header nav a.active { color: #fff; font-weight: 600; }
+
+  /* ── 컨테이너 ── */
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  /* ── 타이포그래피 ── */
+  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
+       font-weight: 700; line-height: 1.3; }
+  h2 { font-size: 1.2rem; color: var(--color-blue); margin: 2em 0 .6em;
+       padding-bottom: 6px; border-bottom: 2px solid var(--color-border);
+       font-weight: 600; }
+  h3 { font-size: 1rem; color: var(--color-navy); margin: 1.4em 0 .4em;
+       font-weight: 600; }
+  p  { margin-bottom: .9em; }
+  a  { color: var(--color-blue); text-underline-offset: 2px; }
+  ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
+  li { margin-bottom: .3em; }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 2em 0; }
+  code { background: var(--color-code-bg); padding: 2px 6px;
+         border-radius: 4px; font-size: .88em; }
+  blockquote {
+    border-left: 4px solid var(--color-blue);
+    padding: 8px 16px;
+    background: var(--color-blue-50);
+    border-radius: 0 8px 8px 0;
+    margin: 1em 0;
+    color: var(--color-muted);
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--color-border); padding: 8px 12px;
+           text-align: left; font-size: .9rem; }
+  th { background: var(--color-blue-50); color: var(--color-navy); font-weight: 600; }
+
+  /* ── 배지 ── */
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .badge {
+    background: var(--color-blue-50);
+    color: var(--color-blue);
+    border: 1px solid var(--color-blue-200);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 500;
+  }
+
+  /* ── 주식시황 전용 ── */
+  .change-pos { color: var(--color-green); font-weight: 600; }
+  .change-neg { color: var(--color-orange); font-weight: 600; }
+  .temp-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 24px; font-weight: 700;
+    font-size: 1rem; margin-bottom: 16px;
+  }
+  .temp-risk-off { background: var(--color-orange-50); color: var(--color-orange);
+                   border: 1.5px solid var(--color-orange-200); }
+  .temp-neutral  { background: var(--color-blue-50);   color: var(--color-blue);
+                   border: 1.5px solid var(--color-blue-200); }
+  .temp-risk-on  { background: var(--color-green-50);  color: var(--color-green);
+                   border: 1.5px solid var(--color-green-200); }
+
+  /* ── 푸터 ── */
+  footer {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .8rem;
+    padding: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ── 반응형 ── */
+  @media (max-width: 600px) {
+    .card { padding: 20px; }
+    header .logo { font-size: 1rem; }
+  }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" onclick="location.href='/'" style="cursor:pointer;">📰 AI <span class="accent">News</span> Daily</div>
+    <nav><a href="../index.html">📰 뉴스</a>
+      <a href="../stock/index.html" class="active">📈 주식</a>
+      <a href="../archive.html">📚 전체 목록</a></nav>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h1>📊 주식 시황 브리핑</h1>
+      <div class="meta">
+        <span class="badge">📅 2026년 05월 21일</span>
+        <span class="temp-badge temp-risk-on">🟢 리스크온</span>
+      </div>
+      <h1 id="일일-주식-시황-브리핑-2026-05-21-목">📊 일일 주식 시황 브리핑 — 2026-05-21 (목)</h1>
+
+<blockquote>
+  <p>📅 생성일시: 2026-05-21 17:21 KST
+  📊 데이터 기준: 2026-05-21 15:30 KST</p>
+</blockquote>
+
+<hr />
+
+<h2 id="핵심-요약-3줄">■ 핵심 요약 (3줄)</h2>
+
+<ul>
+<li><strong>[코스피·글로벌 주요 지수 동향]</strong> — 코스피가 8%대 폭등하며 7,800선을 돌파했고, 미국 증시는 소폭 상승하며 강세 흐름을 유지했습니다.</li>
+<li><strong>[매크로 주요 변수]</strong> — 미국 10년물 금리 상승(4.6%)과 원/달러 환율 급등(1,502원)에도 불구하고 국내 증시는 강력한 매수세가 유입되었습니다.</li>
+<li><strong>[이번 주·내일 핵심 이벤트]</strong> — 고환율과 금리 상승 압박 속에서도 반도체 및 전력 설비 중심의 수급 쏠림 현상이 지속될지 여부가 관건입니다.</li>
+</ul>
+
+<hr />
+
+<h2 id="1-국내-시장">1. 국내 시장</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수</th>
+  <th style="text-align:right;">종가</th>
+  <th style="text-align:right;">등락률</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>코스피</td>
+  <td style="text-align:right;">7,815.59</td>
+  <td style="text-align:right;">+8.42%</td>
+</tr>
+<tr>
+  <td>코스닥</td>
+  <td style="text-align:right;">1,105.97</td>
+  <td style="text-align:right;">+4.73%</td>
+</tr>
+<tr>
+  <td>원/달러</td>
+  <td style="text-align:right;">1,502.5원</td>
+  <td style="text-align:right;">+0.41%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><strong>주요 이슈</strong></p>
+  
+  <ul>
+  <li>[반도체 슈퍼사이클 재점화] 삼성전자와 SK하이닉스가 각각 8%, 11% 급등하며 지수 상승을 견인, 반도체 섹터 전반의 강력한 투자 심리를 확인했습니다.</li>
+  <li>[전력 인프라 대란] HD현대일렉트릭과 LS일렉트릭이 동반 급등하며 AI 데이터센터 확장에 따른 전력 설비 수요가 국내 시장의 핵심 테마로 자리 잡았습니다.</li>
+  </ul>
+</blockquote>
+
+<hr />
+
+<h2 id="2-글로벌-시장">2. 글로벌 시장</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수/지표</th>
+  <th style="text-align:right;">수치</th>
+  <th style="text-align:right;">등락</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S&amp;P 500</td>
+  <td style="text-align:right;">7,440.06</td>
+  <td style="text-align:right;">+0.10%</td>
+</tr>
+<tr>
+  <td>나스닥</td>
+  <td style="text-align:right;">26,295.28</td>
+  <td style="text-align:right;">+0.09%</td>
+</tr>
+<tr>
+  <td>다우존스</td>
+  <td style="text-align:right;">50,141.42</td>
+  <td style="text-align:right;">+0.26%</td>
+</tr>
+<tr>
+  <td>미국 10년물 금리</td>
+  <td style="text-align:right;">4.600%</td>
+  <td style="text-align:right;">3.0bp</td>
+</tr>
+<tr>
+  <td>WTI 유가</td>
+  <td style="text-align:right;">$99.46</td>
+  <td style="text-align:right;">+0.34%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><strong>매크로</strong></p>
+  
+  <ul>
+  <li>[금리 상승 압박] 미국 10년물 국채 금리가 4.6%대로 상승하며 시장의 인플레이션 경계감이 지속되고 있으나, 증시는 이를 견뎌내는 견조한 모습을 보였습니다.</li>
+  <li>[에너지 가격 강세] WTI 유가가 99달러를 돌파하며 100달러 선을 위협, 글로벌 물가 상승 압력과 에너지 관련주에 대한 관심이 고조되고 있습니다.</li>
+  </ul>
+</blockquote>
+
+<hr />
+
+<h2 id="3-핵심-키워드-top-5">3. 핵심 키워드 TOP 5</h2>
+
+<p><strong>① [반도체 수급 폭발]</strong>
+삼성전자와 SK하이닉스의 동반 급등은 글로벌 AI 반도체 수요가 국내 대형주로 집중되고 있음을 시사합니다. 한미반도체까지 15% 이상 상승하며 반도체 밸류체인 전반에 강력한 매수세가 유입되고 있습니다.</p>
+
+<p><strong>② [전력 인프라 슈퍼사이클]</strong>
+AI 데이터센터 가동을 위한 전력망 확충이 필수적인 상황에서 전력 기기주들이 시장의 주도주로 부상했습니다. LS일렉트릭과 HD현대일렉트릭의 급등은 실적 기반의 구조적 성장이 기대됨을 보여줍니다.</p>
+
+<p><strong>③ [환율 1,500원 시대]</strong>
+원/달러 환율이 1,500원을 돌파하며 수출 기업의 가격 경쟁력에는 긍정적이나, 외국인 자금 이탈 우려와 수입 물가 상승이라는 이중고를 안겨주고 있습니다.</p>
+
+<p><strong>④ [방산 및 바이오의 차별화]</strong>
+방산주는 종목별로 등락이 엇갈리는 가운데, 바이오 섹터는 삼성바이오로직스와 셀트리온이 동반 상승하며 시장의 방어주이자 성장주 역할을 톡톡히 하고 있습니다.</p>
+
+<p><strong>⑤ [레인보우로보틱스 급락]</strong>
+로봇 섹터 내 대장주인 레인보우로보틱스가 76% 이상 급락하며 섹터 내 변동성이 극대화되었습니다. 특정 종목의 급락이 로봇 테마 전반의 투자 심리에 미칠 악영향을 경계해야 합니다.</p>
+
+<hr />
+
+<h2 id="4-섹터별-영향-분석">4. 섹터별 영향 분석</h2>
+
+<h3 id="국내">🇰🇷 국내</h3>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th>대표종목</th>
+  <th style="text-align:center;">방향</th>
+  <th>핵심 포인트</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>반도체</td>
+  <td>삼성전자/SK하이닉스</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>AI 반도체 수요 폭발로 인한 대형주 중심의 강력한 수급 유입</td>
+</tr>
+<tr>
+  <td>전력설비</td>
+  <td>LS일렉트릭</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>데이터센터 전력 수요 급증에 따른 실적 기대감 반영</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="해외">🇺🇸 해외</h3>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th>대표종목</th>
+  <th style="text-align:center;">방향</th>
+  <th>핵심 포인트</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>AI/빅테크</td>
+  <td>NVDA/MSFT</td>
+  <td style="text-align:center;">🟡 혼조</td>
+  <td>기술주 전반의 완만한 상승세 속 종목별 차별화 진행</td>
+</tr>
+<tr>
+  <td>전력/에너지</td>
+  <td>Vistra</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>AI 데이터센터 전력 공급 부족 이슈로 인한 전력사 주가 상승</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<h2 id="5-내일-주목-이벤트">5. 내일 주목 이벤트</h2>
+
+<p><em>이벤트 데이터 없음</em></p>
+
+<hr />
+
+<h2 id="6-장기투자-관점-코멘트">6. 장기투자 관점 코멘트</h2>
+
+<p>현재의 지수 급등과 환율 변동성은 단기적인 수급 쏠림에 기인한 측면이 큽니다. 장기 투자자라면 단기 변동성에 일희일비하기보다 AI 산업의 구조적 성장과 전력 인프라의 필수성을 고려하여 우량주 중심의 포트폴리오를 유지하는 것이 바람직합니다.</p>
+
+<hr />
+
+<h2 id="시장-온도계-리스크온">시장 온도계: 🟢 리스크온</h2>
+
+<blockquote>
+  <p>반도체 및 전력 설비 등 주도 섹터의 강력한 상승세와 미국 증시의 견조한 흐름이 시장의 위험 선호 심리를 뒷받침함.</p>
+</blockquote>
+
+<hr />
+
+<p>※ 투자 권유 아님. 데이터 기준: 2026-05-21 15:30 KST</p>
+
+    </div>
+  </div>
+
+  <footer>
+    GitHub Actions · RSS Feeds · 매일 자동 업데이트<br>
+    Generated by Gemini 2.0 Flash ·
+    <a href="https://github.com/chamgil71/dailynews" style="color:inherit">chamgil71/dailynews</a>
+    · 생성: 2026-05-25 03:56 KST
+  </footer>
+</body>
+</html>

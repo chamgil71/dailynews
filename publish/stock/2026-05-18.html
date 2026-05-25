@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI 자동 생성 주식 시황 브리핑">
+  <title>2026년 05월 18일 주식시황 — AI News Daily</title>
+  
+  <style>
+  
+  :root {
+    --color-blue:        #2563eb;
+    --color-blue-light:  #60a5fa;
+    --color-blue-50:     #eff6ff;
+    --color-blue-200:    #bfdbfe;
+    --color-navy:        #1e3a5f;
+    --color-bg:          #f8fafc;
+    --color-card:        #ffffff;
+    --color-border:      #e2e8f0;
+    --color-text:        #1e293b;
+    --color-muted:       #64748b;
+    --color-code-bg:     #f1f5f9;
+    --color-green:       #16a34a;
+    --color-green-50:    #f0fdf4;
+    --color-green-200:   #bbf7d0;
+    --color-orange:      #ea580c;
+    --color-orange-50:   #fff7ed;
+    --color-orange-200:  #fed7aa;
+    --font-sans:         -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    --leading-base:      1.7;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: var(--leading-base);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    background: var(--color-navy);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
+  header .logo .accent { color: var(--color-blue-light); }
+  header nav a {
+    color: rgba(255,255,255,.8);
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: .9rem;
+    transition: color .15s;
+  }
+  header nav a:hover,
+  header nav a.active { color: #fff; font-weight: 600; }
+
+  /* ── 컨테이너 ── */
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  /* ── 타이포그래피 ── */
+  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
+       font-weight: 700; line-height: 1.3; }
+  h2 { font-size: 1.2rem; color: var(--color-blue); margin: 2em 0 .6em;
+       padding-bottom: 6px; border-bottom: 2px solid var(--color-border);
+       font-weight: 600; }
+  h3 { font-size: 1rem; color: var(--color-navy); margin: 1.4em 0 .4em;
+       font-weight: 600; }
+  p  { margin-bottom: .9em; }
+  a  { color: var(--color-blue); text-underline-offset: 2px; }
+  ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
+  li { margin-bottom: .3em; }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 2em 0; }
+  code { background: var(--color-code-bg); padding: 2px 6px;
+         border-radius: 4px; font-size: .88em; }
+  blockquote {
+    border-left: 4px solid var(--color-blue);
+    padding: 8px 16px;
+    background: var(--color-blue-50);
+    border-radius: 0 8px 8px 0;
+    margin: 1em 0;
+    color: var(--color-muted);
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--color-border); padding: 8px 12px;
+           text-align: left; font-size: .9rem; }
+  th { background: var(--color-blue-50); color: var(--color-navy); font-weight: 600; }
+
+  /* ── 배지 ── */
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .badge {
+    background: var(--color-blue-50);
+    color: var(--color-blue);
+    border: 1px solid var(--color-blue-200);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 500;
+  }
+
+  /* ── 주식시황 전용 ── */
+  .change-pos { color: var(--color-green); font-weight: 600; }
+  .change-neg { color: var(--color-orange); font-weight: 600; }
+  .temp-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 24px; font-weight: 700;
+    font-size: 1rem; margin-bottom: 16px;
+  }
+  .temp-risk-off { background: var(--color-orange-50); color: var(--color-orange);
+                   border: 1.5px solid var(--color-orange-200); }
+  .temp-neutral  { background: var(--color-blue-50);   color: var(--color-blue);
+                   border: 1.5px solid var(--color-blue-200); }
+  .temp-risk-on  { background: var(--color-green-50);  color: var(--color-green);
+                   border: 1.5px solid var(--color-green-200); }
+
+  /* ── 푸터 ── */
+  footer {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .8rem;
+    padding: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ── 반응형 ── */
+  @media (max-width: 600px) {
+    .card { padding: 20px; }
+    header .logo { font-size: 1rem; }
+  }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" onclick="location.href='/'" style="cursor:pointer;">📰 AI <span class="accent">News</span> Daily</div>
+    <nav><a href="../index.html">📰 뉴스</a>
+      <a href="../stock/index.html" class="active">📈 주식</a>
+      <a href="../archive.html">📚 전체 목록</a></nav>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h1>📊 주식 시황 브리핑</h1>
+      <div class="meta">
+        <span class="badge">📅 2026년 05월 18일</span>
+        <span class="temp-badge temp-risk-off">🔴 리스크오프</span>
+      </div>
+      <h1 id="일일-주식-시황-브리핑-2026-05-18-월">📊 일일 주식 시황 브리핑 — 2026-05-18 (월)</h1>
+
+<h2 id="핵심-요약-3줄">■ 핵심 요약 (3줄)</h2>
+
+<ul>
+<li><strong>코스피 7,493 → 반발 매수 vs 지속 매도 공방</strong> — '검은 금요일(-6.12%)' 후폭풍 속 낙폭과대 인식 반등 기대와 외국인 8연속 순매도 압력이 맞붙은 하루</li>
+<li><strong>WTI $101·미 10년물 4.6%</strong> — 중동 분쟁(호르무즈해협 봉쇄 우려)發 에너지 급등과 고금리 부담이 리스크오프 연장</li>
+<li><strong>이번 주 최대 변수는 엔비디아(5/20)</strong> — 실적 서프라이즈 시 반도체 반등 트리거, 실망 시 코스피 추가 조정 가능성</li>
+</ul>
+
+<hr />
+
+<h2 id="1-국내-시장">1. 국내 시장</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수</th>
+  <th style="text-align:right;">종가</th>
+  <th style="text-align:right;">등락률</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>코스피</td>
+  <td style="text-align:right;">7,493.18</td>
+  <td style="text-align:right;">-6.12% <em>(전영업일 5/15 기준)</em></td>
+</tr>
+<tr>
+  <td>코스닥</td>
+  <td style="text-align:right;">1,129.82</td>
+  <td style="text-align:right;">약 -5.3% <em>(전영업일 5/15 기준)</em></td>
+</tr>
+<tr>
+  <td>원/달러</td>
+  <td style="text-align:right;">1,500.8원</td>
+  <td style="text-align:right;">+0.66%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><strong>주요 이슈</strong></p>
+  
+  <ul>
+  <li>코스피 장중 사상 최초 <strong>8,046.78</strong> 돌파 후 폭락 → '검은 금요일' 마감 (5/15)</li>
+  <li>삼성전자 <strong>-8.61%</strong>, SK하이닉스 <strong>-7.66%</strong> — 프로그램 매도 <strong>사이드카</strong> 발동</li>
+  <li>5월 누적 외국인 순매도 <strong>17조원 돌파</strong> (7거래일 연속), 개인이 전량 흡수</li>
+  <li>5/18(월) 개장 후 낙폭과대 인식 반발 매수 vs 외국인 추가 이탈 공방 지속</li>
+  </ul>
+</blockquote>
+
+<hr />
+
+<h2 id="2-글로벌-시장">2. 글로벌 시장</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수/지표</th>
+  <th style="text-align:right;">수치</th>
+  <th style="text-align:right;">등락</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S&amp;P 500</td>
+  <td style="text-align:right;">7,408.50</td>
+  <td style="text-align:right;">-1.24%</td>
+</tr>
+<tr>
+  <td>나스닥</td>
+  <td style="text-align:right;">26,225.15</td>
+  <td style="text-align:right;">-1.54%</td>
+</tr>
+<tr>
+  <td>다우존스</td>
+  <td style="text-align:right;">49,526.17</td>
+  <td style="text-align:right;">-1.07%</td>
+</tr>
+<tr>
+  <td>미국 10년물 금리</td>
+  <td style="text-align:right;">4.595%</td>
+  <td style="text-align:right;">+13.4bp</td>
+</tr>
+<tr>
+  <td>WTI 유가</td>
+  <td style="text-align:right;">$101.02</td>
+  <td style="text-align:right;">+4.23%</td>
+</tr>
+<tr>
+  <td>원/달러</td>
+  <td style="text-align:right;">1,500.8원</td>
+  <td style="text-align:right;">+0.66%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><strong>매크로</strong></p>
+  
+  <ul>
+  <li>미 국채 10년물 금리 <strong>1년 최고치(4.6%)</strong> — 스태그플레이션 우려 재부상</li>
+  <li>WTI <strong>$100 재돌파</strong> — 미국-이란 핵협상 교착·호르무즈해협 공급 차질</li>
+  <li>트럼프-시진핑 정상회담(5/14~15) 반도체·희토류 합의 <strong>무산</strong> → 공급망 불안 확산</li>
+  </ul>
+</blockquote>
+
+<hr />
+
+<h2 id="3-핵심-키워드-top-5">3. 핵심 키워드 TOP 5</h2>
+
+<p><strong>① 코스피 8,000 돌파·폭락 — '검은 금요일'</strong>
+코스피가 사상 최초로 8,046pt를 터치했지만 외국인 대규모 매도(하루 5조원↑)와 미국 채권금리 급등이 겹치며 당일 -6.12%로 급락했다. 사이드카가 발동되는 극단적 변동성이었다.</p>
+
+<p><strong>② 트럼프-시진핑 회담 실망감</strong>
+베이징 회담에서 반도체 수출 통제·희토류 공급 등 핵심 의제에서 실질 합의가 이뤄지지 않았고, 시진핑 주석의 대만 '충돌' 경고 발언이 지정학 리스크를 증폭시키며 글로벌 반도체 주식 동반 급락을 이끌었다.</p>
+
+<p><strong>③ 외국인 8연속 순매도·수급 공백</strong>
+5월 들어 외국인은 반도체(-16.8조원)·자동차 위주로 차익실현을 이어가며 5월 누적 순매도 17조원을 돌파했다. 개인이 전량 흡수하는 구조라 지수 회복 속도가 더딜 수 있다.</p>
+
+<p><strong>④ WTI $101 재돌파 + 고금리 동시 부담</strong>
+호르무즈해협 봉쇄 우려로 WTI가 주간 +11%를 기록하며 $101을 넘었다. 미 10년물 금리도 4.6%로 1년 최고치를 경신해 '고금리+고유가' 스태그플레이션 시나리오가 부각된다.</p>
+
+<p><strong>⑤ 엔비디아 실적(5/20) — 이번 주 최대 변수</strong>
+엔비디아는 5월 20일 장 마감 후 FY2027 Q1 실적을 발표한다. 매출 추정치는 약 $79.2B, 옵션 시장은 ±8% 변동을 가격에 반영 중이다. AI 인프라 투자 사이클의 지속 여부를 판단하는 핵심 이벤트로 반도체 전체 섹터 방향성을 결정할 전망이다.</p>
+
+<hr />
+
+<h2 id="4-섹터별-영향-분석">4. 섹터별 영향 분석</h2>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th style="text-align:center;">방향</th>
+  <th>핵심 포인트</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>반도체</td>
+  <td style="text-align:center;">🔴 급락/불안</td>
+  <td>삼성 -8.61% · 하이닉스 -7.66% · 엔비디아 실적 반등 트리거 여부 주목</td>
+</tr>
+<tr>
+  <td>2차전지</td>
+  <td style="text-align:center;">🔴 약세</td>
+  <td>투자심리 급랭, 외국인 5월 선별 매수 후 차익실현 가속</td>
+</tr>
+<tr>
+  <td>바이오</td>
+  <td style="text-align:center;">🟡 혼조</td>
+  <td>방어주 성격으로 상대적 선방, 개별 이슈 중심 차별화</td>
+</tr>
+<tr>
+  <td>금융</td>
+  <td style="text-align:center;">🟡 혼조</td>
+  <td>환율 1,500원 수혜(수출 환차익) vs 경기 둔화 우려 상쇄</td>
+</tr>
+<tr>
+  <td>에너지/정유</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>WTI $101 수혜, S-Oil·SK이노베이션 관심 지속</td>
+</tr>
+<tr>
+  <td>로봇/방산</td>
+  <td style="text-align:center;">🟢 상대 강세</td>
+  <td>외국인 선별 매수 지속 (두산로보틱스 등)</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<h2 id="5-내일-주목-이벤트">5. 내일 주목 이벤트</h2>
+
+<table>
+<thead>
+<tr>
+  <th>날짜</th>
+  <th>이벤트</th>
+  <th style="text-align:center;">중요도</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>5/19(화)</td>
+  <td>미국 4월 주택착공·건축허가 (21:30 KST)</td>
+  <td style="text-align:center;">★★</td>
+</tr>
+<tr>
+  <td>5/19(화)</td>
+  <td>영국 실업률 발표</td>
+  <td style="text-align:center;">★★</td>
+</tr>
+<tr>
+  <td>5/19(화)</td>
+  <td>캐나다 4월 CPI</td>
+  <td style="text-align:center;">★★</td>
+</tr>
+<tr>
+  <td><strong>5/20(수)</strong></td>
+  <td><strong>엔비디아(NVDA) FY27 Q1 실적 발표 (장 마감 후)</strong></td>
+  <td style="text-align:center;">★★★</td>
+</tr>
+<tr>
+  <td><strong>5/20(수)</strong></td>
+  <td><strong>FOMC 5월 의사록 공개</strong></td>
+  <td style="text-align:center;">★★★</td>
+</tr>
+<tr>
+  <td>5/21(목)</td>
+  <td>월마트·Home Depot 실적</td>
+  <td style="text-align:center;">★★</td>
+</tr>
+<tr>
+  <td>5/22(금)</td>
+  <td>미시간대 소비자심리 최종치</td>
+  <td style="text-align:center;">★★</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<h2 id="6-장기투자-관점-코멘트">6. 장기투자 관점 코멘트</h2>
+
+<p>AI 반도체 사이클의 펀더멘털(한국 5월 1~10일 반도체 수출 <strong>+149.8% YoY</strong>)은 견조하다. 코스피 8,000선 이탈은 글로벌 매크로 리스크(고금리·고유가·지정학)에 의한 <strong>기술적 조정</strong>으로 볼 수 있다. 엔비디아 5/20 실적이 예상치를 상회하고 가이던스가 강하다면 반도체 섹터 전반의 V자 반등 기회가 될 수 있다. 단기 변동성에 흔들리지 않고 <strong>분할매수 + 현금 10~15% 유지</strong> 전략이 유효하다.</p>
+
+<hr />
+
+<h2 id="시장-온도계-리스크오프">시장 온도계: 🔴 리스크오프</h2>
+
+<blockquote>
+  <p>코스피 -6.12% · 외국인 8연속 매도 · 환율 1,500원 · 금리 4.6% · WTI $101 · 트럼프-시진핑 합의 무산</p>
+</blockquote>
+
+<hr />
+
+<p>※ 투자 권유 아님. 데이터 기준: 2026-05-15(금) 장 마감 + 5/18(월) 시장 동향 기준</p>
+
+    </div>
+  </div>
+
+  <footer>
+    GitHub Actions · RSS Feeds · 매일 자동 업데이트<br>
+    Generated by Gemini 2.0 Flash ·
+    <a href="https://github.com/chamgil71/dailynews" style="color:inherit">chamgil71/dailynews</a>
+    · 생성: 2026-05-25 03:56 KST
+  </footer>
+</body>
+</html>

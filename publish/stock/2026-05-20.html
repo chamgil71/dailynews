@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI 자동 생성 주식 시황 브리핑">
+  <title>2026년 05월 20일 주식시황 — AI News Daily</title>
+  
+  <style>
+  
+  :root {
+    --color-blue:        #2563eb;
+    --color-blue-light:  #60a5fa;
+    --color-blue-50:     #eff6ff;
+    --color-blue-200:    #bfdbfe;
+    --color-navy:        #1e3a5f;
+    --color-bg:          #f8fafc;
+    --color-card:        #ffffff;
+    --color-border:      #e2e8f0;
+    --color-text:        #1e293b;
+    --color-muted:       #64748b;
+    --color-code-bg:     #f1f5f9;
+    --color-green:       #16a34a;
+    --color-green-50:    #f0fdf4;
+    --color-green-200:   #bbf7d0;
+    --color-orange:      #ea580c;
+    --color-orange-50:   #fff7ed;
+    --color-orange-200:  #fed7aa;
+    --font-sans:         -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    --leading-base:      1.7;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: var(--leading-base);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    background: var(--color-navy);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
+  header .logo .accent { color: var(--color-blue-light); }
+  header nav a {
+    color: rgba(255,255,255,.8);
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: .9rem;
+    transition: color .15s;
+  }
+  header nav a:hover,
+  header nav a.active { color: #fff; font-weight: 600; }
+
+  /* ── 컨테이너 ── */
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  /* ── 타이포그래피 ── */
+  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
+       font-weight: 700; line-height: 1.3; }
+  h2 { font-size: 1.2rem; color: var(--color-blue); margin: 2em 0 .6em;
+       padding-bottom: 6px; border-bottom: 2px solid var(--color-border);
+       font-weight: 600; }
+  h3 { font-size: 1rem; color: var(--color-navy); margin: 1.4em 0 .4em;
+       font-weight: 600; }
+  p  { margin-bottom: .9em; }
+  a  { color: var(--color-blue); text-underline-offset: 2px; }
+  ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
+  li { margin-bottom: .3em; }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 2em 0; }
+  code { background: var(--color-code-bg); padding: 2px 6px;
+         border-radius: 4px; font-size: .88em; }
+  blockquote {
+    border-left: 4px solid var(--color-blue);
+    padding: 8px 16px;
+    background: var(--color-blue-50);
+    border-radius: 0 8px 8px 0;
+    margin: 1em 0;
+    color: var(--color-muted);
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--color-border); padding: 8px 12px;
+           text-align: left; font-size: .9rem; }
+  th { background: var(--color-blue-50); color: var(--color-navy); font-weight: 600; }
+
+  /* ── 배지 ── */
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .badge {
+    background: var(--color-blue-50);
+    color: var(--color-blue);
+    border: 1px solid var(--color-blue-200);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 500;
+  }
+
+  /* ── 주식시황 전용 ── */
+  .change-pos { color: var(--color-green); font-weight: 600; }
+  .change-neg { color: var(--color-orange); font-weight: 600; }
+  .temp-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 24px; font-weight: 700;
+    font-size: 1rem; margin-bottom: 16px;
+  }
+  .temp-risk-off { background: var(--color-orange-50); color: var(--color-orange);
+                   border: 1.5px solid var(--color-orange-200); }
+  .temp-neutral  { background: var(--color-blue-50);   color: var(--color-blue);
+                   border: 1.5px solid var(--color-blue-200); }
+  .temp-risk-on  { background: var(--color-green-50);  color: var(--color-green);
+                   border: 1.5px solid var(--color-green-200); }
+
+  /* ── 푸터 ── */
+  footer {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .8rem;
+    padding: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ── 반응형 ── */
+  @media (max-width: 600px) {
+    .card { padding: 20px; }
+    header .logo { font-size: 1rem; }
+  }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" onclick="location.href='/'" style="cursor:pointer;">📰 AI <span class="accent">News</span> Daily</div>
+    <nav><a href="../index.html">📰 뉴스</a>
+      <a href="../stock/index.html" class="active">📈 주식</a>
+      <a href="../archive.html">📚 전체 목록</a></nav>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h1>📊 주식 시황 브리핑</h1>
+      <div class="meta">
+        <span class="badge">📅 2026년 05월 20일</span>
+        <span class="temp-badge temp-neutral">🟡 중립</span>
+      </div>
+      <h1 id="일일-주식-시황-브리핑-2026-05-20-수">📊 일일 주식 시황 브리핑 — 2026-05-20 (수)</h1>
+
+<blockquote>
+  <p>📅 생성일시: 2026-05-20 17:43 KST
+  📊 데이터 기준: 2026-05-20 15:30 KST</p>
+</blockquote>
+
+<hr />
+
+<h2 id="핵심-요약-3줄">■ 핵심 요약 (3줄)</h2>
+
+<ul>
+<li><strong>[코스피·글로벌 주요 지수 동향]</strong> — 미국 증시는 기술주 중심의 강세로 3대 지수 모두 상승했으나, 국내 증시는 코스닥의 급락과 함께 동조화되지 못한 채 약세 마감했습니다.</li>
+<li><strong>[매크로 주요 변수]</strong> — 미국 10년물 국채 금리가 4.5%대로 하락하고 유가가 97달러대로 급락하며 시장의 인플레이션 우려가 다소 완화되었습니다.</li>
+<li><strong>[이번 주·내일 핵심 이벤트]</strong> — 글로벌 금리 하락세가 국내 증시의 외국인 수급 개선으로 이어질지 여부와 코스닥의 기술적 반등 가능성이 핵심입니다.</li>
+</ul>
+
+<hr />
+
+<h2 id="1-국내-시장">1. 국내 시장</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수</th>
+  <th style="text-align:right;">종가</th>
+  <th style="text-align:right;">등락률</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>코스피</td>
+  <td style="text-align:right;">7,208.95</td>
+  <td style="text-align:right;">-0.86%</td>
+</tr>
+<tr>
+  <td>코스닥</td>
+  <td style="text-align:right;">1,056.07</td>
+  <td style="text-align:right;">-2.61%</td>
+</tr>
+<tr>
+  <td>원/달러</td>
+  <td style="text-align:right;">1,496.6원</td>
+  <td style="text-align:right;">-0.68%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><strong>주요 이슈</strong></p>
+  
+  <ul>
+  <li>[코스닥 시장의 투매 현상] 레인보우로보틱스 등 주요 종목의 급락으로 코스닥 지수가 2.6% 이상 하락하며 투자 심리가 크게 위축되었습니다.</li>
+  <li>[대형주 중심의 차별화] 삼성전자와 SK하이닉스가 보합권에서 방어력을 보였으나, 방산 및 전력기기 등 주도 섹터에서 차익 실현 매물이 출회되었습니다.</li>
+  </ul>
+</blockquote>
+
+<hr />
+
+<h2 id="2-글로벌-시장">2. 글로벌 시장</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수/지표</th>
+  <th style="text-align:right;">수치</th>
+  <th style="text-align:right;">등락</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S&amp;P 500</td>
+  <td style="text-align:right;">7,422.15</td>
+  <td style="text-align:right;">+0.91%</td>
+</tr>
+<tr>
+  <td>나스닥</td>
+  <td style="text-align:right;">26,204.62</td>
+  <td style="text-align:right;">+1.29%</td>
+</tr>
+<tr>
+  <td>다우존스</td>
+  <td style="text-align:right;">49,963.54</td>
+  <td style="text-align:right;">+1.20%</td>
+</tr>
+<tr>
+  <td>미국 10년물 금리</td>
+  <td style="text-align:right;">4.580%</td>
+  <td style="text-align:right;">-9.0bp</td>
+</tr>
+<tr>
+  <td>WTI 유가</td>
+  <td style="text-align:right;">$97.53</td>
+  <td style="text-align:right;">-5.91%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><strong>매크로</strong></p>
+  
+  <ul>
+  <li>[금리 하락과 기술주 반등] 미국 국채 금리 급락이 엔비디아, AMD 등 반도체 및 성장주에 강력한 상승 동력을 제공했습니다.</li>
+  <li>[유가 급락의 의미] WTI 유가가 97달러대로 하락하며 에너지 비용 부담 완화 기대감이 형성되었으나, 경기 침체 우려가 공존하고 있습니다.</li>
+  </ul>
+</blockquote>
+
+<hr />
+
+<h2 id="3-핵심-키워드-top-5">3. 핵심 키워드 TOP 5</h2>
+
+<p><strong>① [미국 국채 금리 하락]</strong>
+미국 10년물 금리가 4.58%로 9bp 급락하며 성장주에 우호적인 환경을 조성했습니다. 금리 하락은 기술주의 밸류에이션 부담을 낮춰 나스닥 상승을 견인했습니다.</p>
+
+<p><strong>② [코스닥 급락과 수급 공백]</strong>
+코스닥 지수가 2.6% 이상 하락하며 시장 전반의 투심이 악화되었습니다. 특히 레인보우로보틱스 등 특정 종목의 급락이 시장 전체의 변동성을 키우는 모습입니다.</p>
+
+<p><strong>③ [전력 인프라 섹터 조정]</strong>
+HD현대일렉트릭, LS일렉트릭 등 그간 상승폭이 컸던 전력기기 관련주들이 차익 실현 매물로 인해 조정을 받았습니다. 다만, AI 데이터센터 수요라는 펀더멘털은 여전히 유효합니다.</p>
+
+<p><strong>④ [반도체 디커플링]</strong>
+미국 반도체주(엔비디아, AMD)가 강세를 보였음에도 국내 반도체 대형주는 보합권에 머물렀습니다. 국내 시장의 수급 부진이 글로벌 반도체 훈풍을 상쇄하고 있습니다.</p>
+
+<p><strong>⑤ [유가 급락과 에너지]</strong>
+WTI 유가가 97달러대로 하락하며 인플레이션 압력이 완화되었습니다. 이는 소비재 및 운송 섹터에는 긍정적이나, 에너지 기업들의 수익성에는 단기적인 부담이 될 수 있습니다.</p>
+
+<hr />
+
+<h2 id="4-섹터별-영향-분석">4. 섹터별 영향 분석</h2>
+
+<h3 id="국내">🇰🇷 국내</h3>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th>대표종목</th>
+  <th style="text-align:center;">방향</th>
+  <th>핵심 포인트</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>반도체</td>
+  <td>삼성전자/SK하이닉스</td>
+  <td style="text-align:center;">🟡 혼조</td>
+  <td>글로벌 상승세 대비 국내 수급 부진으로 보합권 등락</td>
+</tr>
+<tr>
+  <td>방산</td>
+  <td>한화에어로/LIG넥스원</td>
+  <td style="text-align:center;">🔴 약세</td>
+  <td>지정학적 리스크 완화 기대 및 차익 실현 매물 출회</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="해외">🇺🇸 해외</h3>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th>대표종목</th>
+  <th style="text-align:center;">방향</th>
+  <th>핵심 포인트</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>AI/빅테크</td>
+  <td>NVDA/MSFT</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>금리 하락에 따른 성장주 밸류에이션 매력 부각</td>
+</tr>
+<tr>
+  <td>전력/유틸리티</td>
+  <td>콘스텔레이션/Vistra</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>AI 데이터센터 전력 수요 증가 기대감 지속</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<h2 id="5-내일-주목-이벤트">5. 내일 주목 이벤트</h2>
+
+<p><em>이벤트 데이터 없음</em></p>
+
+<hr />
+
+<h2 id="6-장기투자-관점-코멘트">6. 장기투자 관점 코멘트</h2>
+
+<p>단기적인 코스닥의 변동성과 특정 섹터의 차익 실현은 시장의 건강한 조정 과정으로 해석됩니다. 금리 하락 기조가 확인되는 만큼, AI 인프라와 반도체 등 핵심 성장 섹터의 펀더멘털을 믿고 저점 매수 기회를 활용하는 전략이 유효합니다.</p>
+
+<hr />
+
+<h2 id="시장-온도계-중립">시장 온도계: 🟡 중립</h2>
+
+<blockquote>
+  <p>미국 금리 하락과 기술주 강세라는 호재가 있으나, 국내 시장의 수급 불균형과 코스닥의 투매 현상이 시장의 상승을 제한하고 있음.</p>
+</blockquote>
+
+<hr />
+
+<p>※ 투자 권유 아님. 데이터 기준: 2026-05-20 15:30 KST</p>
+
+    </div>
+  </div>
+
+  <footer>
+    GitHub Actions · RSS Feeds · 매일 자동 업데이트<br>
+    Generated by Gemini 2.0 Flash ·
+    <a href="https://github.com/chamgil71/dailynews" style="color:inherit">chamgil71/dailynews</a>
+    · 생성: 2026-05-25 03:56 KST
+  </footer>
+</body>
+</html>

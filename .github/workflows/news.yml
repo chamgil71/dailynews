@@ -52,17 +52,19 @@ jobs:
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
 
       - name: 사이트 빌드 (MD → HTML)
-        run: python scripts/build_site.py --all
-        # 평소에는 아래 한 줄로 복원
-        # run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
+        run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
+        # 테마/디자인 변경 시: 아래로 교체
+        # run: python scripts/build_site.py --all
 
       - name: 리포트 + 사이트 + DB 커밋
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "actions@github.com"
           git add reports/
-          # 날짜별 HTML 전체 추가 (--all 빌드 시 과거 HTML도 재생성되므로 전체 stage)
-          git add -f publish/news/ 2>/dev/null || true
+          # 날짜별 HTML·JSON — 평소: 오늘 것만 / 전체 재빌드(--all) 시: 아래 두 번째 줄로 교체
+          TODAY=$(TZ=Asia/Seoul date +'%Y-%m-%d')
+          git add -f publish/news/${TODAY}.html publish/news/${TODAY}.json 2>/dev/null || true
+          # git add -f publish/news/ 2>/dev/null || true  # --all 빌드 시 사용
           # Vercel 필수 정적 파일 (항상 최신 상태 유지)
           git add -f publish/app.html publish/index.html publish/archive.html \
                      publish/reports.json publish/reports-data.json 2>/dev/null || true
