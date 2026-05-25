@@ -61,15 +61,15 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "actions@github.com"
           git add reports/
-          # 날짜별 HTML (gitignore 대상이므로 -f 강제 추가)
-          git add -f publish/news/$(date +'%Y-%m-%d').html 2>/dev/null || true
+          # 날짜별 HTML 전체 추가 (--all 빌드 시 과거 HTML도 재생성되므로 전체 stage)
+          git add -f publish/news/ 2>/dev/null || true
           # Vercel 필수 정적 파일 (항상 최신 상태 유지)
           git add -f publish/app.html publish/index.html publish/archive.html \
                      publish/reports.json publish/reports-data.json 2>/dev/null || true
           git add -f publish/stock/ 2>/dev/null || true
           git diff --staged --quiet || \
             git commit -m "📰 Daily report $(date +'%Y-%m-%d')"
-          git pull --rebase origin main
+          git pull --rebase --autostash origin main
           git push
 
       - name: GitHub Pages 배포
