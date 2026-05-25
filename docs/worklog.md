@@ -451,6 +451,69 @@ themes/{name}.py 파일 하나만 생성하면 됨:
 | stock_build.yml 실 테스트 | 미완 | stock MD push 후 Actions 트리거 확인 필요 |
 
 
+---
+
+## 2026-05-25 — reports-data.json 경량화, 섹션별 독립 테마, stock HTML 복원, 워크플로우 개선
+
+### 1. reports-data.json 분리 (2.1MB → 484KB) — 뉴스 목록 lazy-load
+
+**문제:** `reports-data.json`이 2.1MB (75개 날짜 × 평균 88건 뉴스 = 6618건 포함)라 Vercel/GitHub Pages에서 첫 로드 시 "리포트 로딩 중..." 무한 대기 발생.
+
+**조치:**
+- `build_site.py`: 날짜별 `publish/news/YYYY-MM-DD.json` 생성 (news_en, news_ko 포함)
+- `reports-data.json`에서 news_en/news_ko 제거 → 2.1MB → **484KB** (77% 감소)
+- `app.html`: `selectDate()` async 전환, `news/날짜.json` lazy-fetch, `state.newsCache` 캐시 도입
+- 분석 텍스트·카드뉴스는 즉시 표시, 뉴스 목록은 날짜 클릭 시 로드
+- **버그 수정**: `renderReport` 내 `let cardNewsHtml = ""` 변수가 전역 함수 `cardNewsHtml()`과 이름 충돌 → `TypeError` 발생. `sliderHtml`로 변수명 변경
+- `.gitignore`에 `publish/news/20??-??-??.json` 추가
+
+### 2. stock 날짜별 HTML 복원
+
+**문제:** `e12b9aa` (5/20 수동 커밋)에서 `publish/stock/2026-05-18.html` 삭제 이후, stock 워크플로우가 당일 것만 force-add해 18~22일 HTML 누락.
+
+**조치:** `reports/stock/` MD 5개로 `build_stock_site.py` 재실행 → `publish/stock/2026-05-18~22.html` 복원 커밋.
+
+### 3. news.yml 커밋 단계 개선
+
+- 평소: `publish/news/${TODAY}.html`, `${TODAY}.json` 만 stage
+- 전체 재빌드(--all) 시: `git add -f publish/news/` 줄 주석 해제 (두 줄 병기)
+- 빌드 단계: `--all` → `--from $(date)` 복원 (전체 재빌드 완료 후)
+
+### 4. stock_build.yml 개선
+
+- 뉴스 빌드 인수: 없음 → `--from $(date)` (오늘만), `--all` 주석 병기
+- stock HTML 커밋: 오늘 것만 / `20??-??-??.html` 전체 두 줄 병기
+
+### 5. 섹션별 독립 테마 (news / stock 각각)
+
+**문제:** SPA가 단일 테마만 사용, `config/theme_config.py`의 `SECTION_THEMES`가 SPA에 반영 안 됨, `app.html`에 `classic` 하드코딩.
+
+**조치:**
+- `app.html`: `SECTION_DEFAULTS` JS 상수 추가 (`/* BUILD_SECTION_DEFAULTS */` 마커)
+- `build_site.py`: `SECTION_THEMES` 읽어서 `SECTION_DEFAULTS` JSON 주입, body data-theme → news 테마 기준
+- `state.newsTheme` / `state.stockTheme` 분리 (localStorage: `theme-news`, `theme-stock`)
+- `_applyThemeDOM()`: DOM만 변경 (저장 없음) — 섹션 전환용 내부 함수
+- `applyTheme()`: 칩 클릭 시 현재 섹션에만 저장
+- `switchSection()`: 섹션 전환 시 해당 섹션 테마 자동 적용
+- **테마 변경 방법**: `config/theme_config.py`의 `SECTION_THEMES` 수정 후 빌드·커밋·푸시
+
+### 6. 테마 패널 현행화 + localStorage 초기화 버튼
+
+- 패널 안내를 ① 즉시적용(내 브라우저) / ② 전체기본값변경(config수정+재빌드) 두 단계로 명확히 구분
+- "사이트 기본값으로 초기화" 버튼 추가 → `localStorage` 삭제 후 `SECTION_DEFAULTS` 즉시 적용 (`resetTheme()`)
+- 이메일 테마 select에 `editorial` 옵션 추가
+
+### 7. 완료 항목 업데이트
+
+| 항목 | 상태 |
+|------|------|
+| reports-data.json 경량화 | ✅ 완료 |
+| 날짜별 HTML→JSON lazy-load | ✅ 완료 |
+| 섹션별 테마 분리 | ✅ 완료 |
+| stock HTML 복원 | ✅ 완료 |
+
+---
+
 ## [추가 질의] app.html UX 이슈 정리 — 2026-05-19
 
 ### 이슈 1. 이메일 email_html 연결 끊김
