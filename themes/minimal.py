@@ -169,7 +169,7 @@ def render_archive(ctx: dict) -> str:
     items = "".join(f"""
     <li style="display:flex;justify-content:space-between;align-items:center;
                padding:16px 0;border-bottom:1px solid var(--color-border)">
-      <a href="{it['date']}.html"
+      <a href="news/{it['date']}.html"
          style="font-weight:600;text-decoration:none;color:var(--color-text)">
         {it['display']}
       </a>

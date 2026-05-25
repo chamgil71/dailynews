@@ -359,7 +359,7 @@ def render_archive(ctx: dict) -> str:
     rows = "".join(f"""
         <tr>
           <td class="date">{it['date']}</td>
-          <td><a href="{it['date']}.html">{it['display']}</a></td>
+          <td><a href="news/{it['date']}.html">{it['display']}</a></td>
           <td style="color:var(--ink-mute);text-align:right">→</td>
         </tr>""" for it in ctx["items"])
     body = f"""

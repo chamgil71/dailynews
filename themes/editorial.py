@@ -336,7 +336,7 @@ def render_report(ctx: dict) -> str:
 def render_archive(ctx: dict) -> str:
     items = "".join(f"""
         <li>
-          <a href="{it['date']}.html">{it['display']}</a>
+          <a href="news/{it['date']}.html">{it['display']}</a>
           <div class="d">{it['date']}</div>
         </li>""" for it in ctx["items"])
     body = f"""

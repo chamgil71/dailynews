@@ -37,9 +37,11 @@ load_dotenv()
 from config.settings import SITE_BASE_URL
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL
 
-REPORTS_DIR = "reports"
-DOCS_DIR    = "publish"
+REPORTS_DIR  = "reports"
+DOCS_DIR     = "publish"
+NEWS_HTML_DIR = os.path.join(DOCS_DIR, "news")   # 날짜별 HTML 전용 디렉토리
 os.makedirs(DOCS_DIR, exist_ok=True)
+os.makedirs(NEWS_HTML_DIR, exist_ok=True)
 
 
 # ── MD 파싱: 통계+뉴스목록 추출 (app.html SPA용 JSON) ────────────────────────
@@ -211,11 +213,11 @@ def build(theme_name: str | None = None,
         ctx  = build_report_ctx(md_path, date_str, data)
 
         html     = theme.render_report(ctx)
-        out_path = os.path.join(DOCS_DIR, f"{date_str}.html")
+        out_path = os.path.join(NEWS_HTML_DIR, f"{date_str}.html")
         Path(out_path).write_text(html, encoding="utf-8")
         pages.append((date_str, out_path))
         reports_data.append(data)
-        print(f"  + {date_str}.html [{active_theme}]")
+        print(f"  + news/{date_str}.html [{active_theme}]")
 
     # archive.html
     archive_ctx = build_archive_ctx(pages)
@@ -242,7 +244,7 @@ def build(theme_name: str | None = None,
     print(f"  + reports-data.json ({len(reports_data)}개)")
 
     # reports.json (메타)
-    meta = [{"date": d, "url": f"{d}.html"} for d, _ in
+    meta = [{"date": d, "url": f"news/{d}.html"} for d, _ in
             sorted([(r["date"], "") for r in reports_data], key=lambda x: x[0], reverse=True)]
     Path(DOCS_DIR, "reports.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
