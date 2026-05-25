@@ -800,6 +800,7 @@ const state = {
   activeSection:  "news",
   arcGroup:       "news",
   theme:          localStorage.getItem("site-theme") || "classic",
+  newsCache:      {},   // date → {news_en, news_ko} lazy-loaded
 };
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────────
@@ -922,10 +923,17 @@ function cardNewsHtml(report) {
   `;
 }
 
-function renderReport(report) {
+function renderReport(report, newsItems) {
   if (!report) return `<div class="report-card"><div class="empty">⚠️ 리포트 없음</div></div>`;
-  const {date, analysis_en, analysis_ko, combined, news_en=[], news_ko=[], stats={}} = report;
-  let analysis = combined||"";
+  const {date, analysis_en, analysis_ko, combined, stats={}} = report;
+  // news_en/news_ko: lazy-loaded via newsItems, fallback to inline data (legacy)
+  const news_en = (newsItems || report).news_en || [];
+  const news_ko = (newsItems || report).news_ko || [];
+  const newsLoaded = !!(newsItems || report.news_en);
+
+  let analysis = combined || (analysis_en && analysis_ko
+    ? analysis_en + "\n\n---\n\n" + analysis_ko
+    : (analysis_en || analysis_ko || ""));
   let nEn = news_en, nKo = news_ko;
   if (state.activeLang==="en") { analysis = analysis_en||""; nKo=[]; }
   if (state.activeLang==="ko") { analysis = analysis_ko||""; nEn=[]; }
@@ -953,8 +961,8 @@ function renderReport(report) {
       <div class="news-list" id="${id}">${rows}</div>`;
   }
 
-  // 카드뉴스 슬라이드 생성
-  let cardNewsHtml = "";
+  // 카드뉴스 슬라이드 생성 (로컬 변수명 sliderHtml — 전역 cardNewsHtml 함수와 이름 충돌 방지)
+  let sliderHtml = "";
   if (report.structured) {
     const enIssues = report.structured.en?.issues || [];
     const koIssues = report.structured.ko?.issues || [];
@@ -962,13 +970,13 @@ function renderReport(report) {
       ...enIssues.map((it, idx) => ({ ...it, lang: "🌐 Global", icon: ["🔥", "📢", "💡"][idx] || "🔥" })),
       ...koIssues.map((it, idx) => ({ ...it, lang: "🇰🇷 국내", icon: ["🔥", "📢", "💡"][idx] || "🔥" }))
     ];
-    
+
     if (issues.length > 0) {
       const slides = issues.map((issue, idx) => {
-        const sourceHtml = (issue.sources || []).slice(0, 1).map(src => 
+        const sourceHtml = (issue.sources || []).slice(0, 1).map(src =>
           `<a href="${esc(src.url)}" target="_blank" rel="noopener">↗ 원문</a>`
         ).join("") || (issue.url ? `<a href="${esc(issue.url)}" target="_blank" rel="noopener">↗ 원문</a>` : "");
-        
+
         return `
         <div class="news-slide-card">
           <div class="slide-header">
@@ -982,9 +990,9 @@ function renderReport(report) {
           ${sourceHtml ? `<div class="slide-footer">${sourceHtml}</div>` : ""}
         </div>`;
       }).join("");
-      
+
       const sliderId = `slider-${date}`;
-      cardNewsHtml = `
+      sliderHtml = `
       <div class="card-news-section">
         <h3>🃏 오늘의 핵심 카드뉴스</h3>
         <button class="slide-nav-btn prev" onclick="scrollSlider('${sliderId}', -1)">◀</button>
@@ -996,9 +1004,14 @@ function renderReport(report) {
     }
   }
 
+  // 뉴스 목록 영역: 로드됐으면 표시, 아니면 로딩 안내
+  const newsSection = newsLoaded
+    ? `${newsHtml(fEn,"en")}${newsHtml(fKo,"ko")}${q && !fEn.length && !fKo.length ? `<div class="empty">🔍 "${esc(q)}" 검색 결과 없음</div>` : ""}`
+    : `<div style="padding:12px 0;color:var(--muted);font-size:.85rem">⏳ 뉴스 목록 로딩 중...</div>`;
+
   return `
   <div class="report-card">
-    ${cardNewsHtml}
+    ${sliderHtml}
     <div class="report-header">
       <div class="report-date">📰 ${y}년 ${m}월 ${d}일 브리핑</div>
       <div class="badges">
@@ -1009,9 +1022,7 @@ function renderReport(report) {
     </div>
     ${cardNewsHtml(report)}
     <div class="analysis">${md2html(analysis)}</div>
-    ${newsHtml(fEn,"en")}
-    ${newsHtml(fKo,"ko")}
-    ${q && !fEn.length && !fKo.length ? `<div class="empty">🔍 "${esc(q)}" 검색 결과 없음</div>` : ""}
+    ${newsSection}
   </div>`;
 }
 
@@ -1165,11 +1176,26 @@ function navToReport(type, date) {
 }
 
 // ── 이벤트 핸들러 ─────────────────────────────────────────────────────────────
-function selectDate(date) {
+async function selectDate(date) {
   state.activeDate = date;
   renderDateList();
   const r = state.reports.find(r=>r.date===date);
-  document.getElementById("reportArea").innerHTML = renderReport(r);
+  // 즉시 분석 텍스트 렌더 (뉴스 목록은 lazy-load)
+  document.getElementById("reportArea").innerHTML = renderReport(r, state.newsCache[date] || null);
+  // 뉴스 목록 lazy-load (캐시 없으면 fetch)
+  if (!state.newsCache[date]) {
+    try {
+      const res = await fetch(`news/${date}.json`);
+      if (res.ok) {
+        const ni = await res.json();
+        state.newsCache[date] = ni;
+        // 현재 날짜가 변경되지 않았으면 뉴스 목록 업데이트
+        if (state.activeDate === date) {
+          document.getElementById("reportArea").innerHTML = renderReport(r, ni);
+        }
+      }
+    } catch {}
+  }
 }
 
 function selectStock(date) {
@@ -1218,7 +1244,7 @@ document.querySelectorAll(".lang-tab").forEach(btn =>
     btn.classList.add("active");
     state.activeLang = btn.dataset.lang;
     const r = state.reports.find(r=>r.date===state.activeDate);
-    document.getElementById("reportArea").innerHTML = renderReport(r);
+    document.getElementById("reportArea").innerHTML = renderReport(r, state.newsCache[state.activeDate] || null);
   })
 );
 let searchTimer;
@@ -1228,7 +1254,7 @@ document.getElementById("searchInput").addEventListener("input", e => {
     state.searchQuery = e.target.value.trim();
     if (state.activeSection === "news") {
       const r = state.reports.find(r=>r.date===state.activeDate);
-      document.getElementById("reportArea").innerHTML = renderReport(r);
+      document.getElementById("reportArea").innerHTML = renderReport(r, state.newsCache[state.activeDate] || null);
     }
   }, 300);
 });
@@ -1305,7 +1331,9 @@ function copyCmdStock() {
     state.reports    = newsData;
     state.activeDate = newsData[0].date;
     renderNewsStats();
-    document.getElementById("reportArea").innerHTML = renderReport(newsData[0]);
+    // 분석 텍스트 즉시 렌더 후 뉴스 목록 lazy-load
+    document.getElementById("reportArea").innerHTML = renderReport(newsData[0], null);
+    selectDate(newsData[0].date);
   } else {
     document.getElementById("reportArea").innerHTML = `<div class="empty">📭 리포트 없음</div>`;
   }

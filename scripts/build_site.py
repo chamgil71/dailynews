@@ -216,8 +216,17 @@ def build(theme_name: str | None = None,
         out_path = os.path.join(NEWS_HTML_DIR, f"{date_str}.html")
         Path(out_path).write_text(html, encoding="utf-8")
         pages.append((date_str, out_path))
-        reports_data.append(data)
-        print(f"  + news/{date_str}.html [{active_theme}]")
+
+        # 날짜별 뉴스 목록 JSON (app.html lazy-load용: news_en, news_ko 분리 저장)
+        news_json_path = os.path.join(NEWS_HTML_DIR, f"{date_str}.json")
+        news_payload   = {"date": date_str, "news_en": data["news_en"], "news_ko": data["news_ko"]}
+        Path(news_json_path).write_text(
+            json.dumps(news_payload, ensure_ascii=False), encoding="utf-8"
+        )
+
+        # reports-data.json 에는 news_en/news_ko 제외 (파일 크기 절감)
+        reports_data.append({k: v for k, v in data.items() if k not in ("news_en", "news_ko")})
+        print(f"  + news/{date_str}.html + {date_str}.json [{active_theme}]")
 
     # archive.html
     archive_ctx = build_archive_ctx(pages)
@@ -225,14 +234,19 @@ def build(theme_name: str | None = None,
     Path(DOCS_DIR, "archive.html").write_text(archive_html, encoding="utf-8")
     print("  + archive.html")
 
-    # reports-data.json (SPA용)
+    # reports-data.json (SPA용 — news_en/news_ko 제외, 경량 인덱스)
     # --from 빌드 시에는 기존 JSON 데이터와 병합
     json_path = Path(DOCS_DIR, "reports-data.json")
     if from_date and not rebuild_all and json_path.exists():
         try:
             existing = json.loads(json_path.read_text(encoding="utf-8"))
             existing_dates = {r["date"] for r in reports_data}
-            merged = reports_data + [r for r in existing if r["date"] not in existing_dates]
+            # 기존 항목도 news_en/news_ko 제거 (레거시 대응)
+            cleaned_existing = [
+                {k: v for k, v in r.items() if k not in ("news_en", "news_ko")}
+                for r in existing if r["date"] not in existing_dates
+            ]
+            merged = reports_data + cleaned_existing
             merged.sort(key=lambda r: r["date"], reverse=True)
             reports_data = merged
         except Exception:
@@ -241,7 +255,7 @@ def build(theme_name: str | None = None,
         json.dumps(reports_data, ensure_ascii=False, indent=None),
         encoding="utf-8"
     )
-    print(f"  + reports-data.json ({len(reports_data)}개)")
+    print(f"  + reports-data.json ({len(reports_data)}개 — news 목록 분리됨)")
 
     # reports.json (메타)
     meta = [{"date": d, "url": f"news/{d}.html"} for d, _ in
