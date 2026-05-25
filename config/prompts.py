@@ -82,28 +82,28 @@ PROMPT_TEMPLATE_JSON: str = """\
 
 출력 형식 (```json 블록으로 감싸세요):
 ```json
-{
+{{
   "lang": "{lang}",
   "issues": [
-    {
+    {{
       "rank": 1,
       "title": "이슈 핵심 제목",
       "summary": "2~3문장 요약. 중요도와 배경 포함.",
       "category": "ai_ml",
       "importance": "high",
       "sources": [
-        {"title": "기사 제목", "url": "https://..."}
+        {{"title": "기사 제목", "url": "https://..."}}
       ]
-    },
-    {"rank": 2, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []},
-    {"rank": 3, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []}
+    }},
+    {{"rank": 2, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []}},
+    {{"rank": 3, "title": "...", "summary": "...", "category": "...", "importance": "medium", "sources": []}}
   ],
   "trends": [
-    {"keyword": "키워드1", "description": "1~2문장 설명", "category": "ai_ml"},
-    {"keyword": "키워드2", "description": "설명", "category": "technology"},
-    {"keyword": "키워드3", "description": "설명", "category": "economy"}
+    {{"keyword": "키워드1", "description": "1~2문장 설명", "category": "ai_ml"}},
+    {{"keyword": "키워드2", "description": "설명", "category": "technology"}},
+    {{"keyword": "키워드3", "description": "설명", "category": "economy"}}
   ],
-  "category_stats": {
+  "category_stats": {{
     "ai_ml": 0,
     "technology": 0,
     "economy": 0,
@@ -111,8 +111,8 @@ PROMPT_TEMPLATE_JSON: str = """\
     "korean_news": 0,
     "security": 0,
     "startup": 0
-  }
-}
+  }}
+}}
 ```
 
 category 값은 다음 중 하나: ai_ml, technology, economy, global_news, korean_news, korean_economy, korean_tech, security, startup
