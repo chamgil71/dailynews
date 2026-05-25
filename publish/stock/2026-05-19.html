@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI 자동 생성 주식 시황 브리핑">
+  <title>2026년 05월 19일 주식시황 — AI News Daily</title>
+  
+  <style>
+  
+  :root {
+    --color-blue:        #2563eb;
+    --color-blue-light:  #60a5fa;
+    --color-blue-50:     #eff6ff;
+    --color-blue-200:    #bfdbfe;
+    --color-navy:        #1e3a5f;
+    --color-bg:          #f8fafc;
+    --color-card:        #ffffff;
+    --color-border:      #e2e8f0;
+    --color-text:        #1e293b;
+    --color-muted:       #64748b;
+    --color-code-bg:     #f1f5f9;
+    --color-green:       #16a34a;
+    --color-green-50:    #f0fdf4;
+    --color-green-200:   #bbf7d0;
+    --color-orange:      #ea580c;
+    --color-orange-50:   #fff7ed;
+    --color-orange-200:  #fed7aa;
+    --font-sans:         -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    --leading-base:      1.7;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: var(--leading-base);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    background: var(--color-navy);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
+  header .logo .accent { color: var(--color-blue-light); }
+  header nav a {
+    color: rgba(255,255,255,.8);
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: .9rem;
+    transition: color .15s;
+  }
+  header nav a:hover,
+  header nav a.active { color: #fff; font-weight: 600; }
+
+  /* ── 컨테이너 ── */
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  /* ── 타이포그래피 ── */
+  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
+       font-weight: 700; line-height: 1.3; }
+  h2 { font-size: 1.2rem; color: var(--color-blue); margin: 2em 0 .6em;
+       padding-bottom: 6px; border-bottom: 2px solid var(--color-border);
+       font-weight: 600; }
+  h3 { font-size: 1rem; color: var(--color-navy); margin: 1.4em 0 .4em;
+       font-weight: 600; }
+  p  { margin-bottom: .9em; }
+  a  { color: var(--color-blue); text-underline-offset: 2px; }
+  ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
+  li { margin-bottom: .3em; }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 2em 0; }
+  code { background: var(--color-code-bg); padding: 2px 6px;
+         border-radius: 4px; font-size: .88em; }
+  blockquote {
+    border-left: 4px solid var(--color-blue);
+    padding: 8px 16px;
+    background: var(--color-blue-50);
+    border-radius: 0 8px 8px 0;
+    margin: 1em 0;
+    color: var(--color-muted);
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--color-border); padding: 8px 12px;
+           text-align: left; font-size: .9rem; }
+  th { background: var(--color-blue-50); color: var(--color-navy); font-weight: 600; }
+
+  /* ── 배지 ── */
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .badge {
+    background: var(--color-blue-50);
+    color: var(--color-blue);
+    border: 1px solid var(--color-blue-200);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 500;
+  }
+
+  /* ── 주식시황 전용 ── */
+  .change-pos { color: var(--color-green); font-weight: 600; }
+  .change-neg { color: var(--color-orange); font-weight: 600; }
+  .temp-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 24px; font-weight: 700;
+    font-size: 1rem; margin-bottom: 16px;
+  }
+  .temp-risk-off { background: var(--color-orange-50); color: var(--color-orange);
+                   border: 1.5px solid var(--color-orange-200); }
+  .temp-neutral  { background: var(--color-blue-50);   color: var(--color-blue);
+                   border: 1.5px solid var(--color-blue-200); }
+  .temp-risk-on  { background: var(--color-green-50);  color: var(--color-green);
+                   border: 1.5px solid var(--color-green-200); }
+
+  /* ── 푸터 ── */
+  footer {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .8rem;
+    padding: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ── 반응형 ── */
+  @media (max-width: 600px) {
+    .card { padding: 20px; }
+    header .logo { font-size: 1rem; }
+  }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" onclick="location.href='/'" style="cursor:pointer;">📰 AI <span class="accent">News</span> Daily</div>
+    <nav><a href="../index.html">📰 뉴스</a>
+      <a href="../stock/index.html" class="active">📈 주식</a>
+      <a href="../archive.html">📚 전체 목록</a></nav>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h1>📊 주식 시황 브리핑</h1>
+      <div class="meta">
+        <span class="badge">📅 2026년 05월 19일</span>
+        <span class="temp-badge temp-risk-off">🔴 리스크오프</span>
+      </div>
+      <h1 id="일일-주식-시황-브리핑-2026-05-19">📊 일일 주식 시황 브리핑 — 2026-05-19</h1>
+
+<blockquote>
+  <p>📅 생성일시: 2026-05-19 19:15 KST
+  📊 데이터 기준: KST 16:30 장 마감</p>
+</blockquote>
+
+<hr />
+
+<h2 id="핵심-요약-3줄">■ 핵심 요약 (3줄)</h2>
+
+<ul>
+<li><strong>[코스피·글로벌 주요 지수 동향]</strong> — 코스피 3.25% 급락(7,271.66), 장중 7,141선까지 후퇴; 코스닥 2.41% 하락; 미국 3대 지수는 혼조(다우 +0.3%, 나스닥 -0.5%, S&amp;P500 -0.1%)</li>
+<li><strong>[매크로 주요 변수]</strong> — 미 10년물 국채금리 4.623%로 급등이 핵심 트리거; 원/달러 1,507.56원으로 전일 대비 +1.3% 급등; WTI 유가 $102.94(-1.4%)</li>
+<li><strong>[이번 주·내일 핵심 이벤트]</strong> — NVDA 실적 발표 임박(5/28); 미-이란 종전 협상 향방 + 씨게이트 CEO 메모리 수요 우려 발언 여진 지속</li>
+</ul>
+
+<hr />
+
+<h2 id="1-국내-시장">1. 국내 시장</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수</th>
+  <th style="text-align:right;">종가</th>
+  <th style="text-align:right;">등락률</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>코스피</td>
+  <td style="text-align:right;">7,271.66</td>
+  <td style="text-align:right;">-3.25%</td>
+</tr>
+<tr>
+  <td>코스닥</td>
+  <td style="text-align:right;">1,084.36</td>
+  <td style="text-align:right;">-2.41%</td>
+</tr>
+<tr>
+  <td>원/달러</td>
+  <td style="text-align:right;">1,507.56원</td>
+  <td style="text-align:right;">+1.29%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><strong>주요 이슈</strong></p>
+  
+  <ul>
+  <li>외국인 코스피서 1조원 이상 순매도, 기관도 동반 매도</li>
+  <li>미 10년물 국채금리 급등 여파로 반도체·성장주 중심 급락</li>
+  <li>삼성전자 소액주주 vs 노조 성과급 갈등 이슈 부각</li>
+  <li>시장금리 급등에 은행주 방어력 부각 — 방어주 매력 재부각</li>
+  <li>한화에어로스페이스 +4.81%로 방산주 역행</li>
+  </ul>
+</blockquote>
+
+<hr />
+
+<h2 id="2-글로벌-시장">2. 글로벌 시장</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수/지표</th>
+  <th style="text-align:right;">수치</th>
+  <th style="text-align:right;">등락</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S&amp;P 500</td>
+  <td style="text-align:right;">7,403.05</td>
+  <td style="text-align:right;">-0.07%</td>
+</tr>
+<tr>
+  <td>나스닥</td>
+  <td style="text-align:right;">26,090.73</td>
+  <td style="text-align:right;">-0.51%</td>
+</tr>
+<tr>
+  <td>다우존스</td>
+  <td style="text-align:right;">49,686.12</td>
+  <td style="text-align:right;">+0.32%</td>
+</tr>
+<tr>
+  <td>미국 10년물 금리</td>
+  <td style="text-align:right;">4.623%</td>
+  <td style="text-align:right;">+2.8bp</td>
+</tr>
+<tr>
+  <td>WTI 유가</td>
+  <td style="text-align:right;">$102.94</td>
+  <td style="text-align:right;">-1.38%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><strong>매크로</strong></p>
+  
+  <ul>
+  <li>미 10년물 국채금리 4.62%대 급등 — 재정적자 우려·무디스 신용등급 강등 여파</li>
+  <li>미-이란 종전 협상 불확실성 고조 → 기술주 중심 매도</li>
+  <li>씨게이트 CEO "메모리 수요 감당 어렵다" 발언으로 필라델피아 반도체 지수 -2%대</li>
+  <li>다우는 방어주·금융주 강세로 소폭 플러스 마감</li>
+  </ul>
+</blockquote>
+
+<hr />
+
+<h2 id="3-핵심-키워드-top-5">3. 핵심 키워드 TOP 5</h2>
+
+<p><strong>① 미 국채금리 급등 — 증시 전반 리스크오프 트리거</strong>
+미 10년물 국채금리가 4.62%대로 급등하며 글로벌 증시에 강한 리스크오프 신호를 보냈다. 미국 재정적자 심화 우려와 무디스의 미국 신용등급 강등이 겹치며 안전자산 선호가 약화됐고, 특히 밸류에이션 부담이 큰 기술·성장주 중심 매도가 집중됐다. 코스피는 외국인 1조원대 순매도와 맞물려 장중 4% 이상 급락하는 패닉 셀 장세를 연출했다.</p>
+
+<p><strong>② 반도체 투톱 동반 급락 — 씨게이트 발 메모리 피크아웃 우려</strong>
+씨게이트 CEO의 메모리 수요 감당 우려 발언이 반도체 섹터 전반에 충격을 줬다. SK하이닉스 -5.16%, 삼성전자 -1.96%로 국내 반도체 투톱이 동반 하락했으며, 미국 장에서도 NVDA -1.33%, AMD -0.73%, TSMC -2.08%를 기록했다. HBM 수요가 탄탄한 가운데 기존 메모리 시장 과잉 공급 우려가 재점화된 것으로, 업황 피크아웃 논쟁이 단기 변동성 요인으로 작용할 전망이다.</p>
+
+<p><strong>③ 원/달러 환율 급등 — 외국인 자금 이탈 가속</strong>
+원/달러 환율이 1,507.56원으로 전일 대비 +19원 급등했다. 미 금리 상승에 따른 달러 강세와 외국인 주식 순매도 자금 이탈이 동시에 작용했다. 환율 상승은 수입물가 상승 및 기업 비용 증가로 이어질 수 있어 내수·소재 섹터에 부담이며, 단기적으로 환율 안정화 여부가 외국인 복귀 시점을 결정할 핵심 변수다.</p>
+
+<p><strong>④ 한화에어로스페이스 +4.81% — 방산주 독보적 강세</strong>
+전반적인 약세장에서 한화에어로스페이스(012450.KS)가 +4.81% 급등, 1,286,000원을 기록하며 방산 섹터 강세를 이끌었다. 글로벌 지정학적 긴장이 고조되는 가운데 K-방산의 수출 모멘텀이 지속되고 있으며, 금리 상승기에도 방어력 있는 수주 잔고가 부각됐다. 중장기적으로 NATO 방위비 확대 수혜 기대감도 유효하다.</p>
+
+<p><strong>⑤ 은행주 방어력 재조명 — 시장금리 급등의 수혜</strong>
+시장금리 급등 환경에서 국내 은행주의 순이자마진(NIM) 개선 기대감이 부각됐다. KB금융, 신한지주 등 대형 금융주와 JP모건(+0.98%) 등 미국 은행주도 강세를 보이며 방어주로서의 매력이 재부각됐다. 단, 고금리 장기화로 인한 여신 건전성 악화 가능성도 동시에 점검이 필요하다.</p>
+
+<hr />
+
+<h2 id="4-섹터별-영향-분석">4. 섹터별 영향 분석</h2>
+
+<h3 id="국내">🇰🇷 국내</h3>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th>대표종목</th>
+  <th style="text-align:center;">방향</th>
+  <th>핵심 포인트</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>반도체</td>
+  <td>삼성전자(-1.96%) / SK하이닉스(-5.16%)</td>
+  <td style="text-align:center;">🔴 약세</td>
+  <td>씨게이트 수요 우려 + 미 금리 급등 동반 하락</td>
+</tr>
+<tr>
+  <td>AI/빅테크</td>
+  <td>NAVER</td>
+  <td style="text-align:center;">🔴 약세</td>
+  <td>성장주 전반 매도 여파</td>
+</tr>
+<tr>
+  <td>전력인프라</td>
+  <td>HD현대일렉트릭(-4.53%)</td>
+  <td style="text-align:center;">🔴 약세</td>
+  <td>고밸류 성장주 조정</td>
+</tr>
+<tr>
+  <td>방산/우주</td>
+  <td>한화에어로스페이스(+4.81%)</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>지정학 리스크 + K-방산 수출 모멘텀</td>
+</tr>
+<tr>
+  <td>바이오</td>
+  <td>삼성바이오로직스 / 셀트리온</td>
+  <td style="text-align:center;">🟡 혼조</td>
+  <td>방어적 특성 + 개별 이슈</td>
+</tr>
+<tr>
+  <td>금융</td>
+  <td>KB금융 / 신한지주</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>NIM 개선 기대, 방어주 부각</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="해외">🇺🇸 해외</h3>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th>대표종목</th>
+  <th style="text-align:center;">방향</th>
+  <th>핵심 포인트</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>AI/반도체</td>
+  <td>NVDA(-1.33%) / AMD(-0.73%)</td>
+  <td style="text-align:center;">🔴 약세</td>
+  <td>금리 급등에 기술·성장주 밸류 부담</td>
+</tr>
+<tr>
+  <td>빅테크</td>
+  <td>MSFT(+0.38%) / GOOGL(+0.04%)</td>
+  <td style="text-align:center;">🟡 혼조</td>
+  <td>소폭 플러스·보합, 상대적 방어</td>
+</tr>
+<tr>
+  <td>파운드리</td>
+  <td>TSMC(-2.08%)</td>
+  <td style="text-align:center;">🔴 약세</td>
+  <td>반도체 수요 우려 여파</td>
+</tr>
+<tr>
+  <td>바이오/헬스</td>
+  <td>LLY(-1.67%)</td>
+  <td style="text-align:center;">🔴 약세</td>
+  <td>기술적 조정, 펀더멘털 이상 무</td>
+</tr>
+<tr>
+  <td>금융</td>
+  <td>JPM(+0.98%)</td>
+  <td style="text-align:center;">🟢 강세</td>
+  <td>금리 수혜 + 견조한 실적 기대</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<h2 id="5-내일-주목-이벤트">5. 내일 주목 이벤트</h2>
+
+<table>
+<thead>
+<tr>
+  <th>구분</th>
+  <th>내용</th>
+  <th>시장 영향</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>미국</td>
+  <td>연준 위원 발언 일정</td>
+  <td>금리 방향성 힌트 — 변동성 주의</td>
+</tr>
+<tr>
+  <td>국내</td>
+  <td>외국인 수급 동향</td>
+  <td>1조 이상 매도세 지속 여부 핵심</td>
+</tr>
+<tr>
+  <td>글로벌</td>
+  <td>미-이란 협상 동향</td>
+  <td>지정학 리스크 + 유가 방향성</td>
+</tr>
+<tr>
+  <td>실적</td>
+  <td>NVDA 실적(5/28)</td>
+  <td>반도체·AI 섹터 분위기 좌우</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<h2 id="6-장기투자-관점-코멘트">6. 장기투자 관점 코멘트</h2>
+
+<p>오늘 코스피 급락은 미 국채금리 급등이라는 매크로 충격에 의한 외부 요인으로, 국내 기업 펀더멘털 훼손과는 거리가 있다. 반도체 투톱의 밸류에이션은 여전히 역사적 저점 수준에 있으며, SK하이닉스의 HBM 수요 독점적 지위는 변함없다. 금리 고점 확인 후 성장주의 반전 탄력이 클 수 있으므로, 장기투자자라면 분할 매수 관점에서 반도체·AI 섹터의 조정을 주목할 시점이다.</p>
+
+<hr />
+
+<h2 id="시장-온도계-리스크오프">시장 온도계: 🔴리스크오프</h2>
+
+<blockquote>
+  <p>미 10년물 금리 4.62% 급등 + 외국인 코스피 1조원대 순매도 + 반도체 투톱 급락 + 환율 1,507원대 급등 — 복합 리스크오프 신호가 동시 발생한 전형적인 금리 충격 장세</p>
+</blockquote>
+
+<hr />
+
+<p>※ 투자 권유 아님. 데이터 기준: 2026-05-19 KST 16:30 장 마감</p>
+
+    </div>
+  </div>
+
+  <footer>
+    GitHub Actions · RSS Feeds · 매일 자동 업데이트<br>
+    Generated by Gemini 2.0 Flash ·
+    <a href="https://github.com/chamgil71/dailynews" style="color:inherit">chamgil71/dailynews</a>
+    · 생성: 2026-05-25 03:56 KST
+  </footer>
+</body>
+</html>
