@@ -694,11 +694,9 @@
     🎨 디자인 설정
     <button class="close-btn" onclick="closeThemePanel()">✕</button>
   </h2>
-  <p style="font-size:.8rem;color:var(--muted);margin-top:4px">
-    색상 테마는 즉시 적용됩니다. 빌드 적용은 아래 명령어를 실행하세요.
-  </p>
 
-  <h3>색상 테마 (즉시 적용)</h3>
+  <!-- ① 즉시 적용 (브라우저 개인 설정) -->
+  <h3>색상 테마 <span style="font-size:.72rem;font-weight:400;color:var(--muted)">— 내 브라우저에만 즉시 적용</span></h3>
   <div class="theme-chips">
         <div class="theme-chip" onclick="applyTheme('classic')" id="chip-classic">
       <div class="chip-swatch" style="background:linear-gradient(90deg,#1e3a5f,#2563eb)"></div>
@@ -731,8 +729,17 @@
       <div class="chip-desc">Bloomberg 터미널 스타일, 다크 모노</div>
     </div>
   </div>
+  <div style="margin-top:8px;display:flex;justify-content:flex-end">
+    <button onclick="resetTheme()" style="font-size:.75rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;cursor:pointer">
+      ↺ 사이트 기본값으로 초기화
+    </button>
+  </div>
 
-  <h3>섹션별 빌드 테마</h3>
+  <!-- ② 전체 사용자 기본값 변경 (config 수정 + 재빌드) -->
+  <h3 style="margin-top:16px">전체 기본 테마 변경 <span style="font-size:.72rem;font-weight:400;color:var(--muted)">— 모든 방문자에게 적용</span></h3>
+  <p style="font-size:.78rem;color:var(--muted);margin-bottom:8px">
+    <code>config/theme_config.py</code> 의 <code>SECTION_THEMES</code> 를 수정한 뒤 빌드·커밋·푸시하세요.
+  </p>
   <div class="build-section">
     <div class="section-theme-row">
       <label>📰 뉴스브리핑</label>
@@ -757,12 +764,13 @@
       </select>
     </div>
     <div class="section-theme-row">
-      <label>📧 메일링뉴스</label>
+      <label>📧 이메일</label>
       <select id="themeEmail">
         <option value="classic">Classic Navy</option>
         <option value="minimal">Minimal</option>
         <option value="ink">Ink (신문)</option>
         <option value="forest">Forest</option>
+        <option value="editorial">Editorial</option>
       </select>
     </div>
   </div>
@@ -771,20 +779,18 @@
   <div class="build-section">
     <label><input type="radio" name="buildRange" value="all" checked> 전체 일괄 변경 (--all)</label>
     <label><input type="radio" name="buildRange" value="from"> 선택 날짜부터 변경</label>
-    <input type="date" id="buildFromDate" style="display:none"
-           value="" max="">
+    <input type="date" id="buildFromDate" style="display:none" value="" max="">
   </div>
 
   <div style="margin-top:10px">
-    <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">실행 명령어</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:4px">뉴스 빌드 명령어</div>
     <div class="cmd-box" id="cmdBox">
       python scripts/build_site.py --all
       <button class="cmd-copy" onclick="copyCmd()">복사</button>
     </div>
   </div>
-
-  <div style="margin-top:10px">
-    <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">주식 빌드</div>
+  <div style="margin-top:8px">
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:4px">주식 빌드 명령어</div>
     <div class="cmd-box" id="cmdStockBox">
       python scripts/build_stock_site.py
       <button class="cmd-copy" onclick="copyCmdStock()">복사</button>
@@ -1291,6 +1297,15 @@ function applyTheme(name) {
     state.newsTheme = name;
     localStorage.setItem("theme-news", name);
   }
+}
+
+// 사이트 기본값으로 초기화 (localStorage 삭제 → SECTION_DEFAULTS 적용)
+function resetTheme() {
+  localStorage.removeItem("theme-news");
+  localStorage.removeItem("theme-stock");
+  state.newsTheme  = SECTION_DEFAULTS.news;
+  state.stockTheme = SECTION_DEFAULTS.stock;
+  _applyThemeDOM(state.activeSection === "stock" ? state.stockTheme : state.newsTheme);
 }
 
 function openThemePanel() {
