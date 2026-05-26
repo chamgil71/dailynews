@@ -44,7 +44,7 @@ flowchart TD
     end
 
     subgraph Report_Generator [3단계: 콘텐츠 컴파일]
-        C1 -->|Jinja2 Templates| D1[reports/news_YYYY-MM-DD.md]
+        C1 -->|Jinja2 Templates| D1[reports/news/news_YYYY-MM-DD.md]
         C2 -->|Jinja2 Templates| D2[reports/stock/stock_YYYY-MM-DD.md]
     end
 

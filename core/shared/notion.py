@@ -1,0 +1,203 @@
+# core/shared/notion.py
+"""
+노션(Notion) 데이터베이스 연동 및 동기화 모듈
+- 동적 스키마 검색: 노션 DB의 속성명(한글/영어) 및 타입을 자동으로 감지하여 유연하게 매핑
+- 병렬 업로드: ThreadPoolExecutor를 이용한 고속 병렬 페이지 생성 (속도 대폭 개선)
+- 안정적인 재시도 로직: Notion API Rate Limit(429) 및 네트워크 에러 대비 3회 재시도 및 대기 적용
+"""
+
+import logging
+import os
+import time
+import requests
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+logger = logging.getLogger(__name__)
+
+NOTION_KEY = os.getenv("NOTION_API_KEY")
+NOTION_DB_NEWS = os.getenv("NOTION_DATABASE_ID_NEWS")
+NOTION_DB_STOCK = os.getenv("NOTION_DATABASE_ID_STOCK")
+
+def _get_headers() -> dict:
+    return {
+        "Authorization": f"Bearer {NOTION_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28"
+    }
+
+def get_database_schema(database_id: str) -> dict | None:
+    """Notion DB 스키마 정보를 동적으로 조회하여 컬럼 이름과 타입을 파악합니다."""
+    if not NOTION_KEY or not database_id:
+        return None
+    url = f"https://api.notion.com/v1/databases/{database_id}"
+    try:
+        res = requests.get(url, headers=_get_headers(), timeout=10)
+        if res.status_code == 200:
+            return res.json().get("properties", {})
+        else:
+            logger.error(f"[Notion] 데이터베이스 정보 조회 실패 ({res.status_code}): {res.text}")
+            return None
+    except Exception as e:
+        logger.error(f"[Notion] 데이터베이스 조회 오류: {e}")
+        return None
+
+def _create_page_with_retry(headers: dict, payload: dict, max_retries: int = 3) -> tuple[bool, str]:
+    """페이지 생성 API 호출 (Rate Limit 429 대응 및 재시도 로직 내장)"""
+    url = "https://api.notion.com/v1/pages"
+    for attempt in range(max_retries):
+        try:
+            res = requests.post(url, headers=headers, json=payload, timeout=12)
+            if res.status_code == 200:
+                return True, "Success"
+            elif res.status_code == 429:
+                retry_after = int(res.headers.get("Retry-After", 2))
+                logger.warning(f"[Notion] Rate Limit(429) 감지. {retry_after}초 대기 후 재시도 ({attempt + 1}/{max_retries})")
+                time.sleep(retry_after)
+            else:
+                # 400 등 일반적인 클라이언트/서버 오류의 경우도 일단 대기 후 재시도
+                time.sleep(1)
+        except Exception as e:
+            if attempt == max_retries - 1:
+                return False, str(e)
+            time.sleep(1.5)
+    return False, f"Max retries ({max_retries}) reached"
+
+def sync_news_to_notion(news_items: list, date_str: str = None) -> int:
+    """
+    수집 완료된 신규 뉴스 기사들을 Notion 뉴스 데이터베이스에 고속 병렬로 페이지를 만들어 삽입합니다.
+    """
+    if not NOTION_KEY or not NOTION_DB_NEWS:
+        logger.warning("[Notion 뉴스] NOTION_API_KEY 또는 NOTION_DATABASE_ID_NEWS 환경변수가 누락되어 동기화를 건너뜁니다.")
+        return 0
+
+    if not news_items:
+        logger.info("[Notion 뉴스] 동기화할 신규 뉴스 기사가 없습니다.")
+        return 0
+
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+    logger.info(f"[Notion 뉴스] '{NOTION_DB_NEWS}' 데이터베이스 스키마 검색 중...")
+    schema = get_database_schema(NOTION_DB_NEWS)
+    
+    # ── 컬럼 매핑 규칙 동적 분석 ──
+    # 기본값 설정
+    col_title = "제목"
+    col_url = "링크"
+    col_category = "카테고리"
+    col_date = "날짜"
+    col_lang = "언어"
+
+    if schema:
+        # 1. Title 타입 컬럼 자동 매핑 (노션 DB의 기본 키 컬럼)
+        for name, prop in schema.items():
+            if prop.get("type") == "title":
+                col_title = name
+                break
+
+        # 2. URL 타입 컬럼 자동 매핑
+        url_found = False
+        for name, prop in schema.items():
+            if prop.get("type") == "url":
+                col_url = name
+                url_found = True
+                break
+        if not url_found:
+            # URL 타입 컬럼이 없을 경우 한글/영어 텍스트 매핑 시도
+            for name in ["링크", "Link", "URL", "url"]:
+                if name in schema:
+                    col_url = name
+                    break
+
+        # 3. Category (카테고리/라벨) 컬럼 매핑
+        for name in ["카테고리", "Category", "라벨", "Label", "label", "category"]:
+            if name in schema:
+                col_category = name
+                break
+
+        # 4. Date (날짜) 컬럼 매핑
+        for name in ["날짜", "Date", "date", "수집일", "날짜선택"]:
+            if name in schema:
+                col_date = name
+                break
+
+        # 5. Language (언어) 컬럼 매핑
+        for name in ["언어", "Language", "Lang", "lang", "language"]:
+            if name in schema:
+                col_lang = name
+                break
+
+    logger.info(f"[Notion 뉴스] 최종 컬럼 매핑 적용 완료: [제목: '{col_title}'], [링크: '{col_url}'], "
+                f"[카테고리: '{col_category}'], [날짜: '{col_date}'], [언어: '{col_lang}']")
+
+    headers = _get_headers()
+    payloads = []
+
+    # 각 기사별로 Notion 페이지 생성용 Payload 조립
+    for item in news_items:
+        properties = {}
+        
+        # 1) 제목 컬럼
+        properties[col_title] = {
+            "title": [{"text": {"content": item.get("title", "")[:100]}}]
+        }
+        
+        # 2) 링크 컬럼 (스키마에 맞춰 url 혹은 rich_text로 분기)
+        is_url_type = schema and schema.get(col_url, {}).get("type") == "url"
+        if is_url_type or not schema:
+            properties[col_url] = {"url": item.get("link", "")}
+        else:
+            properties[col_url] = {
+                "rich_text": [{"text": {"content": item.get("link", "")}}]
+            }
+            
+        # 3) 카테고리 컬럼
+        is_select = schema and schema.get(col_category, {}).get("type") == "select"
+        label_val = item.get("label", item.get("category", "기타"))
+        if is_select or not schema:
+            properties[col_category] = {"select": {"name": label_val}}
+        else:
+            properties[col_category] = {
+                "rich_text": [{"text": {"content": label_val}}]
+            }
+            
+        # 4) 날짜 컬럼
+        is_date_type = schema and schema.get(col_date, {}).get("type") == "date"
+        if is_date_type or not schema:
+            properties[col_date] = {"date": {"start": date_str}}
+        else:
+            properties[col_date] = {
+                "rich_text": [{"text": {"content": date_str}}]
+            }
+            
+        # 5) 언어 컬럼
+        is_select_lang = schema and schema.get(col_lang, {}).get("type") == "select"
+        lang_val = item.get("lang", "ko").upper()
+        if is_select_lang or not schema:
+            properties[col_lang] = {"select": {"name": lang_val}}
+        else:
+            properties[col_lang] = {
+                "rich_text": [{"text": {"content": lang_val}}]
+            }
+
+        payload = {
+            "parent": {"database_id": NOTION_DB_NEWS},
+            "properties": properties
+        }
+        payloads.append(payload)
+
+    # 고속 병렬 삽입 실행 (최대 5개 스레드로 속도 극대화 및 안전성 유지)
+    logger.info(f"[Notion 뉴스] 총 {len(payloads)}개 뉴스 기사를 Notion으로 전송 시작합니다...")
+    success_count = 0
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_payload = {executor.submit(_create_page_with_retry, headers, payload): payload for payload in payloads}
+        for future in as_completed(future_to_payload):
+            success, err_msg = future.result()
+            if success:
+                success_count += 1
+            else:
+                logger.error(f"[Notion 뉴스] 페이지 생성 실패: {err_msg}")
+
+    logger.info(f"[Notion 뉴스] 동기화 완료: 총 {len(payloads)}건 중 {success_count}건 성공적으로 기록 완료.")
+    return success_count

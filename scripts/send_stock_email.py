@@ -64,7 +64,7 @@ def main() -> None:
 
     email_md = _email_body_from_md(latest)
 
-    from core.mailer import send_email
+    from core.shared.mailer import send_email
     from config.settings import STOCK_EMAIL_SUBJECT
 
     now = datetime.now()

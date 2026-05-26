@@ -66,10 +66,17 @@ def main() -> None:
     logger.info(f"     → 저장: {filepath}")
 
     from core.shared.db import append_news
-    logger.info("[4/5] DB 누적 저장 중...")
+    logger.info("[4/5] DB 누적 저장 및 노션 동기화 중...")
     date_tag = datetime.now().strftime("%Y-%m-%d")
     added = append_news(news_data.get("all", []), date_tag)
-    logger.info(f"     → {added}건 저장 완료")
+    logger.info(f"     → 엑셀 DB: {added}건 저장 완료")
+
+    try:
+        from core.shared.notion import sync_news_to_notion
+        notion_count = sync_news_to_notion(news_data.get("all", []), date_tag)
+        logger.info(f"     → 노션 DB: {notion_count}건 동기화 완료")
+    except Exception as ne:
+        logger.error(f"     → 노션 DB 동기화 중 에러 발생: {ne}")
 
     from core.shared.mailer import send_email
     logger.info("[5/5] 이메일 발송 중...")

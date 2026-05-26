@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.db import append_news
+from core.shared.db import append_news
 
 REPORTS_DIR = "reports"
 

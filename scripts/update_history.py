@@ -77,7 +77,7 @@ def update_ticker_md(
 def run(date_str: str | None = None) -> int:
     """watchlist.yaml 기반 전체 티커 이력 업데이트. 갱신된 티커 수 반환."""
     from config.watchlist import get_all_tickers
-    from core.stock_collector import _fetch_ticker
+    from core.stock.collector import _fetch_ticker
 
     today   = date_str or datetime.now().strftime("%Y-%m-%d")
     tickers = get_all_tickers()
