@@ -377,3 +377,171 @@ editorial TOKENS에 stock 렌더러가 요구하는 색상 alias 추가 후 `"cl
 | 2 | 주식시황홈 | `theme_config.py` SITE_THEME → editorial TOKENS 보완 | editorial ✓ |
 | 3 | 뉴스 메일 | `theme_config.py` THEME_EMAIL="classic" 고정 | classic 유지 ✓ |
 | 4 | 주식 메일 | 하드코딩 색상, font만 editorial | 실질 무관 ✓ |
+
+
+
+## 추가 질의 26-05-26 
+
+`stock_build.yml`을 보니 이미 `update_history.py`와 `reports/history/` 경로가 있네요. 즉 **history 구조는 이미 설계되어 있습니다.**
+
+워크플로우 기준으로 정확히 파악하겠습니다.
+
+---
+
+## 현재 구조 분석 (stock_build.yml 기준)
+
+```
+Claude Code 루틴 push
+        │
+        ▼
+stock_build.yml 트리거
+  ├─ update_history.py      ← 티커 이력 업데이트 (이미 있음)
+  ├─ build_stock_site.py    ← HTML 빌드
+  └─ 커밋 대상: reports/stock/ + reports/history/  ← 이미 있음
+```
+
+즉 `reports/history/`는 **GitHub Actions에서 `update_history.py`가 생성**하는 구조입니다. Claude Code 루틴은 `reports/stock/stock_YYYY-MM-DD.md`만 push하면 Actions가 나머지를 처리합니다.
+
+---
+
+## 질문 — 루틴에서 history를 직접 쓰는 방식 원하시나요?
+
+두 가지 선택입니다:
+
+| 방식 | 설명 | 장단점 |
+|------|------|--------|
+| **A. 현재 구조 유지** | 루틴은 stock MD만 push → Actions의 `update_history.py`가 history 처리 | 역할 분리 명확, 루틴 단순 |
+| **B. 루틴에서 직접 추가** | 루틴이 `reports/history/종목명.md`에도 오늘 데이터 append 후 함께 커밋 | 루틴 복잡, Actions와 중복 가능성 |
+
+`update_history.py`가 이미 존재한다면 **A가 맞는 구조**입니다. 루틴에서 할 일은 없고, 단지 Step 5 git add에 `reports/history/`를 추가할 필요도 없습니다 (Actions가 커밋하므로).
+
+혹시 `update_history.py`가 아직 **실제로 구현되지 않은 상태**인가요? 그렇다면 루틴에서 직접 처리하는 B 방식으로 설계해 드리겠습니다.
+
+A. 현재 구조 유지루틴은 stock MD만 push → Actions의 update_history.py가 history 처리역할 분리 명확, 루틴 단순
+
+이렇게 하자고 했는데.  실제 작동을 안 하는것 같다(히스토리 폴더에 md파일이 생성되지 않고 업데이트되는지 확인도 안된다. , 현재 비어있음. )
+
+아래 내용과 같은 템플릿을 주입할 수 있나?  연관 기업 링크와 해당 일에 언급된 종목티커별로 누적 업데이트 포함
+
+'''md
+---
+publish: false
+tags:
+  - 종목분석
+
+# ── 종목 식별 ──────────────────────────────
+ticker: "{{TSLA | 005930}}"         # 미국: 영문티커 / 한국: 6자리 숫자
+종목명: "{{종목명}}"
+exchange: "{{NASDAQ | NYSE | KOSPI | KOSDAQ}}"
+country: "{{US | KR}}"
+
+# ── GICS 분류 ──────────────────────────────
+# 섹터 선택 (11개 중 하나):
+#   에너지 | 소재 | 산업재 | 경기소비재 | 필수소비재
+#   헬스케어 | 금융 | IT | 커뮤니케이션 | 유틸리티 | 부동산
+sector: "{{섹터}}"
+industry_group: "{{산업그룹}}"       # 예: 반도체장비 | 소프트웨어 | 자동차
+themes:
+  - "{{테마1}}"                      # 예: AI | 전기차 | 2차전지
+  - "{{테마2}}"
+
+# ── 종목 상태 ──────────────────────────────
+상태: "{{관심 | 보유중 | 매도완료 | 제외}}"
+시가총액규모: "{{대형 | 중형 | 소형}}"  # 대형: 시총 상위 / 중형 / 소형
+
+# ── 메타 ───────────────────────────────────
+created: <% tp.file.creation_date("YYYY-MM-DD") %>
+modified: <% tp.date.now("YYYY-MM-DD") %>
+---
+
+# {{종목명}} ({{ticker}})
+
+## 📊 기본 정보
+
+| 항목 | 내용 |
+|------|------|
+| 티커 | `{{ticker}}` |
+| 거래소 | {{exchange}} |
+| 국가 | {{country}} |
+| GICS 섹터 | {{sector}} |
+| 산업 | {{industry_group}} |
+| 주요사업 | {{한 줄 사업 설명}} |
+| 상태 | {{상태}} |
+
+## 🎯 투자 포인트
+
+### 강점
+- 
+
+### 리스크
+- 
+
+## 📈 주요 테마
+
+- **핵심 테마**: [[테마명]]
+- **연관 테마**: [[테마명]], [[테마명]]
+
+## 🔗 연관 기업
+
+### 상위 기업 (고객사 / 대주주 / 플랫폼)
+- [[기업명]] — 관계: {{관계설명}}
+
+### 하위 기업 (공급업체 / 자회사 / 파트너)
+- [[기업명]] — 관계: {{관계설명}}
+
+### 경쟁 기업
+- [[기업명]] — 경쟁분야: {{분야}}
+
+## 📰 동향 및 이슈
+
+### <% tp.date.now("YYYY-MM-DD") %> 업데이트
+- 
+
+## 💰 재무 정보
+
+> 기준: {{YYYY Q?}} 실적 / 출처: {{공시 | 블룸버그 | 네이버금융}}
+
+| 지표 | 값 | 비고 |
+|------|----|------|
+| 매출액 | | |
+| 영업이익 | | |
+| 영업이익률 | | |
+| PER | | |
+| PBR | | |
+| ROE | | |
+| 부채비율 | | |
+
+## 🎯 개인 메모
+
+### 매수/매도 기준
+- **목표가**:
+- **손절가**:
+- **매수 사유**:
+- **매도 조건**:
+
+### 체크포인트
+- [ ] 분기 실적 확인
+- [ ] 주요 뉴스 모니터링
+- [ ] 테마 동향 점검
+- [ ] 연관 기업 동향 점검
+- [ ] 환율/금리 영향 점검 (미국주식)
+
+---
+
+## 🔗 관련 링크
+
+<!-- 한국주식 -->
+- [네이버금융](https://finance.naver.com/item/main.naver?code={{종목코드}})
+- [KRX 공시](http://kind.krx.co.kr/)
+- [DART 전자공시](https://dart.fss.or.kr/)
+
+<!-- 미국주식 -->
+- [Yahoo Finance](https://finance.yahoo.com/quote/{{ticker}})
+- [SEC Edgar](https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={{ticker}})
+- [회사 IR]({{IR URL}})
+
+## 연결된 노트
+- [[{{테마명}}]]
+- [[{{상위기업명}}]]
+- [[{{하위기업명}}]]
+'''
