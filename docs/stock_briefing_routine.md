@@ -1,11 +1,11 @@
 # 📊 주식 시황 브리핑 루틴 (v4)
 
-> **실행 조건**: 스케줄러에 의해 자동 실행 (KST 16:30 이후로 별도 지정)
+> **실행 조건**: 스케줄러에 의해 자동 실행 (KST 23:25 이후)
 > **실행 환경**: Claude Code 클라우드 루틴
 >   - repo가 clone된 컨테이너 내부에서 실행
 >   - 파일 저장·git 명령은 모두 상대경로 사용
 >   - GitHub push는 루틴에 연결된 repo 권한으로 처리 (별도 토큰 불필요)
->   - 수집 종목 관리: `.claude/config/watchlist.yaml` (루틴 프롬프트 수정 불필요)
+>   - 수집 종목 관리: `./config/watchlist.yaml` (루틴 프롬프트 수정 불필요)
 
 ---
 
@@ -13,7 +13,7 @@
 
 ### 1-1. 종목 목록 로드
 
-Read tool로 `.claude/config/watchlist.yaml`을 읽어 수집할 티커 목록을 확인하라.
+Read tool로 `./config/watchlist.yaml`을 읽어 수집할 티커 목록을 확인하라.
 파일 구조: `indices` / `macro` / `us_indices` / `sectors` 4개 섹션으로 구성.
 이후 모든 수집은 이 파일에 정의된 티커를 기준으로 한다.
 
@@ -154,6 +154,80 @@ Write tool로 아래 경로에 리포트를 저장하라.
 
 ---
 
+## [Step 3.5: 종목 이력 — 동향 및 이슈 업데이트]
+
+> **목적**: `reports/history/{ticker}.md` 파일의 `📰 동향 및 이슈` 섹션에 오늘 데이터를 추가한다.
+> GitHub Actions(`update_history.py`)는 **가격 테이블**만 담당.
+> 루틴은 **동향 이슈 텍스트**(맥락·키워드 포함)를 담당한다.
+
+### 3.5-1. 처리 대상
+
+`watchlist.yaml`의 **sectors** 항목만 처리한다 (indices / us_indices / macro 제외).
+enabled: false 섹터는 건너뛴다.
+
+### 3.5-2. 파일명 변환 규칙
+
+| 티커 | 파일명 |
+|------|--------|
+| `NVDA` | `reports/history/NVDA.md` |
+| `005930.KS` | `reports/history/005930.KS.md` |
+| `BRK-B` | `reports/history/BRK-B.md` |
+
+### 3.5-3. 각 종목 처리 순서
+
+**① Read tool**로 해당 파일을 읽는다.
+  - 파일이 없으면 건너뛴다 (Actions가 다음 빌드 시 생성).
+
+**② 형식 확인**  
+  - 파일에 `<!-- ISSUES_TOP -->` 마커가 없으면 → **건너뜀**  
+    (레거시 형식. 다음 Actions 실행 후 마이그레이션되면 익일부터 정상 처리)
+
+**③ 중복 확인**  
+  - 파일에 이미 `### YYYY-MM-DD` (오늘 날짜) 섹션이 있으면 → **건너뜀** (중복 방지)
+
+**④ Edit tool**로 `<!-- ISSUES_TOP -->` 를 아래 내용으로 교체한다.  
+마커는 **남겨두고** 새 항목을 마커 바로 뒤에 삽입 → 최신 항목이 위로 쌓임.
+
+```
+<!-- ISSUES_TOP -->
+
+### YYYY-MM-DD
+- 종가: {price} | 등락: {change_pct}% {price_emoji}
+- 섹터: {sector_name} {sector_emoji}
+- 시장: {market_temp_emoji} {market_temp_label}
+```
+
+**실제 예시 (NVDA, 리스크온 날):**
+```
+<!-- ISSUES_TOP -->
+
+### 2026-05-26
+- 종가: 224.59 | 등락: +1.38% 🟢
+- 섹터: 반도체 🟢
+- 시장: 🟢 리스크온
+```
+
+**왜 이 방식인가:**  
+마커가 항상 섹션 상단에 있으므로, 새 항목을 마커 직후에 삽입하면  
+다음 날도 동일한 마커를 기준으로 그 위에 항목이 쌓여 최신순이 유지된다.
+
+### 3.5-4. 값 결정 기준
+
+| 항목 | 출처 |
+|------|------|
+| `price` | Step 1에서 수집한 해당 티커 종가 |
+| `change_pct` | Step 1 수집값. N/A면 항목 전체 건너뜀 |
+| `price_emoji` | +0.5% 초과=🟢 / -0.5% 미만=🔴 / 그 외=🟡 |
+| `sector_emoji` | Step 2 리포트의 섹터 방향(🟢/🟡/🔴) 재사용 |
+| `market_temp_emoji` / `label` | Step 2에서 판단한 시장 온도계 재사용 |
+
+### 3.5-5. 오류 처리
+
+- Read 실패 / 마커 없음 / 데이터 N/A → 해당 종목 건너뜀, **루틴 계속 진행**
+- Edit 실패 → 경고 출력 후 다음 종목으로
+
+---
+
 ## [Step 4: Notion 등록 — Notion MCP]
 
 > **데이터베이스 ID 고정**: `362fae73-9c2b-80c2-ba08-c6f31ae8f922`
@@ -188,7 +262,7 @@ Notion API 오류 발생 시 오류 내용을 콘솔에 출력하고 **루틴은
 
 ```bash
 TODAY=$(date +%Y-%m-%d)
-git add reports/stock/
+git add reports/stock/ reports/history/
 git commit -m "📊 Stock briefing ${TODAY}"
 git push
 ```
@@ -196,9 +270,12 @@ git push
 push 결과(성공/실패)를 콘솔에 출력하라.
 push 실패 시에도 루틴은 정상 종료한다.
 
-> **GitHub Actions 연계**
+> **GitHub Actions 연계 (역할 분담)**
+> - **루틴**: `reports/stock/` (새 리포트) + `reports/history/` (동향 이슈 섹션)
+> - **Actions(`update_history.py`)**: `reports/history/` 가격 테이블 + 레거시 마이그레이션
+>
 > git push 성공 후 `stock_build.yml` 워크플로우가 자동 트리거되어
-> 웹페이지 빌드 및 이메일 발송을 처리한다. 루틴에서 별도 실행 불필요.
+> 웹페이지 빌드·이메일 발송·가격 테이블 업데이트를 처리한다. 루틴에서 별도 실행 불필요.
 
 ---
 
@@ -215,18 +292,27 @@ push 실패 시에도 루틴은 정상 종료한다.
 [Step 2] 리포트 작성
          ├─ 템플릿 로드 성공 → 템플릿 구조 사용
          └─ 템플릿 로드 실패 → 내장 구조 fallback
-         └─ 섹터 테이블 → watchlist.yaml sectors 기준 자동 생성
+         └─ 섹터 방향·시장온도 계산 (Step 3.5에서 재사용)
         │
         ▼
 [Step 3] Write tool → reports/stock/stock_YYYY-MM-DD.md 저장
+        │
+        ▼
+[Step 3.5] 종목 이력 동향·이슈 업데이트
+         ├─ sectors 종목 순회 (enabled만)
+         ├─ 각 파일에 ISSUES_APPEND_END 마커 확인
+         │    ├─ 마커 없음(레거시) → 건너뜀 (Actions가 마이그레이션)
+         │    └─ 마커 있음 → Edit tool로 오늘 이슈 항목 prepend
+         └─ 개별 실패 → 건너뜀, 루틴 계속
         │
         ▼
 [Step 4] Notion MCP → 중복 체크 후 create / update
          └─ 실패해도 루틴 계속 (비중단)
         │
         ▼
-[Step 5] git add → commit → push
+[Step 5] git add reports/stock/ reports/history/ → commit → push
          └─ GitHub Actions stock_build.yml 자동 트리거
+              ├─ update_history.py: 가격 테이블 업데이트 + 레거시 마이그레이션
               ├─ 웹페이지 빌드
               └─ 이메일 발송
 ```
@@ -242,3 +328,6 @@ push 실패 시에도 루틴은 정상 종료한다.
 - [ ] Notion DB(`362fae73-...`)에 속성 8개 추가 완료 확인
 - [ ] `stock_build.yml` 트리거 경로에 `reports/stock/**` 포함 확인
 - [ ] `templates/stock_report.md` 없어도 내장 구조로 동작 (선택사항)
+- [ ] `templates/stock_history.md` 없어도 인라인 폴백으로 동작 (선택사항)
+- [ ] 기존 레거시 history 파일은 최초 Actions 실행 시 자동 마이그레이션됨
+      (루틴은 마이그레이션 이후부터 동향 이슈 섹션을 기록 시작)
