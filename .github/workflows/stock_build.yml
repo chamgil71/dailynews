@@ -118,18 +118,6 @@ jobs:
           RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
           SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
 
-      # ── Notion 주식 동기화 ─────────────────────────────────────────────────
-      - name: Notion 주식 동기화
-        if: |
-          github.event_name == 'push' ||
-          (steps.check_md.outputs.exists == 'false' && (
-            github.event_name == 'schedule' ||
-            (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'full')))
-        run: python scripts/sync_notion.py --type stock --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
-        env:
-          NOTION_API_KEY:           ${{ secrets.NOTION_API_KEY }}
-          NOTION_DATABASE_ID_STOCK: ${{ secrets.NOTION_DATABASE_ID_STOCK }}
-
       # ── 커밋 + 푸시 ────────────────────────────────────────────────────────
       - name: 리포트 + 사이트 커밋
         run: |

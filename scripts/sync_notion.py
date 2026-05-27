@@ -42,19 +42,28 @@ _REPORTS_DIR = Path(_ROOT) / "reports"
 # ──────────────────────────────────────────────
 
 def sync_news(date_str: str) -> int:
-    """reports/news_YYYY-MM-DD.json → Notion 뉴스 DB"""
-    json_path = _REPORTS_DIR / f"news_{date_str}.json"
+    """publish/news/YYYY-MM-DD.json → Notion 뉴스 DB
+
+    뉴스 리스트(news_en + news_ko)는 reports/news_*.json이 아닌
+    publish/news/*.json에 저장됨. 각 항목: label, title, link, summary
+    """
+    _PUBLISH_NEWS_DIR = Path(_ROOT) / "publish" / "news"
+    json_path = _PUBLISH_NEWS_DIR / f"{date_str}.json"
+
     if not json_path.exists():
         logger.error(f"[뉴스] 파일 없음: {json_path}")
         return 0
 
     data = json.loads(json_path.read_text(encoding="utf-8"))
-    news_items = data.get("all", data.get("news_en", []) + data.get("news_ko", []))
+    news_en = data.get("news_en", [])
+    news_ko = data.get("news_ko", [])
+    news_items = news_en + news_ko
 
     if not news_items:
         logger.warning(f"[뉴스] {date_str} 동기화할 기사 없음.")
         return 0
 
+    logger.info(f"[뉴스] {date_str} — EN:{len(news_en)}건 + KO:{len(news_ko)}건 = {len(news_items)}건 동기화 시작")
     from core.shared.notion import sync_news_to_notion
     count = sync_news_to_notion(news_items, date_str)
     logger.info(f"[뉴스] {date_str} → Notion {count}건 완료")
