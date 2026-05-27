@@ -799,8 +799,14 @@ function hi(text, q) {
 function scrollSlider(id, dir) {
   const el = document.getElementById(id);
   if (!el) return;
-  const offset = el.offsetWidth * 0.85; // 슬라이드 폭의 85% 만큼 스무스하게 이동
-  el.scrollBy({ left: dir * offset, behavior: 'smooth' });
+  const cards = el.querySelectorAll('.news-slide-card');
+  if (!cards.length) return;
+  const cardWidth = cards[0].offsetWidth + 16; // 카드 가로 폭 + gap
+  const currentIndex = Math.round(el.scrollLeft / cardWidth);
+  let nextIndex = currentIndex + dir;
+  if (nextIndex < 0) nextIndex = 0;
+  if (nextIndex >= cards.length) nextIndex = cards.length - 1;
+  el.scrollTo({ left: nextIndex * cardWidth, behavior: 'smooth' });
 }
 function md2html(md) {
   if (!md) return "";
