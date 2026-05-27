@@ -201,3 +201,224 @@ def sync_news_to_notion(news_items: list, date_str: str = None) -> int:
 
     logger.info(f"[Notion 뉴스] 동기화 완료: 총 {len(payloads)}건 중 {success_count}건 성공적으로 기록 완료.")
     return success_count
+
+
+def sync_stock_to_notion(date_str: str, summary: str, market_data: dict = None) -> bool:
+    """
+    일일 주식 시황 브리핑을 Notion 주식 데이터베이스에 기록합니다.
+    - date_str: "2026-05-26"
+    - summary: 핵심 요약 텍스트 (3줄 요약)
+    - market_data: {"kospi": ..., "kosdaq": ..., "sp500": ..., "exchange_rate": ...} 등
+    """
+    if not NOTION_KEY or not NOTION_DB_STOCK:
+        logger.warning("[Notion 주식] NOTION_API_KEY 또는 NOTION_DATABASE_ID_STOCK 환경변수가 누락되어 동기화를 건너뜁니다.")
+        return False
+
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+    logger.info(f"[Notion 주식] '{NOTION_DB_STOCK}' 데이터베이스 스키마 검색 중...")
+    schema = get_database_schema(NOTION_DB_STOCK)
+
+    # ── 컬럼 매핑 ──
+    col_title    = "제목"
+    col_date     = "날짜"
+    col_summary  = "요약"
+    col_kospi    = "코스피"
+    col_sp500    = "S&P500"
+    col_exchange = "환율"
+
+    if schema:
+        for name, prop in schema.items():
+            if prop.get("type") == "title":
+                col_title = name
+                break
+        for name in ["날짜", "Date", "date"]:
+            if name in schema:
+                col_date = name
+                break
+        for name in ["요약", "Summary", "summary", "핵심요약"]:
+            if name in schema:
+                col_summary = name
+                break
+        for name in ["코스피", "KOSPI", "kospi"]:
+            if name in schema:
+                col_kospi = name
+                break
+        for name in ["S&P500", "SP500", "sp500", "S&P 500"]:
+            if name in schema:
+                col_sp500 = name
+                break
+        for name in ["환율", "원달러", "KRW/USD", "exchange"]:
+            if name in schema:
+                col_exchange = name
+                break
+
+    market_data = market_data or {}
+    properties = {}
+
+    # 제목: "주식 시황 2026-05-26"
+    properties[col_title] = {
+        "title": [{"text": {"content": f"주식 시황 {date_str}"}}]
+    }
+
+    # 날짜
+    is_date_type = schema and schema.get(col_date, {}).get("type") == "date"
+    if is_date_type or not schema:
+        properties[col_date] = {"date": {"start": date_str}}
+    else:
+        properties[col_date] = {"rich_text": [{"text": {"content": date_str}}]}
+
+    # 요약
+    if col_summary in (schema or {}):
+        properties[col_summary] = {
+            "rich_text": [{"text": {"content": (summary or "")[:2000]}}]
+        }
+
+    # 수치 필드 (number 타입이면 number, 아니면 rich_text)
+    def _set_number_col(col_name, value):
+        if not value or col_name not in (schema or {}):
+            return
+        is_num = schema and schema.get(col_name, {}).get("type") == "number"
+        try:
+            num_val = float(str(value).replace(",", "").replace("%", ""))
+            if is_num:
+                properties[col_name] = {"number": num_val}
+            else:
+                properties[col_name] = {"rich_text": [{"text": {"content": str(value)}}]}
+        except ValueError:
+            properties[col_name] = {"rich_text": [{"text": {"content": str(value)}}]}
+
+    _set_number_col(col_kospi,    market_data.get("kospi"))
+    _set_number_col(col_sp500,    market_data.get("sp500"))
+    _set_number_col(col_exchange, market_data.get("exchange_rate"))
+
+    payload = {
+        "parent": {"database_id": NOTION_DB_STOCK},
+        "properties": properties
+    }
+
+    headers = _get_headers()
+    success, err_msg = _create_page_with_retry(headers, payload)
+    if success:
+        logger.info(f"[Notion 주식] {date_str} 시황 기록 완료.")
+    else:
+        logger.error(f"[Notion 주식] 기록 실패: {err_msg}")
+    return success
+
+
+def sync_ai_issue_to_notion(issue_date: str, period: str, top10: list,
+                             outlook: str, database_id: str = None) -> int:
+    """
+    주간 AI 이슈 보고서를 Notion AI Issue 데이터베이스에 기록합니다.
+    - issue_date: "2026-06-01" (일요일 날짜)
+    - period: "2026-05-26 ~ 2026-06-01"
+    - top10: List[dict] — rank, title, category, importance, summary
+    - outlook: 차주 전망 텍스트
+    - database_id: NOTION_DATABASE_ID_AI_ISSUE (없으면 환경변수에서 읽음)
+    """
+    db_id = database_id or os.getenv("NOTION_DATABASE_ID_AI_ISSUE")
+    if not NOTION_KEY or not db_id:
+        logger.warning("[Notion AI이슈] NOTION_API_KEY 또는 NOTION_DATABASE_ID_AI_ISSUE 환경변수가 누락되어 동기화를 건너뜁니다.")
+        return 0
+
+    if not top10:
+        logger.info("[Notion AI이슈] 동기화할 이슈 데이터가 없습니다.")
+        return 0
+
+    logger.info(f"[Notion AI이슈] '{db_id}' 데이터베이스 스키마 검색 중...")
+    schema = get_database_schema(db_id)
+
+    col_title    = "제목"
+    col_date     = "날짜"
+    col_period   = "기간"
+    col_category = "카테고리"
+    col_rank     = "순위"
+    col_summary  = "요약"
+    col_outlook  = "차주전망"
+
+    if schema:
+        for name, prop in schema.items():
+            if prop.get("type") == "title":
+                col_title = name
+                break
+        for name in ["날짜", "Date", "date"]:
+            if name in schema: col_date = name; break
+        for name in ["기간", "Period", "period"]:
+            if name in schema: col_period = name; break
+        for name in ["카테고리", "Category", "category"]:
+            if name in schema: col_category = name; break
+        for name in ["순위", "Rank", "rank"]:
+            if name in schema: col_rank = name; break
+        for name in ["요약", "Summary", "summary"]:
+            if name in schema: col_summary = name; break
+        for name in ["차주전망", "Outlook", "outlook", "전망"]:
+            if name in schema: col_outlook = name; break
+
+    headers = _get_headers()
+    payloads = []
+
+    for issue in top10:
+        properties = {}
+        # 제목
+        properties[col_title] = {
+            "title": [{"text": {"content": f"[{issue.get('rank', '')}] {issue.get('title', '')}"[:100]}}]
+        }
+        # 날짜
+        is_date_type = schema and schema.get(col_date, {}).get("type") == "date"
+        if is_date_type or not schema:
+            properties[col_date] = {"date": {"start": issue_date}}
+        else:
+            properties[col_date] = {"rich_text": [{"text": {"content": issue_date}}]}
+
+        # 기간
+        if col_period in (schema or {}):
+            properties[col_period] = {"rich_text": [{"text": {"content": period}}]}
+
+        # 카테고리
+        if col_category in (schema or {}):
+            is_select = schema and schema.get(col_category, {}).get("type") == "select"
+            cat_val = issue.get("category", "기타")
+            if is_select or not schema:
+                properties[col_category] = {"select": {"name": cat_val}}
+            else:
+                properties[col_category] = {"rich_text": [{"text": {"content": cat_val}}]}
+
+        # 순위
+        if col_rank in (schema or {}):
+            is_num = schema and schema.get(col_rank, {}).get("type") == "number"
+            if is_num:
+                properties[col_rank] = {"number": issue.get("rank", 0)}
+            else:
+                properties[col_rank] = {"rich_text": [{"text": {"content": str(issue.get("rank", ""))}}]}
+
+        # 요약
+        if col_summary in (schema or {}):
+            properties[col_summary] = {
+                "rich_text": [{"text": {"content": issue.get("summary", "")[:2000]}}]
+            }
+
+        # 차주전망 (1번 이슈에만 첨부)
+        if issue.get("rank") == 1 and col_outlook in (schema or {}):
+            properties[col_outlook] = {
+                "rich_text": [{"text": {"content": (outlook or "")[:2000]}}]
+            }
+
+        payloads.append({
+            "parent": {"database_id": db_id},
+            "properties": properties
+        })
+
+    logger.info(f"[Notion AI이슈] 총 {len(payloads)}개 이슈를 Notion으로 전송 시작합니다...")
+    success_count = 0
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(_create_page_with_retry, headers, p): p for p in payloads}
+        for future in as_completed(futures):
+            ok, err = future.result()
+            if ok:
+                success_count += 1
+            else:
+                logger.error(f"[Notion AI이슈] 페이지 생성 실패: {err}")
+
+    logger.info(f"[Notion AI이슈] 동기화 완료: {len(payloads)}건 중 {success_count}건 성공.")
+    return success_count

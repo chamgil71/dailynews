@@ -50,6 +50,10 @@ jobs:
           SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
           TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Notion 뉴스 동기화
+        run: python scripts/sync_notion.py --type news --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+        env:
           NOTION_API_KEY:          ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID_NEWS: ${{ secrets.NOTION_DATABASE_ID_NEWS }}
 

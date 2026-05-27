@@ -503,7 +503,41 @@ publish/ai-issue/20??-??-??.json
 
 ---
 
-## 11. 기존 코드 재사용 계획
+## 11. Notion 데이터베이스 연동
+
+기존 뉴스·주식과 동일하게 `scripts/sync_notion.py --type ai-issue` 로 별도 동기화.
+
+### 11-1. 환경변수 추가 필요
+
+```
+NOTION_DATABASE_ID_AI_ISSUE   ← 신규 시크릿 (GitHub Actions Secrets에 추가)
+```
+
+### 11-2. Notion DB 권장 스키마
+
+| 컬럼명 | 타입 | 내용 |
+|--------|------|------|
+| 제목 | title | `[순위] 이슈 제목` |
+| 날짜 | date | 해당 주 일요일 날짜 |
+| 기간 | rich_text | `2026-05-26 ~ 2026-06-01` |
+| 카테고리 | select | model/service/research/policy/industry/infra/investment |
+| 순위 | number | 1~10 |
+| 요약 | rich_text | 이슈 2~3줄 요약 |
+| 차주전망 | rich_text | 1순위 이슈에 차주 전망 첨부 |
+
+### 11-3. `ai_issue.yml` 워크플로우에 Notion 스텝 추가
+
+```yaml
+- name: Notion AI이슈 동기화
+  run: python scripts/sync_notion.py --type ai-issue --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+  env:
+    NOTION_API_KEY:                ${{ secrets.NOTION_API_KEY }}
+    NOTION_DATABASE_ID_AI_ISSUE:   ${{ secrets.NOTION_DATABASE_ID_AI_ISSUE }}
+```
+
+---
+
+## 12. 기존 코드 재사용 계획
 
 | 기존 모듈 | 재사용 방식 |
 |-----------|-------------|
