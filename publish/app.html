@@ -942,12 +942,14 @@ function renderReport(report, newsItems) {
         ${n.summary ? `<div class="news-summary" style="margin-top: 6px; font-size: 0.82rem; color: var(--muted); line-height: 1.5; padding-left: 8px; border-left: 2px solid var(--border);">${hi(esc(n.summary),q)}</div>` : ""}
       </div>`).join("");
     const id = `nl-${lang}-${date}`;
+    const isOpen = q ? " open" : "";
+    const arrow = q ? "▲" : "▼";
     return `
       <button class="news-toggle" onclick="toggleNews('${id}')">
         ${flag} ${label} ${items.length}건
-        <span id="${id}-arr">▼</span>
+        <span id="${id}-arr">${arrow}</span>
       </button>
-      <div class="news-list" id="${id}">${rows}</div>`;
+      <div class="news-list${isOpen}" id="${id}">${rows}</div>`;
   }
 
   // 카드뉴스 슬라이드 생성 (로컬 변수명 sliderHtml — 전역 cardNewsHtml 함수와 이름 충돌 방지)
