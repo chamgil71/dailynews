@@ -26,6 +26,28 @@
   .keyword-section h2 { font-size:.88rem; font-weight:700; color:{{ c.orange }}; margin:0 0 8px 0; }
   .keyword-section p { margin:4px 0 8px 0; line-height:1.65; }
   .keyword-section blockquote { margin:4px 0 8px 1em; color:{{ c.muted }}; font-size:.82rem; }
+
+  /* ── 모바일 반응형 (max-width: 600px) ── */
+  @media screen and (max-width: 600px) {
+    /* 2단 칼럼 → 세로 배열 */
+    .col-2 {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .col-spacer { display: none !important; }
+    /* 국내 칼럼 위 여백 (세로 배열 시 간격) */
+    .ko-col { margin-top: 12px !important; }
+
+    /* 헤더·섹션 패딩 축소 */
+    .hd-cell  { padding: 16px 16px 12px !important; }
+    .stats-cell { padding: 0 16px 16px !important; }
+    .body-pad { padding: 16px 10px 10px !important; }
+    .body-pad-sm { padding: 0 10px 12px !important; }
+
+    /* 본문 폰트 가독성 보정 */
+    .en-col, .ko-col { font-size: .85rem !important; }
+  }
 </style>
 </head>
 <body style="margin:0;padding:0;background:{{ c.bg }};font-family:{{ t.font_sans }};-webkit-font-smoothing:antialiased">
@@ -44,7 +66,8 @@
          HEADER — 제목바
     ══════════════════════════════════════════════ -->
     <tr>
-      <td style="background:{{ c.navy }};border-radius:12px 12px 0 0;
+      <td class="hd-cell"
+          style="background:{{ c.navy }};border-radius:12px 12px 0 0;
                  padding:22px 28px 14px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
@@ -84,7 +107,8 @@
          STATS BAR — 통계 + 바로가기
     ══════════════════════════════════════════════ -->
     <tr>
-      <td style="background:{{ c.navy }};padding:0 28px 20px">
+      <td class="stats-cell"
+          style="background:{{ c.navy }};padding:0 28px 20px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td align="center"
@@ -130,12 +154,13 @@
          2단 분석 — 해외 | 국내 이슈 & 트렌드
     ══════════════════════════════════════════════ -->
     <tr>
-      <td style="background:{{ c.bg }};padding:20px 14px 12px">
+      <td class="body-pad"
+          style="background:{{ c.bg }};padding:20px 14px 12px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr valign="top">
 
             <!-- 해외 분석 칼럼 -->
-            <td width="49%" class="en-col"
+            <td width="49%" class="col-2 en-col"
                 style="background:{{ c.card }};border:1px solid {{ c.border }};
                        border-radius:10px;vertical-align:top;
                        box-shadow:0 1px 4px rgba(0,0,0,.05)">
@@ -151,10 +176,10 @@
               </div>
             </td>
 
-            <td width="2%" style="min-width:12px"></td>
+            <td width="2%" class="col-spacer" style="min-width:12px"></td>
 
             <!-- 국내 분석 칼럼 -->
-            <td width="49%" class="ko-col"
+            <td width="49%" class="col-2 ko-col"
                 style="background:{{ c.card }};border:1px solid {{ c.border }};
                        border-radius:10px;vertical-align:top;
                        box-shadow:0 1px 4px rgba(0,0,0,.05)">
@@ -180,7 +205,8 @@
     ══════════════════════════════════════════════ -->
     {% if keyword_html %}
     <tr>
-      <td style="background:{{ c.bg }};padding:0 14px 12px">
+      <td class="body-pad-sm"
+          style="background:{{ c.bg }};padding:0 14px 12px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0"
                style="border-radius:10px;overflow:hidden;
                       border:1px solid {{ c.border }};
@@ -211,7 +237,8 @@
     ══════════════════════════════════════════════ -->
     {% if site_url %}
     <tr>
-      <td style="background:{{ c.bg }};padding:0 14px 20px">
+      <td class="body-pad-sm"
+          style="background:{{ c.bg }};padding:0 14px 20px">
         <table width="100%" cellpadding="0" cellspacing="0" border="0"
                style="border-radius:10px;border:1px solid {{ c.border }};
                       box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden">
