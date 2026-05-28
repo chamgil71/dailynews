@@ -89,12 +89,23 @@ def _parse_summary(raw: str) -> str:
     return m.group(1).strip() if m else ""
 
 
+def _preprocess_raw_md(raw: str) -> str:
+    """핵심 요약의 '제목 — 내용' 형식을 '제목 \n  - 내용'으로 변환."""
+    return re.sub(
+        r'^-\s+\*\*\[(.+?)\]\*\*\s+(?:—|-)\s+(.+)$',
+        r'- **[\1]**\n  - \2',
+        raw,
+        flags=re.MULTILINE
+    )
+
+
 def parse_stock_md(md_path: str, date_str: str) -> dict:
     """
     stock MD 파일 → 구조화 데이터.
     build_stock_report_ctx() 와 stock-data.json 에 사용.
     """
     raw = Path(md_path).read_text(encoding="utf-8")
+    raw = _preprocess_raw_md(raw)
     return {
         "date":        date_str,
         "temperature": _parse_temperature(raw),
@@ -115,6 +126,7 @@ def _display_date(date_str: str) -> str:
 
 def build_stock_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
     raw      = Path(md_path).read_text(encoding="utf-8")
+    raw      = _preprocess_raw_md(raw)
     md_html  = markdown2.markdown(
         raw,
         extras=["tables", "fenced-code-blocks", "strike", "cuddled-lists", "header-ids"],
