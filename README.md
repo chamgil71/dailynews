@@ -6,8 +6,8 @@
 [![GitHub Pages](https://img.shields.io/badge/Hosting-GitHub_Pages-blue.svg?logo=github&logoColor=white)](https://chamgil71.github.io/dailynews/)
 [![Fully Serverless](https://img.shields.io/badge/Serverless-$0_Cost-green.svg?logo=serverless&logoColor=white)](#github-actions-및-비용)
 
-> **완전 자동화 · 초경량 서버리스 · 월 $0 비용**  
-> 매일 아침 RSS 뉴스를 수집해 AI가 트렌드를 분석하고, 매일 장 마감 후 주식 시황을 정밀 요약하여 **고품격 반응형 웹 대시보드**와 **개인화된 이메일 뉴스레터**로 동시에 발행하는 지능형 통합 브리핑 시스템입니다.
+> **완전 자동화 · 초경량 서버리스 데일리 뉴스 서비스**  
+> 매일 아침 RSS 뉴스를 수집해 AI가 트렌드를 분석하고, 매일 장 마감 후 주식 시황을 정밀 요약하여 **반응형 웹 대시보드**와 **개인화된 이메일 뉴스레터**로 동시에 발행하는 지능형 통합 브리핑 시스템입니다.
 
 ---
 
