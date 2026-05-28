@@ -24,7 +24,7 @@ import os
 
 SITE_THEME_DEFAULT    = "editorial"  # classic | minimal | ink | forest | editorial | terminal
 THEME_NEWS_DEFAULT    = "editorial"  # 뉴스브리핑 개별 테마 (기본: SITE_THEME_DEFAULT)
-THEME_STOCK_DEFAULT   = "classic"    # 주식시황 개별 테마 (기본: SITE_THEME_DEFAULT)
+THEME_STOCK_DEFAULT   = "editorial"    # 주식시황 개별 테마 (기본: SITE_THEME_DEFAULT)
 THEME_EMAIL_DEFAULT   = "classic"    # 메일링뉴스 개별 테마 (기본: SITE_THEME_DEFAULT)
 
 SITE_THEME    = os.getenv("SITE_THEME", SITE_THEME_DEFAULT)
