@@ -129,3 +129,88 @@ def send_telegram_cardnews(structured_data: dict, date_str: str = None) -> bool:
     except Exception as e:
         logger.error(f"[Telegram] 통신 오류 발생: {e}")
         return False
+
+
+def send_ai_issue_telegram(report_data: dict, date_str: str = None) -> bool:
+    """
+    주간 AI Issue 보고서 요약을 텔레그램으로 발송.
+    report_data: reports/ai-issue/ai_issue_YYYY-MM-DD.json 내용
+    """
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+
+    if not bot_token or not chat_id:
+        logger.warning("[Telegram/AI이슈] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID 미설정 — 발송 건너뜀")
+        return False
+
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+    period = report_data.get("period", date_str)
+    top10 = report_data.get("top10", [])
+    outlook = report_data.get("next_week_outlook", "")
+
+    lines = [f"🤖 <b>AI Issue Weekly</b> — {html.escape(period)}", ""]
+
+    # TOP 3 이슈
+    cat_icons = {
+        "model": "🤖", "service": "🚀", "research": "🔬",
+        "policy": "⚖️", "industry": "🏭", "infra": "🖥️", "investment": "💰",
+    }
+    rank_emojis = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣"}
+    lines.append("🔝 <b>이번 주 TOP 3 이슈</b>")
+    for item in top10[:3]:
+        rank = item.get("rank", 1)
+        cat = item.get("category", "")
+        icon = cat_icons.get(cat, "🔹")
+        title = html.escape(item.get("title", ""))
+        summary = html.escape(item.get("summary", ""))
+        lines.append(f"{rank_emojis.get(rank, '🔹')} {icon} <b>{title}</b>")
+        if summary:
+            lines.append(f"  ➔ {summary}")
+        lines.append("")
+
+    # 4~10위 심플 목록
+    if len(top10) > 3:
+        lines.append("📋 <b>그 외 주요 이슈</b>")
+        for item in top10[3:]:
+            rank = item.get("rank", "")
+            title = html.escape(item.get("title", ""))
+            lines.append(f"  {rank}. {title}")
+        lines.append("")
+
+    # 차주 전망
+    if outlook:
+        short = html.escape(outlook[:120])
+        if len(outlook) > 120:
+            short += "..."
+        lines.append(f"🔮 <b>차주 전망</b>: {short}")
+        lines.append("")
+
+    # 사이트 링크
+    link_url = f"{SITE_BASE_URL}/ai-issue/" if SITE_BASE_URL else ""
+    if link_url:
+        lines.append(f"📰 <a href=\"{link_url}\">전체 보고서 보기</a>")
+
+    message_text = "\n".join(lines)
+
+    api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message_text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": True,
+    }
+
+    try:
+        response = requests.post(api_url, json=payload, timeout=10)
+        res_data = response.json()
+        if response.status_code == 200 and res_data.get("ok"):
+            logger.info("[Telegram/AI이슈] 발송 완료")
+            return True
+        else:
+            logger.error(f"[Telegram/AI이슈] 발송 실패: {res_data.get('description', '알 수 없는 오류')}")
+            return False
+    except Exception as e:
+        logger.error(f"[Telegram/AI이슈] 통신 오류: {e}")
+        return False
