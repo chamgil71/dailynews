@@ -22,6 +22,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Asia/Seoul
 
     steps:
       - name: Checkout
@@ -51,16 +53,16 @@ jobs:
           TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
 
+      - name: 사이트 빌드 (MD → HTML)
+        run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
+        # 테마/디자인 변경 시: 아래로 교체
+        # run: python scripts/build_site.py --all
+
       - name: Notion 뉴스 동기화
         run: python scripts/sync_notion.py --type news --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
         env:
           NOTION_API_KEY:          ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID_NEWS: ${{ secrets.NOTION_DATABASE_ID_NEWS }}
-
-      - name: 사이트 빌드 (MD → HTML)
-        run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
-        # 테마/디자인 변경 시: 아래로 교체
-        # run: python scripts/build_site.py --all
 
       - name: 리포트 + 사이트 + DB 커밋
         run: |

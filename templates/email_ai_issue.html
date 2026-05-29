@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤖 AI Issue Weekly</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4ede0; color: #1a1612; margin: 0; padding: 0; }
+    .wrapper { max-width: 600px; margin: 0 auto; background-color: #ece2cf; border: 1px solid #2b231a; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+    .header { padding: 30px 20px; text-align: center; background: linear-gradient(135deg, #2b231a, #8b2a1f); color: #ece2cf; }
+    .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .header p { margin: 8px 0 0; font-size: 14px; opacity: 0.85; }
+    .content { padding: 24px 20px; }
+    .section-title { font-size: 18px; font-weight: 700; color: #8b2a1f; border-bottom: 2px solid #2b231a; padding-bottom: 6px; margin-top: 0; margin-bottom: 16px; }
+    .issue-card { background-color: #ece2cf; border: 1px solid #2b231a; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
+    .issue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .issue-title { font-weight: 700; font-size: 15px; color: #2b231a; }
+    .issue-summary { font-size: 13.5px; color: #554e45; line-height: 1.5; margin-top: 4px; }
+    .badge { font-size: 11px; background-color: #8b2a1f; color: #ece2cf; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .cta-btn { display: block; text-align: center; background-color: #8b2a1f; color: #ece2cf; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 700; font-size: 14px; margin: 20px 0; transition: background 0.15s; }
+    .stock-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+    .stock-table th { background-color: #2b231a; color: #ece2cf; padding: 8px; text-align: left; }
+    .stock-table td { padding: 8px; border-bottom: 1px solid #2b231a; }
+    .footer { text-align: center; padding: 20px; font-size: 11px; color: #8a7e6f; border-top: 1px solid #2b231a; }
+    .footer a { color: #8b2a1f; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- 헤더 -->
+  <div class="header">
+    <h1>🤖 AI Issue Weekly</h1>
+    <p>주간 AI 핵심 동향 보고서 — {{ period }}</p>
+  </div>
+
+  <!-- 콘텐츠 본문 -->
+  <div class="content">
+    
+    <!-- 섹션 1: 이번 주 AI 이슈 TOP 3 (심층 분석 요약) -->
+    <div class="section-title">🌟 이번 주 3대 핵심 이슈</div>
+    {% for issue in top10[:3] %}
+    <div class="issue-card">
+      <div class="issue-header">
+        <span class="issue-title">{{ issue.rank }}위. {{ issue.title }}</span>
+        <span class="badge">{{ issue.category.upper() }}</span>
+      </div>
+      <div class="issue-summary">
+        {{ issue.summary }}
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- 섹션 2: 기타 주요 소식 (4~10위 간략 요약) -->
+    <div class="section-title" style="margin-top: 24px;">📰 추가 핵심 소식 (4~10위)</div>
+    <ul style="padding-left: 20px; font-size: 13.5px; line-height: 1.6; color: #2b231a; margin-bottom: 20px;">
+      {% for issue in top10[3:] %}
+      <li style="margin-bottom: 6px;">
+        <strong>[{{ issue.category.upper() }}]</strong> {{ issue.title }}
+      </li>
+      {% endfor %}
+    </ul>
+
+    <!-- 💡 이번 주 AI 팁 하이라이트 (1개만 간결하게) -->
+    {% if weekly_tips %}
+    <div class="section-title" style="margin-top: 24px;">💡 주간 실용 AI 팁</div>
+    <div class="issue-card" style="border-left: 4px solid #8b2a1f; background-color: #f4ede0;">
+      <strong style="color: #8b2a1f; font-size: 14px;">🛠️ [{{ weekly_tips[0].difficulty }}] {{ weekly_tips[0].title }}</strong>
+      <p style="font-size: 13px; margin: 6px 0; color: #554e45;">{{ weekly_tips[0].guide[:150] }}...</p>
+    </div>
+    {% endif %}
+
+    <!-- 📈 빅테크 주간 등락 -->
+    <div class="section-title" style="margin-top: 24px;">📈 AI 주요 종목 주간 등락</div>
+    <table class="stock-table">
+      <thead>
+        <tr>
+          <th>종목명(티커)</th>
+          <th style="text-align: right;">주간 등락률</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stock in stock_snapshots %}
+        <tr>
+          <td><strong>{{ stock.name }}</strong> ({{ stock.ticker }})</td>
+          <td style="text-align: right; font-weight: 700; color: {% if stock.weekly_change_pct >= 0 %}#16a34a{% else %}#ea580c{% endif %};">
+            {{ stock.weekly_change_pct:+.2f }}%
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- 웹으로 보기 유도 CTA 버튼 (Gmail 용량 초과 방지) -->
+    <a href="{{ site_url }}ai-issue/{{ date_str }}.html" class="cta-btn">
+      🔥 전체 보고서 & 논문 분석 웹에서 읽기
+    </a>
+
+  </div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    본 이메일은 주간 동향 자동 취합 보고서입니다.<br>
+    상세 웹 리포트: <a href="{{ site_url }}ai-issue/">{{ site_url }}ai-issue/</a><br>
+    Powered by GitHub Actions · chamgil71/dailynews<br>
+    <a href="{{ unsubscribe_url }}" style="font-size: 10px; color: #8a7e6f; text-decoration: underline; margin-top: 8px; display: inline-block;">이메일 구독 해지</a>
+  </div>
+</div>
+
+</body>
+</html>

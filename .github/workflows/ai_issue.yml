@@ -1,0 +1,129 @@
+name: AI Issue Weekly Report
+
+on:
+  schedule:
+    # UTC 토요일 22:00 = KST 일요일 07:00 실행 (월요일 오전 발행 완료 대비)
+    - cron: '0 22 * * 6'
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: '발행 기준 일요일 날짜 (예: 2026-06-01). 미입력 시 KST 당일 자동 연산'
+        required: false
+
+# Pages 배포 경합 방지
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  ai_issue:
+    runs-on: ubuntu-latest
+    
+    # 글로벌 KST 타임존 주입으로 날짜 정합성 100% 무결 보장
+    env:
+      TZ: Asia/Seoul
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: AI 이슈 수집·분석·보고서 생성
+        run: |
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            python scripts/run_ai_issue.py --date ${{ github.event.inputs.target_date }}
+          else
+            python scripts/run_ai_issue.py
+          fi
+        env:
+          LLM_PROVIDER:        ${{ secrets.LLM_PROVIDER }}
+          GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY:   ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY:      ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Notion AI이슈 동기화
+        run: |
+          TARGET_DATE=$(date +'%Y-%m-%d')
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            TARGET_DATE="${{ github.event.inputs.target_date }}"
+          fi
+          python scripts/sync_notion.py --type ai-issue --date ${TARGET_DATE}
+        env:
+          NOTION_API_KEY:                ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID_AI_ISSUE:   ${{ secrets.NOTION_DATABASE_ID_AI_ISSUE }}
+
+      - name: HTML 빌드 (ai-issue 전용)
+        run: python scripts/build_ai_issue_site.py
+        env:
+          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+
+      - name: 통합 사이트 빌드 (app.html AI이슈 탭 반영 컴파일)
+        run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
+        env:
+          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+
+      - name: 이메일 발송
+        run: |
+          TARGET_DATE=$(date +'%Y-%m-%d')
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            TARGET_DATE="${{ github.event.inputs.target_date }}"
+          fi
+          python scripts/send_ai_issue_email.py --date ${TARGET_DATE}
+        env:
+          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:   ${{ secrets.RECIPIENT_EMAILS }}
+          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+
+      - name: Telegram 발송
+        run: |
+          TARGET_DATE=$(date +'%Y-%m-%d')
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            TARGET_DATE="${{ github.event.inputs.target_date }}"
+          fi
+          python scripts/send_ai_issue_telegram.py --date ${TARGET_DATE}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true # 텔레그램 미등록 시 전체 프로세스 성공 보장용
+
+      - name: 커밋 + 푸시
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git add reports/ai-issue/
+          # 날짜별 빌드 리포트 (gitignore 대상 강제 추적)
+          git add -f publish/ai-issue/20??-??-??.html \
+                     publish/ai-issue/20??-??-??.json 2>/dev/null || true
+          # 통합 인덱스 파일들 (항상 최신 배포)
+          git add -f publish/ai-issue/index.html \
+                     publish/ai-issue/archive.html \
+                     publish/ai-issue/ai-issue-data.json 2>/dev/null || true
+          git add -f publish/app.html publish/index.html 2>/dev/null || true
+          git diff --staged --quiet || \
+            git commit -m "🤖 AI Issue Weekly $(date +'%Y-%m-%d')"
+          git pull --rebase --autostash origin main
+          git push
+
+      - name: GitHub Pages 배포 아티팩트 업로드
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: publish/
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

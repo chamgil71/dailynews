@@ -44,16 +44,16 @@ def _get_email_theme() -> str:
 
 logger = logging.getLogger(__name__)
 
-_UNSUB_FILE = Path(__file__).parent.parent / "storage" / "unsubscribed.txt"
-
-
-def _get_unsubscribed() -> set[str]:
-    # 구독 취소 비활성화 (공식 대시보드 방문 대체)
-    return set()
+# [구독취소 기능 주석 처리 - 향후 Supabase 이전 계획 반영 예정]
+# _UNSUB_FILE = Path(__file__).parent.parent / "storage" / "unsubscribed.txt"
+# 
+# def _get_unsubscribed() -> set[str]:
+#     # 구독 취소 비활성화 (공식 대시보드 방문 대체)
+#     return set()
 
 
 def _get_recipients() -> list[str]:
-    # 구독 취소 필터링 없이 전체 수신자 목록 다이렉트 반환
+    # 구독 취소 필터링 없이 전체 수신자 목록 다이렉트 반환 (향후 Supabase DB 연동 계획)
     return RECIPIENT_EMAILS
 
 
@@ -161,9 +161,9 @@ def _parse_md_for_stock_email(md: str) -> dict:
     temp_m     = re.search(r'## 시장 온도계[:\s]*(.*)', md)
     reason_m   = re.search(r'## 시장 온도계.*\n+>\s*(.*)', md)
 
-    summary_html    = markdown2.markdown(summary_m.group(1).strip(),  extras=["tables"]) if summary_m  else ""
-    keywords_html   = markdown2.markdown(keywords_m.group(1).strip(), extras=["tables"]) if keywords_m else ""
-    lt_comment_html = markdown2.markdown(lt_m.group(1).strip(),       extras=["tables"]) if lt_m       else ""
+    summary_html    = markdown2.markdown(summary_m.group(1).strip(),  extras=["tables", "cuddled-lists"]) if summary_m  else ""
+    keywords_html   = markdown2.markdown(keywords_m.group(1).strip(), extras=["tables", "cuddled-lists"]) if keywords_m else ""
+    lt_comment_html = markdown2.markdown(lt_m.group(1).strip(),       extras=["tables", "cuddled-lists"]) if lt_m       else ""
 
     temperature_display = temp_m.group(1).strip() if temp_m else "🟡 중립"
     temperature_reason  = reason_m.group(1).strip() if reason_m else ""

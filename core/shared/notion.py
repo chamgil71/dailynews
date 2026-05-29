@@ -404,10 +404,53 @@ def sync_ai_issue_to_notion(issue_date: str, period: str, top10: list,
                 "rich_text": [{"text": {"content": (outlook or "")[:2000]}}]
             }
 
-        payloads.append({
+        # ── 5번 요구사항: 상세 본문(Page Body) children 블록 구성 ──
+        body_blocks = []
+        
+        # 1. 머리글 추가
+        body_blocks.append({
+            "object": "block",
+            "type": "heading_2",
+            "heading_2": {
+                "rich_text": [{"type": "text", "text": {"content": f"🤖 {issue.get('rank')}위 이슈 상세 리포트"}}]
+            }
+        })
+        
+        # 2. 요약글 추가
+        if issue.get("summary"):
+            body_blocks.append({
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"type": "text", "text": {"content": f"📝 요약: {issue['summary']}"}}]
+                }
+            })
+            
+        # 3. 마크다운 상세(detail) 파싱 후 children 추가 (TOP 3 심층 분석)
+        detail_md = issue.get("detail", "")
+        if detail_md:
+            body_blocks.extend(_markdown_to_notion_blocks(detail_md))
+            
+        # 4. 1위 이슈인 경우 차주 전망(outlook)도 본문 하단에 추가적 적재
+        if issue.get("rank") == 1 and outlook:
+            body_blocks.append({
+                "object": "block",
+                "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "🔮 차주 AI 모니터링 포인트 및 전망"}}]
+                }
+            })
+            body_blocks.extend(_markdown_to_notion_blocks(outlook))
+
+        payload = {
             "parent": {"database_id": db_id},
             "properties": properties
-        })
+        }
+        
+        if body_blocks:
+            payload["children"] = body_blocks[:100] # Notion 100개 제한
+
+        payloads.append(payload)
 
     logger.info(f"[Notion AI이슈] 총 {len(payloads)}개 이슈를 Notion으로 전송 시작합니다...")
     success_count = 0
@@ -422,3 +465,59 @@ def sync_ai_issue_to_notion(issue_date: str, period: str, top10: list,
 
     logger.info(f"[Notion AI이슈] 동기화 완료: {len(payloads)}건 중 {success_count}건 성공.")
     return success_count
+
+
+def _markdown_to_notion_blocks(md_text: str) -> list[dict]:
+    """간단한 Markdown 텍스트를 Notion Block Object 리스트로 컴파일합니다."""
+    if not md_text:
+        return []
+        
+    blocks = []
+    lines = md_text.splitlines()
+    i = 0
+    
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line:
+            i += 1
+            continue
+            
+        # Heading 3 (### )
+        if line.startswith("### "):
+            blocks.append({
+                "object": "block",
+                "type": "heading_3",
+                "heading_3": {
+                    "rich_text": [{"type": "text", "text": {"content": line[4:].strip()}}]
+                }
+            })
+        # Heading 2 (## )
+        elif line.startswith("## "):
+            blocks.append({
+                "object": "block",
+                "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": line[3:].strip()}}]
+                }
+            })
+        # Bulleted list (- or * )
+        elif line.startswith("- ") or line.startswith("* "):
+            blocks.append({
+                "object": "block",
+                "type": "bulleted_list_item",
+                "bulleted_list_item": {
+                    "rich_text": [{"type": "text", "text": {"content": line[2:].strip()}}]
+                }
+            })
+        # Paragraph
+        else:
+            blocks.append({
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"type": "text", "text": {"content": line[:2000]}}]
+                }
+            })
+        i += 1
+        
+    return blocks

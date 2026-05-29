@@ -580,6 +580,7 @@
 
   <nav class="header-nav">
     <button class="hnav-tab active" data-section="news">📰 뉴스 브리핑</button>
+    <button class="hnav-tab" data-section="ai-issue">🤖 AI이슈</button>
     <button class="hnav-tab" data-section="stock">📈 주식 시황</button>
     <button class="hnav-tab" data-section="archive">📚 아카이브</button>
   </nav>
@@ -622,6 +623,18 @@
     <!-- 아카이브 전용 통계 카드 (archive 탭에서만 표시) -->
     <div class="sidebar-card arc-stat-card arc-active" id="arcNewsCard" onclick="selectArcGroup('news')" style="display:none">
       <h3>📰 뉴스 브리핑</h3>
+    </div>
+
+    <div class="sidebar-card arc-stat-card" id="arcAIIssueCard" onclick="selectArcGroup('ai-issue')" style="display:none">
+      <h3>🤖 AI 이슈</h3>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="num" id="arcAIIssueCount">-</div><div class="lbl">보고서</div></div>
+        <div class="stat-item"><div class="num" id="arcAIIssueTop">-</div><div class="lbl">선별이슈</div></div>
+      </div>
+    </div>
+
+    <div class="sidebar-card arc-stat-card" id="arcStockCard" onclick="selectArcGroup('stock')" style="display:none">
+      <h3>📈 주식 시황</h3>
       <div class="stat-grid">
         <div class="stat-item"><div class="num" id="arcNewsCount">-</div><div class="lbl">리포트</div></div>
         <div class="stat-item"><div class="num" id="arcNewsEn">-</div><div class="lbl">영어</div></div>
@@ -652,6 +665,13 @@
       </div>
       <div id="reportArea">
         <div class="loading"><div class="spinner"></div>리포트 로딩 중...</div>
+      </div>
+    </div>
+
+    <!-- AI이슈 섹션 -->
+    <div id="aiIssueSection" style="display:none">
+      <div id="aiIssueArea">
+        <div class="loading"><div class="spinner"></div>AI 이슈 리포트 로딩 중...</div>
       </div>
     </div>
 
@@ -767,23 +787,27 @@
 
 <script>
 // ── 섹션별 기본 테마 (build_site.py 가 config/theme_config.py 에서 주입) ───────
-const SECTION_DEFAULTS = {"news":"classic","stock":"classic"}; /* BUILD_SECTION_DEFAULTS */
+const SECTION_DEFAULTS = {"news":"classic","stock":"classic","ai-issue":"editorial"}; /* BUILD_SECTION_DEFAULTS */
 
 // ── 상태 ──────────────────────────────────────────────────────────────────────
 const state = {
   reports:        [],
   stockReports:   [],
+  aiIssueReports: [],
   activeDate:     null,
   activeStockDate: null,
+  activeAIIssueDate: null,
   activeLang:     "all",
   searchQuery:    "",
   activeSection:  "news",
   arcGroup:       "news",
   // 섹션별 테마: localStorage 저장값 우선, 없으면 config 기본값
-  newsTheme:  localStorage.getItem("theme-news")  || SECTION_DEFAULTS.news,
-  stockTheme: localStorage.getItem("theme-stock") || SECTION_DEFAULTS.stock,
-  theme:      localStorage.getItem("theme-news")  || SECTION_DEFAULTS.news,
+  newsTheme:     localStorage.getItem("theme-news")     || SECTION_DEFAULTS.news,
+  stockTheme:    localStorage.getItem("theme-stock")    || SECTION_DEFAULTS.stock,
+  aiIssueTheme:  localStorage.getItem("theme-ai-issue") || SECTION_DEFAULTS["ai-issue"],
+  theme:         localStorage.getItem("theme-news")     || SECTION_DEFAULTS.news,
   newsCache:      {},   // date → {news_en, news_ko} lazy-loaded
+  aiIssueCache:   {},   // date → ai-issue JSON cached
 };
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────────
@@ -836,6 +860,15 @@ async function loadStockReports() {
     const r = await fetch("stock/stock-data.json");
     if (!r.ok) throw new Error();
     return await r.json();
+  } catch { return []; }
+}
+
+async function loadAIIssueReports() {
+  try {
+    const r = await fetch("ai-issue/ai-issue-data.json");
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    return data.issues || [];
   } catch { return []; }
 }
 
@@ -1024,6 +1057,108 @@ function toggleNews(id) {
   if (arr) arr.textContent = el.classList.contains("open") ? "▲" : "▼";
 }
 
+// ── AI이슈 렌더 ─────────────────────────────────────────────────────────────
+function renderAIIssue(data) {
+  if (!data) return `<div class="report-card"><div class="empty">🤖 AI 이슈 데이터 없음</div></div>`;
+  const {issue_date, period, top10=[], top3_detail=[], company_trends="", weekly_tips=[], stock_snapshots=[], paper_picks=[], next_week_outlook=""} = data;
+  const [y,m,d] = issue_date.split("-");
+
+  // 1. TOP 10 목록
+  const top10Html = top10.map(item => {
+    const cats = {
+      model: "🤖 모델", service: "🚀 서비스", research: "🔬 연구",
+      policy: "⚖️ 규제", industry: "🏭 산업", infra: "🖥️ 인프라", investment: "💰 투자"
+    };
+    const catLabel = cats[item.category] || item.category;
+    const stars = "★".repeat(item.importance) + "☆".repeat(5 - item.importance);
+    return `
+      <div style="padding:10px 14px; border-bottom:1px solid var(--border); font-size:.85rem">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:4px">
+          <strong style="color:var(--navy)">${item.rank}위. ${esc(item.title)}</strong>
+          <span style="font-size:.74rem; background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:2px 8px">${catLabel} | <span style="color:var(--orange)">${stars}</span></span>
+        </div>
+        <div style="color:var(--muted); font-size:0.82rem; line-height:1.5">${esc(item.summary)}</div>
+        ${item.sources && item.sources.length ? `<div style="font-size:0.75rem; margin-top:4px">🔗 원문: ` + item.sources.map(src => `<a href="${esc(src.url)}" target="_blank" style="color:var(--blue)">${esc(src.name)}</a>`).join(", ") + `</div>` : ""}
+      </div>`;
+  }).join("");
+
+  // 2. TOP 3 심층 분석
+  const top3Html = top10.slice(0,3).map(issue => {
+    const d = top3_detail.find(detail => detail.rank === issue.rank) || {};
+    return `
+      <div style="margin-bottom:18px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:16px">
+        <h4 style="font-size:.9rem; color:var(--blue); margin-bottom:8px">🔥 [이슈 ${issue.rank}위 심층 분석] ${esc(issue.title)}</h4>
+        <div style="font-size:.82rem; line-height:1.6">
+          <div style="margin-bottom:6px"><strong>💡 배경:</strong> ${esc(d.background || "상세 내역 없음")}</div>
+          <div style="margin-bottom:6px"><strong>📌 핵심내용:</strong> ${esc(d.core_content || "상세 내역 없음")}</div>
+          <div style="margin-bottom:6px"><strong>🏭 산업적 파급:</strong> ${esc(d.industrial_impact || "상세 내역 없음")}</div>
+          <div><strong>🔮 미래 파급효과:</strong> ${esc(d.future_effect || "상세 내역 없음")}</div>
+        </div>
+      </div>`;
+  }).join("");
+
+  // 3. 실용 팁
+  const tipsHtml = weekly_tips.map(tip => `
+    <div style="border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:10px; background:var(--card)">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+        <strong style="color:var(--navy); font-size:.86rem">🛠️ [${tip.difficulty}] ${esc(tip.title)}</strong>
+        <span style="font-size:.75rem; color:var(--blue); font-weight:600">${esc(tip.tool_name)}</span>
+      </div>
+      <div style="font-size:.82rem; color:var(--muted); margin-bottom:8px; line-height:1.5">${esc(tip.guide).replace(/\n/g, "<br>")}</div>
+      <pre style="background:#0f172a; color:#38bdf8; padding:10px; border-radius:6px; font-size:.78rem; overflow-x:auto; font-family:monospace">${esc(tip.prompt_example)}</pre>
+    </div>`).join("");
+
+  // 4. 주가
+  const stockHtml = stock_snapshots.map(s => {
+    const neg = String(s.weekly_change_pct).startsWith("-");
+    return `
+      <div class="market-item">
+        <div class="m-label">${esc(s.name)} (${s.ticker})</div>
+        <div class="m-val">${s.weekly_change_pct >= 0 ? "+" : ""}${s.weekly_change_pct}%</div>
+        <div class="m-chg" style="font-size:.7rem; color:var(--muted); margin-top:2px">${esc(s.note)}</div>
+      </div>`;
+  }).join("");
+
+  // 5. 논문
+  const paperHtml = paper_picks.map(p => `
+    <div style="padding:12px; border-bottom:1px solid var(--border); font-size:.84rem">
+      <div style="font-weight:700; color:var(--navy); margin-bottom:4px">📄 ${esc(p.title)}</div>
+      <div style="font-size:.74rem; color:var(--muted); margin-bottom:6px">저자: ${esc(p.authors)}</div>
+      <div style="font-style:italic; margin-bottom:8px; color:var(--text)">"${esc(p.one_liner)}"</div>
+      <div style="background:#eff6ff; padding:8px 12px; border-radius:6px; font-size:.8rem; border-left:3px solid var(--blue); color:var(--muted)">
+        <strong>CTO 가이드:</strong> ${esc(p.practical_note)}
+      </div>
+      <div style="margin-top:6px; text-align:right"><a href="${esc(p.url)}" target="_blank" style="font-size:.75rem; color:var(--blue); text-decoration:none">원문 링크 ↗</a></div>
+    </div>`).join("");
+
+  return `
+  <div class="report-card">
+    <div class="report-header">
+      <div class="report-date">🤖 AI 주간 이슈 브리핑 (${y}년 ${m}월 ${d}일 발행)</div>
+      <span class="badge badge-blue">${period}</span>
+    </div>
+
+    <h3 style="font-size:.95rem; color:var(--navy); margin:18px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">■ 이번 주 AI 이슈 TOP 10</h3>
+    <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:20px">${top10Html}</div>
+
+    <h3 style="font-size:.95rem; color:var(--navy); margin:18px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">■ 주요 이슈 심층 분석 (TOP 3)</h3>
+    <div>${top3Html}</div>
+
+    <div class="analysis" style="margin-top:20px">${md2html(company_trends)}</div>
+
+    <h3 style="font-size:.95rem; color:var(--navy); margin:24px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">💡 이번 주 AI 실용 팁</h3>
+    <div>${tipsHtml}</div>
+
+    <h3 style="font-size:.95rem; color:var(--navy); margin:24px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">📈 AI 주요 종목 주간 등락</h3>
+    <div class="stock-market-grid" style="margin-bottom:20px">${stockHtml}</div>
+
+    <h3 style="font-size:.95rem; color:var(--navy); margin:24px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">🔬 주목 논문 Pick (Research Radar)</h3>
+    <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:20px">${paperHtml}</div>
+
+    <div class="analysis" style="margin-top:20px">${md2html(next_week_outlook)}</div>
+  </div>`;
+}
+
 // ── 주식 렌더 ────────────────────────────────────────────────────────────────
 function renderStock(data) {
   if (!data) return `<div class="report-card"><div class="empty">📈 주식 데이터 없음</div></div>`;
@@ -1196,13 +1331,38 @@ function selectStock(date) {
   document.getElementById("stockArea").innerHTML = renderStock(d);
 }
 
+async function selectAIIssue(date) {
+  state.activeAIIssueDate = date;
+  renderDateList();
+  document.getElementById("aiIssueArea").innerHTML = `<div class="loading"><div class="spinner"></div>보고서 불러오는 중...</div>`;
+  
+  if (!state.aiIssueCache[date]) {
+    try {
+      const res = await fetch(`ai-issue/${date}.json`);
+      if (res.ok) {
+        state.aiIssueCache[date] = await res.json();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  
+  const d = state.aiIssueCache[date];
+  if (state.activeAIIssueDate === date) {
+    document.getElementById("aiIssueArea").innerHTML = d ? renderAIIssue(d) : `<div class="report-card"><div class="empty">🤖 AI 이슈 데이터 없음</div></div>`;
+  }
+}
+
 function switchSection(section) {
   state.activeSection = section;
   // 섹션 전환 시 해당 섹션의 테마 적용
-  _applyThemeDOM(section === "stock" ? state.stockTheme : state.newsTheme);
+  const theme = section === "stock" ? state.stockTheme : (section === "ai-issue" ? state.aiIssueTheme : state.newsTheme);
+  _applyThemeDOM(theme);
   document.querySelectorAll(".hnav-tab").forEach(t=>t.classList.remove("active"));
-  document.querySelector(`[data-section="${section}"]`).classList.add("active");
+  const tab = document.querySelector(`[data-section="${section}"]`);
+  if (tab) tab.classList.add("active");
   document.getElementById("newsSection").style.display    = section==="news"    ? "" : "none";
+  document.getElementById("aiIssueSection").style.display = section==="ai-issue" ? "" : "none";
   document.getElementById("stockSection").style.display   = section==="stock"   ? "" : "none";
   document.getElementById("archiveSection").style.display = section==="archive" ? "" : "none";
   // 사이드바 카드: archive ↔ news/stock 전환
@@ -1210,11 +1370,24 @@ function switchSection(section) {
   document.getElementById("statsCard").style.display       = isArc ? "none" : "";
   document.getElementById("sidebarDateCard").style.display = isArc ? "none" : "";
   document.getElementById("arcNewsCard").style.display     = isArc ? ""     : "none";
+  document.getElementById("arcAIIssueCard").style.display  = isArc ? ""     : "none";
   document.getElementById("arcStockCard").style.display    = isArc ? ""     : "none";
 
   if (section==="news") {
     renderDateList();
     renderNewsStats();
+  } else if (section==="ai-issue") {
+    renderDateList();
+    renderStockStats();
+    if (state.aiIssueReports.length && !state.activeAIIssueDate) {
+      state.activeAIIssueDate = state.aiIssueReports[0].date;
+    }
+    const d = state.aiIssueReports.find(d=>d.date===state.activeAIIssueDate);
+    if (d) {
+      selectAIIssue(state.activeAIIssueDate);
+    } else {
+      document.getElementById("aiIssueArea").innerHTML = `<div class="empty">🤖 AI 이슈 보고서 없음</div>`;
+    }
   } else if (section==="stock") {
     renderDateList();
     renderStockStats();
@@ -1268,6 +1441,9 @@ function applyTheme(name) {
   if (state.activeSection === "stock") {
     state.stockTheme = name;
     localStorage.setItem("theme-stock", name);
+  } else if (state.activeSection === "ai-issue") {
+    state.aiIssueTheme = name;
+    localStorage.setItem("theme-ai-issue", name);
   } else {
     state.newsTheme = name;
     localStorage.setItem("theme-news", name);
@@ -1278,9 +1454,12 @@ function applyTheme(name) {
 function resetTheme() {
   localStorage.removeItem("theme-news");
   localStorage.removeItem("theme-stock");
+  localStorage.removeItem("theme-ai-issue");
   state.newsTheme  = SECTION_DEFAULTS.news;
   state.stockTheme = SECTION_DEFAULTS.stock;
-  _applyThemeDOM(state.activeSection === "stock" ? state.stockTheme : state.newsTheme);
+  state.aiIssueTheme = SECTION_DEFAULTS["ai-issue"];
+  const theme = state.activeSection === "stock" ? state.stockTheme : (state.activeSection === "ai-issue" ? state.aiIssueTheme : state.newsTheme);
+  _applyThemeDOM(theme);
 }
 
 function openThemePanel() {
@@ -1337,7 +1516,7 @@ function copyCmdStock() {
   _applyThemeDOM(state.newsTheme);  // 초기 섹션은 뉴스
   document.getElementById("buildFromDate").max = new Date().toISOString().split("T")[0];
 
-  const [newsData, stockData] = await Promise.all([loadReports(), loadStockReports()]);
+  const [newsData, stockData, aiIssueData] = await Promise.all([loadReports(), loadStockReports(), loadAIIssueReports()]);
 
   // 뉴스 초기화
   if (newsData.length) {
@@ -1355,6 +1534,12 @@ function copyCmdStock() {
   if (stockData.length) {
     state.stockReports    = stockData;
     state.activeStockDate = stockData[0].date;
+  }
+
+  // AI이슈 초기화
+  if (aiIssueData.length) {
+    state.aiIssueReports    = aiIssueData;
+    state.activeAIIssueDate = aiIssueData[0].date;
   }
 
   renderDateList();
