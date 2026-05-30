@@ -106,11 +106,9 @@ def main() -> None:
         
     logger.info("[이메일] 다채널 SMTP 개별 전송 실행 중...")
     
-    # mailer.py 의 send_email 헬퍼 연동
     subject = f"🤖 [AI Weekly] 이번 주 가장 주목할 AI 이슈 & 논문 픽 — {date_str}"
     ok = send_email(
-        md_content=email_html, # mailer.py는 md_content 파라미터에 HTML이 오면 HTML 코드로 인식하여 발송
-        template="html_direct", # HTML 직접 주입 모드
+        html_content=email_html,
         subject_override=subject
     )
     
