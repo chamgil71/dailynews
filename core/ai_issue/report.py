@@ -37,8 +37,7 @@ def generate_weekly_report(analysis_data: dict) -> str:
     def format_float_sign(val) -> str:
         try:
             f_val = float(val)
-            sign = "+" if f_val > 0 else ""
-            return f"{sign}{f_val:+.2f}"
+            return f"{f_val:+.2f}"
         except (ValueError, TypeError):
             return str(val)
             

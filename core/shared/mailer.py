@@ -242,7 +242,7 @@ def _md_to_html(md: str, recipient_email: str) -> str:
 </body></html>"""
 
 
-def send_email(md_content: str, html_content: str | None = None,
+def send_email(md_content: str = "", html_content: str | None = None,
                theme_name: str | None = None,
                subject_override: str | None = None,
                template: str | None = None) -> bool:
