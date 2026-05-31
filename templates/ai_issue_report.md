@@ -77,7 +77,7 @@
 | 티커 | 종목명 | 주간 등락률 | 상세 가격 정보 및 특이사항 |
 |:---:|:---|:---:|:---|
 {% for stock in stock_snapshots -%}
-| **{{ stock.ticker }}** | {{ stock.name }} | **{{ stock.weekly_change_pct:+.2f}}%** | {{ stock.note }} |
+| **{{ stock.ticker }}** | {{ stock.name }} | **{{ stock.weekly_change_pct | weekly_change_pct }}%** | {{ stock.note }} |
 {% endfor %}
 
 ---
