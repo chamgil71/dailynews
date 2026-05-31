@@ -37,15 +37,26 @@ def parse_weekly_json_for_summary(json_path: Path) -> dict:
     try:
         data = json.loads(json_path.read_text(encoding="utf-8"))
         top10 = data.get("top10", [])
-        
+        category_stats = data.get("category_stats", {})
+
         # TOP 3 이슈 제목 추출
         top3_titles = [item.get("title", "") for item in top10[:3]]
-        
+
+        ko_keys = {"korean_news", "korean_economy", "korean_tech"}
+        ko_count = sum(category_stats.get(k, 0) for k in ko_keys)
+        total = sum(category_stats.values()) or len(top10)
+
         return {
             "date": data.get("issue_date", json_path.stem.replace("ai_issue_", "")),
             "period": data.get("period", ""),
             "top3": top3_titles,
-            "category_counts": data.get("category_stats", {})
+            "category_counts": category_stats,
+            "stats": {
+                "total": total,
+                "en": total - ko_count,
+                "ko": ko_count,
+                "sent_to_ai": len(top10),
+            },
         }
     except Exception as e:
         logger.warning(f"  ⚠ JSON 파싱 오류 {json_path.name}: {e}")
@@ -53,7 +64,8 @@ def parse_weekly_json_for_summary(json_path: Path) -> dict:
             "date": json_path.stem.replace("ai_issue_", ""),
             "period": "주간 데이터 분석 중",
             "top3": [],
-            "category_counts": {}
+            "category_counts": {},
+            "stats": {"total": 0, "en": 0, "ko": 0, "sent_to_ai": 0},
         }
 
 
@@ -121,7 +133,8 @@ def main():
         # 1. JSON 요약 정보 획득
         json_path = p.with_suffix(".json")
         summary = parse_weekly_json_for_summary(json_path) if json_path.exists() else {
-            "date": date_str, "period": "주간 데이터 분석", "top3": [], "category_counts": {}
+            "date": date_str, "period": "주간 데이터 분석", "top3": [], "category_counts": {},
+            "stats": {"total": 0, "en": 0, "ko": 0, "sent_to_ai": 0},
         }
         weekly_indexes.append(summary)
         
