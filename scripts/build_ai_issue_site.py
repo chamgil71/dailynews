@@ -59,7 +59,7 @@ def parse_weekly_json_for_summary(json_path: Path) -> dict:
             },
         }
     except Exception as e:
-        logger.warning(f"  ⚠ JSON 파싱 오류 {json_path.name}: {e}")
+        print(f"  ⚠ JSON 파싱 오류 {json_path.name}: {e}")
         return {
             "date": json_path.stem.replace("ai_issue_", ""),
             "period": "주간 데이터 분석 중",
