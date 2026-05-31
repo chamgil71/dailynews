@@ -82,8 +82,17 @@ def main() -> None:
     args = parser.parse_args()
     
     date_str = args.date
+
+    # GMAIL 미설정 시 조기 종료 (워크플로우 성공 보장)
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        logger.warning("[이메일] GMAIL_USER 또는 GMAIL_APP_PASSWORD 미설정 — 이메일 발송을 건너뜁니다.")
+        sys.exit(0)
+    if not RECIPIENT_EMAILS:
+        logger.warning("[이메일] RECIPIENT_EMAILS 미설정 — 수신자 없이 발송을 건너뜁니다.")
+        sys.exit(0)
+
     json_path = Path(_ROOT) / "reports" / "ai-issue" / f"ai_issue_{date_str}.json"
-    
+
     if not json_path.exists():
         logger.error(f"[이메일] 주간 JSON 파일이 존재하지 않습니다: {json_path}")
         sys.exit(1)
