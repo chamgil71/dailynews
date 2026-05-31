@@ -61,7 +61,11 @@ def main() -> None:
     # ── [2단계] LLM 카테고리별 정교한 종합 분석 가동 ──
     logger.info("[2/3] LLM 주간 핵심 동향 및 심층 분석 연쇄 가동...")
     from core.ai_issue.analyzer import analyze_weekly_data
-    analysis_result = analyze_weekly_data(raw_data)
+    try:
+        analysis_result = analyze_weekly_data(raw_data)
+    except Exception as e:
+        logger.error(f"  ❌ [오류] LLM 분석 실패: {e}")
+        sys.exit(1)
     
     # ── [3단계] 마크다운 보고서 렌더링 및 로컬 물리 파일 영구 저장 ──
     logger.info("[3/3] Jinja2 보고서 렌더링 및 reports/ai-issue/ 영구 저장...")
