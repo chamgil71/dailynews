@@ -184,37 +184,36 @@ class ClaudeAnalyzer(BaseAnalyzer):
 
 class GeminiAnalyzer(BaseAnalyzer):
     def __init__(self):
-        # 최신 통합 SDK 클라이언트 사용
         self.client = genai.Client(api_key=GEMINI_API_KEY)
-        # 3.1 핵심: 사고 흔적(Thought Signature) 순환용 변수
-        self.last_thought_signature = None
 
     def _call(self, prompt: str, news_count: int) -> str:
+        import time
         model_name = self._pick_model(
             news_count, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD
         )
-        
-        config_params = {
-            "max_output_tokens": LLM_MAX_TOKENS,
-            "temperature": 0.3,
-        }
-
-        # 사고 흔적이 있다면 설정에 추가 (메일의 'circulation' 대응)
-        if self.last_thought_signature:
-            config_params["thought_signature"] = self.last_thought_signature
-            logger.info("[Gemini 3.1] 이전 사고 흔적(Thought Signature)을 포함합니다.")
-
-        response = self.client.models.generate_content(
-            model=model_name,
-            contents=prompt,
-            config=types.GenerateContentConfig(**config_params)
+        config = types.GenerateContentConfig(
+            max_output_tokens=LLM_MAX_TOKENS,
+            temperature=0.3,
+            response_mime_type="application/json",  # JSON 형식 강제 → _parse_json_response 파싱 실패 방지
         )
-
-        # 새로운 사고 흔적 캡처 (다음 호출에서 사용)
-        if hasattr(response, 'thought_signature'):
-            self.last_thought_signature = response.thought_signature
-
-        return response.text.strip()
+        # 503 일시 과부하 대응: 최대 3회 재시도 (2s / 4s / 8s 백오프)
+        for attempt in range(3):
+            try:
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=config,
+                )
+                return response.text.strip()
+            except Exception as e:
+                err_str = str(e)
+                is_retryable = "503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str
+                if is_retryable and attempt < 2:
+                    wait = 2 ** (attempt + 1)
+                    logger.warning(f"[Gemini] {e} — {wait}초 후 재시도 ({attempt+1}/3)")
+                    time.sleep(wait)
+                else:
+                    raise
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
         results = {"en": "", "ko": "", "combined": "", "structured": {}}
@@ -226,10 +225,15 @@ class GeminiAnalyzer(BaseAnalyzer):
                 if json_mode:
                     data = _parse_json_response(raw)
                     results["structured"]["en"] = data or {}
-                    results["en"] = _structured_to_markdown(data) if data else _fallback_summary(en_news, "en")
+                    if data:
+                        results["en"] = _structured_to_markdown(data)
+                        logger.info(f"[Gemini 분석 완료] 영어 {len(en_news)}건")
+                    else:
+                        results["en"] = _fallback_summary(en_news, "en")
+                        logger.warning(f"[Gemini EN] JSON 파싱 실패 — fallback 사용")
                 else:
                     results["en"] = raw
-                logger.info(f"[Gemini 분석 완료] 영어 {len(en_news)}건")
+                    logger.info(f"[Gemini 분석 완료] 영어 {len(en_news)}건")
             except Exception as e:
                 logger.error(f"[Gemini EN 실패] {e}")
                 results["en"] = _fallback_summary(en_news, "en")
@@ -240,10 +244,15 @@ class GeminiAnalyzer(BaseAnalyzer):
                 if json_mode:
                     data = _parse_json_response(raw)
                     results["structured"]["ko"] = data or {}
-                    results["ko"] = _structured_to_markdown(data) if data else _fallback_summary(ko_news, "ko")
+                    if data:
+                        results["ko"] = _structured_to_markdown(data)
+                        logger.info(f"[Gemini 분석 완료] 한국어 {len(ko_news)}건")
+                    else:
+                        results["ko"] = _fallback_summary(ko_news, "ko")
+                        logger.warning(f"[Gemini KO] JSON 파싱 실패 — fallback 사용")
                 else:
                     results["ko"] = raw
-                logger.info(f"[Gemini 분석 완료] 한국어 {len(ko_news)}건")
+                    logger.info(f"[Gemini 분석 완료] 한국어 {len(ko_news)}건")
             except Exception as e:
                 logger.error(f"[Gemini KO 실패] {e}")
                 results["ko"] = _fallback_summary(ko_news, "ko")
