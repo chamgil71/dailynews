@@ -2,7 +2,7 @@ name: Stock Briefing Build
 
 # ── 트리거 ──────────────────────────────────────────────────────────────────
 # 주 경로: Claude Code 루틴이 stock MD 파일을 push 하면 자동 실행
-# 백업 경로: 매주 월~금 KST 23:40 (UTC 14:40) 스케줄 — 루틴 미실행 시에만 가동
+# 백업 경로: 매주 월~금 KST 21:55 (UTC 12:55) 스케줄 — 루틴 미실행 시에만 가동
 # 수동: workflow_dispatch 로 언제든지 실행 가능
 
 on:
@@ -12,7 +12,7 @@ on:
     paths:
       - 'reports/stock/**.md'   # Claude 루틴이 MD 파일 push 시 자동 실행
   schedule:
-    - cron: '40 14 * * 1-5'    # UTC 14:40 = KST 23:40 (월~금, 루틴 실패 시 백업)
+    - cron: '55 12 * * 1-5'    # UTC 12:55 = KST 21:55 (월~금, 루틴 실패 시 백업)
   workflow_dispatch:
     inputs:
       mode:
