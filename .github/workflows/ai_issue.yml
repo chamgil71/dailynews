@@ -54,17 +54,6 @@ jobs:
           ANTHROPIC_API_KEY:   ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY:      ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Notion AI이슈 동기화
-        run: |
-          TARGET_DATE=$(date +'%Y-%m-%d')
-          if [ -n "${{ github.event.inputs.target_date }}" ]; then
-            TARGET_DATE="${{ github.event.inputs.target_date }}"
-          fi
-          python scripts/sync_notion.py --type ai-issue --date ${TARGET_DATE}
-        env:
-          NOTION_API_KEY:                ${{ secrets.NOTION_API_KEY }}
-          NOTION_DATABASE_ID_AI_ISSUE:   ${{ secrets.NOTION_DATABASE_ID_AI_ISSUE }}
-
       - name: HTML 빌드 (ai-issue 전용)
         run: python scripts/build_ai_issue_site.py
         env:
@@ -74,32 +63,6 @@ jobs:
         run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
         env:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
-
-      - name: 이메일 발송
-        run: |
-          TARGET_DATE=$(date +'%Y-%m-%d')
-          if [ -n "${{ github.event.inputs.target_date }}" ]; then
-            TARGET_DATE="${{ github.event.inputs.target_date }}"
-          fi
-          python scripts/send_ai_issue_email.py --date ${TARGET_DATE}
-        env:
-          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS:   ${{ secrets.RECIPIENT_EMAILS }}
-          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
-
-      - name: Telegram 발송
-        run: |
-          TARGET_DATE=$(date +'%Y-%m-%d')
-          if [ -n "${{ github.event.inputs.target_date }}" ]; then
-            TARGET_DATE="${{ github.event.inputs.target_date }}"
-          fi
-          python scripts/send_ai_issue_telegram.py --date ${TARGET_DATE}
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
-          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
-        continue-on-error: true # 텔레그램 미등록 시 전체 프로세스 성공 보장용
 
       - name: 커밋 + 푸시
         run: |
@@ -127,3 +90,45 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
+
+      # ── Notion 동기화 (배포 완료 후) ──────────────────────────────────────────
+      - name: Notion AI이슈 동기화
+        run: |
+          TARGET_DATE=$(date +'%Y-%m-%d')
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            TARGET_DATE="${{ github.event.inputs.target_date }}"
+          fi
+          python scripts/sync_notion.py --type ai-issue --date ${TARGET_DATE}
+        env:
+          NOTION_API_KEY:                ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID_AI_ISSUE:   ${{ secrets.NOTION_DATABASE_ID_AI_ISSUE }}
+        continue-on-error: true
+
+      # ── 이메일 발송 (배포 완료 후) ────────────────────────────────────────────
+      - name: 이메일 발송
+        run: |
+          TARGET_DATE=$(date +'%Y-%m-%d')
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            TARGET_DATE="${{ github.event.inputs.target_date }}"
+          fi
+          python scripts/send_ai_issue_email.py --date ${TARGET_DATE}
+        env:
+          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:   ${{ secrets.RECIPIENT_EMAILS }}
+          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
+
+      # ── 텔레그램 발송 (배포 완료 후) ──────────────────────────────────────────
+      - name: Telegram 발송
+        run: |
+          TARGET_DATE=$(date +'%Y-%m-%d')
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            TARGET_DATE="${{ github.event.inputs.target_date }}"
+          fi
+          python scripts/send_ai_issue_telegram.py --date ${TARGET_DATE}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
