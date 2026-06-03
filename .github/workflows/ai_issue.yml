@@ -106,13 +106,12 @@ jobs:
 
       # ── 이메일 발송 (배포 완료 후) ────────────────────────────────────────────
       - name: 이메일 발송
-        id: send_email
         run: |
           TARGET_DATE=$(date +'%Y-%m-%d')
           if [ -n "${{ github.event.inputs.target_date }}" ]; then
             TARGET_DATE="${{ github.event.inputs.target_date }}"
           fi
-          python scripts/send_ai_issue_email.py --date ${TARGET_DATE}
+          python scripts/send_email.py --type ai-issue --date ${TARGET_DATE}
         env:
           GMAIL_USER:         ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
@@ -127,7 +126,7 @@ jobs:
           if [ -n "${{ github.event.inputs.target_date }}" ]; then
             TARGET_DATE="${{ github.event.inputs.target_date }}"
           fi
-          python scripts/send_ai_issue_telegram.py --date ${TARGET_DATE}
+          python scripts/send_telegram.py --type ai-issue --date ${TARGET_DATE}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}

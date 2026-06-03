@@ -134,7 +134,7 @@ jobs:
       # ── 이메일 발송 (배포 완료 후) ────────────────────────────────────────────
       - name: 이메일 발송
         if: ${{ github.event.inputs.mode != 'reanalyze' }}
-        run: python scripts/send_news_email.py --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+        run: python scripts/send_email.py --type news --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
         env:
           GMAIL_USER:         ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
@@ -146,7 +146,7 @@ jobs:
       # ── 텔레그램 발송 (배포 완료 후) ──────────────────────────────────────────
       - name: 텔레그램 발송
         if: ${{ github.event.inputs.mode != 'reanalyze' }}
-        run: python scripts/send_news_telegram.py --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+        run: python scripts/send_telegram.py --type news --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}

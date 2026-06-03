@@ -79,7 +79,7 @@ jobs:
       # ── 이메일 발송 ─────────────────────────────────────────────────────────
       - name: 이메일 발송
         if: steps.find_report.outputs.exists == 'true'
-        run: python scripts/send_stock_email.py
+        run: python scripts/send_email.py --type stock --date ${{ steps.find_report.outputs.report_date }}
         env:
           GMAIL_USER:          ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
@@ -102,9 +102,7 @@ jobs:
       # ── 텔레그램 발송 (@msstockbrief) ───────────────────────────────────────
       - name: 텔레그램 발송
         if: steps.find_report.outputs.exists == 'true'
-        run: |
-          python scripts/send_stock_telegram.py \
-            --date ${{ steps.find_report.outputs.report_date }}
+        run: python scripts/send_telegram.py --type stock --date ${{ steps.find_report.outputs.report_date }}
         env:
           TELEGRAM_BOT_TOKEN:     ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID_STOCK: ${{ secrets.TELEGRAM_CHAT_ID_STOCK }}
