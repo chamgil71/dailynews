@@ -10,9 +10,59 @@ Claude Code 루틴 경로에서는 이 모듈 대신 MCP 도구(UsStockInfo)를 
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 logger = logging.getLogger(__name__)
+
+
+def _trading_date_kst() -> tuple[date, bool]:
+    """
+    KST 기준 '실제 데이터 날짜'를 반환.
+    15:30 이전 실행 → 전 거래일 (토/일 포함 역산)
+    15:30 이후 실행 → 당일
+    반환: (거래일 date, 장_마감_후_여부)
+    """
+    try:
+        import pytz
+        kst = pytz.timezone("Asia/Seoul")
+        now_kst = datetime.now(kst)
+    except ImportError:
+        # pytz 미설치 시 UTC+9 수동 계산
+        from datetime import timezone
+        now_kst = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=9)
+
+    after_close = now_kst.hour > 15 or (now_kst.hour == 15 and now_kst.minute >= 30)
+    today = now_kst.date()
+
+    if not after_close:
+        # 장 마감 전: 이전 거래일 역산 (토→금, 일→금, 월→금)
+        delta = {6: 2, 0: 3, 1: 1}.get(today.weekday(), 1)  # 일,월,그외
+        if today.weekday() == 5:   # 토
+            delta = 1
+        elif today.weekday() == 6: # 일
+            delta = 2
+        elif today.weekday() == 0: # 월
+            delta = 3
+        else:
+            delta = 1
+        trading_date = today - timedelta(days=delta)
+        logger.warning(
+            f"[stock_collector] 장 마감 전 실행 ({now_kst.strftime('%H:%M KST')}) "
+            f"— 데이터 기준일: {trading_date} (전 거래일)"
+        )
+        return trading_date, False
+
+    # 장 마감 후이지만 주말이면 전 거래일 사용
+    if today.weekday() == 5:       # 토
+        trading_date = today - timedelta(days=1)
+        logger.warning(f"[stock_collector] 토요일 실행 — 데이터 기준일: {trading_date}")
+        return trading_date, True
+    if today.weekday() == 6:       # 일
+        trading_date = today - timedelta(days=2)
+        logger.warning(f"[stock_collector] 일요일 실행 — 데이터 기준일: {trading_date}")
+        return trading_date, True
+
+    return today, True
 
 # yfinance 는 선택적 의존성 — import 실패 시 fallback dict 반환
 try:
@@ -142,13 +192,16 @@ def build_stock_data() -> dict:
     """
     logger.info("[stock_collector] 데이터 수집 시작")
     now = datetime.now()
+    trading_date, after_close = _trading_date_kst()
     data = {
         "market":            collect_market_data(),
         "sectors":           collect_sectors(),
         "news_ko":           collect_news_ko("코스피 오늘 증시 시황"),
         "events":            [],   # 향후: 경제 캘린더 API 연동
-        "market_close_time": now.strftime("%Y-%m-%d 15:30 KST"),
+        "market_close_time": trading_date.strftime("%Y-%m-%d") + " 15:30 KST",
         "generated_at":      now.strftime("%Y-%m-%d %H:%M KST"),
+        "trading_date":      trading_date.strftime("%Y-%m-%d"),
+        "after_market_close": after_close,
     }
     logger.info(
         f"[stock_collector] 완료 — market {len(data['market'])}개, "

@@ -43,13 +43,33 @@ def _email_body_from_md(md_path: str) -> str:
     )
     body = "\n\n".join(sections).strip()
     if not body:
-        # 전체 MD에서 수집 목록 제외 (없으면 전체 반환)
         body = raw
 
     # 제목 추가
     date_m = re.search(r'# 📊 일일 주식 시황 브리핑 — (.+)', raw)
-    title_line = date_m.group(0) if date_m else f"# 📊 주식 시황 브리핑"
+    title_line = date_m.group(0) if date_m else "# 📊 주식 시황 브리핑"
     return f"{title_line}\n\n{body}"
+
+
+def _is_analysis_complete(md_path: str) -> bool:
+    """
+    MD에서 핵심 요약·온도계 근거가 실제로 채워져 있는지 확인.
+    ⚠ 마커나 빈 줄만 있으면 False 반환 → 이메일 발송 차단.
+    """
+    import re
+    raw = Path(md_path).read_text(encoding="utf-8")
+
+    # 핵심 요약 섹션 내용 추출
+    summary_m = re.search(r'## ■ 핵심 요약[^\n]*\n([\s\S]*?)(?=\n---|\n## )', raw)
+    summary   = summary_m.group(1).strip() if summary_m else ""
+
+    # 온도계 근거 추출
+    temp_m  = re.search(r'## 시장 온도계[^\n]*\n>\s*(.+)', raw)
+    reason  = temp_m.group(1).strip() if temp_m else ""
+
+    has_summary = bool(summary) and len(summary) > 10
+    has_reason  = bool(reason)  and len(reason)  > 5
+    return has_summary and has_reason
 
 
 def main() -> None:
@@ -61,6 +81,14 @@ def main() -> None:
     latest   = md_files[0]
     date_str = Path(latest).stem.replace("stock_", "")
     logger.info(f"[send_stock_email] 대상 파일: {latest}")
+
+    # ── 품질 게이트: 분석 비어있으면 발송 차단 ─────────────────────────────
+    if not _is_analysis_complete(latest):
+        logger.warning(
+            f"[품질게이트] {date_str} 주식 분석 미완성 — 이메일 발송 건너뜀\n"
+            f"  (핵심 요약 또는 시장 온도계 근거가 없거나 너무 짧음)"
+        )
+        return
 
     email_md = _email_body_from_md(latest)
 
