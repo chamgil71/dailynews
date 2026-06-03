@@ -99,13 +99,14 @@ jobs:
           NOTION_DATABASE_ID_STOCK:      ${{ secrets.NOTION_DATABASE_ID_STOCK }}
         continue-on-error: true
 
-      # ── 텔레그램 발송 [향후 확장] ────────────────────────────────────────────
-      # send_stock_telegram.py 구현 후 아래 주석 해제
-      # - name: 텔레그램 발송
-      #   if: steps.find_report.outputs.exists == 'true'
-      #   run: python scripts/send_stock_telegram.py
-      #   env:
-      #     TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      #     TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
-      #     SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
-      #   continue-on-error: true
+      # ── 텔레그램 발송 (@msstockbrief) ───────────────────────────────────────
+      - name: 텔레그램 발송
+        if: steps.find_report.outputs.exists == 'true'
+        run: |
+          python scripts/send_stock_telegram.py \
+            --date ${{ steps.find_report.outputs.report_date }}
+        env:
+          TELEGRAM_BOT_TOKEN:     ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_STOCK: ${{ secrets.TELEGRAM_CHAT_ID_STOCK }}
+          SITE_BASE_URL:          ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
