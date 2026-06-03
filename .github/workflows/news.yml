@@ -108,7 +108,10 @@ jobs:
           # Vercel 필수 정적 파일 (항상 최신 상태 유지)
           git add -f publish/app.html publish/index.html publish/archive.html \
                      publish/reports.json publish/reports-data.json 2>/dev/null || true
-          git add -f publish/stock/ 2>/dev/null || true
+          # stock 파일 — stock_build.yml과 동일 목록 (디렉토리 통째 아닌 명시적 파일)
+          git add -f publish/stock/20??-??-??.html 2>/dev/null || true
+          git add -f publish/stock/index.html publish/stock/archive.html \
+                     publish/stock/stock-data.json 2>/dev/null || true
           if [ "${{ github.event.inputs.mode }}" = "reanalyze" ]; then
             DATE="${{ github.event.inputs.target_date }}"
             if [ -z "$DATE" ]; then DATE=$(date +'%Y-%m-%d'); fi
@@ -117,7 +120,7 @@ jobs:
             MSG="📰 Daily report $(date +'%Y-%m-%d') [skip ci]"
           fi
           git diff --staged --quiet || git commit -m "$MSG"
-          git pull --rebase --autostash origin main
+          git pull --rebase --autostash -X ours origin main
           git push
 
       - name: GitHub Pages 배포

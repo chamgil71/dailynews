@@ -64,6 +64,7 @@ jobs:
         env:
           NOTION_API_KEY:                ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID_AI_ISSUE:   ${{ secrets.NOTION_DATABASE_ID_AI_ISSUE }}
+        continue-on-error: true  # Notion 장애 시 이후 빌드·발송 차단 방지
 
       - name: HTML 빌드 (ai-issue 전용)
         run: python scripts/build_ai_issue_site.py
@@ -76,6 +77,7 @@ jobs:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
 
       - name: 이메일 발송
+        id: send_email
         run: |
           TARGET_DATE=$(date +'%Y-%m-%d')
           if [ -n "${{ github.event.inputs.target_date }}" ]; then
@@ -87,6 +89,11 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           RECIPIENT_EMAILS:   ${{ secrets.RECIPIENT_EMAILS }}
           SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true  # SMTP 실패 시 커밋·배포 차단 방지
+
+      - name: 이메일 발송 실패 경고
+        if: steps.send_email.outcome == 'failure'
+        run: echo "::warning::AI이슈 이메일 발송 실패 — Actions 로그 확인 필요"
 
       - name: Telegram 발송
         run: |

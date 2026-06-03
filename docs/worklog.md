@@ -4,6 +4,63 @@
 
 ---
 
+## 2026-06-03 (2차 — 워크플로우 안정화)
+
+### 주제: 아카이브 버그 수정 + 워크플로우 충돌 방지 개선
+
+#### 배경
+- PR #16 머지 후 stock_build.yml 봇이 구버전 코드로 archive.html 덮어씀 → 뉴스 1개로 리셋
+- 3개 워크플로우(news/stock/ai_issue) 간 충돌 위험 및 에러 처리 불일치 발견
+
+---
+
+### 변경 내용
+
+#### 1. archive.html 구조적 버그 수정 (`themes/editorial.py`, `scripts/build_site.py`)
+
+**`themes/editorial.py`**
+- `id="tabAI"` / `id="tabPanelAI"` → `id="tabAi"` / `id="tabPanelAi"`
+  - JS `showTab('ai')` 는 `charAt(0).toUpperCase()+slice(1)` = `'Ai'` 로 ID를 찾음
+  - 대문자 `AI` 와 불일치하여 AI이슈 탭 클릭이 무반응이던 버그 수정
+
+**`scripts/build_site.py`**
+- `build_archive_ctx(pages)` — news items를 `pages` 파라미터(필터된 목록)에서 읽던 로직 제거
+- `reports/news_*.md` 전체 glob으로 변경 (stock/AI items와 동일 방식)
+- 효과: `--from today` 실행 시에도 archive.html에 항상 전체 뉴스 목록 표시
+
+#### 2. ai_issue.yml 커밋 목록 누락 수정 (`.github/workflows/ai_issue.yml`)
+- 커밋 스텝에 `publish/archive.html`, `publish/reports-data.json` 추가
+- AI이슈 주간 배포 후 메인 아카이브 카운트가 갱신되지 않던 문제 수정
+
+#### 3. 워크플로우 충돌 방지 (`.github/workflows/news.yml`)
+- `git add -f publish/stock/` (디렉토리 통째) → 명시적 파일 목록으로 교체
+  ```
+  publish/stock/20??-??-??.html
+  publish/stock/index.html, archive.html, stock-data.json
+  ```
+  - stock_build.yml과 동일 목록으로 맞춤 (불필요한 파일 포함 방지)
+- `git pull --rebase --autostash origin main` → `-X ours` 추가
+  - stock_build.yml / ai_issue.yml 은 이미 `-X ours` 적용 중 → 3개 워크플로우 통일
+
+#### 4. ai_issue.yml 에러 처리 강화 (`.github/workflows/ai_issue.yml`)
+- Notion 동기화 스텝: `continue-on-error: true` 추가
+- 이메일 발송 스텝: `continue-on-error: true` + `id: send_email` 추가
+- 이메일 발송 실패 시 Actions 경고 로그 출력 스텝 추가 (`if: steps.send_email.outcome == 'failure'`)
+- 효과: SMTP/Notion 장애 시에도 HTML 커밋·Vercel 배포는 정상 진행, 실패는 Actions UI 노란 경고(⚠)로 확인
+
+---
+
+### 워크플로우 에러 처리 현황 (수정 후)
+
+| 스텝 | news.yml | stock_send.yml | ai_issue.yml |
+|------|----------|----------------|--------------|
+| 이메일 발송 | main.py 내부 처리 | continue-on-error ✓ | continue-on-error ✓ |
+| 텔레그램 발송 | main.py 내부 처리 | (미구현) | continue-on-error ✓ |
+| Notion 동기화 | (별도 스텝, 미설정) | continue-on-error ✓ | continue-on-error ✓ |
+| git rebase 전략 | -X ours ✓ | — | -X ours ✓ |
+
+---
+
 ## 2026-06-03
 
 ### 주제: 주식시황 워크플로우 재설계 + 뉴스 재분석 시스템 구축
