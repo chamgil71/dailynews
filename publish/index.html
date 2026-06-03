@@ -156,6 +156,12 @@
     @media (max-width: 768px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar { display: none; }
+      #arcMobileTabs { display: flex !important; }
+      #arcMobileStats { display: block !important; }
+    }
+    @media (min-width: 769px) {
+      #arcMobileTabs { display: none !important; }
+      #arcMobileStats { display: none !important; }
     }
     @media (max-width: 600px) {
       header { padding: 0 12px; }
@@ -636,6 +642,12 @@
     <!-- 아카이브 전용 통계 카드 (archive 탭에서만 표시) -->
     <div class="sidebar-card arc-stat-card arc-active" id="arcNewsCard" onclick="selectArcGroup('news')" style="display:none">
       <h3>📰 뉴스 브리핑</h3>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="num" id="arcNewsCount">-</div><div class="lbl">리포트</div></div>
+        <div class="stat-item"><div class="num" id="arcNewsEn">-</div><div class="lbl">영어</div></div>
+        <div class="stat-item"><div class="num" id="arcNewsKo">-</div><div class="lbl">한국어</div></div>
+        <div class="stat-item"><div class="num" id="arcNewsAi">-</div><div class="lbl">AI 분석</div></div>
+      </div>
     </div>
 
     <div class="sidebar-card arc-stat-card" id="arcAIIssueCard" onclick="selectArcGroup('ai-issue')" style="display:none">
@@ -643,16 +655,6 @@
       <div class="stat-grid">
         <div class="stat-item"><div class="num" id="arcAIIssueCount">-</div><div class="lbl">보고서</div></div>
         <div class="stat-item"><div class="num" id="arcAIIssueTop">-</div><div class="lbl">선별이슈</div></div>
-      </div>
-    </div>
-
-    <div class="sidebar-card arc-stat-card" id="arcStockCard" onclick="selectArcGroup('stock')" style="display:none">
-      <h3>📈 주식 시황</h3>
-      <div class="stat-grid">
-        <div class="stat-item"><div class="num" id="arcNewsCount">-</div><div class="lbl">리포트</div></div>
-        <div class="stat-item"><div class="num" id="arcNewsEn">-</div><div class="lbl">영어</div></div>
-        <div class="stat-item"><div class="num" id="arcNewsKo">-</div><div class="lbl">한국어</div></div>
-        <div class="stat-item"><div class="num" id="arcNewsAi">-</div><div class="lbl">AI 분석</div></div>
       </div>
     </div>
 
@@ -697,6 +699,14 @@
 
     <!-- 아카이브 섹션 -->
     <div id="archiveSection" style="display:none">
+      <!-- 모바일용 그룹 탭 (사이드바 카드 대체) -->
+      <div id="arcMobileTabs" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button onclick="selectArcGroup('news')"     id="arcMTabNews"    style="flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:6px;background:var(--blue);color:#fff;font-size:.8rem;cursor:pointer">📰 뉴스</button>
+        <button onclick="selectArcGroup('ai-issue')" id="arcMTabAI"      style="flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:.8rem;cursor:pointer">🤖 AI이슈</button>
+        <button onclick="selectArcGroup('stock')"    id="arcMTabStock"   style="flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:.8rem;cursor:pointer">📈 주식</button>
+      </div>
+      <!-- 통계 요약 (모바일 전용) -->
+      <div id="arcMobileStats" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;font-size:.82rem;color:var(--muted)"></div>
       <div class="report-card">
         <div class="report-header">
           <div class="report-date" id="arcListTitle">📰 뉴스 브리핑 목록</div>
@@ -1292,41 +1302,70 @@ function renderArcStats() {
   document.getElementById("arcNewsAi").textContent    = rpts.reduce((s,r)=>s+(r.stats?.sent_to_ai||0),0);
   document.getElementById("arcStockCount").textContent = state.stockReports.length;
   document.getElementById("arcStockDays").textContent  = state.stockReports.length;
+  document.getElementById("arcAIIssueCount").textContent = state.aiIssueReports.length;
+  document.getElementById("arcAIIssueTop").textContent   = state.aiIssueReports.reduce((s,r)=>s+(r.top10?.length||0),0);
 }
 
 function selectArcGroup(type) {
   state.arcGroup = type;
-  document.getElementById("arcNewsCard").classList.toggle("arc-active",  type==="news");
-  document.getElementById("arcStockCard").classList.toggle("arc-active", type==="stock");
+  document.getElementById("arcNewsCard").classList.toggle("arc-active",    type==="news");
+  document.getElementById("arcAIIssueCard").classList.toggle("arc-active", type==="ai-issue");
+  document.getElementById("arcStockCard").classList.toggle("arc-active",   type==="stock");
+  // 모바일 탭 버튼 스타일 업데이트
+  const tabs = {news:"arcMTabNews","ai-issue":"arcMTabAI",stock:"arcMTabStock"};
+  Object.entries(tabs).forEach(([k,id])=>{
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = k===type ? "var(--blue)" : "var(--card)";
+    el.style.color      = k===type ? "#fff"        : "var(--text)";
+  });
   renderArchive();
 }
 
 function renderArchive() {
-  const type   = state.arcGroup || "news";
-  const isNews = type === "news";
-  document.getElementById("arcListTitle").textContent =
-    isNews ? "📰 뉴스 브리핑 목록" : "📈 주식 시황 목록";
+  const type = state.arcGroup || "news";
+  const titleMap = {news:"📰 뉴스 브리핑 목록","ai-issue":"🤖 AI 이슈 목록",stock:"📈 주식 시황 목록"};
+  document.getElementById("arcListTitle").textContent = titleMap[type] || titleMap.news;
 
-  const items = isNews
-    ? state.reports.map(({date, stats={}}) => {
-        const [y,m,d] = date.split("-");
-        const sub = `EN ${stats.en||0} · KO ${stats.ko||0} · AI ${stats.sent_to_ai||0}건`;
-        return `<li>
-          <a class="arc-link" onclick="navToReport('news','${date}')" href="#">
-            📄 ${y}년 ${m}월 ${d}일
-          </a>
-          <span class="arc-sub">${sub}</span>
-        </li>`;
-      })
-    : state.stockReports.map(({date}) => {
-        const [y,m,d] = date.split("-");
-        return `<li>
-          <a class="arc-link" onclick="navToReport('stock','${date}')" href="#">
-            📈 ${y}년 ${m}월 ${d}일
-          </a>
-          <span class="arc-sub">시황 리포트</span>
-        </li>`;
-      });
+  let items = [];
+  if (type === "news") {
+    items = state.reports.map(({date, stats={}}) => {
+      const [y,m,d] = date.split("-");
+      const sub = `EN ${stats.en||0} · KO ${stats.ko||0} · AI ${stats.sent_to_ai||0}건`;
+      return `<li>
+        <a class="arc-link" onclick="navToReport('news','${date}')" href="#">📄 ${y}년 ${m}월 ${d}일</a>
+        <span class="arc-sub">${sub}</span>
+      </li>`;
+    });
+  } else if (type === "ai-issue") {
+    items = state.aiIssueReports.map(({date, period=""}) => {
+      const [y,m,d] = date.split("-");
+      return `<li>
+        <a class="arc-link" onclick="navToReport('ai-issue','${date}')" href="#">🤖 ${y}년 ${m}월 ${d}일</a>
+        <span class="arc-sub">${period || "주간 리포트"}</span>
+      </li>`;
+    });
+  } else {
+    items = state.stockReports.map(({date, temperature={}}) => {
+      const [y,m,d] = date.split("-");
+      const temp = temperature?.display || "";
+      return `<li>
+        <a class="arc-link" onclick="navToReport('stock','${date}')" href="#">📈 ${y}년 ${m}월 ${d}일</a>
+        <span class="arc-sub">${temp || "시황 리포트"}</span>
+      </li>`;
+    });
+  }
+
+  // 모바일 통계 요약
+  const statsEl = document.getElementById("arcMobileStats");
+  if (statsEl) {
+    const statLines = [
+      `📰 뉴스 ${state.reports.length}호`,
+      `🤖 AI이슈 ${state.aiIssueReports.length}건`,
+      `📈 주식 ${state.stockReports.length}일`,
+    ];
+    statsEl.textContent = statLines.join("  ·  ");
+  }
 
   document.getElementById("archiveCount").textContent = `${items.length}개`;
   document.getElementById("archiveList").innerHTML =
@@ -1337,6 +1376,9 @@ function navToReport(type, date) {
   if (type === "news") {
     switchSection("news");
     selectDate(date);
+  } else if (type === "ai-issue") {
+    switchSection("ai-issue");
+    selectAIIssue(date);
   } else {
     switchSection("stock");
     selectStock(date);

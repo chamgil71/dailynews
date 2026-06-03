@@ -158,6 +158,17 @@ def build_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
 
 # ── 아카이브 ctx 빌더 ──────────────────────────────────────────────────────────
 def build_archive_ctx(pages: list[tuple[str, str]]) -> dict:
+    def _date_items(glob_pattern: str, prefix: str, suffix: str = ".md") -> list[dict]:
+        result = []
+        for path in sorted(glob.glob(glob_pattern), reverse=True):
+            d = Path(path).name.replace(prefix, "").replace(suffix, "")
+            try:
+                display = datetime.strptime(d, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
+            except ValueError:
+                display = d
+            result.append({"date": d, "display": display})
+        return result
+
     items = []
     for date_str, _ in pages:
         try:
@@ -165,6 +176,10 @@ def build_archive_ctx(pages: list[tuple[str, str]]) -> dict:
         except ValueError:
             display = date_str
         items.append({"date": date_str, "display": display})
+
+    stock_items   = _date_items(f"{REPORTS_DIR}/stock/stock_*.md",    "stock_")
+    ai_items      = _date_items(f"{REPORTS_DIR}/ai-issue/ai_issue_*.json", "ai_issue_", ".json")
+
     return {
         "display_date": "전체 목록",
         "date_str":     "",
@@ -174,6 +189,8 @@ def build_archive_ctx(pages: list[tuple[str, str]]) -> dict:
         "now":          datetime.now().strftime("%Y-%m-%d %H:%M"),
         "data":         {"stats": {}},
         "items":        items,
+        "stock_items":  stock_items,
+        "ai_items":     ai_items,
         "site_url":     SITE_BASE_URL or "",
         "subscribe_url": SUBSCRIBE_URL,
         "unsubscribe_url": "",
