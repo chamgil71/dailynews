@@ -2,10 +2,12 @@ name: Stock Briefing Build
 
 # ── 트리거 ──────────────────────────────────────────────────────────────────
 # 주 경로: Claude Code 루틴이 stock MD 파일을 push 하면 자동 실행
-# 백업 경로: 매주 월~금 KST 21:55 (UTC 12:55) 스케줄 — 루틴 미실행 시에만 가동
+# 백업 경로: 매주 월~금 KST 23:00 (UTC 14:00) 스케줄 — 루틴 미실행 시에만 가동
 # 수동: workflow_dispatch 로 언제든지 실행 가능
 #
-# 배포 흐름: 루틴(수집+분석+MD저장+push) → 이 워크플로우(빌드+배포+발송+Notion+텔레그램)
+# 배포 흐름:
+#   루틴(수집+분석+MD저장+push) → 이 워크플로우(빌드+Pages 배포)
+#                                → stock_send.yml(익일 08:00 KST 이메일·Notion·텔레그램)
 
 on:
   push:
@@ -14,7 +16,7 @@ on:
     paths:
       - 'reports/stock/**.md'   # Claude 루틴이 MD 파일 push 시 자동 실행
   schedule:
-    - cron: '55 12 * * 1-5'    # UTC 12:55 = KST 21:55 (월~금, 루틴 실패 시 백업)
+    - cron: '0 14 * * 1-5'     # UTC 14:00 = KST 23:00 (월~금, 루틴 실패 시 백업)
   workflow_dispatch:
     inputs:
       mode:
@@ -103,50 +105,7 @@ jobs:
         env:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
 
-      # ── 이메일 발송 ─────────────────────────────────────────────────────────
-      # push 경로: 루틴이 MD를 push했을 때 (품질 게이트는 send_stock_email.py 내부)
-      # 백업 경로: 오늘 MD가 없어서 stock_main.py가 새로 생성했을 때
-      - name: 이메일 발송
-        if: |
-          github.event_name == 'push' ||
-          (steps.check_md.outputs.exists == 'false' && (
-            github.event_name == 'schedule' ||
-            (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'full')))
-        run: python scripts/send_stock_email.py
-        env:
-          GMAIL_USER:          ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
-          SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
-        continue-on-error: true
-
-      # ── Notion 동기화 ────────────────────────────────────────────────────────
-      # 루틴에서 처리하던 Notion 등록을 여기로 이관 (루틴 실행 시간 단축)
-      # push 경로 및 백업 경로 모두에서 실행
-      - name: Notion 주식시황 동기화
-        if: |
-          github.event_name == 'push' ||
-          (steps.check_md.outputs.exists == 'false' && (
-            github.event_name == 'schedule' ||
-            (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'full')))
-        run: |
-          TARGET_DATE=$(TZ=Asia/Seoul date +'%Y-%m-%d')
-          python scripts/sync_notion.py --type stock --date ${TARGET_DATE}
-        env:
-          NOTION_API_KEY:                ${{ secrets.NOTION_API_KEY }}
-          NOTION_DATABASE_ID_STOCK:      ${{ secrets.NOTION_DATABASE_ID_STOCK }}
-        continue-on-error: true  # Notion 실패해도 전체 배포 계속
-
-      # ── 텔레그램 발송 [향후 확장] ────────────────────────────────────────────
-      # send_stock_telegram.py 구현 후 아래 주석 해제
-      # - name: 텔레그램 발송
-      #   if: github.event_name == 'push'
-      #   run: python scripts/send_stock_telegram.py
-      #   env:
-      #     TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      #     TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
-      #     SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
-      #   continue-on-error: true
+      # ── 이메일·Notion·텔레그램 발송은 stock_send.yml (익일 08:00 KST) 에서 처리 ──
 
       # ── 커밋 + 푸시 ────────────────────────────────────────────────────────
       - name: 리포트 + 사이트 커밋

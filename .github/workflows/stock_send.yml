@@ -1,0 +1,111 @@
+name: Stock Briefing Send
+
+# ── 트리거 ──────────────────────────────────────────────────────────────────
+# 주 경로: 매주 월~금 KST 08:00 (UTC 23:00 전일) — 전날 분석 리포트를 아침에 발송
+# 수동:   workflow_dispatch 로 특정 날짜 재발송 가능
+#
+# 발송 흐름:
+#   stock_build.yml (전날 22:00~23:00 HTML 빌드+배포)
+#   → 이 워크플로우 (익일 08:00 이메일·Notion·텔레그램 발송)
+
+on:
+  schedule:
+    - cron: '0 23 * * 0-4'    # UTC 23:00 일~목 = KST 08:00 월~금
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '발송 날짜 (YYYY-MM-DD). 미입력 시 가장 최근 리포트 자동 선택'
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      # ── 발송 대상 리포트 확인 ──────────────────────────────────────────────
+      - name: 발송 대상 리포트 확인
+        id: find_report
+        run: |
+          # workflow_dispatch 에서 날짜 지정 시 해당 파일 우선
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            CANDIDATE="reports/stock/stock_${{ github.event.inputs.date }}.md"
+            if [ -f "$CANDIDATE" ]; then
+              LATEST="$CANDIDATE"
+              REPORT_DATE="${{ github.event.inputs.date }}"
+            else
+              echo "지정 날짜(${{ github.event.inputs.date }}) 리포트 없음 — 건너뜀"
+              echo "exists=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          else
+            LATEST=$(ls -t reports/stock/stock_*.md 2>/dev/null | head -1)
+            if [ -z "$LATEST" ]; then
+              echo "reports/stock/ 에 MD 파일 없음 — 건너뜀"
+              echo "exists=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            REPORT_DATE=$(basename "$LATEST" | sed 's/stock_\(.*\)\.md/\1/')
+          fi
+
+          # 3일 이상 지난 리포트는 재발송 방지
+          DAYS_OLD=$(( ( $(date +%s) - $(date -d "$REPORT_DATE" +%s) ) / 86400 ))
+          if [ "$DAYS_OLD" -gt 3 ]; then
+            echo "리포트 날짜: $REPORT_DATE (${DAYS_OLD}일 경과) — 오래된 리포트 발송 건너뜀"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "발송 대상: $LATEST (${DAYS_OLD}일 전)"
+            echo "exists=true"      >> $GITHUB_OUTPUT
+            echo "report_date=$REPORT_DATE" >> $GITHUB_OUTPUT
+            echo "report_file=$LATEST"      >> $GITHUB_OUTPUT
+          fi
+
+      # ── 이메일 발송 ─────────────────────────────────────────────────────────
+      - name: 이메일 발송
+        if: steps.find_report.outputs.exists == 'true'
+        run: python scripts/send_stock_email.py
+        env:
+          GMAIL_USER:          ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
+          SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
+
+      # ── Notion 동기화 ────────────────────────────────────────────────────────
+      - name: Notion 주식시황 동기화
+        if: steps.find_report.outputs.exists == 'true'
+        run: |
+          python scripts/sync_notion.py \
+            --type stock \
+            --date ${{ steps.find_report.outputs.report_date }}
+        env:
+          NOTION_API_KEY:                ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID_STOCK:      ${{ secrets.NOTION_DATABASE_ID_STOCK }}
+        continue-on-error: true
+
+      # ── 텔레그램 발송 [향후 확장] ────────────────────────────────────────────
+      # send_stock_telegram.py 구현 후 아래 주석 해제
+      # - name: 텔레그램 발송
+      #   if: steps.find_report.outputs.exists == 'true'
+      #   run: python scripts/send_stock_telegram.py
+      #   env:
+      #     TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      #     TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+      #     SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+      #   continue-on-error: true
