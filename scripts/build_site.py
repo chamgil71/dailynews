@@ -158,21 +158,31 @@ def build_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
 
 # ── 아카이브 ctx 빌더 ──────────────────────────────────────────────────────────
 def build_archive_ctx(pages: list[tuple[str, str]] = None) -> dict:
-    def _date_items(glob_pattern: str, prefix: str, suffix: str = ".md") -> list[dict]:
-        result = []
-        for path in sorted(glob.glob(glob_pattern), reverse=True):
-            d = Path(path).name.replace(prefix, "").replace(suffix, "")
-            try:
-                display = datetime.strptime(d, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
-            except ValueError:
-                display = d
-            result.append({"date": d, "display": display})
-        return result
+    def _from_json(json_path: str, date_key: str = "date") -> list[dict]:
+        """배포된 JSON 인덱스에서 날짜 목록을 읽어 display 문자열을 붙여 반환."""
+        try:
+            data = json.loads(Path(json_path).read_text(encoding="utf-8"))
+            # reports-data.json → list, stock-data.json → list, ai-issue-data.json → {issues:[]}
+            rows = data if isinstance(data, list) else data.get("issues", [])
+            result = []
+            for row in rows:
+                d = row.get(date_key, "")
+                if not d:
+                    continue
+                try:
+                    display = datetime.strptime(d, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
+                except ValueError:
+                    display = d
+                result.append({"date": d, "display": display})
+            result.sort(key=lambda x: x["date"], reverse=True)
+            return result
+        except Exception:
+            return []
 
-    # 항상 디스크의 전체 MD 목록을 읽음 (--from 빌드여도 아카이브는 전체 반영)
-    news_items    = _date_items(f"{REPORTS_DIR}/news_*.md",           "news_")
-    stock_items   = _date_items(f"{REPORTS_DIR}/stock/stock_*.md",    "stock_")
-    ai_items      = _date_items(f"{REPORTS_DIR}/ai-issue/ai_issue_*.json", "ai_issue_", ".json")
+    # JSON 인덱스 기준으로 읽음 — reports-data.json이 먼저 쓰여진 후 이 함수가 호출됨
+    news_items  = _from_json(f"{DOCS_DIR}/reports-data.json")
+    stock_items = _from_json(f"{DOCS_DIR}/stock/stock-data.json")
+    ai_items    = _from_json(f"{DOCS_DIR}/ai-issue/ai-issue-data.json")
 
     return {
         "display_date": "전체 목록",
@@ -239,20 +249,12 @@ def build(theme_name: str | None = None,
         reports_data.append({k: v for k, v in data.items() if k not in ("news_en", "news_ko")})
         print(f"  + news/{date_str}.html + {date_str}.json [{active_theme}]")
 
-    # archive.html
-    archive_ctx = build_archive_ctx(pages)
-    archive_html = theme.render_archive(archive_ctx)
-    Path(DOCS_DIR, "archive.html").write_text(archive_html, encoding="utf-8")
-    print("  + archive.html")
-
-    # reports-data.json (SPA용 — news_en/news_ko 제외, 경량 인덱스)
-    # --from 빌드 시에는 기존 JSON 데이터와 병합
+    # ① reports-data.json 먼저 생성 (archive/index가 이 JSON을 기준으로 읽음)
     json_path = Path(DOCS_DIR, "reports-data.json")
     if from_date and not rebuild_all and json_path.exists():
         try:
             existing = json.loads(json_path.read_text(encoding="utf-8"))
             existing_dates = {r["date"] for r in reports_data}
-            # 기존 항목도 news_en/news_ko 제거 (레거시 대응)
             cleaned_existing = [
                 {k: v for k, v in r.items() if k not in ("news_en", "news_ko")}
                 for r in existing if r["date"] not in existing_dates
@@ -274,6 +276,12 @@ def build(theme_name: str | None = None,
     Path(DOCS_DIR, "reports.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+
+    # ② archive.html (reports-data.json + stock-data.json + ai-issue-data.json 기준)
+    archive_ctx = build_archive_ctx()
+    archive_html = theme.render_archive(archive_ctx)
+    Path(DOCS_DIR, "archive.html").write_text(archive_html, encoding="utf-8")
+    print("  + archive.html")
 
     # index.html = app.html (동적 SPA)
     app_src = Path(DOCS_DIR, "app.html")
