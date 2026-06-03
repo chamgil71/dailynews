@@ -434,6 +434,10 @@ GEMINI_MODEL_FULL = "gemini-2.0-flash"   # 안정 버전으로 교체 시
 1. API 키 확인 (`.env` 파일)
 2. Gemini: 일일 무료 할당량 초과 시 → 다음 날 자동 복구
 3. Gemini 모델명 만료 시 → `settings.py`에서 `gemini-2.0-flash`로 교체
+4. **재분석**: GitHub Actions → news.yml → Run workflow
+   - `mode`: `reanalyze`
+   - `target_date`: 재분석할 날짜 (예: `2026-06-01`)
+   - `reanalyze_mode`: `smart`(실패 항목만) 또는 `full`(전체 초기화)
 
 ### 키워드 섹션이 비어 있음
 
@@ -467,4 +471,4 @@ GEMINI_MODEL_FULL = "gemini-2.0-flash"   # 안정 버전으로 교체 시
 
 ---
 
-*최종 업데이트: 2026-05-20*
+*최종 업데이트: 2026-06-03*

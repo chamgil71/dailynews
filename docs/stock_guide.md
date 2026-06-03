@@ -76,38 +76,52 @@ Claude Code 웹 구독을 활용. API 키 불필요. MCP 도구 필요.
 
 | MCP | 용도 |
 |-----|------|
-| PlayMCP UsStockInfo | get_stock_info로 yfinance 기반 지수/종목 수집 |
-| NaverSearch | search_news로 국내 뉴스 헤드라인 수집 |
-| Notion MCP | notion-create-pages로 주식시황 DB 페이지 생성 |
+| PlayMCP UsStockInfo | get_stock_info / get_historical_stock_prices 로 지수·종목 수집 |
+| NaverSearch | search_news 로 국내 뉴스 헤드라인 수집 |
 
-### 루틴 실행 흐름
+### 루틴 실행 흐름 (v5)
 
 ```
-Step 1: UsStockInfo → ^KS11, ^KQ11, KRW=X, ^TNX, CL=F, ^GSPC, ^IXIC, ^DJI
-        NaverSearch → "코스피 오늘 증시 시황" 5건, "국내 주식 시장 이슈" 3건
-Step 2: Read templates/stock_report.md → 형식 확인
-        Claude가 수집 데이터 기반으로 리포트 작성
-Step 3: Write → reports/stock/stock_YYYY-MM-DD.md
-Step 4: Notion → 주식시황 데이터베이스에 페이지 생성
-Step 5: git push → stock_build.yml push 트리거 발동
+Step 1: UsStockInfo.get_stock_info × 8
+        → ^KS11, ^KQ11, KRW=X, ^GSPC, ^IXIC, ^DJI, ^TNX, CL=F
+
+Step 2: UsStockInfo.get_historical_stock_prices(period="1d") × 7
+        → 섹터 대표 1종목: 삼성전자, 엔비디아, HD현대일렉트릭,
+          한화에어로스페이스, ISRG, 일라이릴리, KB금융
+
+Step 3: NaverSearch.search_news → "코스피 오늘 증시 시황" 5건
+
+Step 4: Claude 분석 (핵심요약·온도계·키워드·주목섹터·리스크)
+
+Step 5: Write → reports/stock/stock_YYYY-MM-DD.md
+
+Step 6: git push → stock_build.yml push 트리거 발동
 ```
+
+> **최적화 포인트**: Notion 등록은 GitHub Actions(stock_send.yml)에 위임.
+> MCP 호출 수: 기존 39회 → 약 15회로 단축.
 
 ### git push 후 자동 처리
 
-`reports/stock/**.md` push 감지 시 `stock_build.yml`이 자동 실행:
-1. `scripts/send_stock_email.py` — 이메일 발송
+`reports/stock/**.md` push 감지 시 `stock_build.yml`이 즉시 실행:
+1. `scripts/update_history.py` — 티커 이력 업데이트
 2. `scripts/build_stock_site.py` — HTML 빌드
 3. `scripts/build_site.py` — 뉴스 사이트도 재빌드
 4. git commit + GitHub Pages 배포
+
+익일 08:00 KST에 `stock_send.yml`이 실행:
+1. `scripts/send_stock_email.py` — 이메일 발송 (품질 게이트 포함)
+2. `scripts/sync_notion.py` — Notion 주식시황 DB 동기화
+3. [예정] `scripts/send_stock_telegram.py` — 텔레그램 발송
 
 ---
 
 ## 3. Backup 경로: GitHub Actions 자동화
 
-Primary 경로(루틴)가 실행되지 않은 날 오후 4:45 KST에 자동 실행.
+Primary 경로(루틴)가 실행되지 않은 날 **KST 23:00**에 자동 실행.
 
 ```
-cron: '45 07 * * 1-5'   ← UTC 07:45 = KST 16:45 (평일)
+cron: '0 14 * * 1-5'   ← UTC 14:00 = KST 23:00 (평일)
 ```
 
 ### 실행 흐름 (scripts/stock_main.py)

@@ -235,17 +235,34 @@ class GeminiAnalyzer(BaseAnalyzer):
     def __init__(self):
         self.client = genai.Client(api_key=GEMINI_API_KEY)
 
+    @staticmethod
+    def _make_config(json_mode: bool) -> "types.GenerateContentConfig":
+        """
+        SDK 버전에 따라 JSON 응답 설정을 적응형으로 구성.
+        - 신규 SDK (0.9+): response_format 객체 사용
+        - 구 SDK: response_mime_type 문자열 사용 (fallback)
+        """
+        kwargs: dict = {"max_output_tokens": LLM_MAX_TOKENS, "temperature": 0.3}
+        if json_mode:
+            if hasattr(types, "ResponseFormat"):
+                # 신규 API: response_format 객체
+                try:
+                    kwargs["response_format"] = types.ResponseFormat(response_type="json")
+                except Exception:
+                    kwargs["response_mime_type"] = "application/json"
+            else:
+                # 구 API fallback
+                kwargs["response_mime_type"] = "application/json"
+        return types.GenerateContentConfig(**kwargs)
+
     def _call(self, prompt: str, news_count: int) -> str:
         import time
+        from core.shared.alerts import send_llm_failure_alert, is_model_error, gha_warning
         model_name = self._pick_model(
             news_count, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD
         )
-        config = types.GenerateContentConfig(
-            max_output_tokens=LLM_MAX_TOKENS,
-            temperature=0.3,
-            response_mime_type="application/json",  # JSON 형식 강제 → _parse_json_response 파싱 실패 방지
-        )
-        # 503 일시 과부하 대응: 최대 3회 재시도 (2s / 4s / 8s 백오프)
+        config = self._make_config(json_mode=True)
+        # 503/429 과부하 대응: 최대 3회 재시도 (2s / 4s / 8s 백오프)
         for attempt in range(3):
             try:
                 response = self.client.models.generate_content(
@@ -256,12 +273,17 @@ class GeminiAnalyzer(BaseAnalyzer):
                 return response.text.strip()
             except Exception as e:
                 err_str = str(e)
-                is_retryable = "503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str
+                if is_model_error(e):
+                    # 모델 만료·미존재: 재시도 불필요, 즉시 관리자 알림
+                    send_llm_failure_alert("gemini", model_name, e, context="news analyzer")
+                    raise
+                is_retryable = any(k in err_str for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED"))
                 if is_retryable and attempt < 2:
                     wait = 2 ** (attempt + 1)
-                    logger.warning(f"[Gemini] {e} — {wait}초 후 재시도 ({attempt+1}/3)")
+                    gha_warning(f"Gemini 일시 과부하 — {wait}초 후 재시도 ({attempt+1}/3): {err_str[:80]}")
                     time.sleep(wait)
                 else:
+                    send_llm_failure_alert("gemini", model_name, e, context="news analyzer")
                     raise
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
