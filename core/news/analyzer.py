@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 def _build_prompt(news: list, lang: str, use_json: bool = False) -> str:
     """카테고리 분포를 파악해 프롬프트 힌트를 동적으로 구성."""
-    cat_counts = Counter(n["category"] for n in news)
+    cat_counts = Counter(n.get("category", "") for n in news)
     top_cats   = [c for c, _ in cat_counts.most_common(2)]
     hints      = " ".join(CATEGORY_PROMPTS.get(c, "") for c in top_cats).strip()
     if not hints:

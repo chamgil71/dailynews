@@ -49,6 +49,20 @@ def main(date_str: str) -> None:
         logger.error("파싱된 뉴스가 없습니다. MD 형식을 확인하세요.")
         sys.exit(1)
 
+    # label → category 역매핑 (parse_md_for_json 은 label만 반환하므로 보완)
+    try:
+        from config.rss_sources import RSS_FEEDS
+        label_to_cat = {meta["label"]: cat for cat, meta in RSS_FEEDS.items()}
+    except Exception:
+        label_to_cat = {}
+    for item in news_en:
+        if "category" not in item:
+            item["category"] = label_to_cat.get(item.get("label", ""), "technology")
+    for item in news_ko:
+        if "category" not in item:
+            item["category"] = label_to_cat.get(item.get("label", ""), "korean_news")
+    logger.info(f"  카테고리 보완 완료 (label_to_cat 매핑 {len(label_to_cat)}개)")
+
     # 2. AI 분석 실행
     from core.news.analyzer import get_analyzer
     logger.info("  AI 분석 중...")
