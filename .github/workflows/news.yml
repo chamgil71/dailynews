@@ -12,6 +12,10 @@ on:
       target_date:
         description: '재분석 날짜 (reanalyze 모드 전용, 예: 2026-06-01). 미입력 시 오늘'
         required: false
+      reanalyze_mode:
+        description: 'smart (실패 항목만, 기본) | full (날짜 전체 초기화)'
+        required: false
+        default: 'smart'
 
 # Pages 배포 동시 경합 방지
 concurrency:
@@ -69,8 +73,10 @@ jobs:
         run: |
           DATE="${{ github.event.inputs.target_date }}"
           if [ -z "$DATE" ]; then DATE=$(date +'%Y-%m-%d'); fi
-          echo "재분석 대상: $DATE"
-          python scripts/reanalyze.py --date $DATE
+          RMODE="${{ github.event.inputs.reanalyze_mode }}"
+          if [ -z "$RMODE" ]; then RMODE="smart"; fi
+          echo "재분석 대상: $DATE  mode: $RMODE"
+          python scripts/reanalyze.py --date $DATE --mode $RMODE
         env:
           LLM_PROVIDER:   ${{ secrets.LLM_PROVIDER }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
