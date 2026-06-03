@@ -55,7 +55,7 @@ jobs:
               exit 0
             fi
           else
-            LATEST=$(ls -t reports/stock/stock_*.md 2>/dev/null | head -1)
+            LATEST=$(ls reports/stock/stock_*.md 2>/dev/null | sort -r | head -1)
             if [ -z "$LATEST" ]; then
               echo "reports/stock/ 에 MD 파일 없음 — 건너뜀"
               echo "exists=false" >> $GITHUB_OUTPUT
