@@ -42,12 +42,6 @@ def get_all_tickers() -> list[dict[str, str]]:
     return result
 
 
-def get_notion_db_id() -> str:
-    """Notion 주식시황 DB ID. 미설정이면 빈 문자열."""
-    data = load_watchlist()
-    return data.get("notion", {}).get("stock_db_id", "")
-
-
 def get_sector_tickers_dict() -> dict[str, str]:
     """{종목명: ticker} 형태 반환 (SECTOR_TICKERS 대체)."""
     return {t["name"]: t["ticker"] for t in get_all_tickers()}
