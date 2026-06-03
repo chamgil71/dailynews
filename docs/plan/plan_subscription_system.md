@@ -1,207 +1,424 @@
-# 📋 Supabase 기반 구독 제어 시스템 및 메일 테스트 분리 구축 기획서
+# 📋 Supabase 기반 구독 제어 시스템 구축 기획서 v2
 
-> **목적**: Supabase Serverless DB 연동을 통한 구독 라이프사이클(가입-인증-발송-취소) 완전 자동화 및 테스트/실서비스 메일링 워크플로우 분리  
-> **대상 폴더**: `docs/plan/plan_subscription_system.md`  
-> **작성일**: 2026-05-29  
-> **작성자**: Antigravity (AI Co-Pilot)
-
-본 기획서는 별도의 유료 백엔드 웹 서버 구동 없이 **Supabase Serverless DB**와 **Vercel Serverless API**만을 유기적으로 엮어 구독 신청, 이중 승인(Double Opt-In), 구독 취소 라이프사이클을 안전하게 구현하고, GitHub Actions의 메일링 파이프라인을 개선하여 **커밋 테스트 시의 스팸성 전체 발송을 원천 방지하고 개발자 전용 검증 단계를 분리**하는 설계 가이드라인입니다.
+> **목적**: Supabase DB + Vercel Serverless API로 구독 라이프사이클 완전 자동화, 콘텐츠 유형별(뉴스/주식/AI이슈) 선택 구독, AI 분석 품질 게이트, 재분석·재발송 관리 기능 포함  
+> **파일**: `docs/plan/plan_subscription_system.md`  
+> **최초 작성**: 2026-05-29 / **v2 업데이트**: 2026-06-02  
+> **인프라 전제**: 별도 서버 없음 — GitHub Actions + Vercel Serverless + Supabase만 사용
 
 ---
 
 ## 💡 1. 핵심 아키텍처 개요
 
-본 시스템은 정적 프론트엔드(GitHub Pages)와 무상태(Stateless) 백엔드 파이프라인(Actions)의 한계를 극복하기 위해, **PostgreSQL REST API**를 내장한 Supabase 데이터베이스 레이어를 도입합니다.
-
 ```mermaid
 graph TD
-    %% 1. 구독 신청
-    subgraph Frontend Web UI
-        Web[홈페이지 구독 폼] -->|1. POST AJAX| api_sub[Vercel: /api/subscribe]
+    subgraph "Frontend (숨김 URL)"
+        Web["/subscribe 구독 폼\n콘텐츠 유형 체크박스 3개"]
     end
 
-    %% 2. Supabase DB & Auth
-    subgraph Supabase Database
-        DB[(subscribers 테이블)]
+    subgraph "Vercel Serverless API"
+        api_sub["/api/subscribe\n이메일 + 구독유형 등록"]
+        api_verify["/api/verify\n이메일 인증 승인"]
+        api_unsub["/api/unsubscribe\n구독 취소"]
+        api_manage["/api/manage\n구독 유형 변경"]
     end
 
-    %% 3. 서버리스 핸들러 및 메일
-    subgraph Vercel Serverless
-        api_sub -->|2. pending 등록| DB
-        api_sub -->|3. 인증 메일 발송| SMTP[Gmail SMTP]
-        Verify[Vercel: /api/verify] -->|4. active 갱신| DB
-        Unsub[Vercel: /api/unsubscribe] -->|6. unsubscribed 갱신| DB
+    subgraph "Supabase DB"
+        DB[(subscribers)]
+        LOG[(send_log)]
     end
 
-    %% 4. 수집 및 발송 파이프라인
-    subgraph GitHub Actions Pipeline
-        Actions[news.yml / stock_build.yml] -->|5. active 명단 조회| DB
-        Actions -->|7. 뉴스레터 최종 발송| SMTP
+    subgraph "GitHub Actions"
+        news_yml["news.yml\n매일 뉴스 파이프라인"]
+        stock_yml["stock_build.yml\n평일 주식 파이프라인"]
+        ai_yml["ai_issue.yml\n주간 AI이슈 파이프라인"]
     end
+
+    Web -->|POST| api_sub
+    api_sub -->|pending 등록 + 인증메일| DB
+    api_verify -->|active 갱신| DB
+    api_unsub -->|unsubscribed 갱신| DB
+    api_manage -->|구독 유형 업데이트| DB
+
+    news_yml -->|subscribe_news=true 조회| DB
+    stock_yml -->|subscribe_stock=true 조회| DB
+    ai_yml -->|subscribe_ai_issue=true 조회| DB
+
+    news_yml -->|발송 기록| LOG
+    stock_yml -->|발송 기록| LOG
+    ai_yml -->|발송 기록| LOG
 ```
 
 ---
 
-## 🛠️ 2. Supabase DB 설계 (Database Layer)
+## 🛠️ 2. Supabase DB 설계
 
-이메일 평문을 임의 노출하지 않고 악의적인 조작을 방지하기 위해, 고유 **인증 보안 토큰(`token`)**을 매핑하여 가입 및 해지를 처리합니다.
+### 2-1. subscribers 테이블
 
-### 데이터베이스 테이블 정의 (`subscribers`)
 ```sql
 create table subscribers (
-  id uuid default gen_random_uuid() primary key,
-  email text unique not null,
-  status text not null default 'pending', -- 'pending' (인증 대기), 'active' (구독중), 'unsubscribed' (구독 취소)
-  token text not null unique,              -- 인증 및 구독 취소에 사용할 1회성/보안용 랜덤 보안 토큰
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  verified_at timestamp with time zone,
-  unsubscribed_at timestamp with time zone
+  id               uuid default gen_random_uuid() primary key,
+  email            text unique not null,
+  status           text not null default 'pending',
+  -- status: 'pending' | 'active' | 'unsubscribed'
+  token            text not null unique,  -- 인증·취소·관리 공용 보안 토큰
+
+  -- 콘텐츠별 구독 선택 (기본: 뉴스만 true)
+  subscribe_news      boolean not null default true,
+  subscribe_stock     boolean not null default false,
+  subscribe_ai_issue  boolean not null default false,
+
+  created_at       timestamptz default timezone('utc', now()) not null,
+  verified_at      timestamptz,
+  unsubscribed_at  timestamptz
 );
 
--- Row Level Security (RLS) 활성화
 alter table subscribers enable row level security;
 
--- RLS 정책(Policy) 수립
--- 1. 홈페이지 구독 폼을 통한 익명(Anon) 인서트 허용
-create policy "Allow public insert" on subscribers for insert with check (true);
--- 2. 토큰을 검증 필터로 활용한 조회 및 상태 업데이트 허용
-create policy "Allow select by token" on subscribers for select using (true);
+create policy "Allow public insert"        on subscribers for insert with check (true);
+create policy "Allow select by token"      on subscribers for select using (true);
 create policy "Allow update status by token" on subscribers for update using (true);
 ```
 
----
+### 2-2. send_log 테이블
 
-## ⚙️ 3. Vercel Serverless API 구현 (Lifecycle Handlers)
+발송 이력 기록. 재발송 중복 방지 및 관리 UI에서 상태 표시에 사용.
 
-`api/` 폴더 하위의 Python 서버리스 함수를 통해 데이터 입력 및 인증 확인을 제어합니다.
-
-### 3-1. 구독 신청 처리 (`/api/subscribe`)
-* **기능**: 사용자의 구독 요청을 받아 고유 토큰을 발급하고 Supabase에 `pending` 상태로 기록한 뒤, 확인 이메일을 발송합니다.
-* **주요 비즈니스 로직**:
-  1. 이메일 유효성 및 봇 차단 간이 필터링.
-  2. 암호학적으로 안전한 1회성 토큰 생성 (`secrets.token_urlsafe(16)`).
-  3. Supabase DB에 인서트 (기존 존재 여부를 판별해 기존 이력이 `unsubscribed` 상태인 경우 토큰과 상태 갱신).
-  4. SMTP 메일러를 기동하여 더블 옵트인 인증 URL(`{SITE_BASE_URL}/api/verify?token=토큰`)이 포함된 예쁜 HTML 안내 메일을 발송합니다.
-
-### 3-2. 구독 인증 자동 승인 (`/api/verify`)
-* **기능**: 사용자가 메일함에서 인증 버튼을 클릭했을 때의 비동기 처리 진입점입니다.
-* **주요 비즈니스 로직**:
-  1. URL의 `token` 파라미터 캡처.
-  2. Supabase DB에서 해당 토큰을 보유한 `status = 'pending'` 레코드 조회.
-  3. 성공 시 상태를 `active`로 변경하고 `verified_at` 기록.
-  4. 깔끔하고 직관적인 "구독 승인 완료" HTML 안내 페이지를 띄우고 3초 후 메인 홈 대시보드로 자동 리다이렉트합니다.
-
-### 3-3. 초고속 구독 취소 (`/api/unsubscribe`)
-* **기능**: 메일 하단 링크 클릭 시 Supabase DB 상태를 `unsubscribed`로 다이렉트 업데이트합니다.
-* **주요 비즈니스 로직**:
-  1. 메일 하단의 고유 인증 취소 링크(`{SITE_BASE_URL}/api/unsubscribe?token=토큰`)를 클릭하여 진입합니다.
-  2. 토큰 조회를 통해 `status = 'active'` 상태인 사용자를 `status = 'unsubscribed'` 및 `unsubscribed_at = now()`로 즉각 업데이트합니다.
-  3. **(개선)** 기존의 느리고 충돌을 유발하던 GitHub Contents API 커밋 방식을 **완전 폐기**하여, 배포 딜레이 없는 초고속 구독 취소 경험을 제공합니다.
+```sql
+create table send_log (
+  id           uuid default gen_random_uuid() primary key,
+  content_type text not null,  -- 'news' | 'stock' | 'ai_issue'
+  report_date  date not null,
+  channel      text not null,  -- 'email' | 'telegram' | 'notion'
+  status       text not null,  -- 'sent' | 'skipped' | 'failed'
+  recipient_count int,
+  analysis_ok  boolean,        -- AI 분석 성공 여부
+  sent_at      timestamptz default timezone('utc', now())
+);
+```
 
 ---
 
-## 📧 4. 뉴스레터 발송 엔진 개편 (Mailing Layer)
+## 🔒 3. AI 분석 품질 게이트 (신규)
 
-`core/shared/mailer.py` 내의 수신자 조회 로직을 Supabase 실시간 연동으로 전환하고, **테스트 모드 분리 장치**를 장착합니다.
+### 3-1. 리포트 JSON에 분석 상태 플래그 추가
 
-### 4-1. `core/shared/mailer.py` 주요 변경안
-실행 환경변수 `MAIL_MODE`를 판별하여 발송 모드를 안전하게 분기합니다.
+`reports/news/news_YYYY-MM-DD.json` 등 모든 리포트 JSON에 아래 필드 포함:
+
+```json
+{
+  "date": "2026-06-02",
+  "analysis_ok": true,
+  "fallback_used": false,
+  "en": { ... },
+  "ko": { ... }
+}
+```
+
+- `analysis_ok`: LLM이 정상 JSON을 반환한 경우 `true`
+- `fallback_used`: `_fallback_summary()` 가 사용된 경우 `true`
+
+### 3-2. 발송 스크립트 품질 게이트
 
 ```python
-import os
-from supabase import create_client, Client
+# send_news_email.py, send_stock_email.py, send_ai_issue_email.py 공통 패턴
+import json
 
+def load_report_with_gate(report_json_path: str) -> dict | None:
+    with open(report_json_path) as f:
+        data = json.load(f)
+    if not data.get("analysis_ok", False):
+        logger.warning(f"[품질게이트] AI 분석 실패 리포트 — 발송 건너뜀: {report_json_path}")
+        _notify_admin_failure(report_json_path)  # 관리자에게 실패 알림만 발송
+        return None
+    return data
+```
+
+### 3-3. 분석 실패 시 관리자 알림
+
+전체 발송 대신 `GMAIL_USER` (관리자)에게만 실패 요약 메일 발송:
+
+```
+제목: [DailyNews] ⚠ 2026-06-02 뉴스 분석 실패 — 재분석 필요
+내용: EN 분석 실패 (fallback 사용)
+      재분석: https://github.com/owner/repo/actions/workflows/news.yml
+```
+
+### 3-4. 워크플로우 중복 트리거 방지
+
+Actions 봇 커밋에 `[skip ci]` 추가:
+
+```yaml
+git commit -m "📰 News build $(date +'%Y-%m-%d') [skip ci]"
+```
+
+---
+
+## ⚙️ 4. Vercel Serverless API 구현
+
+### 4-1. `/api/subscribe` — 구독 신청
+
+- 이메일 + 구독 유형 3개(체크박스) 수신
+- 암호학적 토큰 생성 (`secrets.token_urlsafe(16)`)
+- Supabase에 `pending` 등록 (재구독 시 토큰·상태 갱신)
+- Double Opt-In 인증 메일 발송
+
+```python
+# 요청 body 예시
+{
+  "email": "user@example.com",
+  "subscribe_news": true,
+  "subscribe_stock": false,
+  "subscribe_ai_issue": true
+}
+```
+
+### 4-2. `/api/verify` — 이메일 인증
+
+- `?token=xxx` 파라미터로 `pending` → `active` 갱신
+- `verified_at` 기록
+- "구독 완료" HTML 응답 + 3초 후 홈으로 리다이렉트
+
+### 4-3. `/api/unsubscribe` — 구독 취소
+
+- `?token=xxx` 파라미터로 `active` → `unsubscribed` 갱신
+- `unsubscribed_at` 기록
+- GitHub Contents API 방식 완전 폐기
+
+### 4-4. `/api/manage` — 구독 유형 변경 (신규)
+
+- `?token=xxx`로 현재 구독 유형 조회
+- POST body로 구독 유형 업데이트
+- 메일 하단 "구독 설정 변경" 링크에서 접근
+
+```python
+# GET: 현재 설정 조회
+# POST body: { "subscribe_news": true, "subscribe_stock": true, "subscribe_ai_issue": false }
+```
+
+---
+
+## 📧 5. 발송 엔진 개편 (콘텐츠별 수신자 분리)
+
+### 5-1. `core/shared/mailer.py` 변경안
+
+```python
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") # RLS 우회용 서비스 롤 키
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-def _get_recipients(mode: str = "test") -> list[str]:
-    """실행 모드에 따른 이메일 수신자 명단 추출"""
-    # 1. 테스트 모드 (커밋 테스트)
+def get_recipients(content_type: str, mode: str = "prod") -> list[str]:
+    """
+    content_type: 'news' | 'stock' | 'ai_issue'
+    mode: 'test' | 'prod'
+    """
     if mode == "test":
-        test_emails = os.getenv("TEST_RECIPIENT_EMAILS", "")
-        recipients = [e.strip() for e in test_emails.split(",") if e.strip()]
-        logger.info(f"[테스트 메일 모드] 수신자: {recipients}")
-        return recipients
-        
-    # 2. 프로덕션 서비스 모드 (실 서비스 발송)
+        emails = os.getenv("TEST_RECIPIENT_EMAILS", "")
+        return [e.strip() for e in emails.split(",") if e.strip()]
+
     if not SUPABASE_URL or not SUPABASE_KEY:
-        logger.error("[Supabase] 설정이 불완전하여 기본 환경변수 백업으로 전환합니다.")
-        return RECIPIENT_EMAILS # fallback
-        
-    try:
-        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        # active 구독자만 고속 필터링 조회
-        response = supabase.table("subscribers").select("email").eq("status", "active").execute()
-        recipients = [row["email"] for row in response.data]
-        logger.info(f"[프로덕션 메일 모드] 활성 구독자 조회 완료: {len(recipients)}명")
-        return recipients
-    except Exception as e:
-        logger.error(f"[Supabase 구독자 Fetch 에러] {e}")
-        return []
+        logger.warning("[Supabase 미설정] RECIPIENT_EMAILS 환경변수로 폴백")
+        return [e.strip() for e in os.getenv("RECIPIENT_EMAILS", "").split(",") if e.strip()]
+
+    col_map = {
+        "news":     "subscribe_news",
+        "stock":    "subscribe_stock",
+        "ai_issue": "subscribe_ai_issue",
+    }
+    filter_col = col_map.get(content_type, "subscribe_news")
+
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    resp = (supabase.table("subscribers")
+            .select("email")
+            .eq("status", "active")
+            .eq(filter_col, True)
+            .execute())
+    emails = [row["email"] for row in resp.data]
+    logger.info(f"[{content_type}] 구독자 {len(emails)}명 조회 완료")
+    return emails
+```
+
+### 5-2. 각 발송 스크립트 호출 변경
+
+| 스크립트 | 변경 전 | 변경 후 |
+|---|---|---|
+| `send_news_email.py` | `RECIPIENT_EMAILS` 직접 사용 | `get_recipients("news", mode)` |
+| `send_stock_email.py` | `RECIPIENT_EMAILS` 직접 사용 | `get_recipients("stock", mode)` |
+| `send_ai_issue_email.py` | `RECIPIENT_EMAILS` 직접 사용 | `get_recipients("ai_issue", mode)` |
+
+---
+
+## 🚀 6. 워크플로우 발송 모드 분리
+
+### 6-1. MAIL_MODE 분기 로직
+
+| 트리거 | MAIL_MODE | 수신자 |
+|---|---|---|
+| `push` (코드 커밋) | `test` | `TEST_RECIPIENT_EMAILS` 만 |
+| `schedule` (정기 cron) | `prod` | Supabase active 구독자 전원 |
+| `workflow_dispatch` | 입력값 (`test`/`prod`) | 선택에 따라 |
+
+### 6-2. workflow YAML 공통 패턴 (3개 워크플로우 동일)
+
+```yaml
+workflow_dispatch:
+  inputs:
+    mail_mode:
+      description: '발송 모드 (test: 개발자 전용 / prod: 전체 구독자)'
+      required: false
+      default: 'test'
+    date:
+      description: '재처리 날짜 (YYYY-MM-DD, 비워두면 오늘)'
+      required: false
+      default: ''
+    step:
+      description: '실행 단계 (all / analyze / publish)'
+      required: false
+      default: 'all'
+```
+
+```yaml
+- name: 이메일 발송
+  env:
+    MAIL_MODE: >-
+      ${{
+        github.event_name == 'schedule' && 'prod' ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.mail_mode) ||
+        'test'
+      }}
+    TEST_RECIPIENT_EMAILS: ${{ secrets.TEST_RECIPIENT_EMAILS }}
+    SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 ```
 
 ---
 
-## 🚀 5. 테스트 vs 실제 발송 워크플로우 분리 (CI/CD Pipeline Layer)
+## 🔁 7. 재분석·재발송 관리 기능 (신규)
 
-가장 큰 문제였던 **"단순 코드 커밋/푸시 시에도 무조건 전체 발송되어 스팸이 되는 문제"**를 해결합니다.
+서버 없이 GitHub Actions `workflow_dispatch`의 inputs 확장으로 구현합니다.
 
-### 5-1. 워크플로우 발송 모드 정의
-* **`test` 모드 (개발 확인용)**:
-  * 대상: 단순히 `main` 브랜치에 코드를 push한 경우 또는 Pull Request가 돌 때.
-  * 결과: 사이트 빌드 검증을 모두 수행하되, 이메일은 오직 **테스트용 개인 메일 2개(`TEST_RECIPIENT_EMAILS`)로만 발송**되어 레이아웃 정상 여부를 자가 진단합니다.
-* **`prod` 모드 (실제 정기 배포 서비스)**:
-  * 대상: 깃허브 액션 크론(스케줄러) 정기 구동 시점 또는 수동으로 실제 발송을 승인한 경우 (`workflow_dispatch` 트리거).
-  * 결과: Supabase DB의 전체 Active 구독자 명단을 긁어와 전체에 뉴스레터를 안전하게 자동 배포합니다.
-
-### 5-2. `.github/workflows/` 내 YAML 수정 설정
-`news.yml` 및 `stock_build.yml` 내 수동 발송 옵션 탑재와 `MAIL_MODE` 분기 처리입니다.
+### 7-1. workflow_dispatch 확장 입력값
 
 ```yaml
-on:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: '15 23 * * *'  # 오전 08:15 KST 정기 배포 (Production)
-  workflow_dispatch:      # 수동 트리거 패널
-    inputs:
-      mail_mode:
-        description: '발송 모드 지정 (test: 개발자 전용 / prod: 전체 구독자)'
-        required: true
-        default: 'test'
+workflow_dispatch:
+  inputs:
+    date:
+      description: '재처리 날짜 (YYYY-MM-DD, 비워두면 오늘)'
+      default: ''
+    step:
+      description: '실행 단계'
+      type: choice
+      options:
+        - all          # 수집 + 분석 + 발송
+        - collect      # 수집만 (RSS 재수집)
+        - analyze      # 분석만 (기존 수집 데이터 재분석)
+        - publish      # 발송만 (기존 분석 결과로 발송)
+      default: 'all'
+    channels:
+      description: '발송 채널'
+      type: choice
+      options:
+        - all          # 이메일 + 텔레그램
+        - email
+        - telegram
+        - none         # 빌드만, 발송 안 함
+      default: 'all'
+    mail_mode:
+      description: '발송 대상 (test/prod)'
+      type: choice
+      options: [prod, test]
+      default: 'prod'
 ```
 
-#### 이메일 발송 Step의 환경변수 동적 판별
-```yaml
-      - name: 이메일 발송
-        run: python scripts/run_news.py
-        env:
-          # schedule 구동 시엔 무조건 prod, 수동 실행 시엔 입력값 적용, 단순 push(commit) 시엔 test로 분기
-          MAIL_MODE: >-
-            ${{ 
-              github.event_name == 'schedule' && 'prod' || 
-              (github.event_name == 'workflow_dispatch' && github.event.inputs.mail_mode) || 
-              'test' 
-            }}
-          TEST_RECIPIENT_EMAILS: ${{ secrets.TEST_RECIPIENT_EMAILS }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+### 7-2. 스크립트 분기 처리
+
+```python
+# run_news.py 내 분기 예시
+import os
+
+STEP = os.getenv("STEP", "all")
+TARGET_DATE = os.getenv("TARGET_DATE") or datetime.now().strftime("%Y-%m-%d")
+
+if STEP in ("all", "collect"):
+    news_data = collector.collect()
+    save_raw(news_data, TARGET_DATE)
+else:
+    news_data = load_raw(TARGET_DATE)  # 기존 수집 데이터 로드
+
+if STEP in ("all", "analyze"):
+    result = analyzer.analyze(news_data)
+    save_report(result, TARGET_DATE)
+    analysis_ok = result.get("analysis_ok", False)
+else:
+    result = load_report(TARGET_DATE)
+    analysis_ok = result.get("analysis_ok", False)
+
+if STEP in ("all", "publish") and analysis_ok:
+    if CHANNELS in ("all", "email"):
+        mailer.send(result, content_type="news", mode=MAIL_MODE)
+    if CHANNELS in ("all", "telegram"):
+        telegram.send(result)
 ```
 
 ---
 
-## 🎯 6. 검증 및 향후 마일스톤
+## 🌐 8. 구독 폼 UI (숨김 페이지)
 
-### 1단계: 로컬/테스트 검증
-* `main` 브랜치에 임의의 커스텀 커밋을 Push하여 워크플로우를 자동 구동합니다.
-* Actions 로그에서 `[테스트 메일 모드] 수신자: ['개인메일1', '개인메일2']`가 정상 매핑되고, 두 메일함으로만 이메일이 무사 도달하는지 확인하여 스팸 0%를 확립합니다.
+페이지 내비게이션에는 노출하지 않고 직접 URL로만 접근 가능.
 
-### 2단계: 홈페이지 구독 신청 및 승인 검증
-* 홈페이지 테스트 화면에서 이메일 구독 폼을 접수하여 Supabase DB에 `pending` 레코드가 정상 등록되는지 모니터링합니다.
-* 개인 메일로 수신된 인증 버튼을 클릭했을 때 Vercel 서버리스가 DB 상태를 `active`로 즉각 승인 변경하는지 데이터 검증을 수행합니다.
+```
+https://your-site.vercel.app/subscribe
+```
 
-### 3단계: 원클릭 구독 취소 검증
-* 수신된 이메일 하단의 구독 취소 단추를 눌러 Supabase DB 내 `status = 'unsubscribed'`로 즉각 갱신되는지 확인하여 구독 해지 라이프사이클을 완성합니다.
+폼 구성:
+```html
+<form action="/api/subscribe" method="POST">
+  <input type="email" name="email" placeholder="이메일 주소" required>
+  
+  <fieldset>
+    <legend>받고 싶은 뉴스레터 선택</legend>
+    <label><input type="checkbox" name="subscribe_news"      checked> 📰 데일리 뉴스 브리핑 (매일)</label>
+    <label><input type="checkbox" name="subscribe_stock"           > 📊 주식 시황 브리핑 (평일)</label>
+    <label><input type="checkbox" name="subscribe_ai_issue"        > 🤖 AI 이슈 위클리 (주 1회)</label>
+  </fieldset>
+  
+  <button type="submit">구독 신청</button>
+</form>
+```
+
+---
+
+## 🔑 9. 추가 환경변수 (GitHub Secrets)
+
+| 변수명 | 용도 |
+|---|---|
+| `SUPABASE_URL` | Supabase 프로젝트 URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | RLS 우회용 서비스 롤 키 (서버 전용) |
+| `SUPABASE_ANON_KEY` | 프론트엔드 공개 키 (구독 폼 AJAX용) |
+| `TEST_RECIPIENT_EMAILS` | 테스트 모드 수신자 (쉼표 구분) |
+
+---
+
+## 📅 10. 구현 마일스톤
+
+### Phase 1 — 품질 게이트 + 중복 트리거 방지 (즉시 적용 가능)
+- [ ] 리포트 JSON에 `analysis_ok`, `fallback_used` 플래그 추가
+- [ ] 발송 스크립트에 품질 게이트 로직 추가
+- [ ] 분석 실패 시 관리자 알림 메일 발송
+- [ ] 워크플로우 봇 커밋에 `[skip ci]` 추가
+
+### Phase 2 — Supabase 구독자 관리
+- [ ] Supabase 프로젝트 생성 + `subscribers`, `send_log` 테이블 생성
+- [ ] `/api/subscribe`, `/api/verify`, `/api/unsubscribe` 구현
+- [ ] `mailer.py` 수신자 조회 로직 Supabase로 전환
+- [ ] `MAIL_MODE` 분기 각 워크플로우에 적용
+- [ ] `/subscribe` 숨김 폼 페이지 생성
+
+### Phase 3 — 재분석·재발송 관리
+- [ ] `workflow_dispatch` inputs 3개 워크플로우 모두 확장
+- [ ] `run_news.py`, `run_stock.py`, `run_ai_issue.py` STEP/CHANNELS 분기 추가
+- [ ] `/api/manage` 구독 유형 변경 API 구현
+- [ ] `send_log` 테이블 연동 (발송 이력 기록)
+
+### Phase 4 — Admin UI (선택, 장기)
+- [ ] 날짜별 리포트 상태 대시보드
+- [ ] 재분석/재발송 버튼 UI
+- [ ] 구독자 관리 화면

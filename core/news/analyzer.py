@@ -99,7 +99,8 @@ class GPTAnalyzer(BaseAnalyzer):
         return response.choices[0].message.content.strip()
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
-        results = {"en": "", "ko": "", "combined": "", "structured": {}}
+        results = {"en": "", "ko": "", "combined": "", "structured": {},
+                   "analysis_ok": False, "fallback_used": {"en": False, "ko": False}}
         json_mode = True
         if en_news:
             try:
@@ -107,26 +108,44 @@ class GPTAnalyzer(BaseAnalyzer):
                 if json_mode:
                     data = _parse_json_response(raw)
                     results["structured"]["en"] = data or {}
-                    results["en"] = _structured_to_markdown(data) if data else _fallback_summary(en_news, "en")
+                    if data:
+                        results["en"] = _structured_to_markdown(data)
+                        results["analysis_ok"] = True
+                        logger.info(f"[GPT 분석 완료] 영어 {len(en_news)}건")
+                    else:
+                        results["en"] = _fallback_summary(en_news, "en")
+                        results["fallback_used"]["en"] = True
+                        logger.warning("[GPT EN] JSON 파싱 실패 — fallback 사용")
                 else:
                     results["en"] = raw
-                logger.info(f"[GPT 분석 완료] 영어 {len(en_news)}건")
+                    results["analysis_ok"] = True
+                    logger.info(f"[GPT 분석 완료] 영어 {len(en_news)}건")
             except Exception as e:
                 logger.error(f"[GPT EN 실패] {e}")
                 results["en"] = _fallback_summary(en_news, "en")
+                results["fallback_used"]["en"] = True
         if ko_news:
             try:
                 raw = self._call(_build_prompt(ko_news, "ko", json_mode), len(ko_news))
                 if json_mode:
                     data = _parse_json_response(raw)
                     results["structured"]["ko"] = data or {}
-                    results["ko"] = _structured_to_markdown(data) if data else _fallback_summary(ko_news, "ko")
+                    if data:
+                        results["ko"] = _structured_to_markdown(data)
+                        results["analysis_ok"] = True
+                        logger.info(f"[GPT 분석 완료] 한국어 {len(ko_news)}건")
+                    else:
+                        results["ko"] = _fallback_summary(ko_news, "ko")
+                        results["fallback_used"]["ko"] = True
+                        logger.warning("[GPT KO] JSON 파싱 실패 — fallback 사용")
                 else:
                     results["ko"] = raw
-                logger.info(f"[GPT 분석 완료] 한국어 {len(ko_news)}건")
+                    results["analysis_ok"] = True
+                    logger.info(f"[GPT 분석 완료] 한국어 {len(ko_news)}건")
             except Exception as e:
                 logger.error(f"[GPT KO 실패] {e}")
                 results["ko"] = _fallback_summary(ko_news, "ko")
+                results["fallback_used"]["ko"] = True
         results["combined"] = _merge(results["en"], results["ko"])
         return results
 
@@ -149,7 +168,8 @@ class ClaudeAnalyzer(BaseAnalyzer):
         return msg.content[0].text.strip()
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
-        results = {"en": "", "ko": "", "combined": "", "structured": {}}
+        results = {"en": "", "ko": "", "combined": "", "structured": {},
+                   "analysis_ok": False, "fallback_used": {"en": False, "ko": False}}
         json_mode = True
         if en_news:
             try:
@@ -157,26 +177,44 @@ class ClaudeAnalyzer(BaseAnalyzer):
                 if json_mode:
                     data = _parse_json_response(raw)
                     results["structured"]["en"] = data or {}
-                    results["en"] = _structured_to_markdown(data) if data else _fallback_summary(en_news, "en")
+                    if data:
+                        results["en"] = _structured_to_markdown(data)
+                        results["analysis_ok"] = True
+                        logger.info(f"[Claude 분석 완료] 영어 {len(en_news)}건")
+                    else:
+                        results["en"] = _fallback_summary(en_news, "en")
+                        results["fallback_used"]["en"] = True
+                        logger.warning("[Claude EN] JSON 파싱 실패 — fallback 사용")
                 else:
                     results["en"] = raw
-                logger.info(f"[Claude 분석 완료] 영어 {len(en_news)}건")
+                    results["analysis_ok"] = True
+                    logger.info(f"[Claude 분석 완료] 영어 {len(en_news)}건")
             except Exception as e:
                 logger.error(f"[Claude EN 실패] {e}")
                 results["en"] = _fallback_summary(en_news, "en")
+                results["fallback_used"]["en"] = True
         if ko_news:
             try:
                 raw = self._call(_build_prompt(ko_news, "ko", json_mode), len(ko_news))
                 if json_mode:
                     data = _parse_json_response(raw)
                     results["structured"]["ko"] = data or {}
-                    results["ko"] = _structured_to_markdown(data) if data else _fallback_summary(ko_news, "ko")
+                    if data:
+                        results["ko"] = _structured_to_markdown(data)
+                        results["analysis_ok"] = True
+                        logger.info(f"[Claude 분석 완료] 한국어 {len(ko_news)}건")
+                    else:
+                        results["ko"] = _fallback_summary(ko_news, "ko")
+                        results["fallback_used"]["ko"] = True
+                        logger.warning("[Claude KO] JSON 파싱 실패 — fallback 사용")
                 else:
                     results["ko"] = raw
-                logger.info(f"[Claude 분석 완료] 한국어 {len(ko_news)}건")
+                    results["analysis_ok"] = True
+                    logger.info(f"[Claude 분석 완료] 한국어 {len(ko_news)}건")
             except Exception as e:
                 logger.error(f"[Claude KO 실패] {e}")
                 results["ko"] = _fallback_summary(ko_news, "ko")
+                results["fallback_used"]["ko"] = True
         results["combined"] = _merge(results["en"], results["ko"])
         return results
 
@@ -216,7 +254,8 @@ class GeminiAnalyzer(BaseAnalyzer):
                     raise
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
-        results = {"en": "", "ko": "", "combined": "", "structured": {}}
+        results = {"en": "", "ko": "", "combined": "", "structured": {},
+                   "analysis_ok": False, "fallback_used": {"en": False, "ko": False}}
         json_mode = True
 
         if en_news:
@@ -227,16 +266,20 @@ class GeminiAnalyzer(BaseAnalyzer):
                     results["structured"]["en"] = data or {}
                     if data:
                         results["en"] = _structured_to_markdown(data)
+                        results["analysis_ok"] = True
                         logger.info(f"[Gemini 분석 완료] 영어 {len(en_news)}건")
                     else:
                         results["en"] = _fallback_summary(en_news, "en")
-                        logger.warning(f"[Gemini EN] JSON 파싱 실패 — fallback 사용")
+                        results["fallback_used"]["en"] = True
+                        logger.warning("[Gemini EN] JSON 파싱 실패 — fallback 사용")
                 else:
                     results["en"] = raw
+                    results["analysis_ok"] = True
                     logger.info(f"[Gemini 분석 완료] 영어 {len(en_news)}건")
             except Exception as e:
                 logger.error(f"[Gemini EN 실패] {e}")
                 results["en"] = _fallback_summary(en_news, "en")
+                results["fallback_used"]["en"] = True
 
         if ko_news:
             try:
@@ -246,16 +289,20 @@ class GeminiAnalyzer(BaseAnalyzer):
                     results["structured"]["ko"] = data or {}
                     if data:
                         results["ko"] = _structured_to_markdown(data)
+                        results["analysis_ok"] = True
                         logger.info(f"[Gemini 분석 완료] 한국어 {len(ko_news)}건")
                     else:
                         results["ko"] = _fallback_summary(ko_news, "ko")
-                        logger.warning(f"[Gemini KO] JSON 파싱 실패 — fallback 사용")
+                        results["fallback_used"]["ko"] = True
+                        logger.warning("[Gemini KO] JSON 파싱 실패 — fallback 사용")
                 else:
                     results["ko"] = raw
+                    results["analysis_ok"] = True
                     logger.info(f"[Gemini 분석 완료] 한국어 {len(ko_news)}건")
             except Exception as e:
                 logger.error(f"[Gemini KO 실패] {e}")
                 results["ko"] = _fallback_summary(ko_news, "ko")
+                results["fallback_used"]["ko"] = True
 
         results["combined"] = _merge(results["en"], results["ko"])
         return results
