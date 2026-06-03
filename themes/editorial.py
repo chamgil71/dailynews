@@ -368,11 +368,11 @@ def render_archive(ctx: dict) -> str:
       <div style="margin-bottom:20px;border-bottom:1px solid var(--rule);padding-bottom:4px">
         <button onclick="showTab('news')"  id="tabNews"  style="{tab_active}">📰 뉴스 {len(ctx['items'])}</button>
         <button onclick="showTab('stock')" id="tabStock" style="{tab_style}">📈 주식 {len(stock_items)}</button>
-        <button onclick="showTab('ai')"    id="tabAI"    style="{tab_style}">🤖 AI이슈 {len(ai_items)}</button>
+        <button onclick="showTab('ai')"    id="tabAi"    style="{tab_style}">🤖 AI이슈 {len(ai_items)}</button>
       </div>
       <div id="tabPanelNews"  ><ul>{news_items}</ul></div>
       <div id="tabPanelStock" style="display:none"><ul>{stock_items_html or f"<li style='color:var(--muted);padding:12px 0'>주식 리포트 없음</li>"}</ul></div>
-      <div id="tabPanelAI"    style="display:none"><ul>{ai_items_html or f"<li style='color:var(--muted);padding:12px 0'>AI 이슈 보고서 없음</li>"}</ul></div>
+      <div id="tabPanelAi"    style="display:none"><ul>{ai_items_html or f"<li style='color:var(--muted);padding:12px 0'>AI 이슈 보고서 없음</li>"}</ul></div>
     </div>
     <script>
     var _tabActive = "{tab_active}";

@@ -157,7 +157,7 @@ def build_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
 
 
 # ── 아카이브 ctx 빌더 ──────────────────────────────────────────────────────────
-def build_archive_ctx(pages: list[tuple[str, str]]) -> dict:
+def build_archive_ctx(pages: list[tuple[str, str]] = None) -> dict:
     def _date_items(glob_pattern: str, prefix: str, suffix: str = ".md") -> list[dict]:
         result = []
         for path in sorted(glob.glob(glob_pattern), reverse=True):
@@ -169,16 +169,10 @@ def build_archive_ctx(pages: list[tuple[str, str]]) -> dict:
             result.append({"date": d, "display": display})
         return result
 
-    items = []
-    for date_str, _ in pages:
-        try:
-            display = datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
-        except ValueError:
-            display = date_str
-        items.append({"date": date_str, "display": display})
-
-    stock_items   = _date_items(f"{REPORTS_DIR}/stock/stock_*.md",    "stock_")
-    ai_items      = _date_items(f"{REPORTS_DIR}/ai-issue/ai_issue_*.json", "ai_issue_", ".json")
+    # news items: --from 필터에 관계없이 항상 전체 MD 파일에서 읽음
+    items       = _date_items(f"{REPORTS_DIR}/news_*.md",              "news_")
+    stock_items = _date_items(f"{REPORTS_DIR}/stock/stock_*.md",       "stock_")
+    ai_items    = _date_items(f"{REPORTS_DIR}/ai-issue/ai_issue_*.json", "ai_issue_", ".json")
 
     return {
         "display_date": "전체 목록",
