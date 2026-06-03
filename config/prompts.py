@@ -76,12 +76,11 @@ PROMPT_TEMPLATE: str = """\
 # 반환값: ```json ... ``` 블록 안의 JSON을 파싱해서 data["structured"] 에 저장
 
 PROMPT_TEMPLATE_JSON: str = """\
-당신은 뉴스 분석 AI입니다. 아래 뉴스 목록을 분석하고 **JSON만** 출력하세요.
+당신은 뉴스 분석 AI입니다. 아래 뉴스 목록을 분석하고 **순수 JSON만** 출력하세요. 백틱이나 마크다운 블록 없이 JSON 객체만 출력합니다.
 {hints}
-**반드시 한국어 텍스트로 작성하고, JSON 외 다른 설명은 출력하지 마세요.**
+**반드시 한국어 텍스트로 작성하고, JSON 외 다른 설명·주석·백틱은 절대 출력하지 마세요.**
 
-출력 형식 (```json 블록으로 감싸세요):
-```json
+출력 형식 (순수 JSON 객체):
 {{
   "lang": "{lang}",
   "issues": [
@@ -113,7 +112,6 @@ PROMPT_TEMPLATE_JSON: str = """\
     "startup": 0
   }}
 }}
-```
 
 category 값은 다음 중 하나: ai_ml, technology, economy, global_news, korean_news, korean_economy, korean_tech, security, startup
 importance 값: high, medium, low

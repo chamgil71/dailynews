@@ -52,18 +52,29 @@ def _build_prompt(news: list, lang: str, use_json: bool = False) -> str:
 
 
 def _parse_json_response(text: str) -> dict | None:
-    """AI 응답에서 ```json 블록을 추출해 파싱. 실패 시 None."""
+    """AI 응답에서 JSON을 추출해 파싱. ```json 블록 또는 순수 JSON 모두 처리."""
     import json, re
+    # 1차: ```json 블록 추출
     m = re.search(r'```json\s*([\s\S]*?)```', text)
     if m:
         try:
             return json.loads(m.group(1).strip())
         except json.JSONDecodeError:
             pass
+    # 2차: 순수 JSON (response_mime_type="application/json" 응답)
     try:
         return json.loads(text.strip())
     except json.JSONDecodeError:
-        return None
+        pass
+    # 3차: 텍스트 내 첫 번째 { ... } 블록 추출 시도
+    m2 = re.search(r'\{[\s\S]*\}', text)
+    if m2:
+        try:
+            return json.loads(m2.group(0))
+        except json.JSONDecodeError:
+            pass
+    logger.warning(f"[JSON 파싱] 모든 방법 실패. 응답 앞 300자: {text[:300]!r}")
+    return None
 
 # ── 베이스 클래스 ─────────────────────────────────────────────────────────────
 
