@@ -40,7 +40,6 @@ scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
 ## 작업 브랜치 규칙
 
 - **`main`**: 완성·검증된 것만 병합
-- **`claude/pipeline-fix-clean`**: 현재 작업 브랜치 (PR #18 오픈 중)
 - 새 작업 시작 시: `git checkout main && git pull && git checkout -b claude/작업명`
 - 작업 완료 시: PR 생성 → 병합 → 브랜치 삭제
 
@@ -48,7 +47,7 @@ scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
 
 ## 현재 상태 (2026-06-03)
 
-### 완료된 작업
+### 완료된 작업 (main 반영 완료)
 - [x] 3채널 파이프라인 발송 순서 통일 (수집→빌드→배포→이메일→텔레그램)
 - [x] `run_news.py`에서 이메일·텔레그램 분리
 - [x] `send_email.py` / `send_telegram.py` 통합 스크립트 생성 (6개→2개)
@@ -57,15 +56,18 @@ scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
 - [x] AI이슈 탭 클릭 버그 수정 (`tabAI` → `tabAi`)
 - [x] `news.yml` Notion sync `continue-on-error`, `-X ours` 추가
 - [x] `ai_issue.yml` Notion sync / 이메일·텔레그램 배포 후 실행
+- [x] **PR #18** (`claude/pipeline-fix-clean` → `main`) 병합 완료 (2026-06-03 10:42)
+- [x] `CLAUDE.md` main 반영
 
-### 진행 중
-- [ ] **PR #18** (`claude/pipeline-fix-clean` → `main`) 병합 대기 중
-  - URL: https://github.com/chamgil71/dailynews/pull/18
+### 검증 필요 (다음 실행 시 확인)
+- [ ] `stock_send.yml` workflow_dispatch 수동 실행 → @msstockbrief 채널 수신 확인
+- [ ] `news.yml` 자동 실행 시 이메일·텔레그램이 Pages 배포 로그 이후에 찍히는지 확인
+- [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 스텝 이후 이메일·텔레그램 실행 확인
 
-### 다음 할 일 (PR 병합 후)
-- [ ] `docs/worklog.md` 현행화
-- [ ] `stock_send.yml` workflow_dispatch 테스트 — @msstockbrief 채널 수신 확인
-- [ ] `news.yml` / `ai_issue.yml` 다음 자동 실행 시 발송 순서 로그 확인
+### 다음 개발 (우선순위 순)
+- [ ] 구독 시스템 구현 — Supabase + Vercel API (`docs/plan/roadmap.md` Phase 2 참고)
+- [ ] 카드뉴스 SNS 내보내기 — html2canvas, 인스타용 1080×1080 PNG
+- [ ] 전체 검색 인덱스 (`publish/search-index.json`) 빌드 + 앱 검색 고도화
 
 ---
 

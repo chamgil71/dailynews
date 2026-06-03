@@ -4,6 +4,67 @@
 
 ---
 
+## 2026-06-03 (3차 — 파이프라인 정합성 + 스크립트 통합) [PR #18]
+
+### 주제: 3채널 발송 순서 통일 · send 스크립트 6→2 통합 · 주식 텔레그램 구현
+
+#### 배경
+- `news.yml`: 이메일·텔레그램이 `main.py` 내부(HTML 빌드 전)에서 발송되던 순서 오류
+- `ai_issue.yml`: 이메일·텔레그램이 커밋 전 단계에서 발송 (Pages 배포 전)
+- `send_stock_email.py`, `send_news_email.py` 등 채널별 개별 스크립트 6개가 난립
+
+---
+
+### 변경 내용
+
+#### 1. 파이프라인 발송 순서 통일
+전체 채널 공통 순서: **수집·분석·저장 → HTML 빌드 → 커밋·push → Pages 배포 → Notion → 이메일 → 텔레그램**
+
+- **`scripts/run_news.py`**: 이메일·텔레그램 발송 로직 제거. 수집/분석/MD저장(5단계)만 담당
+- **`.github/workflows/news.yml`**: 이메일·텔레그램을 `deploy-pages` 스텝 이후로 이동. `RECIPIENT_EMAILS`·`TELEGRAM_*` 환경변수를 `main.py` 스텝에서 제거
+- **`.github/workflows/ai_issue.yml`**: 이메일·텔레그램을 `deploy-pages` 스텝 이후로 이동 (커밋 전에 실행되던 것 수정)
+
+#### 2. send 스크립트 6→2 통합
+| 이전 (6개) | 이후 (2개) |
+|-----------|-----------|
+| `send_news_email.py` | `scripts/send_email.py --type news` |
+| `send_stock_email.py` | `scripts/send_email.py --type stock` |
+| `send_ai_issue_email.py` | `scripts/send_email.py --type ai-issue` |
+| `send_news_telegram.py` | `scripts/send_telegram.py --type news` |
+| `send_stock_telegram.py` | `scripts/send_telegram.py --type stock` |
+| `send_ai_issue_telegram.py` | `scripts/send_telegram.py --type ai-issue` |
+
+실제 발송 로직은 `core/shared/mailer.py` / `core/shared/telegram.py`에 유지.
+스크립트는 타입별 데이터 로드·검증·전달만 수행.
+
+#### 3. 주식 텔레그램 발송 구현
+- **`core/shared/telegram.py`**: `send_stock_telegram()` 추가
+  - `TELEGRAM_CHAT_ID_STOCK` 환경변수 → @msstockbrief 채널
+  - 형식: 시장온도계 → 핵심요약 → 주요지수(코스피/코스닥/S&P500/원달러) → 키워드TOP3 → 사이트링크
+- **`.github/workflows/stock_send.yml`**: 텔레그램 stub → 실제 구현 활성화, `TELEGRAM_CHAT_ID_STOCK` 시크릿 사용
+
+#### 4. archive 카운트 버그 추가 수정
+- **`scripts/build_site.py`** `build_archive_ctx()`: JSON 인덱스 기반으로 재변경
+  - `reports-data.json` / `stock-data.json` / `ai-issue-data.json` 읽어서 항상 전체 목록 반영
+  - (이전: MD glob이 `--from today` 파라미터에 영향받아 카운트가 1로 리셋되던 문제)
+
+#### 5. CLAUDE.md 신규 생성
+- 세션 간 컨텍스트 유지를 위한 프로젝트 컨텍스트 파일
+- 3기기(웹/VSCode터미널/데스크탑앱) 공통 — `git pull` 로 동기화
+
+---
+
+### 워크플로우 에러 처리 현황 (수정 후)
+
+| 스텝 | news.yml | stock_send.yml | ai_issue.yml |
+|------|----------|----------------|--------------|
+| 이메일 발송 | continue-on-error ✓ | continue-on-error ✓ | continue-on-error ✓ |
+| 텔레그램 발송 | continue-on-error ✓ | continue-on-error ✓ | continue-on-error ✓ |
+| Notion 동기화 | continue-on-error ✓ | continue-on-error ✓ | continue-on-error ✓ |
+| git rebase 전략 | -X ours ✓ | — | -X ours ✓ |
+
+---
+
 ## 2026-06-03 (2차 — 워크플로우 안정화)
 
 ### 주제: 아카이브 버그 수정 + 워크플로우 충돌 방지 개선
