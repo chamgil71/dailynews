@@ -28,7 +28,7 @@ THEME_STOCK_DEFAULT   = "editorial"    # 주식시황 개별 테마 (기본: SIT
 THEME_EMAIL_DEFAULT   = "classic"    # 메일링뉴스 개별 테마 (기본: SITE_THEME_DEFAULT)
 
 SITE_THEME    = os.getenv("SITE_THEME", SITE_THEME_DEFAULT)
-SITE_TITLE    = os.getenv("SITE_TITLE", "AI News Daily")
+SITE_TITLE    = os.getenv("SITE_TITLE", "AI News Brief")
 SUBSCRIBE_URL = os.getenv("SUBSCRIBE_URL", "https://forms.gle/REPLACE_WITH_GOOGLE_FORM_ID")
 
 # ── 섹션별 테마 (섹션마다 독립 설정 가능) ──────────────────────────────────────

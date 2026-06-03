@@ -60,7 +60,7 @@
 | 변수명 | 필요여부 | 설명 | 획득처 | 형식 예시 |
 |---|---|---|---|---|
 | `SITE_BASE_URL` | ✅ 필수 | 배포된 사이트 URL (링크 생성용) | Vercel 대시보드 → Domains | `https://your-project.vercel.app` |
-| `SITE_TITLE` | ⬜ 선택 | 사이트 타이틀 (기본값 있음) | 직접 입력 | `Daily News Brief` |
+| `SITE_TITLE` | ⬜ 선택 | 사이트 타이틀 (기본값 있음) | 직접 입력 | `AI News Brief` |
 | `SUBSCRIBE_URL` | ⬜ 선택 | 구독 폼 URL | `SITE_BASE_URL/subscribe` | `https://your-project.vercel.app/subscribe` |
 | `VERCEL_TOKEN` | ⬜ 선택 | Vercel 수동 배포용 토큰 | Vercel → Account → Tokens | `vercel_...` |
 | `VERCEL_ORG_ID` | ⬜ 선택 | Vercel 조직 ID | Vercel → Project → Settings | `team_...` |
