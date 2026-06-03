@@ -1,5 +1,5 @@
 """
-뉴스 수집·분석·저장·발송 실행 진입점.
+뉴스 수집·분석·저장 실행 진입점.
 
 실행: python scripts/run_news.py
       (또는 루트에서 python main.py — 동일)
@@ -9,9 +9,10 @@
   2. AI 분석 (카테고리별 프롬프트)
   3. Markdown 리포트 생성 (reports/news_YYYY-MM-DD.md)
   4. DB 누적 저장 (storage/news_db.xlsx)
-  5. 품질 게이트 — AI 분석 실패 시 발송 차단, 관리자 알림만 발송
-  6. 이메일 발송 (Gmail SMTP)
-  7. 텔레그램 카드뉴스 발송
+  5. 품질 게이트 — AI 분석 실패 시 관리자 알림만 발송 후 종료
+
+이메일·텔레그램 발송: scripts/send_news_email.py / scripts/send_news_telegram.py
+(news.yml 에서 HTML 빌드·배포 완료 후 별도 실행)
 """
 from __future__ import annotations
 
@@ -123,31 +124,16 @@ def main() -> None:
     logger.info(f"     → 엑셀 DB: {added}건 저장 완료")
     # ※ Notion 동기화는 workflows에서 scripts/sync_notion.py --type news 로 별도 실행
 
-    # ── 품질 게이트: 분석 실패 시 발송 차단 ────────────────────────────────────
+    # ── 품질 게이트: 분석 실패 시 관리자 알림만 발송 ──────────────────────────
     if not analysis_ok:
-        logger.warning(f"[5/7] 품질게이트 차단 — AI 분석 실패 (fallback: {fallback_used})")
+        logger.warning(f"[5/5] 품질게이트 — AI 분석 실패 (fallback: {fallback_used})")
         _send_failure_alert(date_tag, fallback_used)
-        logger.info("     → 관리자 알림 발송 후 종료 (이메일/텔레그램 전체 발송 건너뜀)")
+        logger.info("     → 관리자 알림 발송 후 종료 (이메일/텔레그램은 send_news_*.py 에서 자동 건너뜀)")
         elapsed = (datetime.now() - start).seconds
         logger.info(f"완료(분석실패 종료). 소요 시간: {elapsed}초")
         return
 
-    from core.shared.mailer import send_email
-    logger.info("[5/7] 이메일 발송 중...")
-    ok = send_email(md_content)
-    logger.info(f"     → {'성공' if ok else '실패(로그 확인)'}")
-
-    # 텔레그램 카드뉴스 발송
-    logger.info("[6/7] 텔레그램 카드뉴스 발송 중...")
-    structured_data = analysis.get("structured")
-    if structured_data:
-        from core.shared.telegram import send_telegram_cardnews
-        tg_ok = send_telegram_cardnews(structured_data, date_tag)
-        logger.info(f"     → {'성공' if tg_ok else '실패(로그 확인)'}")
-    else:
-        logger.info("     → 구조화된 분석 데이터가 없어 텔레그램 발송을 건너뜁니다.")
-
-    logger.info("[7/7] 완료")
+    logger.info("[5/5] 완료 (이메일·텔레그램은 HTML 빌드·배포 후 별도 실행)")
     elapsed = (datetime.now() - start).seconds
     logger.info("=" * 60)
     logger.info(f"완료! 소요 시간: {elapsed}초")

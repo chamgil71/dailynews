@@ -158,21 +158,30 @@ def build_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
 
 # ── 아카이브 ctx 빌더 ──────────────────────────────────────────────────────────
 def build_archive_ctx(pages: list[tuple[str, str]] = None) -> dict:
-    def _date_items(glob_pattern: str, prefix: str, suffix: str = ".md") -> list[dict]:
-        result = []
-        for path in sorted(glob.glob(glob_pattern), reverse=True):
-            d = Path(path).name.replace(prefix, "").replace(suffix, "")
-            try:
-                display = datetime.strptime(d, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
-            except ValueError:
-                display = d
-            result.append({"date": d, "display": display})
-        return result
+    def _from_json(json_path: str) -> list[dict]:
+        """배포된 JSON 인덱스에서 날짜 목록을 읽어 반환. reports-data.json 이후에 호출됨."""
+        try:
+            data = json.loads(Path(json_path).read_text(encoding="utf-8"))
+            rows = data if isinstance(data, list) else data.get("issues", [])
+            result = []
+            for row in rows:
+                d = row.get("date", "")
+                if not d:
+                    continue
+                try:
+                    display = datetime.strptime(d, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
+                except ValueError:
+                    display = d
+                result.append({"date": d, "display": display})
+            result.sort(key=lambda x: x["date"], reverse=True)
+            return result
+        except Exception:
+            return []
 
-    # news items: --from 필터에 관계없이 항상 전체 MD 파일에서 읽음
-    items       = _date_items(f"{REPORTS_DIR}/news_*.md",              "news_")
-    stock_items = _date_items(f"{REPORTS_DIR}/stock/stock_*.md",       "stock_")
-    ai_items    = _date_items(f"{REPORTS_DIR}/ai-issue/ai_issue_*.json", "ai_issue_", ".json")
+    # JSON 인덱스 기준으로 읽음 — reports-data.json이 먼저 쓰여진 후 이 함수가 호출됨
+    items       = _from_json(f"{DOCS_DIR}/reports-data.json")
+    stock_items = _from_json(f"{DOCS_DIR}/stock/stock-data.json")
+    ai_items    = _from_json(f"{DOCS_DIR}/ai-issue/ai-issue-data.json")
 
     return {
         "display_date": "전체 목록",

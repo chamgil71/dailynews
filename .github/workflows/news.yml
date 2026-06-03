@@ -50,7 +50,8 @@ jobs:
       - name: 패키지 설치
         run: pip install -r requirements.txt
 
-      # ── 일반 모드: 오늘 뉴스 수집 + 분석 + 발송 ─────────────────────────────
+      # ── 일반 모드: 오늘 뉴스 수집 + 분석 + MD/JSON 저장 ────────────────────
+      # 이메일·텔레그램은 HTML 빌드·배포 완료 후 별도 스텝에서 실행
       - name: 뉴스 수집 및 리포트 생성
         if: ${{ github.event.inputs.mode != 'reanalyze' }}
         run: python main.py
@@ -61,11 +62,8 @@ jobs:
           OPENAI_API_KEY:      ${{ secrets.OPENAI_API_KEY }}
           GMAIL_USER:          ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
           UNSUBSCRIBE_SECRET:  ${{ secrets.UNSUBSCRIBE_SECRET }}
           SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
-          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
 
       # ── 재분석 모드: 기존 MD 재분석 + HTML 재빌드 (발송 없음) ──────────────
       - name: 뉴스 재분석 (reanalyze 모드)
@@ -97,6 +95,7 @@ jobs:
         env:
           NOTION_API_KEY:          ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID_NEWS: ${{ secrets.NOTION_DATABASE_ID_NEWS }}
+        continue-on-error: true
 
       - name: 리포트 + 사이트 + DB 커밋
         run: |
@@ -131,6 +130,28 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
+
+      # ── 이메일 발송 (배포 완료 후) ────────────────────────────────────────────
+      - name: 이메일 발송
+        if: ${{ github.event.inputs.mode != 'reanalyze' }}
+        run: python scripts/send_email.py --type news --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+        env:
+          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:   ${{ secrets.RECIPIENT_EMAILS }}
+          UNSUBSCRIBE_SECRET: ${{ secrets.UNSUBSCRIBE_SECRET }}
+          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
+
+      # ── 텔레그램 발송 (배포 완료 후) ──────────────────────────────────────────
+      - name: 텔레그램 발송
+        if: ${{ github.event.inputs.mode != 'reanalyze' }}
+        run: python scripts/send_telegram.py --type news --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
 
       # ── Vercel 강제 프로덕션 배포 (Vercel Git Integration + Output Directory: publish 로 대체)
       # - name: Vercel 프로덕션 강제 배포
