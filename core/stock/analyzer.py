@@ -98,18 +98,40 @@ def _build_prompt(stock_data: dict) -> str:
 
 def _call_llm(prompt: str) -> str:
     """설정된 LLM 으로 프롬프트 전송. 실패 시 빈 문자열 반환."""
+    import time
+    from core.shared.alerts import send_llm_failure_alert, is_model_error, gha_warning
     provider = LLM_PROVIDER.lower()
+
+    def _try_gemini() -> str:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        config = types.GenerateContentConfig(max_output_tokens=2000, temperature=0.3)
+        # 재시도 3회 (2s / 4s / 8s)
+        for attempt in range(3):
+            try:
+                resp = client.models.generate_content(
+                    model=GEMINI_MODEL_FULL, contents=prompt, config=config,
+                )
+                return resp.text.strip()
+            except Exception as e:
+                err_str = str(e)
+                if is_model_error(e):
+                    send_llm_failure_alert("gemini", GEMINI_MODEL_FULL, e, context="stock analyzer")
+                    raise
+                is_retryable = any(k in err_str for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED"))
+                if is_retryable and attempt < 2:
+                    wait = 2 ** (attempt + 1)
+                    gha_warning(f"Gemini 과부하 재시도 ({attempt+1}/3): {err_str[:80]}")
+                    time.sleep(wait)
+                else:
+                    send_llm_failure_alert("gemini", GEMINI_MODEL_FULL, e, context="stock analyzer")
+                    raise
+        return ""
+
     try:
         if provider == "gemini":
-            from google import genai
-            from google.genai import types
-            client = genai.Client(api_key=GEMINI_API_KEY)
-            resp   = client.models.generate_content(
-                model=GEMINI_MODEL_FULL,
-                contents=prompt,
-                config=types.GenerateContentConfig(max_output_tokens=2000, temperature=0.3),
-            )
-            return resp.text.strip()
+            return _try_gemini()
 
         elif provider == "claude":
             import anthropic
@@ -133,7 +155,7 @@ def _call_llm(prompt: str) -> str:
             return response.choices[0].message.content.strip()
 
     except Exception as e:
-        logger.error(f"[stock_analyzer] LLM 호출 실패: {e}")
+        logger.error(f"[stock_analyzer] LLM 호출 최종 실패: {e}")
         return ""
 
 
