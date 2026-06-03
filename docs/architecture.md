@@ -1,4 +1,4 @@
-# AI News Daily — 전체 아키텍처
+# AI News Brief — 전체 아키텍처
 
 > 중앙 설정(config) → 콘텐츠(MD) → 템플릿 → 테마 → 배포  
 > 하드코딩 없이 config 한 곳에서 전체 제어

@@ -1,4 +1,4 @@
-# 📰 데일리 뉴스 브리핑 — README
+# 📰 AI News Brief — 뉴스 브리핑 README
 
 > RSS 뉴스 자동 수집 → AI 분석 → Markdown 리포트 → 웹사이트 + 이메일  
 > **서버 불필요 · 완전 자동화 · 월 $1 미만**

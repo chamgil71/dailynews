@@ -1,4 +1,4 @@
-# 📊 주식시황 브리핑 — README
+# 📊 AI News Brief — 주식시황 브리핑 README
 
 > 매일 장 마감 후 국내외 시장 데이터 수집 → AI 분석 → MD 저장 → 이메일 + 사이트  
 > **두 경로 병행: Claude Code 루틴 (주) + GitHub Actions 자동화 (백업)**
