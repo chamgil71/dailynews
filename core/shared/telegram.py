@@ -131,6 +131,98 @@ def send_telegram_cardnews(structured_data: dict, date_str: str = None) -> bool:
         return False
 
 
+def send_stock_telegram(stock_data: dict, date_str: str = None) -> bool:
+    """
+    주식 시황 MD 파싱 데이터를 텔레그램 @msstockbrief 채널로 발송.
+    stock_data: parse_stock_md() 반환값
+    """
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id   = os.getenv("TELEGRAM_CHAT_ID_STOCK")
+
+    if not bot_token or not chat_id:
+        logger.warning("[Telegram/주식] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID_STOCK 미설정 — 발송 건너뜀")
+        return False
+
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+    temp    = stock_data.get("temperature", {})
+    market  = stock_data.get("market", {})
+    summary = stock_data.get("summary", "")
+    keywords = stock_data.get("keywords", [])
+
+    temp_display = html.escape(temp.get("display", "🟡 중립"))
+    lines = [f"📈 <b>Ms Stock Brief</b> — {html.escape(date_str)}", ""]
+
+    lines.append(f"🌡 <b>시장 온도계</b>: {temp_display}")
+    lines.append("")
+
+    # 핵심 요약 (최대 3줄, 각 줄 앞의 '- ' 제거)
+    if summary:
+        lines.append("📌 <b>핵심 요약</b>")
+        for line in summary.splitlines():
+            line = line.strip().lstrip("- ").strip()
+            if line:
+                lines.append(f"  • {html.escape(line)}")
+        lines.append("")
+
+    # 주요 지수
+    index_rows = []
+    if market.get("kospi"):
+        k = market["kospi"]
+        index_rows.append(f"코스피 {html.escape(k['close_str'])} ({html.escape(k['chg_str'])})")
+    if market.get("kosdaq"):
+        k = market["kosdaq"]
+        index_rows.append(f"코스닥 {html.escape(k['close_str'])} ({html.escape(k['chg_str'])})")
+    if market.get("sp500"):
+        k = market["sp500"]
+        index_rows.append(f"S&P500 {html.escape(k['close_str'])} ({html.escape(k['chg_str'])})")
+    if market.get("usd_krw"):
+        k = market["usd_krw"]
+        index_rows.append(f"원/달러 {html.escape(k['close_str'])}원 ({html.escape(k['chg_str'])})")
+    if index_rows:
+        lines.append("📊 <b>주요 지수</b>")
+        for row in index_rows:
+            lines.append(f"  {row}")
+        lines.append("")
+
+    # 키워드 TOP 3
+    if keywords:
+        lines.append("🔑 <b>핵심 키워드</b>")
+        for kw in keywords[:3]:
+            title = html.escape(kw.get("title", ""))
+            lines.append(f"  • <b>{title}</b>")
+        lines.append("")
+
+    # 사이트 링크
+    link_url = f"{SITE_BASE_URL}/stock/" if SITE_BASE_URL else ""
+    if link_url:
+        lines.append(f"📰 <a href=\"{link_url}\">전체 시황 보기</a>")
+
+    message_text = "\n".join(lines)
+
+    api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message_text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": True,
+    }
+
+    try:
+        response = requests.post(api_url, json=payload, timeout=10)
+        res_data = response.json()
+        if response.status_code == 200 and res_data.get("ok"):
+            logger.info("[Telegram/주식] 발송 완료")
+            return True
+        else:
+            logger.error(f"[Telegram/주식] 발송 실패: {res_data.get('description', '알 수 없는 오류')}")
+            return False
+    except Exception as e:
+        logger.error(f"[Telegram/주식] 통신 오류: {e}")
+        return False
+
+
 def send_ai_issue_telegram(report_data: dict, date_str: str = None) -> bool:
     """
     주간 AI Issue 보고서 요약을 텔레그램으로 발송.
