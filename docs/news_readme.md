@@ -14,7 +14,7 @@
 | 리포트 형식 | Markdown (.md) — Obsidian 바로 사용 가능 |
 | 웹사이트 | GitHub Pages (정적) |
 | 이메일 | Gmail SMTP — 수신자별 개별 발송 |
-| 자동 실행 | GitHub Actions cron — 매일 오전 8시 KST |
+| 자동 실행 | GitHub Actions cron — 매일 KST 03:15 (UTC 18:15) |
 | 서버 | 불필요 (완전 서버리스) |
 
 ---
@@ -22,7 +22,7 @@
 ## 전체 워크플로우
 
 ```
-[GitHub Actions / 로컬 실행]
+[GitHub Actions / news.yml — 매일 KST 03:15]
          │
          ▼
   collector.py — RSS 수집
@@ -30,22 +30,28 @@
   중복 제거(전일 캐시) → 언어 분리 → AI 전송용 최대 40건
          │
          ▼
-  analyzer.py — AI 분석 (언어별 2회 호출)
-  영어 뉴스 → h3 이슈 TOP 3 + 트렌드 키워드 + URL 출처
+  analyzer.py — Gemini 분석 (언어별 2회 호출)
+  영어 뉴스 → 이슈 TOP 3 + 트렌드 키워드 + URL 출처
   한국어 뉴스 → 동일 형식 한국어 출력
          │
          ▼
-  report.py — Markdown 리포트 생성
-  templates/daily_report.md (Jinja2) → reports/news_YYYY-MM-DD.md
+  report.py — Markdown + JSON 리포트 생성
+  → reports/news_YYYY-MM-DD.md + .json
          │
-    ┌────┴────┐
-    ▼         ▼
-mailer.py  build_site.py
-이메일 발송  MD → HTML 변환
-           publish/*.html + reports-data.json
-                 │
-                 ▼
-          GitHub Pages 자동 배포
+         ▼
+  build_site.py --from today
+  → publish/news/YYYY-MM-DD.html
+  → publish/archive.html (뉴스·주식·AI이슈 3탭)
+  → publish/reports-data.json
+         │
+    ┌────┴────────┐
+    ▼             ▼
+mailer.py    telegram.py
+이메일 발송   텔레그램 카드뉴스
+         │
+         ▼
+  git commit + push → Vercel 배포
+  sync_notion.py → Notion 뉴스 DB
 ```
 
 ---
@@ -110,10 +116,11 @@ Repository → Settings → Secrets and variables → Actions
 | `GMAIL_APP_PASSWORD` | 앱비밀번호 |
 | `RECIPIENT_EMAILS` | email1,email2 |
 | `SITE_BASE_URL` | https://chamgil71.github.io/dailynews |
-| `SITE_THEME` | classic (또는 minimal/ink/forest) |
-| `VERCEL_TOKEN` | Vercel API Token (명시적 배포용) |
-| `VERCEL_ORG_ID` | Vercel Org/Team ID |
-| `VERCEL_PROJECT_ID` | Vercel Project ID |
+| `SITE_THEME` | editorial (또는 classic/terminal/minimal/ink/forest) |
+| `TELEGRAM_BOT_TOKEN` | 텔레그램 봇 토큰 |
+| `TELEGRAM_CHAT_ID` | 텔레그램 채널 ID |
+| `NOTION_API_KEY` | Notion 통합 키 |
+| `NOTION_DATABASE_ID_NEWS` | Notion 뉴스 DB ID |
 
 ### GitHub Pages 설정 (최초 1회)
 

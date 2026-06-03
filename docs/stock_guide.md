@@ -51,10 +51,11 @@ scripts/
   send_stock_email.py      ← push 트리거 경로 이메일 발송
 
 .github/workflows/
-  stock_build.yml          ← push 트리거 + 정기 백업 워크플로우
+  stock_build.yml          ← push 트리거 + 정기 백업 워크플로우 (KST 23:00)
+  stock_send.yml           ← 익일 KST 08:00 이메일 + Notion 발송
 
 docs/
-  claude_주식시황.md       ← Claude Code 루틴 프롬프트 (루틴에 그대로 붙여넣기)
+  stock_routine_prompt_v5.md  ← Claude Code 루틴 프롬프트 (루틴에 그대로 붙여넣기)
 
 reports/stock/
   stock_YYYY-MM-DD.md      ← 날짜별 주식시황 리포트 (루틴 또는 자동화 생성)
@@ -109,10 +110,10 @@ Step 6: git push → stock_build.yml push 트리거 발동
 3. `scripts/build_site.py` — 뉴스 사이트도 재빌드
 4. git commit + GitHub Pages 배포
 
-익일 08:00 KST에 `stock_send.yml`이 실행:
-1. `scripts/send_stock_email.py` — 이메일 발송 (품질 게이트 포함)
-2. `scripts/sync_notion.py` — Notion 주식시황 DB 동기화
-3. [예정] `scripts/send_stock_telegram.py` — 텔레그램 발송
+익일 KST 08:00에 `stock_send.yml`이 실행:
+1. `scripts/send_stock_email.py` — 이메일 발송 (품질 게이트 포함, `continue-on-error: true`)
+2. `scripts/sync_notion.py` — Notion 주식시황 DB 동기화 (`continue-on-error: true`)
+3. [예정] 텔레그램 발송 (stub)
 
 ---
 
@@ -397,4 +398,4 @@ STOCK_EMAIL_SUBJECT = "📊 주식 시황 브리핑 — {date} ({weekday})"
 
 ---
 
-*최종 업데이트: 2026-05-20*
+*최종 업데이트: 2026-06-03*

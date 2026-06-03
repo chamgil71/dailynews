@@ -27,16 +27,18 @@ content   : 수집된 뉴스·주식 데이터 (MD)
 ## 2. 전체 서비스 구조
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    2개 서비스                                 │
-│                                                             │
-│  📰 데일리 뉴스                    📊 주식시황               │
-│  RSS 자동 수집                     루틴 수동 실행 (주)        │
-│  GitHub Actions 1회/일             Claude Code 루틴          │
-│                                    GitHub Actions (백업)      │
-│                    ↓ 공통 파이프라인 ↓                        │
-│         MD 파일 → HTML 빌드 → 배포 (동일 로직)               │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                         3개 서비스                                    │
+│                                                                      │
+│  📰 데일리 뉴스        📊 주식시황           🤖 AI이슈 주간          │
+│  GitHub Actions       Claude Code 루틴      GitHub Actions           │
+│  KST 03:15 매일       KST 21:25 (주)        KST 07:00 매주 일요일    │
+│  Gemini 분석          Claude 분석           Gemini 분석              │
+│  이메일+텔레그램       이메일(익일 08:00)     이메일+텔레그램+Notion   │
+│                                                                      │
+│                  ↓ 공통 파이프라인 ↓                                  │
+│       MD 파일 → HTML 빌드 → git push → Vercel 배포                   │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -82,25 +84,19 @@ content   : 수집된 뉴스·주식 데이터 (MD)
 
 ## 4. 두 서비스의 차이점
 
-### 데이터 수집 단계 (MD 생성 전)
+### 서비스별 비교
 
-| 항목 | 데일리 뉴스 | 주식시황 |
-|------|------------|---------|
-| 수집 방식 | RSS 자동 파싱 | PlayMCP + NaverSearch (루틴) / yfinance (백업) |
-| AI 분석 | Gemini/Claude API | Claude (루틴 직접 작성) / Gemini (백업) |
-| 실행 주체 | GitHub Actions cron | Claude Code 루틴 (수동) + Actions (백업) |
-| 트리거 | 매일 UTC 02:00 | stock MD push → Actions 자동 트리거 |
-| Notion 등록 | 없음 | 루틴이 Notion MCP로 자동 등록 |
-
-### MD 생성 이후 (공통 파이프라인)
-
-| 항목 | 데일리 뉴스 | 주식시황 |
-|------|------------|---------|
-| MD 위치 | `reports/news_YYYY-MM-DD.md` | `reports/stock/stock_YYYY-MM-DD.md` |
-| 빌드 스크립트 | `scripts/build_site.py` | `scripts/build_stock_site.py` |
-| 테마 설정 | `SECTION_THEMES["news"]` | `SECTION_THEMES["stock"]` |
-| 출력 경로 | `publish/YYYY-MM-DD.html` | `publish/stock/YYYY-MM-DD.html` |
-| 이메일 발송 | `main.py` (뉴스 워크플로우 내) | `scripts/send_stock_email.py` |
+| 항목 | 📰 데일리 뉴스 | 📊 주식시황 | 🤖 AI이슈 |
+|------|--------------|-----------|---------|
+| 실행 주체 | GitHub Actions | Claude Code 루틴 (주) + Actions (백업) | GitHub Actions |
+| 스케줄 | 매일 KST 03:15 | 루틴 KST 21:25 / 빌드 즉시 / 발송 08:00 | 매주 일요일 KST 07:00 |
+| AI 모델 | Gemini (기본) | Claude (루틴) / Gemini (백업) | Gemini (기본) |
+| MD 위치 | `reports/news_YYYY-MM-DD.md` | `reports/stock/stock_YYYY-MM-DD.md` | `reports/ai-issue/ai_issue_YYYY-MM-DD.md` |
+| 빌드 스크립트 | `build_site.py` | `build_stock_site.py` | `build_ai_issue_site.py` |
+| 출력 경로 | `publish/news/` | `publish/stock/` | `publish/ai-issue/` |
+| 이메일 발송 | `run_news.py` 내 즉시 발송 | `send_stock_email.py` (익일 08:00) | `send_ai_issue_email.py` (동일 워크플로우) |
+| 텔레그램 | ✓ (`send_telegram_cardnews`) | 예정 | ✓ (`send_ai_issue_telegram.py`) |
+| Notion 동기화 | ✓ (news.yml) | ✓ (stock_send.yml) | ✓ (ai_issue.yml) |
 
 ---
 
@@ -256,33 +252,39 @@ dailynews/
 ├── core/                      # 비즈니스 로직
 │   ├── news/                  # 뉴스 수집·분석·리포트
 │   ├── stock/                 # 주식 수집·분석·리포트
-│   └── shared/
-│       └── mailer.py          # 이메일 발송 (공통)
+│   ├── ai_issue/              # AI이슈 수집·분석
+│   └── shared/                # mailer, telegram, alerts 공통
 │
-├── scripts/                   # 실행 스크립트
-│   ├── build_site.py          # 뉴스 MD → HTML
+├── scripts/
+│   ├── build_site.py          # 뉴스 MD → HTML + archive.html
 │   ├── build_stock_site.py    # 주식 MD → HTML
+│   ├── build_ai_issue_site.py # AI이슈 MD → HTML
 │   ├── send_stock_email.py    # 주식 이메일 발송
-│   └── stock_main.py          # 주식 백업 수집·분석
+│   ├── send_ai_issue_email.py # AI이슈 이메일 발송
+│   └── sync_notion.py         # Notion 동기화 (3채널 공통)
 │
-├── reports/                   # 생성된 MD 파일
+├── reports/
 │   ├── news_YYYY-MM-DD.md
-│   └── stock/stock_YYYY-MM-DD.md
+│   ├── stock/stock_YYYY-MM-DD.md
+│   └── ai-issue/ai_issue_YYYY-MM-DD.md
 │
-├── publish/                   # 생성된 HTML (배포 대상)
-│   ├── index.html             # 메인 (app.html 복사본)
-│   ├── YYYY-MM-DD.html        # 날짜별 뉴스
-│   ├── archive.html
+├── publish/                   # 배포 대상
+│   ├── index.html             # SPA 메인 (app.html 컴파일)
+│   ├── archive.html           # 3탭 아카이브 (뉴스·주식·AI이슈)
 │   ├── reports-data.json
-│   └── stock/
-│       ├── index.html
-│       ├── YYYY-MM-DD.html    # 날짜별 주식
-│       ├── archive.html
-│       └── stock-data.json
+│   ├── news/YYYY-MM-DD.html
+│   ├── stock/
+│   │   ├── index.html / archive.html / stock-data.json
+│   │   └── YYYY-MM-DD.html
+│   └── ai-issue/
+│       ├── index.html / archive.html / ai-issue-data.json
+│       └── YYYY-MM-DD.html
 │
 ├── .github/workflows/
-│   ├── news.yml               # 뉴스 자동화 (매일 KST 11:00)
-│   └── stock_build.yml        # 주식 빌드 (stock MD push 트리거)
+│   ├── news.yml               # 뉴스 자동화 (매일 KST 03:15)
+│   ├── stock_build.yml        # 주식 빌드 (stock MD push 트리거 + KST 23:00 백업)
+│   ├── stock_send.yml         # 주식 발송 (익일 KST 08:00)
+│   └── ai_issue.yml           # AI이슈 주간 (일요일 KST 07:00)
 │
 └── vercel.json                # Vercel 라우팅 설정
 ```

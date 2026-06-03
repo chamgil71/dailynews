@@ -49,7 +49,13 @@ python main.py
   │   └─ storage/news_db.xlsx 누적 저장
   │
   ▼ Step 5: mailer.send_email()
-      └─ Gmail SMTP → RECIPIENT_EMAILS 수신자 개별 발송
+  │   └─ Gmail SMTP → RECIPIENT_EMAILS 수신자 개별 발송
+  │
+  ▼ Step 6: telegram.send_telegram_cardnews()
+  │   └─ 구조화 분석 데이터로 텔레그램 카드뉴스 발송 (structured 데이터 없으면 스킵)
+  │
+  ▼ Step 7: (news.yml) sync_notion.py --type news
+      └─ Notion 뉴스 DB 동기화 (워크플로우에서 별도 실행)
 ```
 
 ---
