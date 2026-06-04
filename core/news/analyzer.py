@@ -54,6 +54,7 @@ def _build_prompt(news: list, lang: str, use_json: bool = False) -> str:
 def _parse_json_response(text: str) -> dict | None:
     """AI 응답에서 JSON을 추출해 파싱. ```json 블록 또는 순수 JSON 모두 처리."""
     import json, re
+    text = text.strip()
     # 1차: ```json 블록 추출
     m = re.search(r'```json\s*([\s\S]*?)```', text)
     if m:
@@ -61,16 +62,20 @@ def _parse_json_response(text: str) -> dict | None:
             return json.loads(m.group(1).strip())
         except json.JSONDecodeError:
             pass
-    # 2차: 순수 JSON (response_mime_type="application/json" 응답)
+    # 2차: raw_decode — 첫 번째 유효한 JSON 객체에서 멈춤 (trailing 내용 무시)
     try:
-        return json.loads(text.strip())
+        obj, _ = json.JSONDecoder().raw_decode(text)
+        if isinstance(obj, dict):
+            return obj
     except json.JSONDecodeError:
         pass
-    # 3차: 텍스트 내 첫 번째 { ... } 블록 추출 시도
-    m2 = re.search(r'\{[\s\S]*\}', text)
-    if m2:
+    # 3차: 첫 번째 '{' 위치부터 raw_decode 재시도 (앞에 다른 텍스트가 있을 경우)
+    idx = text.find('{')
+    if idx > 0:
         try:
-            return json.loads(m2.group(0))
+            obj, _ = json.JSONDecoder().raw_decode(text[idx:])
+            if isinstance(obj, dict):
+                return obj
         except json.JSONDecodeError:
             pass
     logger.warning(f"[JSON 파싱] 모든 방법 실패. 응답 앞 300자: {text[:300]!r}")
@@ -237,22 +242,9 @@ class GeminiAnalyzer(BaseAnalyzer):
 
     @staticmethod
     def _make_config(json_mode: bool) -> "types.GenerateContentConfig":
-        """
-        SDK 버전에 따라 JSON 응답 설정을 적응형으로 구성.
-        - 신규 SDK (0.9+): response_format 객체 사용
-        - 구 SDK: response_mime_type 문자열 사용 (fallback)
-        """
         kwargs: dict = {"max_output_tokens": LLM_MAX_TOKENS, "temperature": 0.3}
         if json_mode:
-            if hasattr(types, "ResponseFormat"):
-                # 신규 API: response_format 객체
-                try:
-                    kwargs["response_format"] = types.ResponseFormat(response_type="json")
-                except Exception:
-                    kwargs["response_mime_type"] = "application/json"
-            else:
-                # 구 API fallback
-                kwargs["response_mime_type"] = "application/json"
+            kwargs["response_mime_type"] = "application/json"
         return types.GenerateContentConfig(**kwargs)
 
     def _call(self, prompt: str, news_count: int) -> str:
