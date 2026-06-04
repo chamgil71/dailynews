@@ -64,6 +64,7 @@ def _card_html(card_idx: int, total_cards: int, content_html: str, date_str: str
     )
     return f"""
 <div class="card" id="card-{card_idx}">
+  <div class="card-topbar"></div>
   <div class="card-inner">
     {content_html}
   </div>
@@ -161,159 +162,181 @@ CARD_CSS = """
 body {
   width: 1080px;
   background: #000;
-  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic',
+               'Noto Sans CJK KR', sans-serif;
 }
 .card {
   width: 1080px;
   height: 1080px;
   display: none;
   flex-direction: column;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f2040 100%);
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
   position: relative;
   overflow: hidden;
 }
 .card.active { display: flex; }
+
+/* 배경 장식 */
 .card::before {
   content: '';
   position: absolute;
-  top: -200px; right: -200px;
-  width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%);
+  top: -280px; right: -180px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 65%);
   pointer-events: none;
 }
 .card::after {
   content: '';
   position: absolute;
-  bottom: -150px; left: -150px;
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%);
+  bottom: -200px; left: -120px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 65%);
   pointer-events: none;
 }
+
+/* 상단 컬러 라인 */
+.card-topbar {
+  height: 5px;
+  background: linear-gradient(90deg, #38bdf8, #6366f1, #a78bfa);
+  flex-shrink: 0;
+}
+
 .card-inner {
   flex: 1;
-  padding: 64px 72px 40px;
+  padding: 56px 80px 32px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   position: relative;
   z-index: 1;
 }
+
 .card-footer {
-  padding: 20px 72px 32px;
+  padding: 18px 80px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
   z-index: 1;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
 }
-.site-tag { font-size: 22px; color: #38bdf8; font-weight: 500; }
-.date-tag { font-size: 22px; color: #64748b; }
-.dots { display: flex; gap: 8px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2); }
-.dot.active { background: #38bdf8; width: 28px; border-radius: 5px; }
+.site-tag { font-size: 24px; color: #38bdf8; font-weight: 600; letter-spacing: -0.3px; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.18); }
+.dot.active { background: #38bdf8; width: 32px; border-radius: 6px; }
 
 /* ── Cover ─────────────────────────────────────────────────── */
 .cover-logo {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 40px;
+  gap: 22px;
+  margin-bottom: 36px;
 }
 .logo-badge {
-  width: 72px; height: 72px;
-  background: linear-gradient(135deg, #38bdf8, #6366f1);
-  border-radius: 18px;
+  width: 78px; height: 78px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border-radius: 20px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 900; color: #fff;
+  font-size: 30px; font-weight: 900; color: #fff;
   letter-spacing: -1px;
+  flex-shrink: 0;
 }
-.logo-main { font-size: 36px; font-weight: 700; color: #f8fafc; }
-.logo-sub  { font-size: 22px; color: #94a3b8; margin-top: 4px; }
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; font-weight: 400; }
+
 .cover-date {
-  font-size: 28px; color: #38bdf8; font-weight: 500;
-  margin-bottom: 28px;
+  font-size: 32px; color: #38bdf8; font-weight: 600;
+  margin-bottom: 24px;
+  letter-spacing: -0.3px;
 }
 .cover-divider {
   height: 2px;
-  background: linear-gradient(90deg, #38bdf8 0%, transparent 100%);
-  margin-bottom: 32px;
+  background: linear-gradient(90deg, rgba(56,189,248,0.8) 0%, transparent 100%);
+  margin-bottom: 30px;
 }
 .cover-headline {
-  font-size: 28px; color: #94a3b8; font-weight: 500;
-  margin-bottom: 24px;
-  text-transform: uppercase; letter-spacing: 2px;
+  font-size: 26px; color: #64748b; font-weight: 500;
+  margin-bottom: 22px;
+  letter-spacing: 3px;
 }
-.cover-issues { display: flex; flex-direction: column; gap: 20px; }
+.cover-issues { display: flex; flex-direction: column; gap: 18px; }
 .cover-issue {
-  display: flex; align-items: flex-start; gap: 16px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  padding: 16px 20px;
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 16px;
+  padding: 18px 24px;
 }
-.cover-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
-.cover-issue-text { font-size: 26px; color: #f1f5f9; font-weight: 500; line-height: 1.4; }
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text {
+  font-size: 30px; color: #f1f5f9; font-weight: 600;
+  line-height: 1.45; letter-spacing: -0.3px;
+}
 .cover-tags {
-  margin-top: 32px;
-  font-size: 22px; color: #475569;
+  margin-top: 28px;
+  font-size: 24px; color: #334155; font-weight: 400;
 }
 
 /* ── Issue Card ─────────────────────────────────────────────── */
 .issue-rank-badge {
   display: flex; align-items: center; gap: 14px;
-  margin-bottom: 36px;
+  margin-bottom: 32px;
 }
-.rank-icon { font-size: 40px; }
-.rank-label { font-size: 26px; font-weight: 700; }
+.rank-icon { font-size: 44px; line-height: 1; }
+.rank-label { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
 .cat-badge {
-  font-size: 20px; padding: 6px 16px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 20px;
+  font-size: 22px; padding: 7px 20px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 24px;
   color: #cbd5e1;
   margin-left: auto;
+  font-weight: 500;
 }
 .issue-title {
-  font-size: 40px; font-weight: 700;
+  font-size: 46px; font-weight: 800;
   color: #f8fafc;
-  line-height: 1.35;
-  margin-bottom: 28px;
+  line-height: 1.38;
+  margin-bottom: 26px;
+  letter-spacing: -0.8px;
 }
 .issue-divider {
-  height: 3px; width: 80px;
+  height: 4px; width: 72px;
   border-radius: 2px;
-  margin-bottom: 28px;
+  margin-bottom: 26px;
 }
 .issue-summary {
-  font-size: 27px; color: #94a3b8;
-  line-height: 1.7;
+  font-size: 30px; color: #94a3b8;
+  line-height: 1.75;
   flex: 1;
+  letter-spacing: -0.2px;
 }
 .issue-sources {
   margin-top: 28px;
-  font-size: 22px; color: #475569;
+  font-size: 24px; color: #475569; font-weight: 500;
 }
 
 /* ── Trends Card ────────────────────────────────────────────── */
 .trends-header {
-  display: flex; align-items: center; gap: 16px;
-  margin-bottom: 40px;
+  display: flex; align-items: center; gap: 18px;
+  margin-bottom: 38px;
 }
-.trends-icon { font-size: 40px; }
-.trends-title { font-size: 34px; font-weight: 700; color: #f8fafc; }
-.trends-list { display: flex; flex-direction: column; gap: 28px; }
+.trends-icon { font-size: 44px; line-height: 1; }
+.trends-title { font-size: 38px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; }
 .trend-item {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-left: 4px solid #38bdf8;
-  border-radius: 12px;
-  padding: 20px 24px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-left: 5px solid #38bdf8;
+  border-radius: 14px;
+  padding: 22px 26px;
 }
-.trend-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.trend-icon { font-size: 28px; }
-.trend-keyword { font-size: 26px; font-weight: 700; color: #38bdf8; }
-.trend-desc { font-size: 23px; color: #94a3b8; line-height: 1.5; }
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: #38bdf8; letter-spacing: -0.3px; }
+.trend-desc { font-size: 26px; color: #94a3b8; line-height: 1.65; letter-spacing: -0.2px; }
 """
 
 CARD_JS = """
