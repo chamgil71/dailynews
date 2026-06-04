@@ -31,7 +31,7 @@ KST_TODAY = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
 
 
 # ── news ──────────────────────────────────────────────────────────────────────
-def _send_news(date_str: str) -> None:
+def _send_news(date_str: str, force: bool = False) -> None:
     from core.shared.telegram import send_telegram_cardnews
 
     json_path = Path(_ROOT) / "reports" / f"news_{date_str}.json"
@@ -45,10 +45,12 @@ def _send_news(date_str: str) -> None:
         logger.error(f"[텔레그램/뉴스] JSON 파싱 에러: {e}")
         sys.exit(1)
 
-    if not data.get("analysis_ok", True):
-        logger.warning("[텔레그램/뉴스] AI 분석 실패 플래그 감지 — 발송 건너뜀")
+    if not force and not data.get("analysis_ok", True):
+        logger.warning("[텔레그램/뉴스] AI 분석 실패 플래그 감지 — 발송 건너뜀 (강제 발송: --force 사용)")
         return
 
+    if force:
+        logger.info("[텔레그램/뉴스] 강제 발송 모드 — analysis_ok 플래그 무시")
     ok = send_telegram_cardnews(data, date_str)
     logger.info(f"[텔레그램/뉴스] {'완료' if ok else '실패 또는 건너뜀'}")
 
@@ -97,10 +99,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="통합 텔레그램 발송기")
     parser.add_argument("--type", choices=["news", "stock", "ai-issue"], required=True)
     parser.add_argument("--date", default=KST_TODAY, help="대상 날짜 (YYYY-MM-DD)")
+    parser.add_argument("--force", action="store_true", help="AI 분석 실패 플래그 무시하고 강제 발송 (news 전용)")
     args = parser.parse_args()
 
-    logger.info(f"[텔레그램] type={args.type} date={args.date}")
-    {"news": _send_news, "stock": _send_stock, "ai-issue": _send_ai_issue}[args.type](args.date)
+    logger.info(f"[텔레그램] type={args.type} date={args.date} force={args.force}")
+    if args.type == "news":
+        _send_news(args.date, force=args.force)
+    else:
+        {"stock": _send_stock, "ai-issue": _send_ai_issue}[args.type](args.date)
 
 
 if __name__ == "__main__":

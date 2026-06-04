@@ -34,7 +34,7 @@ KST_TODAY = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
 
 
 # ── news ──────────────────────────────────────────────────────────────────────
-def _send_news(date_str: str) -> None:
+def _send_news(date_str: str, force: bool = False) -> None:
     md_path   = Path(_ROOT) / "reports" / f"news_{date_str}.md"
     json_path = Path(_ROOT) / "reports" / f"news_{date_str}.json"
 
@@ -42,15 +42,17 @@ def _send_news(date_str: str) -> None:
         logger.error(f"[이메일/뉴스] MD 파일 없음: {md_path}")
         sys.exit(1)
 
-    # AI 분석 실패 시 구독자 발송 건너뜀 (관리자 알림은 run_news.py 에서 처리)
-    if json_path.exists():
+    # AI 분석 실패 시 구독자 발송 건너뜀 (force=True 시 무시)
+    if not force and json_path.exists():
         try:
             if not json.loads(json_path.read_text(encoding="utf-8")).get("analysis_ok", True):
-                logger.warning("[이메일/뉴스] AI 분석 실패 플래그 감지 — 발송 건너뜀")
+                logger.warning("[이메일/뉴스] AI 분석 실패 플래그 감지 — 발송 건너뜀 (강제 발송: --force 사용)")
                 return
         except Exception:
             pass
 
+    if force:
+        logger.info("[이메일/뉴스] 강제 발송 모드 — analysis_ok 플래그 무시")
     ok = send_email(md_path.read_text(encoding="utf-8"))
     logger.info(f"[이메일/뉴스] {'완료' if ok else '실패 또는 건너뜀'}")
 
@@ -145,10 +147,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="통합 이메일 발송기")
     parser.add_argument("--type", choices=["news", "stock", "ai-issue"], required=True)
     parser.add_argument("--date", default=KST_TODAY, help="대상 날짜 (YYYY-MM-DD)")
+    parser.add_argument("--force", action="store_true", help="AI 분석 실패 플래그 무시하고 강제 발송 (news 전용)")
     args = parser.parse_args()
 
-    logger.info(f"[이메일] type={args.type} date={args.date}")
-    {"news": _send_news, "stock": _send_stock, "ai-issue": _send_ai_issue}[args.type](args.date)
+    logger.info(f"[이메일] type={args.type} date={args.date} force={args.force}")
+    if args.type == "news":
+        _send_news(args.date, force=args.force)
+    else:
+        {"stock": _send_stock, "ai-issue": _send_ai_issue}[args.type](args.date)
 
 
 if __name__ == "__main__":

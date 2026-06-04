@@ -1,0 +1,111 @@
+name: News Brief Send
+
+# 뉴스 이메일·텔레그램 독립 발송 워크플로우.
+# 재분석(reanalyze) 완료 후 발송이 필요할 때 수동으로 실행.
+#
+# 발송 흐름:
+#   news.yml reanalyze 모드로 분석 복구
+#   → 이 워크플로우로 이메일·텔레그램만 별도 발송
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '발송 날짜 (YYYY-MM-DD). 미입력 시 가장 최근 리포트 자동 선택'
+        required: false
+      force:
+        description: 'AI 분석 실패 플래그 무시하고 강제 발송 (재분석 후 사용)'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      # ── 발송 대상 리포트 확인 ──────────────────────────────────────────────
+      - name: 발송 대상 리포트 확인
+        id: find_report
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            CANDIDATE="reports/news_${{ github.event.inputs.date }}.md"
+            if [ -f "$CANDIDATE" ]; then
+              REPORT_DATE="${{ github.event.inputs.date }}"
+            else
+              echo "지정 날짜(${{ github.event.inputs.date }}) 리포트 없음 — 건너뜀"
+              echo "exists=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          else
+            LATEST=$(ls reports/news_*.md 2>/dev/null | sort -r | head -1)
+            if [ -z "$LATEST" ]; then
+              echo "reports/ 에 뉴스 MD 파일 없음 — 건너뜀"
+              echo "exists=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            REPORT_DATE=$(basename "$LATEST" | sed 's/news_\(.*\)\.md/\1/')
+          fi
+
+          # 3일 이상 지난 리포트는 재발송 방지 (force=true 시 무시)
+          DAYS_OLD=$(( ( $(date +%s) - $(date -d "$REPORT_DATE" +%s) ) / 86400 ))
+          if [ "$DAYS_OLD" -gt 3 ] && [ "${{ github.event.inputs.force }}" != "true" ]; then
+            echo "리포트 날짜: $REPORT_DATE (${DAYS_OLD}일 경과) — 오래된 리포트 발송 건너뜀"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "발송 대상: reports/news_${REPORT_DATE}.md (${DAYS_OLD}일 전, force=${{ github.event.inputs.force }})"
+            echo "exists=true"          >> $GITHUB_OUTPUT
+            echo "report_date=$REPORT_DATE" >> $GITHUB_OUTPUT
+          fi
+
+      # ── 이메일 발송 ─────────────────────────────────────────────────────────
+      - name: 이메일 발송
+        if: steps.find_report.outputs.exists == 'true'
+        run: |
+          FORCE_FLAG=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            FORCE_FLAG="--force"
+          fi
+          python scripts/send_email.py --type news \
+            --date ${{ steps.find_report.outputs.report_date }} \
+            $FORCE_FLAG
+        env:
+          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:   ${{ secrets.RECIPIENT_EMAILS }}
+          UNSUBSCRIBE_SECRET: ${{ secrets.UNSUBSCRIBE_SECRET }}
+          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
+
+      # ── 텔레그램 발송 ───────────────────────────────────────────────────────
+      - name: 텔레그램 발송
+        if: steps.find_report.outputs.exists == 'true'
+        run: |
+          FORCE_FLAG=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            FORCE_FLAG="--force"
+          fi
+          python scripts/send_telegram.py --type news \
+            --date ${{ steps.find_report.outputs.report_date }} \
+            $FORCE_FLAG
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
