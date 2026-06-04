@@ -200,6 +200,46 @@ def build_archive_ctx(pages: list[tuple[str, str]] = None) -> dict:
     }
 
 
+# ── 검색 인덱스 빌드 ──────────────────────────────────────────────────────────
+def build_search_index() -> None:
+    """publish/news/*.json에서 기사 레벨 검색 인덱스 생성."""
+    import glob as _glob
+    index = []
+    for jpath in sorted(_glob.glob(f"{DOCS_DIR}/news/*.json"), reverse=True):
+        try:
+            data = json.loads(Path(jpath).read_text(encoding="utf-8"))
+            date = Path(jpath).stem
+            if not date or len(date) != 10:
+                continue
+            articles = []
+            for item in data.get("news_en", []) + data.get("news_ko", []):
+                t = item.get("title", "").strip()
+                l = item.get("link", "").strip()
+                if t and l:
+                    articles.append({
+                        "title": t,
+                        "link": l,
+                        "label": item.get("label", ""),
+                    })
+            if articles:
+                try:
+                    display = datetime.strptime(date, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
+                except ValueError:
+                    display = date
+                index.append({
+                    "date": date,
+                    "display": display,
+                    "report_url": f"news/{date}.html",
+                    "articles": articles,
+                })
+        except Exception:
+            pass
+    out = Path(DOCS_DIR, "search-index.json")
+    out.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
+    total = sum(len(r["articles"]) for r in index)
+    print(f"  + search-index.json ({len(index)} reports, {total} articles)")
+
+
 # ── 메인 빌드 ─────────────────────────────────────────────────────────────────
 def build(theme_name: str | None = None,
           from_date: str | None = None,
@@ -283,6 +323,9 @@ def build(theme_name: str | None = None,
     Path(DOCS_DIR, "reports.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+
+    # search index
+    build_search_index()
 
     # index.html = app.html (동적 SPA)
     app_src = Path(DOCS_DIR, "app.html")

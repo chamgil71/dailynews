@@ -374,21 +374,33 @@ def render_archive(ctx: dict) -> str:
         <button onclick="showTab('ai')"    id="tabAi"    style="{tab_style}">🤖 AI이슈 {len(ai_list)}</button>
       </div>
 
-      <div style="position:relative;margin-bottom:16px">
-        <input id="searchBox" type="text"
-          placeholder="날짜 또는 요일로 검색…"
-          oninput="filterList()"
-          style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--rule-soft);
-                 border-radius:6px;background:var(--paper-2);color:var(--ink);
-                 font-family:inherit;font-size:.88rem;outline:none;" />
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:.82rem">🔍</span>
-      </div>
-      <p id="searchCount" style="font-size:.78rem;color:var(--muted);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.05em"></p>
-
       <div id="tabPanelNews"  ><ul>{news_html}</ul></div>
       <div id="tabPanelStock" style="display:none"><ul>{stock_html}</ul></div>
       <div id="tabPanelAi"    style="display:none"><ul>{ai_html}</ul></div>
+
+      <!-- 기사 검색 (search-index.json 활용) -->
+      <div class="arch-search" style="margin-top:28px;border-top:2px solid var(--rule);padding-top:20px">
+        <div style="position:relative;margin-bottom:12px">
+          <input id="arcSearchInput" type="text" placeholder="기사 제목으로 검색…"
+            style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--rule-soft);
+                   border-radius:6px;background:var(--paper-2);color:var(--ink);
+                   font-family:inherit;font-size:.9rem;outline:none;" />
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.85rem;pointer-events:none">🔍</span>
+        </div>
+        <div id="arcSearchResults"></div>
+      </div>
     </div>
+
+    <style>
+    .arc-result {{ padding:8px 0; border-bottom:1px solid var(--rule-soft); font-size:.88rem; line-height:1.5; }}
+    .arc-result:last-child {{ border-bottom:none; }}
+    .arc-date {{ font-family:'IBM Plex Mono',monospace; font-size:.76rem; color:var(--muted); margin-right:8px; }}
+    .arc-label {{ display:inline-block; font-size:.72rem; background:var(--paper-2); color:var(--muted);
+                  border:1px solid var(--rule-soft); border-radius:3px; padding:1px 5px; margin-left:6px; }}
+    .arc-result a {{ color:var(--ink); text-decoration:none; }}
+    .arc-result a:hover {{ text-decoration:underline; color:var(--rule); }}
+    .arc-result .arc-date a {{ color:var(--muted); }}
+    </style>
 
     <script>
     var _active = 'news';
@@ -400,21 +412,50 @@ def render_archive(ctx: dict) -> str:
         document.getElementById('tab'+cap).setAttribute('style', k===t ? _tabA : _tabN);
       }});
       _active = t;
-      document.getElementById('searchBox').value = '';
-      document.getElementById('searchCount').textContent = '';
     }}
-    function filterList() {{
-      var q = document.getElementById('searchBox').value.trim().toLowerCase();
-      var cap = _active.charAt(0).toUpperCase()+_active.slice(1);
-      var lis = document.getElementById('tabPanel'+cap).querySelectorAll('li[data-label]');
-      var shown = 0;
-      lis.forEach(function(li) {{
-        var match = !q || li.getAttribute('data-label').toLowerCase().indexOf(q) >= 0;
-        li.style.display = match ? '' : 'none';
-        if (match) shown++;
+
+    // 기사 레벨 검색
+    var _searchIndex = null;
+    var _searchLoading = false;
+    function _loadSearchIndex(cb) {{
+      if (_searchIndex) {{ cb(_searchIndex); return; }}
+      if (_searchLoading) {{ setTimeout(function(){{ _loadSearchIndex(cb); }}, 100); return; }}
+      _searchLoading = true;
+      fetch('search-index.json')
+        .then(function(r) {{ return r.json(); }})
+        .then(function(data) {{ _searchIndex = data; _searchLoading = false; cb(data); }})
+        .catch(function() {{ _searchLoading = false; _searchIndex = []; cb([]); }});
+    }}
+    document.getElementById('arcSearchInput').addEventListener('input', function() {{
+      var q = this.value.trim().toLowerCase();
+      var res = document.getElementById('arcSearchResults');
+      if (q.length < 2) {{ res.innerHTML = ''; return; }}
+      _loadSearchIndex(function(index) {{
+        var hits = [];
+        index.forEach(function(report) {{
+          report.articles.forEach(function(art) {{
+            if (art.title.toLowerCase().indexOf(q) >= 0) {{
+              hits.push({{ date: report.date, display: report.display,
+                           report_url: report.report_url, art: art }});
+            }}
+          }});
+        }});
+        if (!hits.length) {{
+          res.innerHTML = '<p style="color:var(--muted);font-size:.85rem;padding:8px 0">검색 결과 없음</p>';
+          return;
+        }}
+        var html = '<p style="font-size:.78rem;color:var(--muted);margin-bottom:8px;font-family:\'IBM Plex Mono\',monospace">' + hits.length + '건 검색됨</p>';
+        hits.slice(0, 100).forEach(function(h) {{
+          var label = h.art.label ? '<span class="arc-label">' + h.art.label + '</span>' : '';
+          html += '<div class="arc-result">'
+            + '<span class="arc-date"><a href="' + h.report_url + '">' + h.display + '</a></span>'
+            + '<a href="' + h.art.link + '" target="_blank" rel="noopener">' + h.art.title + '</a>'
+            + label
+            + '</div>';
+        }});
+        res.innerHTML = html;
       }});
-      document.getElementById('searchCount').textContent = q ? shown + '건 검색됨' : '';
-    }}
+    }});
     </script>"""
 
     return _layout("아카이브", body, "archive", ctx["site_title"], ctx["now"], ctx.get("site_url", ""))
