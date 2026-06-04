@@ -80,6 +80,15 @@ def generate(stock_data: dict, analysis: dict) -> str:
     m   = stock_data.get("market", {})
     now = datetime.now()
 
+    # 보고서 날짜 = 데이터 기준 거래일 (실행 날짜가 아님)
+    trading_date_str = stock_data.get("trading_date", now.strftime("%Y-%m-%d"))
+    try:
+        trading_dt = datetime.strptime(trading_date_str, "%Y-%m-%d")
+    except ValueError:
+        trading_dt = now
+    _wd = ["월","화","수","목","금","토","일"][trading_dt.weekday()]
+    report_date = f"{trading_date_str} ({_wd})"
+
     # 온도계 표시값 조립
     temp_raw     = analysis.get("temperature", "중립").strip()
     temp_emoji   = {"리스크오프": "🔴", "중립": "🟡", "리스크온": "🟢"}.get(temp_raw, "🟡")
@@ -87,9 +96,7 @@ def generate(stock_data: dict, analysis: dict) -> str:
 
     return tpl.render(
         # 날짜/메타
-        date              = now.strftime("%Y-%m-%d (%a)").replace(
-            "Mon","월").replace("Tue","화").replace("Wed","수").replace(
-            "Thu","목").replace("Fri","금").replace("Sat","토").replace("Sun","일"),
+        date              = report_date,
         generated_at      = now.strftime("%Y-%m-%d %H:%M KST"),
         market_close_time = stock_data.get("market_close_time", now.strftime("%Y-%m-%d 15:30 KST")),
 

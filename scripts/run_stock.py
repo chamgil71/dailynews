@@ -75,26 +75,29 @@ def main() -> None:
     logger.info("Stock Briefing — 주식 시황 실행")
     logger.info("=" * 55)
 
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    weekday  = datetime.now().weekday()
+    now_weekday = datetime.now().weekday()
 
     # ── 주말 체크 ─────────────────────────────────────────────────────────────
-    if weekday >= 5:  # 토(5), 일(6)
-        day_name = _weekday_ko(weekday)
-        logger.warning(f"[주말 감지] {date_str}({day_name}) — 주식 시장 휴장. 수집만 하고 이메일은 건너뜀.")
-
-    _primary_ran = Path(f"reports/stock/stock_{date_str}.md").exists()
+    if now_weekday >= 5:
+        logger.warning(f"[주말 감지] — 주식 시장 휴장. 수집만 하고 이메일은 건너뜀.")
 
     # ── [1/5] 시장 데이터 수집 ────────────────────────────────────────────────
     logger.info("[1/5] 시장 데이터 수집 중...")
     from core.stock.collector import build_stock_data
     stock_data = build_stock_data()
 
-    # 장 전/장중 경고 로깅 (collector 내부에서도 로그하지만 여기서도 명시)
+    # 파일명·이메일 등 모든 날짜는 실제 거래일 기준
+    date_str = stock_data.get("trading_date", datetime.now().strftime("%Y-%m-%d"))
+    weekday  = datetime.strptime(date_str, "%Y-%m-%d").weekday()
+    logger.info(f"[거래일 기준] date_str={date_str}")
+
+    _primary_ran = Path(f"reports/stock/stock_{date_str}.md").exists()
+
+    # 장 전/장중 경고 로깅
     if not stock_data.get("after_market_close", True):
         logger.warning(
             f"[장 마감 전] 실행 시각이 15:30 KST 이전 — "
-            f"데이터 기준일: {stock_data.get('trading_date', '?')} (전 거래일)"
+            f"데이터 기준일: {date_str} (전 거래일)"
         )
 
     # ── [2/5] LLM 분석 ────────────────────────────────────────────────────────
