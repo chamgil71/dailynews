@@ -365,8 +365,31 @@ def render_archive(ctx: dict) -> str:
 
     body = f"""
     <div class="arch">
-      <h1>전체 리포트 색인</h1>
-      <p class="count">LEDGER · 총 {total}호 발행</p>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:4px">
+        <div>
+          <h1>전체 리포트 색인</h1>
+          <p class="count">LEDGER · 총 {total}호 발행</p>
+        </div>
+        <!-- 통합 검색 (뉴스·AI이슈·주식) -->
+        <div class="arch-search" style="flex:0 0 280px;min-width:200px">
+          <div style="position:relative;margin-bottom:6px">
+            <input id="arcSearchInput" type="text" placeholder="기사·이슈·시황 키워드…"
+              style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--rule-soft);
+                     border-radius:6px;background:var(--paper-2);color:var(--ink);
+                     font-family:inherit;font-size:.87rem;outline:none;" />
+            <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.8rem;pointer-events:none">🔍</span>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--muted)">
+            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+              <input type="checkbox" id="arcSfNews"  checked style="accent-color:#1d4ed8"> 📰 뉴스</label>
+            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+              <input type="checkbox" id="arcSfAi"    checked style="accent-color:#6d28d9"> 🤖 AI이슈</label>
+            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+              <input type="checkbox" id="arcSfStock" checked style="accent-color:#15803d"> 📊 주식</label>
+          </div>
+          <div id="arcSearchResults"></div>
+        </div>
+      </div>
 
       <div style="margin-bottom:8px;border-bottom:1px solid var(--rule);padding-bottom:4px">
         <button onclick="showTab('news')"  id="tabNews"  style="{tab_active}">📰 뉴스 {len(news_list)}</button>
@@ -378,26 +401,6 @@ def render_archive(ctx: dict) -> str:
       <div id="tabPanelStock" style="display:none"><ul>{stock_html}</ul></div>
       <div id="tabPanelAi"    style="display:none"><ul>{ai_html}</ul></div>
 
-      <!-- 통합 검색 (뉴스·AI이슈·주식) -->
-      <div class="arch-search" style="margin-top:28px;border-top:2px solid var(--rule);padding-top:20px">
-        <div style="font-weight:700;font-size:.92rem;margin-bottom:10px;color:var(--ink)">🔍 통합 검색</div>
-        <div style="position:relative;margin-bottom:8px">
-          <input id="arcSearchInput" type="text" placeholder="기사·이슈·시황 키워드…"
-            style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--rule-soft);
-                   border-radius:6px;background:var(--paper-2);color:var(--ink);
-                   font-family:inherit;font-size:.9rem;outline:none;" />
-          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.85rem;pointer-events:none">🔍</span>
-        </div>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:.8rem;color:var(--muted)">
-          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-            <input type="checkbox" id="arcSfNews"  checked style="accent-color:#1d4ed8"> 📰 뉴스</label>
-          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-            <input type="checkbox" id="arcSfAi"    checked style="accent-color:#6d28d9"> 🤖 AI이슈</label>
-          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-            <input type="checkbox" id="arcSfStock" checked style="accent-color:#15803d"> 📊 주식</label>
-        </div>
-        <div id="arcSearchResults"></div>
-      </div>
     </div>
 
     <style>

@@ -147,8 +147,31 @@
 
     
     <div class="arch">
-      <h1>전체 리포트 색인</h1>
-      <p class="count">LEDGER · 총 99호 발행</p>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:4px">
+        <div>
+          <h1>전체 리포트 색인</h1>
+          <p class="count">LEDGER · 총 99호 발행</p>
+        </div>
+        <!-- 통합 검색 (뉴스·AI이슈·주식) -->
+        <div class="arch-search" style="flex:0 0 280px;min-width:200px">
+          <div style="position:relative;margin-bottom:6px">
+            <input id="arcSearchInput" type="text" placeholder="기사·이슈·시황 키워드…"
+              style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--rule-soft);
+                     border-radius:6px;background:var(--paper-2);color:var(--ink);
+                     font-family:inherit;font-size:.87rem;outline:none;" />
+            <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.8rem;pointer-events:none">🔍</span>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--muted)">
+            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+              <input type="checkbox" id="arcSfNews"  checked style="accent-color:#1d4ed8"> 📰 뉴스</label>
+            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+              <input type="checkbox" id="arcSfAi"    checked style="accent-color:#6d28d9"> 🤖 AI이슈</label>
+            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+              <input type="checkbox" id="arcSfStock" checked style="accent-color:#15803d"> 📊 주식</label>
+          </div>
+          <div id="arcSearchResults"></div>
+        </div>
+      </div>
 
       <div style="margin-bottom:8px;border-bottom:1px solid var(--rule);padding-bottom:4px">
         <button onclick="showTab('news')"  id="tabNews"  style="font-family:inherit;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;padding:4px 0;border:none;border-bottom:2px solid var(--rule);background:none;cursor:pointer;color:var(--text);font-weight:700;margin-right:20px">📰 뉴스 84</button>
@@ -160,26 +183,6 @@
       <div id="tabPanelStock" style="display:none"><ul><li data-label="2026년 06월 03일 (Wed)"><a href="stock/2026-06-03.html">📊 2026년 06월 03일 (Wed)</a><span class="d">2026-06-03</span></li><li data-label="2026년 06월 02일 (Tue)"><a href="stock/2026-06-02.html">📊 2026년 06월 02일 (Tue)</a><span class="d">2026-06-02</span></li><li data-label="2026년 06월 01일 (Mon)"><a href="stock/2026-06-01.html">📊 2026년 06월 01일 (Mon)</a><span class="d">2026-06-01</span></li><li data-label="2026년 05월 30일 (Sat)"><a href="stock/2026-05-30.html">📊 2026년 05월 30일 (Sat)</a><span class="d">2026-05-30</span></li><li data-label="2026년 05월 29일 (Fri)"><a href="stock/2026-05-29.html">📊 2026년 05월 29일 (Fri)</a><span class="d">2026-05-29</span></li><li data-label="2026년 05월 28일 (Thu)"><a href="stock/2026-05-28.html">📊 2026년 05월 28일 (Thu)</a><span class="d">2026-05-28</span></li><li data-label="2026년 05월 27일 (Wed)"><a href="stock/2026-05-27.html">📊 2026년 05월 27일 (Wed)</a><span class="d">2026-05-27</span></li><li data-label="2026년 05월 26일 (Tue)"><a href="stock/2026-05-26.html">📊 2026년 05월 26일 (Tue)</a><span class="d">2026-05-26</span></li><li data-label="2026년 05월 25일 (Mon)"><a href="stock/2026-05-25.html">📊 2026년 05월 25일 (Mon)</a><span class="d">2026-05-25</span></li><li data-label="2026년 05월 22일 (Fri)"><a href="stock/2026-05-22.html">📊 2026년 05월 22일 (Fri)</a><span class="d">2026-05-22</span></li><li data-label="2026년 05월 21일 (Thu)"><a href="stock/2026-05-21.html">📊 2026년 05월 21일 (Thu)</a><span class="d">2026-05-21</span></li><li data-label="2026년 05월 20일 (Wed)"><a href="stock/2026-05-20.html">📊 2026년 05월 20일 (Wed)</a><span class="d">2026-05-20</span></li><li data-label="2026년 05월 19일 (Tue)"><a href="stock/2026-05-19.html">📊 2026년 05월 19일 (Tue)</a><span class="d">2026-05-19</span></li><li data-label="2026년 05월 18일 (Mon)"><a href="stock/2026-05-18.html">📊 2026년 05월 18일 (Mon)</a><span class="d">2026-05-18</span></li></ul></div>
       <div id="tabPanelAi"    style="display:none"><ul><li data-label="2026년 05월 31일 (Sun)"><a href="ai-issue/2026-05-31.html">🤖 2026년 05월 31일 (Sun)</a><span class="d">2026-05-31</span></li></ul></div>
 
-      <!-- 통합 검색 (뉴스·AI이슈·주식) -->
-      <div class="arch-search" style="margin-top:28px;border-top:2px solid var(--rule);padding-top:20px">
-        <div style="font-weight:700;font-size:.92rem;margin-bottom:10px;color:var(--ink)">🔍 통합 검색</div>
-        <div style="position:relative;margin-bottom:8px">
-          <input id="arcSearchInput" type="text" placeholder="기사·이슈·시황 키워드…"
-            style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--rule-soft);
-                   border-radius:6px;background:var(--paper-2);color:var(--ink);
-                   font-family:inherit;font-size:.9rem;outline:none;" />
-          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.85rem;pointer-events:none">🔍</span>
-        </div>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:.8rem;color:var(--muted)">
-          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-            <input type="checkbox" id="arcSfNews"  checked style="accent-color:#1d4ed8"> 📰 뉴스</label>
-          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-            <input type="checkbox" id="arcSfAi"    checked style="accent-color:#6d28d9"> 🤖 AI이슈</label>
-          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-            <input type="checkbox" id="arcSfStock" checked style="accent-color:#15803d"> 📊 주식</label>
-        </div>
-        <div id="arcSearchResults"></div>
-      </div>
     </div>
 
     <style>
@@ -279,7 +282,7 @@
       <span>AI News Brief</span>
       <span>Generated by Gemini 2.0 Flash</span>
       <span>chamgil71/dailynews</span>
-      <span>생성 2026-06-04 08:50 KST</span>
+      <span>생성 2026-06-04 09:00 KST</span>
     </div>
   </div>
 </body>
