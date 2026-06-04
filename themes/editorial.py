@@ -208,7 +208,7 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
         <span>{title}</span>
         <span>KST 08:00</span>
       </div>
-      <a href="{site_url}" style="text-decoration:none;color:inherit">
+      <a href="{nav_prefix}index.html" style="text-decoration:none;color:inherit">
         <h1 class="mh-title">{_masthead_title(site_title)}</h1>
       </a>
       <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
