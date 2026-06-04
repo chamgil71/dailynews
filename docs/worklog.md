@@ -61,6 +61,13 @@
 
 ---
 
+#### 6. 추가 개선 (세션 후반)
+- **AI이슈 카드뉴스 슬라이더** (`publish/app.html`): 뉴스 섹션과 동일하게 `top10` → 가로 슬라이더 상단 표시. 카테고리 아이콘·중요도 별표·원문 링크 포함
+- **archive.html 검색창 위치 이동** (`themes/editorial.py`): 하단 → "전체 리포트 색인" 제목 오른쪽 flex 배치
+- **서브페이지 nav 탭 인디케이터 통일** (`templates/web_*.html` 4개): SPA `hnav-tab.active`와 동일하게 `border-bottom: 2px solid var(--color-blue-light)` 추가. 주식·뉴스·아카이브 서브페이지 현재 탭에 하단 컬러 바 표시
+
+---
+
 ### 영향받은 파일
 | 파일 | 변경 |
 |------|------|

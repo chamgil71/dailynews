@@ -62,12 +62,15 @@ scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
   - `build_search_index()` 3채널 확장 (뉴스·AI이슈·주식, `type` 필드)
   - `index.html` 사이드바 검색 → 전체 기간 통합 검색 (체크박스 필터)
   - `archive.html` 검색도 동일하게 통합 검색 업그레이드
+  - AI이슈 탭 상단 카드뉴스 슬라이더 추가 (top10 → 슬라이드 카드)
+  - `archive.html` 검색창 위치 제목 옆으로 이동 (flex row 레이아웃)
+  - 서브페이지 4개 nav 탭 인디케이터 통일 (SPA와 동일한 하단 컬러 바)
 
 ### 검증 필요 (다음 실행 시 확인)
 - [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 (`analysis_ok=true` 확인)
 - [ ] `stock_send.yml` workflow_dispatch 수동 실행 → @msstockbrief 채널 수신 확인
 - [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 스텝 이후 이메일·텔레그램 실행 확인
-- [ ] 통합 검색 Vercel 배포 후 동작 확인 (`search-index.json` fetch 정상 여부)
+- [ ] 통합 검색 Vercel 배포 후 동작 확인 (`search-index.json` fetch 정상 여부) — Vercel 배포 완료 확인됨, 브라우저 강력새로고침(Ctrl+Shift+R) 필요
 
 ### 다음 개발 (우선순위 순)
 - [ ] 구독 시스템 구현 — Supabase + Vercel API (`docs/plan/roadmap.md` Phase 2 참고)
