@@ -68,10 +68,10 @@ DESIGN_TEMPLATES: list[dict] = [
 
 # ── 네비게이션 섹션 ────────────────────────────────────────────────────────────
 NAV_SECTIONS: list[dict] = [
-    {"key": "news",     "label": "📰 뉴스",      "url": "index.html",          "enabled": True},
-    {"key": "cardnews", "label": "🃏 카드뉴스",  "url": "cardnews/index.html", "enabled": False},
-    {"key": "stock",    "label": "📈 주식",      "url": "stock/index.html",    "enabled": True},
-    {"key": "archive",  "label": "📚 전체 목록", "url": "archive.html",         "enabled": True},
+    {"key": "news",     "label": "📰 뉴스 브리핑", "url": "index.html",         "enabled": True},
+    {"key": "ai-issue", "label": "🤖 AI이슈",       "url": "ai-issue/",          "enabled": True},
+    {"key": "stock",    "label": "📊 주식 시황",    "url": "stock/",             "enabled": True},
+    {"key": "archive",  "label": "📚 아카이브",     "url": "archive.html",       "enabled": True},
 ]
 
 # ── 허브 섹션 (Phase 2/3 활성화 시 index.html 허브 카드에 표시) ───────────────

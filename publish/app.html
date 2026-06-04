@@ -693,15 +693,14 @@
       </div>
     </div>
 
-    <!-- 아카이브 섹션 -->
+    <!-- ARCHIVE_SECTION_HIDDEN_START
+    아카이브 섹션 (archive.html 로 이동 — SPA 내 섹션 비활성화)
     <div id="archiveSection" style="display:none">
-      <!-- 모바일용 그룹 탭 (사이드바 카드 대체) -->
       <div id="arcMobileTabs" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <button onclick="selectArcGroup('news')"     id="arcMTabNews"    style="flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:6px;background:var(--blue);color:#fff;font-size:.8rem;cursor:pointer">📰 뉴스</button>
         <button onclick="selectArcGroup('ai-issue')" id="arcMTabAI"      style="flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:.8rem;cursor:pointer">🤖 AI이슈</button>
         <button onclick="selectArcGroup('stock')"    id="arcMTabStock"   style="flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:.8rem;cursor:pointer">📈 주식</button>
       </div>
-      <!-- 통계 요약 (모바일 전용) -->
       <div id="arcMobileStats" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;font-size:.82rem;color:var(--muted)"></div>
       <div class="report-card">
         <div class="report-header">
@@ -711,6 +710,7 @@
         <ul class="archive-list" id="archiveList"></ul>
       </div>
     </div>
+    ARCHIVE_SECTION_HIDDEN_END -->
 
   </main>
 </div>
@@ -1427,7 +1427,7 @@ function switchSection(section) {
   document.getElementById("newsSection").style.display    = section==="news"    ? "" : "none";
   document.getElementById("aiIssueSection").style.display = section==="ai-issue" ? "" : "none";
   document.getElementById("stockSection").style.display   = section==="stock"   ? "" : "none";
-  document.getElementById("archiveSection").style.display = section==="archive" ? "" : "none";
+  // ARCHIVE_SECTION_HIDDEN: document.getElementById("archiveSection").style.display = section==="archive" ? "" : "none";
   // 사이드바 카드: archive ↔ news/stock 전환
   const isArc = section === "archive";
   document.getElementById("statsCard").style.display       = isArc ? "none" : "";

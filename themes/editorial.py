@@ -181,9 +181,10 @@ def _masthead_title(site_title: str) -> str:
 
 def _layout(title: str, body: str, active: str, site_title: str, now: str, site_url: str = "", nav_prefix: str = "") -> str:
     nav_items = [
-        ("news",    "index.html",   "최신 리포트"),
-        ("stock",   "stock/",       "주식시황"),
-        ("archive", "archive.html", "아카이브"),
+        ("news",     "index.html",   "📰 뉴스 브리핑"),
+        ("ai-issue", "ai-issue/",    "🤖 AI이슈"),
+        ("stock",    "stock/",       "📊 주식 시황"),
+        ("archive",  "archive.html", "📚 아카이브"),
     ]
     nav_html = "  ".join(
         f'<a href="{nav_prefix}{url}" class="{"on" if active == key else ""}">{label}</a>'
