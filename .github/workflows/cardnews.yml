@@ -1,4 +1,4 @@
-name: Card News — Build & Instagram Post
+name: Card News — Build & SNS Post
 
 # ── 트리거 ──────────────────────────────────────────────────────────────────
 on:
@@ -6,14 +6,18 @@ on:
   workflow_run:
     workflows: ["Daily News Report"]
     types: [completed]
-  # 수동 실행 (날짜 지정 가능)
+  # 수동 실행
   workflow_dispatch:
     inputs:
       date:
-        description: '날짜 (YYYY-MM-DD). 미입력 시 최신 날짜'
+        description: '날짜 (YYYY-MM-DD). 미입력 시 최신'
         required: false
-      skip_instagram:
-        description: 'true: PNG 생성만, Instagram 포스팅 건너뜀'
+      platforms:
+        description: '발송 플랫폼 (쉼표 구분): instagram,telegram,twitter'
+        required: false
+        default: 'instagram,telegram'
+      build_only:
+        description: 'true: PNG만 생성, SNS 발송 건너뜀'
         required: false
         default: 'false'
 
@@ -27,7 +31,6 @@ permissions:
 jobs:
   build-and-post:
     runs-on: ubuntu-latest
-    # workflow_run 트리거 시 뉴스 워크플로우가 성공한 경우에만 실행
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
@@ -38,7 +41,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # 최신 push 포함 (news.yml이 push한 reports-data.json 포함)
           ref: main
           fetch-depth: 1
 
@@ -51,13 +53,18 @@ jobs:
       - name: 패키지 설치
         run: pip install -r requirements.txt
 
-      # ── 한국어 폰트 설치 (Pillow PNG 렌더링용) ──────────────────────────────
+      # ── 한국어 폰트 + Playwright ───────────────────────────────────────────
       - name: 한국어 폰트 설치
         run: |
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk fonts-noto-cjk-extra
           fc-cache -f
 
-      # ── 카드뉴스 HTML 빌드 ──────────────────────────────────────────────────
+      - name: Playwright 설치
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      # ── 카드뉴스 HTML 빌드 ─────────────────────────────────────────────────
       - name: 카드뉴스 HTML 빌드
         run: |
           DATE="${{ github.event.inputs.date }}"
@@ -69,7 +76,7 @@ jobs:
         env:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
 
-      # ── PNG 이미지 생성 (Playwright) ─────────────────────────────────────────
+      # ── PNG 이미지 생성 (Playwright → Noto Sans KR 렌더링) ─────────────────
       - name: PNG 이미지 생성
         run: |
           DATE="${{ github.event.inputs.date }}"
@@ -79,7 +86,7 @@ jobs:
             python scripts/generate_cardnews_images.py
           fi
 
-      # ── PNG + HTML 커밋 & 푸시 ────────────────────────────────────────────
+      # ── PNG + HTML 커밋 & 푸시 (raw URL로 Instagram API 접근) ───────────────
       - name: 카드뉴스 파일 커밋
         run: |
           git config user.name  "github-actions[bot]"
@@ -89,18 +96,30 @@ jobs:
           git pull --rebase --autostash -X ours origin main
           git push
 
-      # ── Instagram 포스팅 ─────────────────────────────────────────────────
-      # PNG를 main에 push한 후 GitHub raw URL로 접근 가능
-      - name: Instagram 카루셀 포스팅
-        if: ${{ github.event.inputs.skip_instagram != 'true' }}
+      # ── SNS 발송 (멀티 플랫폼) ────────────────────────────────────────────
+      - name: SNS 발송
+        if: ${{ github.event.inputs.build_only != 'true' }}
         run: |
           DATE="${{ github.event.inputs.date }}"
-          if [ -n "$DATE" ]; then
-            python scripts/post_instagram.py --date "$DATE"
-          else
-            python scripts/post_instagram.py
-          fi
+          PLATFORMS="${{ github.event.inputs.platforms }}"
+          if [ -z "$PLATFORMS" ]; then PLATFORMS="instagram,telegram"; fi
+
+          ARGS="--platform $PLATFORMS"
+          if [ -n "$DATE" ]; then ARGS="$ARGS --date $DATE"; fi
+
+          python scripts/post_cardnews.py $ARGS
         env:
+          # Instagram
           INSTAGRAM_ACCESS_TOKEN:        ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
+          # Telegram (기존)
+          TELEGRAM_BOT_TOKEN:            ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:              ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Twitter/X
+          TWITTER_API_KEY:               ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET:            ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN:          ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET:   ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          # 공통
+          SITE_BASE_URL:                 ${{ secrets.SITE_BASE_URL }}
         continue-on-error: true

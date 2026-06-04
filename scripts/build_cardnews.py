@@ -39,9 +39,9 @@ CATEGORY_LABELS = {
     "security":       "보안",
     "startup":        "스타트업",
 }
-ISSUE_ICONS = ["🔥", "📢", "💡"]
+ISSUE_ICONS  = ["&#128293;", "&#128226;", "&#128161;"]  # 🔥📢💡 HTML entities
 ISSUE_COLORS = ["#f59e0b", "#818cf8", "#34d399"]
-TREND_ICONS  = ["📊", "🎯", "⚡"]
+TREND_ICONS  = ["&#128202;", "&#127919;", "&#9889;"]   # 📊🎯⚡ HTML entities
 
 
 def _fmt_date(date_str: str) -> str:
@@ -57,15 +57,17 @@ def _cat_label(cat: str) -> str:
     return CATEGORY_LABELS.get(cat, cat)
 
 
-def _card_html(card_idx: int, total_cards: int, content_html: str, date_str: str) -> str:
+def _card_html(card_idx: int, total_cards: int, content_html: str, date_str: str,
+               layout: str = "") -> str:
     dots = "".join(
         f'<span class="dot {"active" if i == card_idx else ""}"></span>'
         for i in range(total_cards)
     )
+    inner_class = f'card-inner{" layout-" + layout if layout else ""}'
     return f"""
 <div class="card" id="card-{card_idx}">
   <div class="card-topbar"></div>
-  <div class="card-inner">
+  <div class="{inner_class}">
     {content_html}
   </div>
   <div class="card-footer">
@@ -116,18 +118,28 @@ def build_issue_card(issue: dict, rank: int, date_str: str,
     summary = issue.get("summary", "")
     src_count = len(issue.get("sources", []))
 
+    first_source_url = ""
+    sources = issue.get("sources", [])
+    if sources:
+        first_source_url = sources[0].get("url", "")
+
     content = f"""
-  <div class="issue-rank-badge" style="color:{color}">
+  <div class="issue-top" style="color:{color}">
     <span class="rank-icon">{icon}</span>
     <span class="rank-label">핵심 이슈 {rank}</span>
     <span class="cat-badge">{cat}</span>
   </div>
-  <div class="issue-title">{title}</div>
-  <div class="issue-divider" style="background:{color}"></div>
-  <div class="issue-summary">{summary}</div>
-  <div class="issue-sources">📎 출처 {src_count}개</div>"""
+  <div class="issue-body">
+    <div class="issue-title">{title}</div>
+    <div class="issue-divider" style="background:{color}"></div>
+    <div class="issue-summary">{summary}</div>
+  </div>
+  <div class="issue-bottom">
+    <span>&#128206; 출처 {src_count}개</span>
+    {"&nbsp;&nbsp;·&nbsp;&nbsp;<a href='" + first_source_url + "' style='color:#38bdf8;text-decoration:none;font-size:24px'>원문 보기 →</a>" if first_source_url else ""}
+  </div>"""
 
-    return _card_html(card_idx, total_cards, content, _fmt_date(date_str))
+    return _card_html(card_idx, total_cards, content, _fmt_date(date_str), layout="issue")
 
 
 def build_trends_card(trends: list[dict], date_str: str,
@@ -148,13 +160,13 @@ def build_trends_card(trends: list[dict], date_str: str,
 
     content = f"""
   <div class="trends-header">
-    <span class="trends-icon">📈</span>
+    <span class="trends-icon">&#128200;</span>
     <span class="trends-title">주목할 트렌드 키워드</span>
   </div>
   <div class="trends-list">{trend_items}
   </div>"""
 
-    return _card_html(card_idx, total_cards, content, _fmt_date(date_str))
+    return _card_html(card_idx, total_cards, content, _fmt_date(date_str), layout="trends")
 
 
 CARD_CSS = """
@@ -203,12 +215,16 @@ body {
 
 .card-inner {
   flex: 1;
-  padding: 56px 80px 32px;
+  padding: 60px 80px 28px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   position: relative;
   z-index: 1;
+}
+/* 이슈 카드만 space-between으로 콘텐츠를 위아래로 배분 */
+.card-inner.layout-issue {
+  justify-content: space-between;
 }
 
 .card-footer {
@@ -280,63 +296,76 @@ body {
 }
 
 /* ── Issue Card ─────────────────────────────────────────────── */
-.issue-rank-badge {
+.issue-top { /* rank badge + category */
   display: flex; align-items: center; gap: 14px;
-  margin-bottom: 32px;
 }
-.rank-icon { font-size: 44px; line-height: 1; }
-.rank-label { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
 .cat-badge {
-  font-size: 22px; padding: 7px 20px;
+  font-size: 24px; padding: 8px 22px;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 24px;
+  border-radius: 26px;
   color: #cbd5e1;
   margin-left: auto;
   font-weight: 500;
 }
+.issue-body { /* title + divider + summary - 가운데 영역 flex-grow */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px 0;
+}
 .issue-title {
-  font-size: 46px; font-weight: 800;
+  font-size: 50px; font-weight: 800;
   color: #f8fafc;
-  line-height: 1.38;
-  margin-bottom: 26px;
-  letter-spacing: -0.8px;
+  line-height: 1.42;
+  margin-bottom: 28px;
+  letter-spacing: -1px;
+  word-break: keep-all;
 }
 .issue-divider {
-  height: 4px; width: 72px;
+  height: 4px; width: 80px;
   border-radius: 2px;
-  margin-bottom: 26px;
+  margin-bottom: 28px;
+  flex-shrink: 0;
 }
 .issue-summary {
-  font-size: 30px; color: #94a3b8;
-  line-height: 1.75;
-  flex: 1;
+  font-size: 31px; color: #94a3b8;
+  line-height: 1.9;
   letter-spacing: -0.2px;
+  word-break: keep-all;
 }
-.issue-sources {
-  margin-top: 28px;
-  font-size: 24px; color: #475569; font-weight: 500;
+.issue-bottom { /* source count - 하단 고정 */
+  font-size: 25px; color: #475569; font-weight: 500;
 }
 
 /* ── Trends Card ────────────────────────────────────────────── */
+.layout-trends {
+  justify-content: flex-start;
+}
 .trends-header {
   display: flex; align-items: center; gap: 18px;
-  margin-bottom: 38px;
+  margin-bottom: 40px;
+  flex-shrink: 0;
 }
-.trends-icon { font-size: 44px; line-height: 1; }
-.trends-title { font-size: 38px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px; }
-.trends-list { display: flex; flex-direction: column; gap: 24px; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 26px; flex: 1; }
 .trend-item {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.09);
   border-left: 5px solid #38bdf8;
   border-radius: 14px;
-  padding: 22px 26px;
+  padding: 24px 28px;
+  flex: 1;
+  display: flex; flex-direction: column; justify-content: center;
 }
-.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-.trend-icon { font-size: 30px; line-height: 1; }
-.trend-keyword { font-size: 30px; font-weight: 700; color: #38bdf8; letter-spacing: -0.3px; }
-.trend-desc { font-size: 26px; color: #94a3b8; line-height: 1.65; letter-spacing: -0.2px; }
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.trend-icon { font-size: 32px; line-height: 1; }
+.trend-keyword { font-size: 32px; font-weight: 700; color: #38bdf8; letter-spacing: -0.3px; }
+.trend-desc { font-size: 28px; color: #94a3b8; line-height: 1.8; letter-spacing: -0.2px; word-break: keep-all; }
 """
 
 CARD_JS = """
