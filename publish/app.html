@@ -208,6 +208,49 @@
       transform: translateY(-50%);
       color: var(--muted); font-size: .8rem; pointer-events: none;
     }
+    .search-filters {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+    }
+    .search-filters label {
+      display: flex; align-items: center; gap: 3px;
+      font-size: .75rem; color: var(--muted); cursor: pointer;
+      user-select: none;
+    }
+    .search-filters input[type=checkbox] { accent-color: var(--blue); cursor: pointer; }
+    .srp-panel {
+      margin-top: 10px;
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--card);
+      display: none;
+    }
+    .srp-panel.open { display: block; }
+    .srp-meta { font-size: .72rem; color: var(--muted); padding: 6px 10px 4px;
+                border-bottom: 1px solid var(--border); font-family: monospace; }
+    .srp-item {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: .82rem; line-height: 1.45;
+    }
+    .srp-item:last-child { border-bottom: none; }
+    .srp-type {
+      display: inline-block; font-size: .68rem; font-weight: 600;
+      padding: 1px 5px; border-radius: 3px; margin-right: 4px;
+      vertical-align: middle;
+    }
+    .srp-type-news    { background: #dbeafe; color: #1d4ed8; }
+    .srp-type-ai      { background: #ede9fe; color: #6d28d9; }
+    .srp-type-stock   { background: #dcfce7; color: #15803d; }
+    .srp-date { font-size: .73rem; color: var(--muted); margin-right: 4px; }
+    .srp-date a { color: var(--muted); text-decoration: none; }
+    .srp-date a:hover { text-decoration: underline; }
+    .srp-title a { color: var(--text); text-decoration: none; }
+    .srp-title a:hover { text-decoration: underline; color: var(--blue); }
+    .srp-label { display: inline-block; font-size: .68rem; color: var(--muted);
+                 background: var(--bg); border: 1px solid var(--border);
+                 border-radius: 3px; padding: 0 4px; margin-left: 4px; }
     /* 통계 */
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .stat-item {
@@ -613,10 +656,19 @@
   <aside class="sidebar" id="sidebar">
 
     <div class="sidebar-card">
-      <h3>🔍 검색</h3>
+      <h3>🔍 통합 검색</h3>
       <div class="search-wrap">
-        <input type="text" id="searchInput" placeholder="키워드 검색...">
+        <input type="text" id="searchInput" placeholder="기사·이슈·시황 키워드…" autocomplete="off">
         <span class="search-icon">🔍</span>
+      </div>
+      <div class="search-filters">
+        <label><input type="checkbox" id="sfNews"  checked> 📰 뉴스</label>
+        <label><input type="checkbox" id="sfAi"    checked> 🤖 AI이슈</label>
+        <label><input type="checkbox" id="sfStock" checked> 📊 주식</label>
+      </div>
+      <div class="srp-panel" id="srpPanel">
+        <div class="srp-meta" id="srpMeta"></div>
+        <div id="srpList"></div>
       </div>
     </div>
 
@@ -817,7 +869,6 @@ const state = {
   activeStockDate: null,
   activeAIIssueDate: null,
   activeLang:     "all",
-  searchQuery:    "",
   activeSection:  "news",
   arcGroup:       "news",
   // 섹션별 테마: localStorage 저장값 우선, 없으면 config 기본값
@@ -978,9 +1029,6 @@ function renderReport(report, newsItems) {
   let nEn = news_en, nKo = news_ko;
   if (state.activeLang==="en") { analysis = analysis_en||""; nKo=[]; }
   if (state.activeLang==="ko") { analysis = analysis_ko||""; nEn=[]; }
-  const q = state.searchQuery;
-  const fil = list => q ? list.filter(n => n.title.toLowerCase().includes(q.toLowerCase())) : list;
-  const fEn = fil(nEn), fKo = fil(nKo);
   const [y,m,d] = date.split("-");
 
   function newsHtml(items, lang) {
@@ -990,18 +1038,16 @@ function renderReport(report, newsItems) {
     const rows  = items.map(n => `
       <div class="news-item" style="padding: 10px 13px;">
         <span class="cat">${esc(n.label)}</span>
-        <a href="${esc(n.link)}" target="_blank" rel="noopener" style="font-weight: 500;">${hi(esc(n.title),q)}</a>
-        ${n.summary ? `<div class="news-summary" style="margin-top: 6px; font-size: 0.82rem; color: var(--muted); line-height: 1.5; padding-left: 8px; border-left: 2px solid var(--border);">${hi(esc(n.summary),q)}</div>` : ""}
+        <a href="${esc(n.link)}" target="_blank" rel="noopener" style="font-weight: 500;">${esc(n.title)}</a>
+        ${n.summary ? `<div class="news-summary" style="margin-top: 6px; font-size: 0.82rem; color: var(--muted); line-height: 1.5; padding-left: 8px; border-left: 2px solid var(--border);">${esc(n.summary)}</div>` : ""}
       </div>`).join("");
     const id = `nl-${lang}-${date}`;
-    const isOpen = q ? " open" : "";
-    const arrow = q ? "▲" : "▼";
     return `
       <button class="news-toggle" onclick="toggleNews('${id}')">
         ${flag} ${label} ${items.length}건
-        <span id="${id}-arr">${arrow}</span>
+        <span id="${id}-arr">▼</span>
       </button>
-      <div class="news-list${isOpen}" id="${id}">${rows}</div>`;
+      <div class="news-list" id="${id}">${rows}</div>`;
   }
 
   // 카드뉴스 슬라이드 생성 (로컬 변수명 sliderHtml — 전역 cardNewsHtml 함수와 이름 충돌 방지)
@@ -1049,7 +1095,7 @@ function renderReport(report, newsItems) {
 
   // 뉴스 목록 영역: 로드됐으면 표시, 아니면 로딩 안내
   const newsSection = newsLoaded
-    ? `${newsHtml(fEn,"en")}${newsHtml(fKo,"ko")}${q && !fEn.length && !fKo.length ? `<div class="empty">🔍 "${esc(q)}" 검색 결과 없음</div>` : ""}`
+    ? `${newsHtml(nEn,"en")}${newsHtml(nKo,"ko")}`
     : `<div style="padding:12px 0;color:var(--muted);font-size:.85rem">⏳ 뉴스 목록 로딩 중...</div>`;
 
   return `
@@ -1476,16 +1522,80 @@ document.querySelectorAll(".lang-tab").forEach(btn =>
     document.getElementById("reportArea").innerHTML = renderReport(r, state.newsCache[state.activeDate] || null);
   })
 );
+// ── 통합 검색 ─────────────────────────────────────────────────────────────────
+var _srpIndex = null, _srpLoading = false;
+function _loadSrpIndex(cb) {
+  if (_srpIndex) { cb(_srpIndex); return; }
+  if (_srpLoading) { setTimeout(() => _loadSrpIndex(cb), 100); return; }
+  _srpLoading = true;
+  fetch("search-index.json")
+    .then(r => r.json())
+    .then(d => { _srpIndex = d; _srpLoading = false; cb(d); })
+    .catch(() => { _srpLoading = false; _srpIndex = []; cb([]); });
+}
+
+function _runSearch(q) {
+  const panel  = document.getElementById("srpPanel");
+  const meta   = document.getElementById("srpMeta");
+  const list   = document.getElementById("srpList");
+  const useNews  = document.getElementById("sfNews").checked;
+  const useAi    = document.getElementById("sfAi").checked;
+  const useStock = document.getElementById("sfStock").checked;
+
+  if (q.length < 2) { panel.classList.remove("open"); return; }
+  panel.classList.add("open");
+  meta.textContent = "검색 중…";
+  list.innerHTML = "";
+
+  _loadSrpIndex(index => {
+    const ql = q.toLowerCase();
+    const hits = [];
+    index.forEach(report => {
+      const t = report.type;
+      if (t === "news"     && !useNews)  return;
+      if (t === "ai-issue" && !useAi)    return;
+      if (t === "stock"    && !useStock) return;
+      report.articles.forEach(art => {
+        if (art.title.toLowerCase().includes(ql)) {
+          hits.push({ type: t, date: report.date, display: report.display,
+                      report_url: report.report_url, art });
+        }
+      });
+    });
+
+    if (!hits.length) {
+      meta.textContent = "결과 없음";
+      list.innerHTML = `<div style="padding:10px;font-size:.82rem;color:var(--muted)">「${q}」 검색 결과가 없습니다.</div>`;
+      return;
+    }
+    meta.textContent = `${hits.length}건 검색됨 (최대 80건 표시)`;
+
+    const typeLabel = { news: "뉴스", "ai-issue": "AI", stock: "주식" };
+    const typeCls   = { news: "srp-type-news", "ai-issue": "srp-type-ai", stock: "srp-type-stock" };
+    list.innerHTML = hits.slice(0, 80).map(h => {
+      const badge = `<span class="srp-type ${typeCls[h.type]}">${typeLabel[h.type]}</span>`;
+      const dateLink = `<span class="srp-date"><a href="${h.report_url}" target="_blank">${h.date}</a></span>`;
+      const hi = s => s.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"),
+                                 m => `<mark style="background:#fef08a;border-radius:2px">${m}</mark>`);
+      const titleHtml = h.art.link
+        ? `<a href="${h.art.link}" target="_blank" rel="noopener">${hi(h.art.title)}</a>`
+        : hi(h.art.title);
+      const labelHtml = h.art.label ? `<span class="srp-label">${h.art.label}</span>` : "";
+      return `<div class="srp-item">${badge}${dateLink}<span class="srp-title">${titleHtml}${labelHtml}</span></div>`;
+    }).join("");
+  });
+}
+
 let searchTimer;
 document.getElementById("searchInput").addEventListener("input", e => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    state.searchQuery = e.target.value.trim();
-    if (state.activeSection === "news") {
-      const r = state.reports.find(r=>r.date===state.activeDate);
-      document.getElementById("reportArea").innerHTML = renderReport(r, state.newsCache[state.activeDate] || null);
-    }
-  }, 300);
+  searchTimer = setTimeout(() => _runSearch(e.target.value.trim()), 280);
+});
+["sfNews","sfAi","sfStock"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => {
+    const q = document.getElementById("searchInput").value.trim();
+    if (q.length >= 2) _runSearch(q);
+  });
 });
 
 // ── 테마 시스템 ───────────────────────────────────────────────────────────────

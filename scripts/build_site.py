@@ -201,10 +201,19 @@ def build_archive_ctx(pages: list[tuple[str, str]] = None) -> dict:
 
 
 # ── 검색 인덱스 빌드 ──────────────────────────────────────────────────────────
+def _fmt_date(date: str) -> str:
+    try:
+        return datetime.strptime(date, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
+    except ValueError:
+        return date
+
+
 def build_search_index() -> None:
-    """publish/news/*.json에서 기사 레벨 검색 인덱스 생성."""
+    """뉴스·AI이슈·주식 기사 레벨 통합 검색 인덱스 생성."""
     import glob as _glob
     index = []
+
+    # ── 뉴스 ──────────────────────────────────────────────────────────────────
     for jpath in sorted(_glob.glob(f"{DOCS_DIR}/news/*.json"), reverse=True):
         try:
             data = json.loads(Path(jpath).read_text(encoding="utf-8"))
@@ -216,28 +225,76 @@ def build_search_index() -> None:
                 t = item.get("title", "").strip()
                 l = item.get("link", "").strip()
                 if t and l:
-                    articles.append({
-                        "title": t,
-                        "link": l,
-                        "label": item.get("label", ""),
-                    })
+                    articles.append({"title": t, "link": l, "label": item.get("label", "")})
             if articles:
-                try:
-                    display = datetime.strptime(date, "%Y-%m-%d").strftime("%Y년 %m월 %d일 (%a)")
-                except ValueError:
-                    display = date
                 index.append({
+                    "type": "news",
                     "date": date,
-                    "display": display,
+                    "display": _fmt_date(date),
                     "report_url": f"news/{date}.html",
                     "articles": articles,
                 })
         except Exception:
             pass
+
+    # ── AI이슈 ────────────────────────────────────────────────────────────────
+    for jpath in sorted(_glob.glob(f"{DOCS_DIR}/ai-issue/[0-9][0-9][0-9][0-9]-*.json"), reverse=True):
+        try:
+            data = json.loads(Path(jpath).read_text(encoding="utf-8"))
+            date = Path(jpath).stem
+            if not date or len(date) != 10:
+                continue
+            articles = []
+            for item in data.get("top10", []):
+                t = item.get("title", "").strip()
+                if not t:
+                    continue
+                sources = item.get("sources", [])
+                link = sources[0].get("url", "") if sources else ""
+                articles.append({"title": t, "link": link, "label": item.get("category", "")})
+            if articles:
+                index.append({
+                    "type": "ai-issue",
+                    "date": date,
+                    "display": _fmt_date(date),
+                    "report_url": f"ai-issue/{date}.html",
+                    "articles": articles,
+                })
+        except Exception:
+            pass
+
+    # ── 주식 ──────────────────────────────────────────────────────────────────
+    stock_path = Path(DOCS_DIR) / "stock/stock-data.json"
+    if stock_path.exists():
+        try:
+            for report in json.loads(stock_path.read_text(encoding="utf-8")):
+                date = report.get("date", "")
+                if not date or len(date) != 10:
+                    continue
+                summary = report.get("summary", "").strip()
+                articles = []
+                for sentence in summary.split("\n"):
+                    s = sentence.strip().lstrip("0123456789. ")
+                    if s:
+                        articles.append({"title": s, "link": "", "label": "시황"})
+                if articles:
+                    index.append({
+                        "type": "stock",
+                        "date": date,
+                        "display": _fmt_date(date),
+                        "report_url": f"stock/{date}.html",
+                        "articles": articles,
+                    })
+        except Exception:
+            pass
+
     out = Path(DOCS_DIR, "search-index.json")
     out.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
-    total = sum(len(r["articles"]) for r in index)
-    print(f"  + search-index.json ({len(index)} reports, {total} articles)")
+    news_c   = sum(1 for r in index if r["type"] == "news")
+    ai_c     = sum(1 for r in index if r["type"] == "ai-issue")
+    stock_c  = sum(1 for r in index if r["type"] == "stock")
+    total    = sum(len(r["articles"]) for r in index)
+    print(f"  + search-index.json (뉴스 {news_c} · AI이슈 {ai_c} · 주식 {stock_c} = {total}건)")
 
 
 # ── 메인 빌드 ─────────────────────────────────────────────────────────────────
