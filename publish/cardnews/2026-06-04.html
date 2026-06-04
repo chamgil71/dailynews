@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>AI 카드뉴스 2026-06-04</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px;
+  background: #000;
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+.card {
+  width: 1080px;
+  height: 1080px;
+  display: none;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f2040 100%);
+  position: relative;
+  overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: '';
+  position: absolute;
+  top: -200px; right: -200px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: -150px; left: -150px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.card-inner {
+  flex: 1;
+  padding: 64px 72px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+.card-footer {
+  padding: 20px 72px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.site-tag { font-size: 22px; color: #38bdf8; font-weight: 500; }
+.date-tag { font-size: 22px; color: #64748b; }
+.dots { display: flex; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+.dot.active { background: #38bdf8; width: 28px; border-radius: 5px; }
+
+/* ── Cover ─────────────────────────────────────────────────── */
+.cover-logo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+.logo-badge {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+  letter-spacing: -1px;
+}
+.logo-main { font-size: 36px; font-weight: 700; color: #f8fafc; }
+.logo-sub  { font-size: 22px; color: #94a3b8; margin-top: 4px; }
+.cover-date {
+  font-size: 28px; color: #38bdf8; font-weight: 500;
+  margin-bottom: 28px;
+}
+.cover-divider {
+  height: 2px;
+  background: linear-gradient(90deg, #38bdf8 0%, transparent 100%);
+  margin-bottom: 32px;
+}
+.cover-headline {
+  font-size: 28px; color: #94a3b8; font-weight: 500;
+  margin-bottom: 24px;
+  text-transform: uppercase; letter-spacing: 2px;
+}
+.cover-issues { display: flex; flex-direction: column; gap: 20px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+.cover-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+.cover-issue-text { font-size: 26px; color: #f1f5f9; font-weight: 500; line-height: 1.4; }
+.cover-tags {
+  margin-top: 32px;
+  font-size: 22px; color: #475569;
+}
+
+/* ── Issue Card ─────────────────────────────────────────────── */
+.issue-rank-badge {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 36px;
+}
+.rank-icon { font-size: 40px; }
+.rank-label { font-size: 26px; font-weight: 700; }
+.cat-badge {
+  font-size: 20px; padding: 6px 16px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  color: #cbd5e1;
+  margin-left: auto;
+}
+.issue-title {
+  font-size: 40px; font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.35;
+  margin-bottom: 28px;
+}
+.issue-divider {
+  height: 3px; width: 80px;
+  border-radius: 2px;
+  margin-bottom: 28px;
+}
+.issue-summary {
+  font-size: 27px; color: #94a3b8;
+  line-height: 1.7;
+  flex: 1;
+}
+.issue-sources {
+  margin-top: 28px;
+  font-size: 22px; color: #475569;
+}
+
+/* ── Trends Card ────────────────────────────────────────────── */
+.trends-header {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 40px;
+}
+.trends-icon { font-size: 40px; }
+.trends-title { font-size: 34px; font-weight: 700; color: #f8fafc; }
+.trends-list { display: flex; flex-direction: column; gap: 28px; }
+.trend-item {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-left: 4px solid #38bdf8;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+.trend-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.trend-icon { font-size: 28px; }
+.trend-keyword { font-size: 26px; font-weight: 700; color: #38bdf8; }
+.trend-desc { font-size: 23px; color: #94a3b8; line-height: 1.5; }
+
+</style>
+</head>
+<body>
+
+<div class="card" id="card-0">
+  <div class="card-inner">
+    
+  <div class="cover-logo">
+    <div class="logo-badge">AI</div>
+    <div class="logo-text">
+      <div class="logo-main">AI News Brief</div>
+      <div class="logo-sub">매일 아침 AI가 정리하는 핵심 뉴스</div>
+    </div>
+  </div>
+  <div class="cover-date">2026년 6월 4일 (목)</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">오늘의 핵심 이슈</div>
+  <div class="cover-issues">
+    <div class="cover-issue">
+      <span class="cover-icon" style="color:#f59e0b">🔥</span>
+      <span class="cover-issue-text">젠슨 황 엔비디아 CEO 방한 및 국내 AI 생태계 협력 ...</span>
+    </div>
+    <div class="cover-issue">
+      <span class="cover-icon" style="color:#818cf8">📢</span>
+      <span class="cover-issue-text">OECD, 한국 경제성장률 전망치 2.6%로 대폭 상향 조...</span>
+    </div>
+    <div class="cover-issue">
+      <span class="cover-icon" style="color:#34d399">💡</span>
+      <span class="cover-issue-text">이란의 쿠웨이트 공습에 따른 지정학적 리스크 및 뉴욕증시 ...</span>
+    </div>
+  </div>
+  <div class="cover-tags">#AI뉴스 #테크 #데일리브리핑 #인공지능</div>
+  </div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 4일 (목)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-inner">
+    
+  <div class="issue-rank-badge" style="color:#f59e0b">
+    <span class="rank-icon">🔥</span>
+    <span class="rank-label">핵심 이슈 1</span>
+    <span class="cat-badge">한국기술</span>
+  </div>
+  <div class="issue-title">젠슨 황 엔비디아 CEO 방한 및 국내 AI 생태계 협력 강화</div>
+  <div class="issue-divider" style="background:#f59e0b"></div>
+  <div class="issue-summary">젠슨 황 엔비디아 CEO가 한국을 방문하여 국내 주요 기업 총수들과 만나고 AI 생태계를 점업할 예정이다. 특히 엔비디아의 한국 내 AI 기술센터 설립 부지로 새만금이 유력하게 거론되며 국내 반도체 및 AI 산업에 큰 파급효과가 기대된다.</div>
+  <div class="issue-sources">📎 출처 2개</div>
+  </div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 4일 (목)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-inner">
+    
+  <div class="issue-rank-badge" style="color:#818cf8">
+    <span class="rank-icon">📢</span>
+    <span class="rank-label">핵심 이슈 2</span>
+    <span class="cat-badge">한국경제</span>
+  </div>
+  <div class="issue-title">OECD, 한국 경제성장률 전망치 2.6%로 대폭 상향 조정</div>
+  <div class="issue-divider" style="background:#818cf8"></div>
+  <div class="issue-summary">OECD가 한국의 올해 경제성장률 전망치를 기존 1.7%에서 2.6%로 크게 올렸다. 이는 G20 국가 중 가장 큰 상향 조정폭으로, 글로벌 반도체 수요 회복에 따른 수출 호조가 주요 원인으로 분석된다.</div>
+  <div class="issue-sources">📎 출처 1개</div>
+  </div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 4일 (목)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-inner">
+    
+  <div class="issue-rank-badge" style="color:#34d399">
+    <span class="rank-icon">💡</span>
+    <span class="rank-label">핵심 이슈 3</span>
+    <span class="cat-badge">경제</span>
+  </div>
+  <div class="issue-title">이란의 쿠웨이트 공습에 따른 지정학적 리스크 및 뉴욕증시 하락</div>
+  <div class="issue-divider" style="background:#34d399"></div>
+  <div class="issue-summary">이란이 미국의 우방인 쿠웨이트를 드론으로 공습하면서 중동 지역의 군사적 긴장감이 고조되었다. 이에 따라 국제 유가가 상승하고 뉴욕증시 3대 지수가 일제히 하락 마감하는 등 글로벌 금융시장이 요동치고 있다.</div>
+  <div class="issue-sources">📎 출처 2개</div>
+  </div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 4일 (목)</span>
+  </div>
+</div>
+<div class="card" id="card-4">
+  <div class="card-inner">
+    
+  <div class="trends-header">
+    <span class="trends-icon">📈</span>
+    <span class="trends-title">주목할 트렌드 키워드</span>
+  </div>
+  <div class="trends-list">
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">📊</span>
+        <span class="trend-keyword">#AI 인프라 및 전력 수요</span>
+      </div>
+      <div class="trend-desc">AI 데이터센터 구축이 본격화되면서 반도체를 넘어 전력, 네트워크 장비, ESS용 동박 등 인프라 산업 전반으로 투자 자금이 ...</div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">🎯</span>
+        <span class="trend-keyword">#하이브리드 추론</span>
+      </div>
+      <div class="trend-desc">데이터센터 전력 부족과 클라우드 비용 압박을 해결하기 위해 개인 PC 자원을 활용하는 하이브리드 AI 추론 기술이 대안으로 부...</div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">⚡</span>
+        <span class="trend-keyword">#청소년 금융 교육</span>
+      </div>
+      <div class="trend-desc">서울시가 카카오뱅크, 넥슨 등 민간 기업과 손잡고 청소년들의 미래 금융 역량 강화를 위한 경제·금융 교육 프로그램을 확대하고 ...</div>
+    </div>
+  </div>
+  </div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 6월 4일 (목)</span>
+  </div>
+</div>
+<script>
+(function() {
+  const params = new URLSearchParams(location.search);
+  const idx = parseInt(params.get('card') || '0');
+  const cards = document.querySelectorAll('.card');
+  cards.forEach((c, i) => c.classList.toggle('active', i === idx));
+})();
+</script>
+</body>
+</html>
