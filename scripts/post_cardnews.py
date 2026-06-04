@@ -1,9 +1,10 @@
 """
-카드뉴스 멀티 플랫폼 SNS 발송
+카드뉴스 멀티 플랫폼 SNS 발송 (3채널 지원)
 
 사용법:
   python scripts/post_cardnews.py --platform instagram,telegram,twitter
-  python scripts/post_cardnews.py --platform telegram --date 2026-06-04
+  python scripts/post_cardnews.py --type ai-issue --platform telegram --date 2026-06-04
+  python scripts/post_cardnews.py --type stock --platform telegram
 
 지원 플랫폼:
   instagram  - 카루셀 포스트 (Graph API v21.0)
@@ -51,27 +52,37 @@ def _env(key: str, required: bool = True) -> str:
     return val
 
 
-def _load_index(date_str: str) -> dict:
-    index_path = CARDNEWS_DIR / "cardnews-data.json"
+def _channel_dir(channel: str) -> Path:
+    return CARDNEWS_DIR / channel
+
+
+def _load_index(channel: str, date_str: str) -> dict:
+    index_path = _channel_dir(channel) / "data.json"
     if not index_path.exists():
-        raise FileNotFoundError("cardnews-data.json 없음")
+        raise FileNotFoundError(f"data.json 없음: {index_path}")
     index = json.loads(index_path.read_text(encoding="utf-8"))
     entry = next((e for e in index if e["date"] == date_str), None)
     if not entry:
-        raise ValueError(f"{date_str} 카드뉴스 인덱스 없음")
+        raise ValueError(f"{date_str} 카드뉴스 인덱스 없음 ({channel})")
     return entry
 
 
-def _png_paths(date_str: str) -> list[Path]:
-    paths = sorted(CARDNEWS_DIR.glob(f"{date_str}-*.png"))
+def _png_paths(channel: str, date_str: str) -> list[Path]:
+    paths = sorted(_channel_dir(channel).glob(f"{date_str}-*.png"))
     if not paths:
-        raise FileNotFoundError(f"PNG 없음: {CARDNEWS_DIR}/{date_str}-*.png")
+        raise FileNotFoundError(
+            f"PNG 없음: {_channel_dir(channel)}/{date_str}-*.png"
+        )
     return paths[:MAX_CAROUSEL]
 
 
-def _build_caption(date_str: str, include_link: bool = True) -> str:
+def _channel_label(channel: str) -> str:
+    return {"news": "뉴스", "ai-issue": "AI이슈", "stock": "주식"}.get(channel, channel)
+
+
+def _build_caption(channel: str, date_str: str, include_link: bool = True) -> str:
     try:
-        entry = _load_index(date_str)
+        entry = _load_index(channel, date_str)
         issue_titles = entry.get("issue_titles", [])
     except Exception:
         issue_titles = []
@@ -84,22 +95,23 @@ def _build_caption(date_str: str, include_link: bool = True) -> str:
     except ValueError:
         display = date_str
 
+    label = _channel_label(channel)
     icons = ["🔥", "📢", "💡"]
-    lines = [f"📰 {display} AI 뉴스 브리핑\n"]
+    lines = [f"📰 {display} {label} 브리핑\n"]
     for i, title in enumerate(issue_titles[:3]):
         lines.append(f"{icons[i]} {title}")
 
     if include_link:
-        lines.append(f"\n🔗 ms-dailynews.vercel.app/cardnews/{date_str}.html")
+        lines.append(f"\n🔗 ms-dailynews.vercel.app/cardnews/{channel}/{date_str}.html")
 
     lines.append("\n#AI뉴스 #테크뉴스 #데일리뉴스 #인공지능 #AINews #TechNews")
     return "\n".join(lines)
 
 
 # ── Instagram ─────────────────────────────────────────────────────────────────
-def post_instagram(date_str: str) -> None:
+def post_instagram(channel: str, date_str: str) -> None:
     from scripts.post_instagram import post_cardnews as _post
-    _post(date_str)
+    _post(channel, date_str)
 
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
@@ -115,14 +127,13 @@ def _tg(token: str, method: str, **kwargs) -> dict:
     return data["result"]
 
 
-def post_telegram(date_str: str) -> None:
+def post_telegram(channel: str, date_str: str) -> None:
     token   = _env("TELEGRAM_BOT_TOKEN")
     chat_id = _env("TELEGRAM_CHAT_ID")
-    png_paths = _png_paths(date_str)
+    png_paths = _png_paths(channel, date_str)
 
-    caption = _build_caption(date_str, include_link=True)
+    caption = _build_caption(channel, date_str, include_link=True)
 
-    # 미디어 그룹 (앨범) 으로 전송
     media = []
     files = {}
     for i, p in enumerate(png_paths):
@@ -134,18 +145,18 @@ def post_telegram(date_str: str) -> None:
             item["parse_mode"] = "HTML"
         media.append(item)
 
+    label = _channel_label(channel)
     print(f"  Telegram 미디어 그룹 발송 ({len(png_paths)}장) → chat_id={chat_id}")
     result = _tg(token, "sendMediaGroup",
                  data={"chat_id": chat_id, "media": json.dumps(media)},
                  files=files)
 
-    # 마지막 메시지에 "원문 보기" 버튼 추가
     last_msg_id = result[-1]["message_id"] if isinstance(result, list) else result["message_id"]
-    link = f"https://ms-dailynews.vercel.app/cardnews/{date_str}.html"
+    link = f"https://ms-dailynews.vercel.app/cardnews/{channel}/{date_str}.html"
     _tg(token, "sendMessage",
         json={
             "chat_id":    chat_id,
-            "text":       f"📖 카드뉴스 전체 보기",
+            "text":       f"📖 {label} 카드뉴스 전체 보기",
             "parse_mode": "HTML",
             "reply_markup": {
                 "inline_keyboard": [[
@@ -159,7 +170,7 @@ def post_telegram(date_str: str) -> None:
 
 
 # ── Twitter/X ────────────────────────────────────────────────────────────────
-def post_twitter(date_str: str) -> None:
+def post_twitter(channel: str, date_str: str) -> None:
     try:
         import tweepy
     except ImportError:
@@ -170,28 +181,24 @@ def post_twitter(date_str: str) -> None:
     acc_token  = _env("TWITTER_ACCESS_TOKEN")
     acc_secret = _env("TWITTER_ACCESS_TOKEN_SECRET")
 
-    # v1.1 인증 (미디어 업로드용)
     auth = tweepy.OAuth1UserHandler(api_key, api_secret, acc_token, acc_secret)
     api  = tweepy.API(auth)
 
-    # v2 클라이언트 (트윗 작성용)
     client = tweepy.Client(
         consumer_key=api_key, consumer_secret=api_secret,
         access_token=acc_token, access_token_secret=acc_secret,
     )
 
-    png_paths = _png_paths(date_str)
-    caption   = _build_caption(date_str, include_link=True)
+    png_paths = _png_paths(channel, date_str)
+    caption   = _build_caption(channel, date_str, include_link=True)
 
-    # 이미지 업로드 (v1.1)
     media_ids = []
-    for p in png_paths[:4]:  # Twitter 최대 4장
+    for p in png_paths[:4]:
         media = api.media_upload(filename=str(p))
         media_ids.append(str(media.media_id))
         print(f"  업로드: {p.name} → {media.media_id}")
         time.sleep(1)
 
-    # 트윗 (v2)
     resp = client.create_tweet(text=caption[:280], media_ids=media_ids or None)
     tweet_id = resp.data["id"]
     print(f"  ✅ Twitter 발송 완료 — tweet_id: {tweet_id}")
@@ -207,28 +214,30 @@ PLATFORM_HANDLERS = {
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="카드뉴스 SNS 발송")
+    parser.add_argument("--type", dest="channel",
+                        choices=["news", "ai-issue", "stock"],
+                        default="news", help="카드뉴스 채널")
     parser.add_argument("--platform",
                         default="instagram,telegram",
                         help="발송 플랫폼 (쉼표 구분): instagram,telegram,twitter")
     parser.add_argument("--date", help="YYYY-MM-DD (미입력 시 최신)")
     args = parser.parse_args()
 
-    # 날짜 결정
     if args.date:
         date_str = args.date
     else:
-        index_path = CARDNEWS_DIR / "cardnews-data.json"
-        if not index_path.exists():
-            print("cardnews-data.json 없음. build_cardnews.py 먼저 실행하세요.")
+        data_path = _channel_dir(args.channel) / "data.json"
+        if not data_path.exists():
+            print(f"data.json 없음 ({args.channel}). build_cardnews.py 먼저 실행하세요.")
             sys.exit(1)
-        index = json.loads(index_path.read_text(encoding="utf-8"))
+        index = json.loads(data_path.read_text(encoding="utf-8"))
         if not index:
             print("카드뉴스 인덱스가 비어 있습니다.")
             sys.exit(1)
         date_str = index[0]["date"]
 
     platforms = [p.strip() for p in args.platform.split(",") if p.strip()]
-    print(f"[post-cardnews] {date_str}  플랫폼: {', '.join(platforms)}")
+    print(f"[post-cardnews] {args.channel} / {date_str}  플랫폼: {', '.join(platforms)}")
 
     errors = []
     for platform in platforms:
@@ -238,7 +247,7 @@ def main() -> None:
             continue
         print(f"\n── {platform.upper()} ──────────────────")
         try:
-            handler(date_str)
+            handler(args.channel, date_str)
         except EnvironmentError as e:
             print(f"  ⚠ 환경변수 누락 — {e}")
             errors.append(platform)

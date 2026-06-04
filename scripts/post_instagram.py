@@ -43,6 +43,10 @@ GITHUB_RAW   = "https://raw.githubusercontent.com/chamgil71/dailynews/main"
 MAX_CAROUSEL_ITEMS = 5
 
 
+def _channel_dir(channel: str) -> Path:
+    return CARDNEWS_DIR / channel
+
+
 def _env(key: str) -> str:
     val = os.environ.get(key, "").strip()
     if not val:
@@ -117,8 +121,8 @@ def publish_carousel(ig_user_id: str, token: str, container_id: str) -> str:
     return media_id
 
 
-def build_caption(date_str: str) -> str:
-    index_path = CARDNEWS_DIR / "cardnews-data.json"
+def build_caption(channel: str, date_str: str) -> str:
+    index_path = _channel_dir(channel) / "data.json"
     issue_titles: list[str] = []
     if index_path.exists():
         index = json.loads(index_path.read_text(encoding="utf-8"))
@@ -127,7 +131,6 @@ def build_caption(date_str: str) -> str:
                 issue_titles = entry.get("issue_titles", [])
                 break
 
-    # 날짜 포맷
     try:
         from datetime import datetime
         dt = datetime.strptime(date_str, "%Y-%m-%d")
@@ -136,32 +139,32 @@ def build_caption(date_str: str) -> str:
     except ValueError:
         display = date_str
 
-    lines = [f"📰 {display} AI 뉴스 브리핑\n"]
+    label = {"news": "뉴스", "ai-issue": "AI이슈", "stock": "주식"}.get(channel, channel)
+    lines = [f"📰 {display} {label} 브리핑\n"]
     for i, title in enumerate(issue_titles[:3]):
         icons = ["🔥", "📢", "💡"]
         lines.append(f"{icons[i]} {title}")
-    lines.append("\n🔗 ms-dailynews.vercel.app")
+    lines.append(f"\n🔗 ms-dailynews.vercel.app/cardnews/{channel}/{date_str}.html")
     lines.append("\n#AI뉴스 #테크뉴스 #데일리뉴스 #인공지능 #AINews #TechNews #DailyBriefing")
 
     return "\n".join(lines)
 
 
-def post_cardnews(date_str: str) -> None:
+def post_cardnews(channel: str, date_str: str) -> None:
     token       = _env("INSTAGRAM_ACCESS_TOKEN")
     ig_user_id  = _env("INSTAGRAM_BUSINESS_ACCOUNT_ID")
 
-    # 해당 날짜의 PNG 목록 확인
-    png_files = sorted(CARDNEWS_DIR.glob(f"{date_str}-*.png"))
+    ch_dir    = _channel_dir(channel)
+    png_files = sorted(ch_dir.glob(f"{date_str}-*.png"))
     if not png_files:
-        raise FileNotFoundError(f"PNG 없음: {CARDNEWS_DIR}/{date_str}-*.png")
+        raise FileNotFoundError(f"PNG 없음: {ch_dir}/{date_str}-*.png")
 
-    # 최대 MAX_CAROUSEL_ITEMS개로 제한
     png_files = png_files[:MAX_CAROUSEL_ITEMS]
     print(f"  업로드 이미지: {[p.name for p in png_files]}")
 
-    # GitHub raw URL 생성
+    # GitHub raw URL — 서브디렉터리 포함
     image_urls = [
-        f"{GITHUB_RAW}/publish/cardnews/{p.name}"
+        f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}"
         for p in png_files
     ]
 
@@ -179,7 +182,7 @@ def post_cardnews(date_str: str) -> None:
         wait_for_container(ig_user_id, token, cid)
 
     # 3. 카루셀 컨테이너 생성
-    caption = build_caption(date_str)
+    caption = build_caption(channel, date_str)
     print("  카루셀 컨테이너 생성 중...")
     carousel_id = create_carousel(ig_user_id, token, children, caption)
     print(f"    → {carousel_id}")
@@ -192,24 +195,27 @@ def post_cardnews(date_str: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--type", dest="channel",
+                        choices=["news", "ai-issue", "stock"],
+                        default="news", help="카드뉴스 채널")
     parser.add_argument("--date", help="YYYY-MM-DD (미입력 시 최신)")
     args = parser.parse_args()
 
     if args.date:
         date_str = args.date
     else:
-        index_path = CARDNEWS_DIR / "cardnews-data.json"
-        if not index_path.exists():
-            print("cardnews-data.json 없음. build_cardnews.py 먼저 실행하세요.")
+        data_path = _channel_dir(args.channel) / "data.json"
+        if not data_path.exists():
+            print(f"data.json 없음 ({args.channel}). build_cardnews.py 먼저 실행하세요.")
             sys.exit(1)
-        index = json.loads(index_path.read_text(encoding="utf-8"))
+        index = json.loads(data_path.read_text(encoding="utf-8"))
         if not index:
             print("카드뉴스 인덱스가 비어 있습니다.")
             sys.exit(1)
         date_str = index[0]["date"]
 
-    print(f"[post-instagram] {date_str}")
-    post_cardnews(date_str)
+    print(f"[post-instagram] {args.channel} / {date_str}")
+    post_cardnews(args.channel, date_str)
 
 
 if __name__ == "__main__":

@@ -2,13 +2,20 @@ name: Card News — Build & SNS Post
 
 # ── 트리거 ──────────────────────────────────────────────────────────────────
 on:
-  # 뉴스 워크플로우 성공 완료 후 자동 실행
+  # 각 채널 워크플로우 성공 완료 후 자동 실행
   workflow_run:
-    workflows: ["Daily News Report"]
+    workflows:
+      - "Daily News Report"
+      - "AI Issue Report"
+      - "Stock Build"
     types: [completed]
   # 수동 실행
   workflow_dispatch:
     inputs:
+      type:
+        description: '채널 (news|ai-issue|stock)'
+        required: false
+        default: 'news'
       date:
         description: '날짜 (YYYY-MM-DD). 미입력 시 최신'
         required: false
@@ -64,35 +71,53 @@ jobs:
           pip install playwright
           playwright install chromium --with-deps
 
+      # ── 채널 타입 결정 ──────────────────────────────────────────────────────
+      - name: 채널 타입 결정
+        id: channel
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TYPE="${{ github.event.inputs.type }}"
+            if [ -z "$TYPE" ]; then TYPE="news"; fi
+          else
+            TRIGGER="${{ github.event.workflow_run.name }}"
+            case "$TRIGGER" in
+              "Daily News Report") TYPE="news" ;;
+              "AI Issue Report")   TYPE="ai-issue" ;;
+              "Stock Build")       TYPE="stock" ;;
+              *)                   TYPE="news" ;;
+            esac
+          fi
+          echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+          echo "채널: $TYPE"
+
       # ── 카드뉴스 HTML 빌드 ─────────────────────────────────────────────────
       - name: 카드뉴스 HTML 빌드
         run: |
+          TYPE="${{ steps.channel.outputs.type }}"
           DATE="${{ github.event.inputs.date }}"
-          if [ -n "$DATE" ]; then
-            python scripts/build_cardnews.py --date "$DATE"
-          else
-            python scripts/build_cardnews.py
-          fi
+          ARGS="--type $TYPE"
+          if [ -n "$DATE" ]; then ARGS="$ARGS --date $DATE"; fi
+          python scripts/build_cardnews.py $ARGS
         env:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
 
       # ── PNG 이미지 생성 (Playwright → Noto Sans KR 렌더링) ─────────────────
       - name: PNG 이미지 생성
         run: |
+          TYPE="${{ steps.channel.outputs.type }}"
           DATE="${{ github.event.inputs.date }}"
-          if [ -n "$DATE" ]; then
-            python scripts/generate_cardnews_images.py --date "$DATE"
-          else
-            python scripts/generate_cardnews_images.py
-          fi
+          ARGS="--type $TYPE"
+          if [ -n "$DATE" ]; then ARGS="$ARGS --date $DATE"; fi
+          python scripts/generate_cardnews_images.py $ARGS
 
-      # ── PNG + HTML 커밋 & 푸시 (raw URL로 Instagram API 접근) ───────────────
+      # ── PNG + HTML 커밋 & 푸시 ──────────────────────────────────────────────
       - name: 카드뉴스 파일 커밋
         run: |
+          TYPE="${{ steps.channel.outputs.type }}"
           git config user.name  "github-actions[bot]"
           git config user.email "actions@github.com"
-          git add -f publish/cardnews/
-          git diff --staged --quiet || git commit -m "🖼️ Card news $(date +'%Y-%m-%d') [skip ci]"
+          git add -f publish/cardnews/$TYPE/
+          git diff --staged --quiet || git commit -m "🖼️ Card news ($TYPE) $(date +'%Y-%m-%d') [skip ci]"
           git pull --rebase --autostash -X ours origin main
           git push
 
@@ -100,11 +125,12 @@ jobs:
       - name: SNS 발송
         if: ${{ github.event.inputs.build_only != 'true' }}
         run: |
+          TYPE="${{ steps.channel.outputs.type }}"
           DATE="${{ github.event.inputs.date }}"
           PLATFORMS="${{ github.event.inputs.platforms }}"
           if [ -z "$PLATFORMS" ]; then PLATFORMS="instagram,telegram"; fi
 
-          ARGS="--platform $PLATFORMS"
+          ARGS="--type $TYPE --platform $PLATFORMS"
           if [ -n "$DATE" ]; then ARGS="$ARGS --date $DATE"; fi
 
           python scripts/post_cardnews.py $ARGS
@@ -112,7 +138,7 @@ jobs:
           # Instagram
           INSTAGRAM_ACCESS_TOKEN:        ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
-          # Telegram (기존)
+          # Telegram
           TELEGRAM_BOT_TOKEN:            ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:              ${{ secrets.TELEGRAM_CHAT_ID }}
           # Twitter/X
