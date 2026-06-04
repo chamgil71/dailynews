@@ -4,6 +4,79 @@
 
 ---
 
+## 2026-06-04 (4차 — UI 통합·검색 고도화·nav 모듈화)
+
+### 주제: 사이트 디자인 통합 + 통합 검색 (뉴스·AI이슈·주식) + nav.js 모듈화
+
+#### 배경
+- SPA(`index.html`)와 서브페이지(stock/ai-issue) 헤더 구조 불일치
+- 로고명 "AI News Daily" / "AI News Brief" 혼재
+- `archive.html` 마스트헤드 유지하면서 검색 기능 추가 필요
+- SPA 검색이 현재 날짜 1건만 필터, 전체 기간 통합 검색 부재
+- 아카이브 탭이 SPA 내부 섹션 스위처로 연결 (독립 페이지로 분리 필요)
+
+---
+
+### 변경 내용
+
+#### 1. 로고·홈링크 통일 (`config/theme_config.py`, `themes/base.py`, `themes/editorial.py`)
+- `SITE_LOGO_HTML` 변수 신설 — `SITE_TITLE`에서 자동 생성 (`📰 AI <span class="accent">News</span> Brief`)
+- 모든 서브페이지 로고 "AI News Daily" → "AI News Brief" 통일
+- 홈 링크 `location.href='/'` → `'../'` (GitHub Pages `/dailynews/` 경로 대응)
+
+#### 2. `publish/nav.js` 신설 — 공유 nav 모듈
+- URL 깊이 감지 → 상대 경로 prefix 자동 계산 (Vercel·GitHub Pages 공통)
+- `id="site-nav"` 요소에 탭 HTML 주입 (active 탭 자동 감지)
+- 탭 목록: 📰 뉴스 브리핑 / 🤖 AI이슈 / 📊 주식 시황 / 📚 아카이브
+- 4개 서브페이지 템플릿 모두 적용 (`web_news.html`, `web_stock.html`, `web_archive.html`, `web_stock_archive.html`)
+
+#### 3. AI이슈 탭 추가 (`config/theme_config.py`, `themes/editorial.py`, `publish/nav.js`)
+- `NAV_SECTIONS`에 `ai-issue` 항목 추가
+- `editorial.py` `_layout()` nav_items 동기화
+- 모든 페이지에서 AI이슈 탭 접근 가능
+
+#### 4. SPA 아카이브 탭 분리 (`publish/app.html`)
+- 아카이브 탭: JS 섹션 스위처 → `<a href="archive.html">` 직접 링크로 변경
+- SPA 내장 아카이브 섹션 주석 처리 (삭제 아님 — `ARCHIVE_SECTION_HIDDEN_START/END`)
+
+#### 5. 통합 검색 구현 (`scripts/build_site.py`, `publish/app.html`, `themes/editorial.py`)
+
+**`build_search_index()` 확장** (`scripts/build_site.py`)
+- 뉴스(`publish/news/*.json`): `news_en` + `news_ko` → 개별 기사 제목·링크·라벨
+- AI이슈(`publish/ai-issue/YYYY-*.json`): `top10` 이슈 제목 + 소스 URL + 카테고리
+- 주식(`publish/stock/stock-data.json`): 날짜별 시황 요약 문장
+- `type` 필드 추가 (`news` / `ai-issue` / `stock`)
+- 결과: 뉴스 84 · AI이슈 1 · 주식 13 = **8,175건** 인덱싱
+
+**SPA 검색 교체** (`publish/app.html`)
+- 기존: 현재 날짜 기사만 인라인 필터
+- 신규: `search-index.json` lazy-fetch → 전체 기간 통합 검색
+- 📰 뉴스 / 🤖 AI이슈 / 📊 주식 체크박스 필터
+- 결과: 타입 배지 + 날짜(리포트 링크) + 기사 제목(원문 링크) + 키워드 하이라이트
+- 최대 80건 표시, 체크박스 변경 시 즉시 재검색
+
+**아카이브 검색 업그레이드** (`themes/editorial.py`)
+- 동일한 통합 검색 UI (체크박스·배지·하이라이트)
+- 최대 100건 표시
+
+---
+
+### 영향받은 파일
+| 파일 | 변경 |
+|------|------|
+| `config/theme_config.py` | `SITE_LOGO_HTML` 추가, `NAV_SECTIONS` AI이슈 추가 |
+| `themes/editorial.py` | nav_items AI이슈 추가, `render_archive()` 통합 검색 |
+| `themes/base.py` | `SITE_LOGO_HTML` import·적용 |
+| `scripts/build_site.py` | `build_search_index()` 3채널 확장, `_fmt_date()` 추출 |
+| `publish/nav.js` | 신규 생성 |
+| `publish/app.html` | 아카이브 탭 분리, 통합 검색 교체 |
+| `templates/web_*.html` (4개) | `id="site-nav"`, `nav.js` script 태그 추가 |
+| `publish/search-index.json` | 8,175건 통합 인덱스 |
+| `publish/index.html` | 빌드 산출물 갱신 |
+| `publish/archive.html` | 빌드 산출물 갱신 |
+
+---
+
 ## 2026-06-03 (3차 — 파이프라인 정합성 + 스크립트 통합) [PR #18]
 
 ### 주제: 3채널 발송 순서 통일 · send 스크립트 6→2 통합 · 주식 텔레그램 구현

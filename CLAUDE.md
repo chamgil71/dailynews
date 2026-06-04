@@ -50,33 +50,35 @@ scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
 
 ### 완료된 작업 (main 반영 완료)
 - [x] 3채널 파이프라인 발송 순서 통일 (수집→빌드→배포→이메일→텔레그램)
-- [x] `run_news.py`에서 이메일·텔레그램 분리
 - [x] `send_email.py` / `send_telegram.py` 통합 스크립트 생성 (6개→2개)
 - [x] 주식 텔레그램 발송 구현 (`@msstockbrief`, `TELEGRAM_CHAT_ID_STOCK`)
-- [x] `build_site.py` archive 카운트 버그 수정 (JSON 인덱스 기반)
-- [x] AI이슈 탭 클릭 버그 수정 (`tabAI` → `tabAi`)
-- [x] `news.yml` Notion sync `continue-on-error`, `-X ours` 추가
-- [x] `ai_issue.yml` Notion sync / 이메일·텔레그램 배포 후 실행
 - [x] **PR #18** (`claude/pipeline-fix-clean` → `main`) 병합 완료 (2026-06-03)
-- [x] **Gemini JSON 파싱 버그 수정** — `core/news/analyzer.py`
-  - `_make_config`: `response_format=` → `response_mime_type="application/json"` (JSON 모드 미적용 버그)
-  - `_parse_json_response`: greedy regex → `json.JSONDecoder().raw_decode()` (trailing content 오파싱 버그)
-- [x] **주식 이메일 발송 체크 버그 수정** — `scripts/send_email.py`
-  - `_stock_analysis_complete()`: `\n>` → `\n+>` (템플릿 빈줄 때문에 항상 False 반환하던 버그)
-- [x] **주식 분석 섹션 파싱 버그 수정** — `core/stock/analyzer.py`
-  - CRLF 정규화 + `_parse_section` 헤더 패턴 유연화 (빈 섹션 반환 방지)
-- [x] 위 3개 버그픽스 main cherry-pick + push 완료 (2026-06-04)
+- [x] Gemini JSON 파싱 버그 / 주식 이메일 발송 체크 버그 / 주식 섹션 파싱 버그 수정 (2026-06-04)
+- [x] **사이트 UI 통합 · 검색 고도화** (2026-06-04) — 세션 4차
+  - `SITE_LOGO_HTML` 변수화, 로고명 "AI News Brief" 통일
+  - `publish/nav.js` 신설 — 공유 nav 모듈 (URL 깊이 자동 계산)
+  - AI이슈 탭 전 페이지 추가 (`NAV_SECTIONS`, `editorial.py`, `nav.js`)
+  - SPA 아카이브 탭 → `archive.html` 직접 링크 분리 (내장 섹션 주석)
+  - `build_search_index()` 3채널 확장 (뉴스·AI이슈·주식, `type` 필드)
+  - `index.html` 사이드바 검색 → 전체 기간 통합 검색 (체크박스 필터)
+  - `archive.html` 검색도 동일하게 통합 검색 업그레이드
 
 ### 검증 필요 (다음 실행 시 확인)
-- [ ] `news.yml` 2026-06-04 자동 실행 — Gemini JSON 파싱 성공 여부 (`analysis_ok=true` 확인)
-- [ ] 뉴스 분석 실패 시: `news.yml` reanalyze 모드 + date=2026-06-04 수동 실행 → `news_send.yml` force=true 로 이메일/텔레그램 발송
+- [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 (`analysis_ok=true` 확인)
 - [ ] `stock_send.yml` workflow_dispatch 수동 실행 → @msstockbrief 채널 수신 확인
 - [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 스텝 이후 이메일·텔레그램 실행 확인
+- [ ] 통합 검색 Vercel 배포 후 동작 확인 (`search-index.json` fetch 정상 여부)
 
 ### 다음 개발 (우선순위 순)
 - [ ] 구독 시스템 구현 — Supabase + Vercel API (`docs/plan/roadmap.md` Phase 2 참고)
 - [ ] 카드뉴스 SNS 내보내기 — html2canvas, 인스타용 1080×1080 PNG
-- [ ] 전체 검색 인덱스 (`publish/search-index.json`) 빌드 + 앱 검색 고도화
+- [ ] 탭별 색상 테마 (뉴스=파랑, AI이슈=보라, 주식=초록) — 동일 구조 색상만 변경
+
+### 주요 아키텍처 메모
+- `publish/archive.html`은 **`themes/editorial.py::render_archive()`** 에서 직접 생성 (Jinja2 미사용)
+- `templates/web_archive.html`은 editorial 외 테마(classic/ink 등)용
+- `publish/search-index.json`: `build_site.py` 빌드 시 자동 갱신 (뉴스 전체 + AI이슈 + 주식)
+- 서브페이지 nav는 `nav.js` 런타임 주입 — 탭 변경 시 `nav.js`만 수정하면 전체 반영
 
 ---
 
