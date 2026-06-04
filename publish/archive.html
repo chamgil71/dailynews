@@ -160,14 +160,23 @@
       <div id="tabPanelStock" style="display:none"><ul><li data-label="2026년 06월 03일 (Wed)"><a href="stock/2026-06-03.html">📊 2026년 06월 03일 (Wed)</a><span class="d">2026-06-03</span></li><li data-label="2026년 06월 02일 (Tue)"><a href="stock/2026-06-02.html">📊 2026년 06월 02일 (Tue)</a><span class="d">2026-06-02</span></li><li data-label="2026년 06월 01일 (Mon)"><a href="stock/2026-06-01.html">📊 2026년 06월 01일 (Mon)</a><span class="d">2026-06-01</span></li><li data-label="2026년 05월 30일 (Sat)"><a href="stock/2026-05-30.html">📊 2026년 05월 30일 (Sat)</a><span class="d">2026-05-30</span></li><li data-label="2026년 05월 29일 (Fri)"><a href="stock/2026-05-29.html">📊 2026년 05월 29일 (Fri)</a><span class="d">2026-05-29</span></li><li data-label="2026년 05월 28일 (Thu)"><a href="stock/2026-05-28.html">📊 2026년 05월 28일 (Thu)</a><span class="d">2026-05-28</span></li><li data-label="2026년 05월 27일 (Wed)"><a href="stock/2026-05-27.html">📊 2026년 05월 27일 (Wed)</a><span class="d">2026-05-27</span></li><li data-label="2026년 05월 26일 (Tue)"><a href="stock/2026-05-26.html">📊 2026년 05월 26일 (Tue)</a><span class="d">2026-05-26</span></li><li data-label="2026년 05월 25일 (Mon)"><a href="stock/2026-05-25.html">📊 2026년 05월 25일 (Mon)</a><span class="d">2026-05-25</span></li><li data-label="2026년 05월 22일 (Fri)"><a href="stock/2026-05-22.html">📊 2026년 05월 22일 (Fri)</a><span class="d">2026-05-22</span></li><li data-label="2026년 05월 21일 (Thu)"><a href="stock/2026-05-21.html">📊 2026년 05월 21일 (Thu)</a><span class="d">2026-05-21</span></li><li data-label="2026년 05월 20일 (Wed)"><a href="stock/2026-05-20.html">📊 2026년 05월 20일 (Wed)</a><span class="d">2026-05-20</span></li><li data-label="2026년 05월 19일 (Tue)"><a href="stock/2026-05-19.html">📊 2026년 05월 19일 (Tue)</a><span class="d">2026-05-19</span></li><li data-label="2026년 05월 18일 (Mon)"><a href="stock/2026-05-18.html">📊 2026년 05월 18일 (Mon)</a><span class="d">2026-05-18</span></li></ul></div>
       <div id="tabPanelAi"    style="display:none"><ul><li data-label="2026년 05월 31일 (Sun)"><a href="ai-issue/2026-05-31.html">🤖 2026년 05월 31일 (Sun)</a><span class="d">2026-05-31</span></li></ul></div>
 
-      <!-- 기사 검색 (search-index.json 활용) -->
+      <!-- 통합 검색 (뉴스·AI이슈·주식) -->
       <div class="arch-search" style="margin-top:28px;border-top:2px solid var(--rule);padding-top:20px">
-        <div style="position:relative;margin-bottom:12px">
-          <input id="arcSearchInput" type="text" placeholder="기사 제목으로 검색…"
+        <div style="font-weight:700;font-size:.92rem;margin-bottom:10px;color:var(--ink)">🔍 통합 검색</div>
+        <div style="position:relative;margin-bottom:8px">
+          <input id="arcSearchInput" type="text" placeholder="기사·이슈·시황 키워드…"
             style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--rule-soft);
                    border-radius:6px;background:var(--paper-2);color:var(--ink);
                    font-family:inherit;font-size:.9rem;outline:none;" />
           <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.85rem;pointer-events:none">🔍</span>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:.8rem;color:var(--muted)">
+          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+            <input type="checkbox" id="arcSfNews"  checked style="accent-color:#1d4ed8"> 📰 뉴스</label>
+          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+            <input type="checkbox" id="arcSfAi"    checked style="accent-color:#6d28d9"> 🤖 AI이슈</label>
+          <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
+            <input type="checkbox" id="arcSfStock" checked style="accent-color:#15803d"> 📊 주식</label>
         </div>
         <div id="arcSearchResults"></div>
       </div>
@@ -176,11 +185,16 @@
     <style>
     .arc-result { padding:8px 0; border-bottom:1px solid var(--rule-soft); font-size:.88rem; line-height:1.5; }
     .arc-result:last-child { border-bottom:none; }
-    .arc-date { font-family:'IBM Plex Mono',monospace; font-size:.76rem; color:var(--muted); margin-right:8px; }
-    .arc-label { display:inline-block; font-size:.72rem; background:var(--paper-2); color:var(--muted);
-                  border:1px solid var(--rule-soft); border-radius:3px; padding:1px 5px; margin-left:6px; }
+    .arc-type { display:inline-block; font-size:.68rem; font-weight:600;
+                 padding:1px 5px; border-radius:3px; margin-right:4px; vertical-align:middle; }
+    .arc-type-news  { background:#dbeafe; color:#1d4ed8; }
+    .arc-type-ai    { background:#ede9fe; color:#6d28d9; }
+    .arc-type-stock { background:#dcfce7; color:#15803d; }
+    .arc-date { font-family:'IBM Plex Mono',monospace; font-size:.76rem; color:var(--muted); margin-right:4px; }
+    .arc-label { display:inline-block; font-size:.68rem; background:var(--paper-2); color:var(--muted);
+                  border:1px solid var(--rule-soft); border-radius:3px; padding:1px 5px; margin-left:5px; }
     .arc-result a { color:var(--ink); text-decoration:none; }
-    .arc-result a:hover { text-decoration:underline; color:var(--rule); }
+    .arc-result a:hover { text-decoration:underline; }
     .arc-result .arc-date a { color:var(--muted); }
     </style>
 
@@ -196,28 +210,35 @@
       _active = t;
     }
 
-    // 기사 레벨 검색
-    var _searchIndex = null;
-    var _searchLoading = false;
+    // 통합 검색
+    var _searchIndex = null, _searchLoading = false;
     function _loadSearchIndex(cb) {
       if (_searchIndex) { cb(_searchIndex); return; }
       if (_searchLoading) { setTimeout(function(){ _loadSearchIndex(cb); }, 100); return; }
       _searchLoading = true;
       fetch('search-index.json')
         .then(function(r) { return r.json(); })
-        .then(function(data) { _searchIndex = data; _searchLoading = false; cb(data); })
+        .then(function(d) { _searchIndex = d; _searchLoading = false; cb(d); })
         .catch(function() { _searchLoading = false; _searchIndex = []; cb([]); });
     }
-    document.getElementById('arcSearchInput').addEventListener('input', function() {
-      var q = this.value.trim().toLowerCase();
+    function _runSearch() {
+      var q   = document.getElementById('arcSearchInput').value.trim();
       var res = document.getElementById('arcSearchResults');
+      var useNews  = document.getElementById('arcSfNews').checked;
+      var useAi    = document.getElementById('arcSfAi').checked;
+      var useStock = document.getElementById('arcSfStock').checked;
       if (q.length < 2) { res.innerHTML = ''; return; }
+      var ql = q.toLowerCase();
       _loadSearchIndex(function(index) {
         var hits = [];
         index.forEach(function(report) {
+          var t = report.type || 'news';
+          if (t === 'news'     && !useNews)  return;
+          if (t === 'ai-issue' && !useAi)    return;
+          if (t === 'stock'    && !useStock) return;
           report.articles.forEach(function(art) {
-            if (art.title.toLowerCase().indexOf(q) >= 0) {
-              hits.push({ date: report.date, display: report.display,
+            if (art.title.toLowerCase().indexOf(ql) >= 0) {
+              hits.push({ type: t, date: report.date, display: report.display,
                            report_url: report.report_url, art: art });
             }
           });
@@ -226,17 +247,31 @@
           res.innerHTML = '<p style="color:var(--muted);font-size:.85rem;padding:8px 0">검색 결과 없음</p>';
           return;
         }
-        var html = '<p style="font-size:.78rem;color:var(--muted);margin-bottom:8px;font-family:'IBM Plex Mono',monospace">' + hits.length + '건 검색됨</p>';
+        var typeLabel = { news:'뉴스', 'ai-issue':'AI', stock:'주식' };
+        var typeCls   = { news:'arc-type-news', 'ai-issue':'arc-type-ai', stock:'arc-type-stock' };
+        var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+        var html = '<p style="font-size:.75rem;color:var(--muted);margin-bottom:8px;font-family:'IBM Plex Mono',monospace">'
+                 + hits.length + '건 검색됨 (최대 100건)</p>';
         hits.slice(0, 100).forEach(function(h) {
+          var badge = '<span class="arc-type ' + typeCls[h.type] + '">' + typeLabel[h.type] + '</span>';
+          var dateA = '<span class="arc-date"><a href="' + h.report_url + '">' + h.date + '</a></span>';
+          var hiTitle = h.art.title.replace(re, '<mark style="background:#fef08a;border-radius:2px">$1</mark>');
+          var titleA = h.art.link
+            ? '<a href="' + h.art.link + '" target="_blank" rel="noopener">' + hiTitle + '</a>'
+            : hiTitle;
           var label = h.art.label ? '<span class="arc-label">' + h.art.label + '</span>' : '';
-          html += '<div class="arc-result">'
-            + '<span class="arc-date"><a href="' + h.report_url + '">' + h.display + '</a></span>'
-            + '<a href="' + h.art.link + '" target="_blank" rel="noopener">' + h.art.title + '</a>'
-            + label
-            + '</div>';
+          html += '<div class="arc-result">' + badge + dateA + titleA + label + '</div>';
         });
         res.innerHTML = html;
       });
+    }
+    var _arcTimer;
+    document.getElementById('arcSearchInput').addEventListener('input', function() {
+      clearTimeout(_arcTimer);
+      _arcTimer = setTimeout(_runSearch, 280);
+    });
+    ['arcSfNews','arcSfAi','arcSfStock'].forEach(function(id) {
+      document.getElementById(id).addEventListener('change', _runSearch);
     });
     </script>
 
@@ -244,7 +279,7 @@
       <span>AI News Brief</span>
       <span>Generated by Gemini 2.0 Flash</span>
       <span>chamgil71/dailynews</span>
-      <span>생성 2026-06-04 08:25 KST</span>
+      <span>생성 2026-06-04 08:27 KST</span>
     </div>
   </div>
 </body>
