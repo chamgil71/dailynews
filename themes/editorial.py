@@ -471,7 +471,7 @@ def render_archive(ctx: dict) -> str:
         var typeLabel = {{ news:'뉴스', 'ai-issue':'AI', stock:'주식' }};
         var typeCls   = {{ news:'arc-type-news', 'ai-issue':'arc-type-ai', stock:'arc-type-stock' }};
         var re = new RegExp('(' + q.replace(/[.*+?^${{}}()|[\\]\\\\]/g,'\\\\$&') + ')', 'gi');
-        var html = '<p style="font-size:.75rem;color:var(--muted);margin-bottom:8px;font-family:\'IBM Plex Mono\',monospace">'
+        var html = '<p style="font-size:.75rem;color:var(--muted);margin-bottom:8px;font-family:monospace">'
                  + hits.length + '건 검색됨 (최대 100건)</p>';
         hits.slice(0, 100).forEach(function(h) {{
           var badge = '<span class="arc-type ' + typeCls[h.type] + '">' + typeLabel[h.type] + '</span>';
