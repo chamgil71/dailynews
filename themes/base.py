@@ -145,7 +145,7 @@ def layout_html(
 </head>
 <body>
   <header>
-    <div class="logo">📰 AI <span class="accent">News</span> Daily</div>
+    <div class="logo">📰 AI <span class="accent">News</span> Brief</div>
     <nav>
       {nav_html(active, nav_prefix)}
     </nav>
