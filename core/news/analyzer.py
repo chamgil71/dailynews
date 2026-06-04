@@ -245,6 +245,12 @@ class GeminiAnalyzer(BaseAnalyzer):
         kwargs: dict = {"max_output_tokens": LLM_MAX_TOKENS, "temperature": 0.3}
         if json_mode:
             kwargs["response_mime_type"] = "application/json"
+            # thinking 모델(2.5+)은 reasoning 토큰이 max_output_tokens를 소비해 JSON 잘림 발생.
+            # JSON 구조 출력엔 thinking 불필요 → budget=0 으로 비활성화.
+            try:
+                kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+            except AttributeError:
+                pass  # SDK 버전이 ThinkingConfig 미지원 시 무시
         return types.GenerateContentConfig(**kwargs)
 
     def _call(self, prompt: str, news_count: int) -> str:

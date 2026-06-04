@@ -18,10 +18,10 @@ CLAUDE_MODEL_MINI  = "claude-haiku-4-5-20251001"
 CLAUDE_MINI_THRESHOLD = 20
 
 # ── Gemini 모델 설정 ──────────────────────────────────────────────────────────
-GEMINI_MODEL_FULL  = "gemini-3.5-flash"
-GEMINI_MODEL_MINI  = "gemini-3.1-flash-lite"
+GEMINI_MODEL_FULL  = os.getenv("GEMINI_MODEL_FULL",  "gemini-3.5-flash")
+GEMINI_MODEL_MINI  = os.getenv("GEMINI_MODEL_MINI",  "gemini-3.1-flash-lite")
 GEMINI_MINI_THRESHOLD = 40
-LLM_MAX_TOKENS        = 4000
+LLM_MAX_TOKENS        = 8000
 
 # ── 수집 설정 ─────────────────────────────────────────────────────────────────
 MAX_ENTRIES_PER_FEED    = 8
