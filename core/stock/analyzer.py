@@ -113,7 +113,7 @@ def _call_llm(prompt: str) -> str:
                 resp = client.models.generate_content(
                     model=GEMINI_MODEL_FULL, contents=prompt, config=config,
                 )
-                return resp.text.strip()
+                return resp.text.strip().replace('\r\n', '\n').replace('\r', '\n')
             except Exception as e:
                 err_str = str(e)
                 if is_model_error(e):
@@ -141,7 +141,7 @@ def _call_llm(prompt: str) -> str:
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}],
             )
-            return msg.content[0].text.strip()
+            return msg.content[0].text.strip().replace('\r\n', '\n').replace('\r', '\n')
 
         else:  # gpt
             from openai import OpenAI
@@ -152,7 +152,7 @@ def _call_llm(prompt: str) -> str:
                 max_tokens=2000,
                 temperature=0.3,
             )
-            return response.choices[0].message.content.strip()
+            return response.choices[0].message.content.strip().replace('\r\n', '\n').replace('\r', '\n')
 
     except Exception as e:
         logger.error(f"[stock_analyzer] LLM 호출 최종 실패: {e}")
@@ -162,9 +162,9 @@ def _call_llm(prompt: str) -> str:
 # ── LLM 출력 파싱 ──────────────────────────────────────────────────────────────
 
 def _parse_section(text: str, header: str) -> str:
-    """## {header} 섹션 내용 추출."""
+    """## {header} 섹션 내용 추출. 헤더 뒤 추가 텍스트(굵게, 공백 등) 허용."""
     m = re.search(
-        rf'## {re.escape(header)}\n([\s\S]*?)(?=\n## |\Z)',
+        rf'## {re.escape(header)}[^\n]*\n([\s\S]*?)(?=\n## |\Z)',
         text,
     )
     return m.group(1).strip() if m else ""
