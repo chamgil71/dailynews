@@ -1265,15 +1265,19 @@ function renderStock(data) {
 
 // ── 사이드바 ─────────────────────────────────────────────────────────────────
 function renderDateList() {
-  const isStock = state.activeSection === "stock";
-  const list = isStock ? state.stockReports : state.reports;
-  const activeDate = isStock ? state.activeStockDate : state.activeDate;
-  document.getElementById("sidebarListLabel").textContent = isStock ? "시황 목록" : "리포트 목록";
+  const sec = state.activeSection;
+  const isStock   = sec === "stock";
+  const isAIIssue = sec === "ai-issue";
+  const list = isStock ? state.stockReports : (isAIIssue ? state.aiIssueReports : state.reports);
+  const activeDate = isStock ? state.activeStockDate : (isAIIssue ? state.activeAIIssueDate : state.activeDate);
+  document.getElementById("sidebarListLabel").textContent =
+    isStock ? "시황 목록" : (isAIIssue ? "AI이슈 목록" : "리포트 목록");
   document.getElementById("dateList").innerHTML = list.map(({date}) => {
     const [y,m,d] = date.split("-");
     const active = date === activeDate;
+    const handler = isStock ? `selectStock('${date}')` : isAIIssue ? `selectAIIssue('${date}')` : `selectDate('${date}')`;
     return `<li><a href="#" class="${active?"active":""}"
-       onclick="${isStock?`selectStock('${date}')`:`selectDate('${date}')`};return false;">
+       onclick="${handler};return false;">
        <span class="date-dot"></span>${y}.${m}.${d}</a></li>`;
   }).join("");
 }
@@ -1290,6 +1294,14 @@ function renderStockStats() {
   const s = state.stockReports;
   document.getElementById("statTotal").textContent = s.length;
   document.getElementById("statNews").textContent  = "—";
+  document.getElementById("statEn").textContent    = "—";
+  document.getElementById("statKo").textContent    = "—";
+}
+
+function renderAIIssueStats() {
+  const ai = state.aiIssueReports;
+  document.getElementById("statTotal").textContent = ai.length;
+  document.getElementById("statNews").textContent  = ai.reduce((s,r)=>s+(r.top10?.length||0),0);
   document.getElementById("statEn").textContent    = "—";
   document.getElementById("statKo").textContent    = "—";
 }
@@ -1462,7 +1474,7 @@ function switchSection(section) {
     renderNewsStats();
   } else if (section==="ai-issue") {
     renderDateList();
-    renderStockStats();
+    renderAIIssueStats();
     if (state.aiIssueReports.length && !state.activeAIIssueDate) {
       state.activeAIIssueDate = state.aiIssueReports[0].date;
     }
