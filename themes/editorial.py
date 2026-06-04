@@ -341,52 +341,255 @@ def render_report(ctx: dict) -> str:
 
 
 def render_archive(ctx: dict) -> str:
-    news_items = "".join(f"""
-        <li>
-          <a href="news/{it['date']}.html">{it['display']}</a>
-          <div class="d">{it['date']}</div>
-        </li>""" for it in ctx["items"])
-    stock_items = ctx.get("stock_items", [])
-    stock_items_html = "".join(f"""
-        <li>
-          <a href="stock/{it['date']}.html">{it['display']}</a>
-          <div class="d">{it['date']}</div>
-        </li>""" for it in stock_items)
-    ai_items = ctx.get("ai_items", [])
-    ai_items_html = "".join(f"""
-        <li>
-          <a href="ai-issue/{it['date']}.html">{it['display']}</a>
-          <div class="d">{it['date']}</div>
-        </li>""" for it in ai_items)
-    total = len(ctx['items']) + len(stock_items) + len(ai_items)
-    tab_style = "font-family:inherit;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;padding:4px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--muted);margin-right:20px"
-    tab_active = tab_style.replace("border-bottom:2px solid transparent", "border-bottom:2px solid var(--rule)").replace("color:var(--muted)", "color:var(--text);font-weight:700")
-    body = f"""
-    <div class="arch">
-      <h1>전체 리포트 색인</h1>
-      <p class="count">LEDGER · 총 {total}호 발행</p>
-      <div style="margin-bottom:20px;border-bottom:1px solid var(--rule);padding-bottom:4px">
-        <button onclick="showTab('news')"  id="tabNews"  style="{tab_active}">📰 뉴스 {len(ctx['items'])}</button>
-        <button onclick="showTab('stock')" id="tabStock" style="{tab_style}">📈 주식 {len(stock_items)}</button>
-        <button onclick="showTab('ai')"    id="tabAi"    style="{tab_style}">🤖 AI이슈 {len(ai_items)}</button>
-      </div>
-      <div id="tabPanelNews"  ><ul>{news_items}</ul></div>
-      <div id="tabPanelStock" style="display:none"><ul>{stock_items_html or f"<li style='color:var(--muted);padding:12px 0'>주식 리포트 없음</li>"}</ul></div>
-      <div id="tabPanelAi"    style="display:none"><ul>{ai_items_html or f"<li style='color:var(--muted);padding:12px 0'>AI 이슈 보고서 없음</li>"}</ul></div>
+    """통합 아카이브: 심플 navbar + 3탭(뉴스/AI이슈/주식) + 검색."""
+    site_title  = ctx["site_title"]
+    now         = ctx["now"]
+    footer      = FOOTER_CONFIG
+    site_url    = ctx.get("site_url", "")
+
+    news_list   = ctx.get("items", [])
+    stock_list  = ctx.get("stock_items", [])
+    ai_list     = ctx.get("ai_items", [])
+    total       = len(news_list) + len(stock_list) + len(ai_list)
+
+    def _items_html(items: list, href_tpl: str, icon: str) -> str:
+        if not items:
+            return "<li class='empty'>리포트 없음</li>"
+        return "".join(
+            f'<li data-label="{it["display"]}">'
+            f'<a href="{href_tpl.format(date=it["date"])}">'
+            f'{icon} {it["display"]}</a>'
+            f'<span class="date-tag">{it["date"]}</span>'
+            f'</li>'
+            for it in items
+        )
+
+    news_html  = _items_html(news_list,  "news/{date}.html",     "📰")
+    stock_html = _items_html(stock_list, "stock/{date}.html",    "📊")
+    ai_html    = _items_html(ai_list,    "ai-issue/{date}.html", "🤖")
+
+    return f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI News Brief 전체 리포트 목록">
+  <title>아카이브 — {site_title}</title>
+  {_FONTS}
+  <style>
+  :root {{
+    --color-navy:       #2b231a;
+    --color-blue:       #8b2a1f;
+    --color-blue-light: #c4735a;
+    --color-bg:         #f4ede0;
+    --color-card:       #ece2cf;
+    --color-border:     #c8bda7;
+    --color-text:       #1a1612;
+    --color-muted:      #8a7e6f;
+    --font-sans:        'Noto Serif KR', Georgia, serif;
+    --leading-base:     1.8;
+  }}
+  *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: var(--leading-base);
+    -webkit-font-smoothing: antialiased;
+  }}
+  /* ── 헤더 (SPA 스타일 navbar) ── */
+  header {{
+    background: var(--color-navy);
+    color: #fff;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    height: 58px;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    gap: 0;
+  }}
+  .logo {{
+    font-size: 1.05rem; font-weight: 700; letter-spacing: -.3px;
+    margin-right: 20px; white-space: nowrap; cursor: pointer;
+  }}
+  .logo .accent {{ color: var(--color-blue-light); }}
+  .header-nav {{
+    display: flex; align-items: center; height: 100%; gap: 2px;
+  }}
+  .hnav-tab {{
+    display: flex; align-items: center; height: 100%;
+    padding: 0 14px;
+    color: rgba(255,255,255,.65);
+    text-decoration: none;
+    font-size: .88rem; font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }}
+  .hnav-tab:hover {{ color: rgba(255,255,255,.9); }}
+  .hnav-tab.active {{ color: #fff; border-bottom-color: var(--color-blue-light); }}
+  /* ── 컨테이너 ── */
+  .container {{ max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }}
+  /* ── 카드 ── */
+  .card {{
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 28px 32px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }}
+  h1 {{
+    font-size: 1.5rem; color: var(--color-navy);
+    font-weight: 800; margin-bottom: 4px;
+  }}
+  .subtitle {{
+    color: var(--color-muted); font-size: .85rem; margin-bottom: 24px;
+  }}
+  /* ── 탭 버튼 ── */
+  .tab-bar {{
+    display: flex; gap: 4px; margin-bottom: 20px;
+    border-bottom: 2px solid var(--color-border); padding-bottom: 0;
+  }}
+  .tab-btn {{
+    padding: 8px 18px; border: none; background: none; cursor: pointer;
+    font-family: var(--font-sans); font-size: .88rem; font-weight: 500;
+    color: var(--color-muted);
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+    transition: color .15s, border-color .15s;
+  }}
+  .tab-btn:hover {{ color: var(--color-text); }}
+  .tab-btn.active {{ color: var(--color-blue); border-bottom-color: var(--color-blue); font-weight: 700; }}
+  /* ── 검색 ── */
+  .search-wrap {{
+    margin-bottom: 16px;
+    position: relative;
+  }}
+  .search-wrap input {{
+    width: 100%; padding: 9px 14px 9px 36px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans); font-size: .9rem;
+    outline: none;
+    transition: border-color .15s;
+  }}
+  .search-wrap input:focus {{ border-color: var(--color-blue); }}
+  .search-wrap::before {{
+    content: "🔍"; position: absolute;
+    left: 10px; top: 50%; transform: translateY(-50%);
+    font-size: .85rem; pointer-events: none;
+  }}
+  .search-count {{ font-size: .8rem; color: var(--color-muted); margin-bottom: 12px; }}
+  /* ── 목록 ── */
+  .archive-list {{ list-style: none; padding: 0; }}
+  .archive-list li {{
+    border-bottom: 1px solid var(--color-border);
+    padding: 12px 0;
+    display: flex; align-items: baseline; gap: 12px;
+  }}
+  .archive-list li:last-child {{ border-bottom: none; }}
+  .archive-list a {{
+    color: var(--color-blue); text-decoration: none;
+    font-weight: 500; font-size: .97rem;
+    flex: 1;
+  }}
+  .archive-list a:hover {{ text-decoration: underline; text-underline-offset: 2px; }}
+  .date-tag {{
+    color: var(--color-muted); font-size: .8rem; white-space: nowrap;
+  }}
+  .empty {{ color: var(--color-muted); padding: 20px 0; font-size: .9rem; }}
+  .hidden {{ display: none !important; }}
+  /* ── 푸터 ── */
+  footer {{
+    text-align: center; color: var(--color-muted);
+    font-size: .8rem; padding: 24px;
+    border-top: 1px solid var(--color-border);
+  }}
+  footer a {{ color: inherit; }}
+  @media (max-width: 600px) {{
+    .card {{ padding: 20px; }}
+    .logo {{ font-size: .95rem; }}
+  }}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" onclick="location.href='{site_url or '.'}'" >
+      📰 AI <span class="accent">News</span> Brief
     </div>
-    <script>
-    var _tabActive = "{tab_active}";
-    var _tabNorm   = "{tab_style}";
-    function showTab(t){{
-      ['news','stock','ai'].forEach(k=>{{
-        var panel = document.getElementById('tabPanel'+k.charAt(0).toUpperCase()+k.slice(1));
-        var btn   = document.getElementById('tab'+k.charAt(0).toUpperCase()+k.slice(1));
-        panel.style.display = k===t ? '' : 'none';
-        btn.setAttribute('style', k===t ? _tabActive : _tabNorm);
-      }});
-    }}
-    </script>"""
-    return _layout("아카이브", body, "archive", ctx["site_title"], ctx["now"], ctx.get("site_url", ""))
+    <nav class="header-nav">
+      <a class="hnav-tab" href="index.html">📰 뉴스 브리핑</a>
+      <a class="hnav-tab" href="ai-issue/">🤖 AI이슈</a>
+      <a class="hnav-tab" href="stock/">📊 주식 시황</a>
+      <a class="hnav-tab active" href="archive.html">📚 아카이브</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h1>📚 전체 리포트 목록</h1>
+      <p class="subtitle">총 {total}건 · 뉴스 {len(news_list)} · 주식 {len(stock_list)} · AI이슈 {len(ai_list)}</p>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('news')"  id="tabNews" >📰 뉴스 ({len(news_list)})</button>
+        <button class="tab-btn"        onclick="switchTab('stock')" id="tabStock">📊 주식 ({len(stock_list)})</button>
+        <button class="tab-btn"        onclick="switchTab('ai')"    id="tabAi"   >🤖 AI이슈 ({len(ai_list)})</button>
+      </div>
+
+      <div class="search-wrap">
+        <input type="text" id="searchBox" placeholder="날짜 또는 요일로 검색…" oninput="filterList()" />
+      </div>
+      <p class="search-count" id="searchCount"></p>
+
+      <div id="panelNews" ><ul class="archive-list" id="listNews" >{news_html}</ul></div>
+      <div id="panelStock" class="hidden"><ul class="archive-list" id="listStock">{stock_html}</ul></div>
+      <div id="panelAi"    class="hidden"><ul class="archive-list" id="listAi"   >{ai_html}</ul></div>
+    </div>
+  </div>
+
+  <footer>
+    {footer['powered_by']} · {footer['update_text']}<br>
+    Generated by {footer['generator']} ·
+    <a href="https://github.com/{footer['repo']}">{footer['repo']}</a>
+    · 생성: {now} KST
+  </footer>
+
+  <script>
+  var _activeTab = 'news';
+  function switchTab(t) {{
+    ['news','stock','ai'].forEach(function(k) {{
+      var cap = k.charAt(0).toUpperCase() + k.slice(1);
+      document.getElementById('panel' + cap).classList.toggle('hidden', k !== t);
+      document.getElementById('tab'   + cap).classList.toggle('active', k === t);
+    }});
+    _activeTab = t;
+    document.getElementById('searchBox').value = '';
+    updateCount();
+  }}
+  function filterList() {{
+    var q = document.getElementById('searchBox').value.trim().toLowerCase();
+    var cap = _activeTab.charAt(0).toUpperCase() + _activeTab.slice(1);
+    var items = document.getElementById('list' + cap).querySelectorAll('li:not(.empty)');
+    items.forEach(function(li) {{
+      var label = (li.getAttribute('data-label') || li.textContent).toLowerCase();
+      li.classList.toggle('hidden', q.length > 0 && label.indexOf(q) === -1);
+    }});
+    updateCount();
+  }}
+  function updateCount() {{
+    var cap = _activeTab.charAt(0).toUpperCase() + _activeTab.slice(1);
+    var items   = document.getElementById('list' + cap).querySelectorAll('li:not(.empty)');
+    var visible = Array.from(items).filter(function(li) {{ return !li.classList.contains('hidden'); }}).length;
+    var q = document.getElementById('searchBox').value.trim();
+    document.getElementById('searchCount').textContent =
+      q ? visible + '건 검색됨' : '';
+  }}
+  </script>
+</body>
+</html>"""
 
 
 def render_stock_report(ctx: dict) -> str:
