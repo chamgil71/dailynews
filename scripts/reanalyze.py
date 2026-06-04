@@ -49,9 +49,11 @@ def _extract_section(md: str, header: str) -> str:
 
 def _replace_section(md: str, header: str, new_content: str) -> str:
     """헤더 다음 내용을 new_content로 교체. --- 또는 ## 📋 앞까지만."""
+    if not new_content or not new_content.strip():
+        logger.warning(f"  섹션 교체 건너뜀 (새 내용 없음): {header[:30]}")
+        return md
     pattern = re.compile(
-        re.escape(header) + r"\n[\s\S]*?(?=\n---|\n## 📋)",
-        re.MULTILINE,
+        re.escape(header) + r"\n[\s\S]*?(?=\n---|\n## 📋|\Z)",
     )
     replacement = header + "\n\n" + new_content.strip() + "\n"
     result = pattern.sub(replacement, md, count=1)
