@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import importlib
 
-from config.theme_config import NAV_SECTIONS, HUB_SECTIONS, FOOTER_CONFIG
+from config.theme_config import NAV_SECTIONS, HUB_SECTIONS, FOOTER_CONFIG, SITE_LOGO_HTML
 
 _TEMPLATES = Path(__file__).parent.parent / "templates"
 
@@ -386,6 +386,7 @@ def render_report(ctx: dict, theme_name: str) -> str:
         display_date=ctx["display_date"],
         date_str=ctx["date_str"],
         site_title=ctx["site_title"],
+        site_logo_html=SITE_LOGO_HTML,
         now=ctx["now"],
         nav=nav_html("news"),
         stats=data["stats"],
@@ -408,6 +409,7 @@ def render_archive(ctx: dict, theme_name: str) -> str:
         font_link=_font_link(tokens),
         display_date="전체 목록",
         site_title=ctx["site_title"],
+        site_logo_html=SITE_LOGO_HTML,
         now=ctx["now"],
         nav=nav_html("archive"),
         items=ctx["items"],
@@ -432,6 +434,7 @@ def render_stock_report(ctx: dict, theme_name: str) -> str:
         display_date=ctx["display_date"],
         date_str=ctx["date_str"],
         site_title=ctx["site_title"],
+        site_logo_html=SITE_LOGO_HTML,
         now=ctx["now"],
         nav=nav_html("stock", "../"),
         md_html=ctx["md_html"],
@@ -449,6 +452,7 @@ def render_stock_archive(ctx: dict, theme_name: str) -> str:
         font_link=_font_link(tokens),
         display_date="주식 시황 전체 목록",
         site_title=ctx["site_title"],
+        site_logo_html=SITE_LOGO_HTML,
         now=ctx["now"],
         nav=nav_html("stock", "../"),
         items=ctx["items"],

@@ -31,6 +31,15 @@ SITE_THEME    = os.getenv("SITE_THEME", SITE_THEME_DEFAULT)
 SITE_TITLE    = os.getenv("SITE_TITLE", "AI News Brief")
 SUBSCRIBE_URL = os.getenv("SUBSCRIBE_URL", "https://forms.gle/REPLACE_WITH_GOOGLE_FORM_ID")
 
+def _make_logo_html(title: str) -> str:
+    """'AI News Brief' → '📰 AI <span class="accent">News</span> Brief'"""
+    parts = title.split()
+    if len(parts) >= 2:
+        return f'📰 {parts[0]} <span class="accent">{parts[1]}</span> {" ".join(parts[2:])}'.strip()
+    return f"📰 {title}"
+
+SITE_LOGO_HTML = _make_logo_html(SITE_TITLE)
+
 # ── 섹션별 테마 (섹션마다 독립 설정 가능) ──────────────────────────────────────
 SECTION_THEMES: dict[str, str] = {
     "news":  os.getenv("THEME_NEWS",   THEME_NEWS_DEFAULT or SITE_THEME),   # 뉴스브리핑 본문
