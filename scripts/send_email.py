@@ -61,7 +61,7 @@ def _send_news(date_str: str, force: bool = False) -> None:
 def _stock_analysis_complete(md_path: Path) -> bool:
     raw = md_path.read_text(encoding="utf-8")
     summary_m = re.search(r'## ■ 핵심 요약[^\n]*\n([\s\S]*?)(?=\n---|\n## )', raw)
-    temp_m    = re.search(r'## 시장 온도계[^\n]*\n>\s*(.+)', raw)
+    temp_m    = re.search(r'## 시장 온도계[^\n]*\n+>\s*(.+)', raw)
     summary   = summary_m.group(1).strip() if summary_m else ""
     reason    = temp_m.group(1).strip() if temp_m else ""
     return len(summary) > 10 and len(reason) > 5
