@@ -1128,6 +1128,38 @@ function renderAIIssue(data) {
   const {issue_date, period, top10=[], top3_detail=[], company_trends="", weekly_tips=[], stock_snapshots=[], paper_picks=[], next_week_outlook=""} = data;
   const [y,m,d] = issue_date.split("-");
 
+  // 0. TOP10 카드뉴스 슬라이더
+  const catIcons = { model:"🤖", service:"🚀", research:"🔬", policy:"⚖️", industry:"🏭", infra:"🖥️", investment:"💰" };
+  let aiSliderHtml = "";
+  if (top10.length) {
+    const slides = top10.map((item, idx) => {
+      const icon = catIcons[item.category] || "📌";
+      const stars = "★".repeat(item.importance) + "☆".repeat(5 - item.importance);
+      const src = item.sources && item.sources[0];
+      const srcHtml = src ? `<a href="${esc(src.url)}" target="_blank" rel="noopener">↗ 원문</a>` : "";
+      return `
+      <div class="news-slide-card">
+        <div class="slide-header">
+          <span>${icon} AI이슈 ${idx + 1}위</span>
+          <span style="font-size:.7rem;opacity:.8;color:var(--orange)">${stars}</span>
+        </div>
+        <div class="slide-body">
+          <h4>${esc(item.title)}</h4>
+          <p>${esc(item.summary || "")}</p>
+        </div>
+        ${srcHtml ? `<div class="slide-footer">${srcHtml}</div>` : ""}
+      </div>`;
+    }).join("");
+    const sliderId = `ai-slider-${issue_date}`;
+    aiSliderHtml = `
+    <div class="card-news-section">
+      <h3>🃏 이번 주 AI 이슈 카드</h3>
+      <button class="slide-nav-btn prev" onclick="scrollSlider('${sliderId}', -1)">◀</button>
+      <button class="slide-nav-btn next" onclick="scrollSlider('${sliderId}', 1)">▶</button>
+      <div class="card-news-viewport" id="${sliderId}">${slides}</div>
+    </div>`;
+  }
+
   // 1. TOP 10 목록
   const top10Html = top10.map(item => {
     const cats = {
@@ -1198,6 +1230,7 @@ function renderAIIssue(data) {
 
   return `
   <div class="report-card">
+    ${aiSliderHtml}
     <div class="report-header">
       <div class="report-date">🤖 AI 주간 이슈 브리핑 (${y}년 ${m}월 ${d}일 발행)</div>
       <span class="badge badge-blue">${period}</span>
