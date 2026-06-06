@@ -59,7 +59,7 @@ publish/cardnews/
 
 ---
 
-## 현재 상태 (2026-06-04)
+## 현재 상태 (2026-06-06)
 
 ### 완료된 작업 (main 반영 완료)
 - [x] 3채널 파이프라인 발송 순서 통일 (수집→빌드→배포→이메일→텔레그램)
@@ -71,26 +71,31 @@ publish/cardnews/
   - `SITE_LOGO_HTML` 변수화, 로고명 "AI News Brief" 통일
   - `publish/nav.js` 신설 — 공유 nav 모듈 (URL 깊이 자동 계산)
   - AI이슈 탭 전 페이지 추가 (`NAV_SECTIONS`, `editorial.py`, `nav.js`)
-  - SPA 아카이브 탭 → `archive.html` 직접 링크 분리 (내장 섹션 주석)
   - `build_search_index()` 3채널 확장 (뉴스·AI이슈·주식, `type` 필드)
-  - `index.html` 사이드바 검색 → 전체 기간 통합 검색 (체크박스 필터)
-  - `archive.html` 검색도 동일하게 통합 검색 업그레이드
-  - AI이슈 탭 상단 카드뉴스 슬라이더 추가 (top10 → 슬라이드 카드)
-  - `archive.html` 검색창 위치 제목 옆으로 이동 (flex row 레이아웃)
-  - 서브페이지 4개 nav 탭 인디케이터 통일 (SPA와 동일한 하단 컬러 바)
-
-### 진행 중 (PR 머지 대기)
-- [ ] **PR #19** (`claude/card-news-sns-deployment-O6S4m`) — 카드뉴스 3채널 SNS 자동 배포
-  - 병합 전 필수: GitHub Secrets 5개 추가 (아래 환경변수 표 참고)
-  - Vercel 프리뷰 배포 완료 확인됨
+  - `index.html` / `archive.html` 통합 검색 업그레이드 (체크박스 필터)
+  - 서브페이지 4개 nav 탭 인디케이터 통일
+- [x] **PR #19** — 카드뉴스 3채널 SNS 자동 배포 병합 (2026-06-06)
+  - `scripts/build_cardnews.py` / `generate_cardnews_images.py` / `post_cardnews.py` / `post_instagram.py` — `--type news|ai-issue|stock`
+  - `.github/workflows/cardnews.yml` — 3개 채널 workflow_run 트리거
+  - `publish/cardnews/{news|ai-issue|stock}/` 서브디렉터리 구조
+- [x] **PR #20** — `stock_build.yml` analysis_ok 필드 체크 병합 (2026-06-06)
+  - MD 파일 있어도 `analysis_ok != true`이면 백업 경로 재실행
+- [x] `stock_send.yml` 스케줄 수정 — `0-4` → `0-5` (토요일 아침 금요일 데이터 발송)
+- [x] 빈 `stock_2026-06-05.md` 삭제 (2026-06-06)
 
 ### 검증 필요 (다음 실행 시 확인)
 - [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 (`analysis_ok=true` 확인)
-- [ ] `stock_send.yml` workflow_dispatch 수동 실행 → @msstockbrief 채널 수신 확인
+- [ ] `stock_send.yml` 토요일 자동 실행 → @msstockbrief 채널 수신 확인
 - [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 스텝 이후 이메일·텔레그램 실행 확인
-- [ ] PR #19 병합 후 `cardnews.yml` workflow_dispatch 수동 실행 → 텔레그램 수신 확인
+- [ ] `cardnews.yml` workflow_dispatch 수동 실행 → 텔레그램 수신 확인 (--type news)
+
+### 주의: 2026-06-05 주식 분석 미완료
+- `stock_2026-06-05.md` 삭제됨 — 재분석 필요시 월요일 루틴이 수동 트리거 필요
+- `publish/stock/2026-06-05.html` 존재하나 AI 분석 섹션 없음 (시장 데이터만 있음)
+- `stock-data.json`에 2026-06-05 항목 없음 → 다음 루틴 실행(2026-06-09 월요일) 후 자동 복구
 
 ### 다음 개발 (우선순위 순)
+- [ ] `cardnews.yml` 텔레그램 발송 수동 검증 → 정상 수신 확인
 - [ ] 구독 시스템 구현 — Supabase + Vercel API (`docs/plan/roadmap.md` Phase 2 참고)
 - [ ] 탭별 색상 테마 (뉴스=파랑, AI이슈=보라, 주식=초록) — 동일 구조 색상만 변경
 
