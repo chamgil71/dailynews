@@ -78,21 +78,42 @@ publish/cardnews/
   - `scripts/build_cardnews.py` / `generate_cardnews_images.py` / `post_cardnews.py` / `post_instagram.py` — `--type news|ai-issue|stock`
   - `.github/workflows/cardnews.yml` — 3개 채널 workflow_run 트리거
   - `publish/cardnews/{news|ai-issue|stock}/` 서브디렉터리 구조
-- [x] **PR #20** — `stock_build.yml` analysis_ok 필드 체크 병합 (2026-06-06)
-  - MD 파일 있어도 `analysis_ok != true`이면 백업 경로 재실행
+- [x] **PR #20** — `stock_build.yml` analysis_ok 필드 체크 병합 후 추가 수정 (2026-06-06)
 - [x] `stock_send.yml` 스케줄 수정 — `0-4` → `0-5` (토요일 아침 금요일 데이터 발송)
-- [x] 빈 `stock_2026-06-05.md` 삭제 (2026-06-06)
+- [x] **주식 백업 파이프라인 품질 게이트 강화** (2026-06-06) — 이번 세션
+  - `stock_2026-06-05.md` LLM 분석 실패 원인 조사 → `stock_main.py`의 Gemini 호출 실패
+  - `run_stock.py`: 품질 게이트를 `save()` 호출 **전**으로 이동 (분석 실패 시 빈 MD 저장 차단)
+  - `run_stock.py`: 분석 실패 시 텔레그램(`TELEGRAM_CHAT_ID`) + 이메일 이중 알림 추가
+  - `stock_build.yml`: `stock-data.json` analysis_ok 체크 → **MD 본문 직접 파싱**으로 교체
+    - `analysis_ok` 필드는 실제로 쓰지 않아 항상 false였던 버그 수정
+    - `핵심 요약` 섹션에 실제 내용 여부로 분석 완성도 판단
+    - Claude Code 루틴 빈 분석·stock_main.py LLM 실패 양쪽 모두 커버
+
+### 주식 파이프라인 완성된 흐름
+```
+Claude Code 루틴 (21:25 KST):
+  데이터 수집(MCP) → Claude 분석 → MD 저장 → git push
+  → stock_build.yml push 트리거 → HTML 빌드·Pages 배포
+
+stock_build.yml 23:00 스케줄 (백업):
+  MD 없음?                     → stock_main.py 실행
+  MD 있는데 핵심 요약 비어있음?  → stock_main.py 실행 + 텔레그램/이메일 알림
+  MD 있고 내용 정상?            → 건너뜀
+
+stock_send.yml 익일 08:00:
+  이메일 + Notion + 텔레그램(@msstockbrief) 발송
+```
 
 ### 검증 필요 (다음 실행 시 확인)
-- [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 (`analysis_ok=true` 확인)
+- [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 확인
 - [ ] `stock_send.yml` 토요일 자동 실행 → @msstockbrief 채널 수신 확인
 - [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 스텝 이후 이메일·텔레그램 실행 확인
 - [ ] `cardnews.yml` workflow_dispatch 수동 실행 → 텔레그램 수신 확인 (--type news)
+- [ ] 다음 주식 루틴 실행 시 분석 실패 발생하면 텔레그램 알림 수신 확인
 
-### 주의: 2026-06-05 주식 분석 미완료
-- `stock_2026-06-05.md` 삭제됨 — 재분석 필요시 월요일 루틴이 수동 트리거 필요
-- `publish/stock/2026-06-05.html` 존재하나 AI 분석 섹션 없음 (시장 데이터만 있음)
-- `stock-data.json`에 2026-06-05 항목 없음 → 다음 루틴 실행(2026-06-09 월요일) 후 자동 복구
+### 주의: 2026-06-05 주식 데이터
+- `stock_2026-06-05.md` 이번 세션에서 재생성 완료 (정상 분석 포함)
+- `stock-data.json`에 2026-06-05 항목 없음 → 다음 빌드(월요일 루틴 실행 후) 자동 반영
 
 ### 다음 개발 (우선순위 순)
 - [ ] `cardnews.yml` 텔레그램 발송 수동 검증 → 정상 수신 확인
@@ -106,6 +127,8 @@ publish/cardnews/
 - 서브페이지 nav는 `nav.js` 런타임 주입 — 탭 변경 시 `nav.js`만 수정하면 전체 반영
 - 카드뉴스 `data.json`: 채널별 서브디렉터리에 위치 (`publish/cardnews/{type}/data.json`)
 - 카드뉴스 GitHub raw URL: `https://raw.githubusercontent.com/chamgil71/dailynews/main/publish/cardnews/{type}/{date}-{n}.png`
+- **주식 품질 게이트**: `run_stock.py`의 `_is_analysis_complete()` — summary + temperature_reason 둘 다 있어야 통과
+- **백업 분析 판단**: `stock_build.yml` check_md — MD의 `## ■ 핵심 요약` 섹션 내용 파싱 (stock-data.json 미사용)
 
 ---
 
