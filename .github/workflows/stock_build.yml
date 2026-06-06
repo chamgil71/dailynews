@@ -63,27 +63,29 @@ jobs:
         id: check_md
         run: |
           TODAY=$(TZ=Asia/Seoul date +%Y-%m-%d)
-          if [ ! -f "reports/stock/stock_${TODAY}.md" ]; then
+          MD_PATH="reports/stock/stock_${TODAY}.md"
+          if [ ! -f "$MD_PATH" ]; then
             echo "exists=false" >> $GITHUB_OUTPUT
             echo "오늘 MD 파일 없음 — 백업 경로 실행"
           else
-            # MD 파일이 있어도 analysis_ok != true 이면 재분석 필요
+            # MD 파일이 있어도 핵심 요약이 비어있으면 재분석 필요
+            # (Claude Code 루틴 분석 실패 or stock_main.py LLM 실패 모두 대응)
             ANALYSIS_OK=$(python3 -c "
-import json, sys
+import re, sys
 try:
-    data = json.load(open('publish/stock/stock-data.json'))
-    entries = data if isinstance(data, list) else [data]
-    entry = next((e for e in entries if e.get('date') == '${TODAY}'), None)
-    print('true' if entry and entry.get('analysis_ok') is True else 'false')
-except Exception as e:
+    md = open('$MD_PATH').read()
+    m = re.search(r'## ■ 핵심 요약.*?\n\n(.+)', md, re.DOTALL)
+    has_content = bool(m and m.group(1).strip()[:3] not in ('', '---'))
+    print('true' if has_content else 'false')
+except Exception:
     print('false')
 " 2>/dev/null)
             if [ "$ANALYSIS_OK" = "true" ]; then
               echo "exists=true" >> $GITHUB_OUTPUT
-              echo "오늘 MD 파일 존재 + analysis_ok=true — 백업 경로 건너뜀"
+              echo "오늘 MD 파일 존재 + 분석 내용 확인 — 백업 경로 건너뜀"
             else
               echo "exists=false" >> $GITHUB_OUTPUT
-              echo "오늘 MD 파일 존재하나 analysis_ok != true — 백업 경로 실행"
+              echo "오늘 MD 파일 존재하나 분석 내용 비어있음 — 백업 경로 실행"
             fi
           fi
 
