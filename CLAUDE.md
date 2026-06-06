@@ -28,11 +28,24 @@ scripts/run_news.py        ← 뉴스 수집·분석·MD저장 (발송 없음)
 scripts/build_site.py      ← 뉴스 HTML 빌드
 scripts/build_stock_site.py← 주식 HTML 빌드
 scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
+scripts/build_cardnews.py  ← 카드뉴스 HTML 생성 (--type news|ai-issue|stock|all)
+scripts/generate_cardnews_images.py ← HTML → 1080×1080 PNG (Playwright/Pillow)
+scripts/post_cardnews.py   ← 카드뉴스 SNS 발송 (--type, --platform instagram|telegram|twitter)
+scripts/post_instagram.py  ← Instagram Graph API v21.0 카루셀
 .github/workflows/
   news.yml                 ← 뉴스 전체 파이프라인
   stock_build.yml          ← 주식 빌드·배포
   stock_send.yml           ← 주식 발송 (이메일·Notion·텔레그램)
   ai_issue.yml             ← AI이슈 전체 파이프라인
+  cardnews.yml             ← 카드뉴스 빌드+SNS 발송 (3개 채널 트리거)
+```
+
+### 카드뉴스 출력 구조
+```
+publish/cardnews/
+  news/      YYYY-MM-DD.html + YYYY-MM-DD-{N}.png + data.json
+  ai-issue/  YYYY-MM-DD.html + YYYY-MM-DD-{N}.png + data.json
+  stock/     YYYY-MM-DD.html + YYYY-MM-DD-{N}.png + data.json
 ```
 
 ---
@@ -66,15 +79,19 @@ scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
   - `archive.html` 검색창 위치 제목 옆으로 이동 (flex row 레이아웃)
   - 서브페이지 4개 nav 탭 인디케이터 통일 (SPA와 동일한 하단 컬러 바)
 
+### 진행 중 (PR 머지 대기)
+- [ ] **PR #19** (`claude/card-news-sns-deployment-O6S4m`) — 카드뉴스 3채널 SNS 자동 배포
+  - 병합 전 필수: GitHub Secrets 5개 추가 (아래 환경변수 표 참고)
+  - Vercel 프리뷰 배포 완료 확인됨
+
 ### 검증 필요 (다음 실행 시 확인)
 - [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 (`analysis_ok=true` 확인)
 - [ ] `stock_send.yml` workflow_dispatch 수동 실행 → @msstockbrief 채널 수신 확인
 - [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 스텝 이후 이메일·텔레그램 실행 확인
-- [ ] 통합 검색 Vercel 배포 후 동작 확인 (`search-index.json` fetch 정상 여부) — Vercel 배포 완료 확인됨, 브라우저 강력새로고침(Ctrl+Shift+R) 필요
+- [ ] PR #19 병합 후 `cardnews.yml` workflow_dispatch 수동 실행 → 텔레그램 수신 확인
 
 ### 다음 개발 (우선순위 순)
 - [ ] 구독 시스템 구현 — Supabase + Vercel API (`docs/plan/roadmap.md` Phase 2 참고)
-- [ ] 카드뉴스 SNS 내보내기 — html2canvas, 인스타용 1080×1080 PNG
 - [ ] 탭별 색상 테마 (뉴스=파랑, AI이슈=보라, 주식=초록) — 동일 구조 색상만 변경
 
 ### 주요 아키텍처 메모
@@ -82,6 +99,8 @@ scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
 - `templates/web_archive.html`은 editorial 외 테마(classic/ink 등)용
 - `publish/search-index.json`: `build_site.py` 빌드 시 자동 갱신 (뉴스 전체 + AI이슈 + 주식)
 - 서브페이지 nav는 `nav.js` 런타임 주입 — 탭 변경 시 `nav.js`만 수정하면 전체 반영
+- 카드뉴스 `data.json`: 채널별 서브디렉터리에 위치 (`publish/cardnews/{type}/data.json`)
+- 카드뉴스 GitHub raw URL: `https://raw.githubusercontent.com/chamgil71/dailynews/main/publish/cardnews/{type}/{date}-{n}.png`
 
 ---
 
@@ -97,6 +116,10 @@ scripts/build_ai_issue_site.py ← AI이슈 HTML 빌드
 | `RECIPIENT_EMAILS` | 수신자 목록 |
 | `SITE_BASE_URL` | https://ms-dailynews.vercel.app |
 | `NOTION_API_KEY` | Notion 동기화 |
+| `INSTAGRAM_ACCESS_TOKEN` | Meta Graph API 장기 토큰 (60일, 갱신 필요) — **미설정** |
+| `INSTAGRAM_BUSINESS_ACCOUNT_ID` | Instagram Business 계정 숫자 ID — **미설정** |
+| `TWITTER_API_KEY` / `TWITTER_API_SECRET` | Twitter Developer App — **미설정** |
+| `TWITTER_ACCESS_TOKEN` / `TWITTER_ACCESS_TOKEN_SECRET` | Twitter OAuth 1.0a — **미설정** |
 
 ---
 
@@ -111,4 +134,9 @@ git checkout main && git pull && git checkout -b claude/작업명
 
 # 작업 완료 후 push
 git add -p && git commit -m "feat: ..." && git push -u origin HEAD
+
+# 카드뉴스 수동 빌드 테스트
+python scripts/build_cardnews.py --type news
+python scripts/generate_cardnews_images.py --type news
+python scripts/post_cardnews.py --type news --platform telegram
 ```

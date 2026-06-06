@@ -112,13 +112,44 @@
 | 변수명 | 필요여부 | 설명 | 획득처 | 형식 예시 |
 |---|---|---|---|---|
 | `TELEGRAM_BOT_TOKEN` | 🔶 권장 | 텔레그램 봇 토큰 | Telegram → @BotFather → /newbot | `1234567890:ABCdef...` |
-| `TELEGRAM_CHAT_ID` | 🔶 권장 | 발송 대상 채팅/채널 ID | @userinfobot 또는 채널 ID | `-1001234567890` |
+| `TELEGRAM_CHAT_ID` | 🔶 권장 | 뉴스·AI이슈 채널 ID | @userinfobot 또는 채널 ID | `-1001234567890` |
+| `TELEGRAM_CHAT_ID_STOCK` | 🔶 권장 | 주식 전용 채널 ID (@msstockbrief) | 동상 | `-1009876543210` |
 
 > 채널 ID: 채널에 봇 추가 후 `@userinfobot` 에 포워드하거나 Telegram API로 확인
 
 ---
 
-## 8. Supabase (Phase 2 — 미구현)
+## 8. SNS 카드뉴스 (Instagram / Twitter·X)
+
+> **카드뉴스 파이프라인**: `build_cardnews.py` → `generate_cardnews_images.py` → `post_cardnews.py`  
+> 출력: `publish/cardnews/{news|ai-issue|stock}/YYYY-MM-DD-{N}.png` (1080×1080)  
+> 워크플로우: `cardnews.yml` — 각 채널 완료 후 자동 트리거
+
+### Instagram
+
+| 변수명 | 필요여부 | 설명 | 획득처 | 형식 예시 |
+|---|---|---|---|---|
+| `INSTAGRAM_ACCESS_TOKEN` | 🔶 권장 | Meta Graph API 장기 액세스 토큰 (60일) | Meta for Developers → Graph API Explorer → `instagram_content_publish` 권한 요청 | `EAAxxxxx...` |
+| `INSTAGRAM_BUSINESS_ACCOUNT_ID` | 🔶 권장 | Instagram Business 계정 숫자 ID | Meta Business Suite → 계정 설정 또는 Graph API `/me?fields=instagram_business_account` | `123456789012345` |
+
+> **주의**: 액세스 토큰은 60일마다 만료. 만료 전 Graph API Explorer에서 갱신 필요.  
+> 필요 앱 권한: `instagram_content_publish`, `instagram_manage_comments`(선택)
+
+### Twitter / X
+
+| 변수명 | 필요여부 | 설명 | 획득처 | 형식 예시 |
+|---|---|---|---|---|
+| `TWITTER_API_KEY` | 🔶 권장 | Twitter Developer App API Key | [developer.twitter.com](https://developer.twitter.com/) → Projects & Apps → 키 생성 | `xxxxxxxxxx...` |
+| `TWITTER_API_SECRET` | 🔶 권장 | Twitter Developer App API Key Secret | 동상 | `xxxxxxxxxx...` |
+| `TWITTER_ACCESS_TOKEN` | 🔶 권장 | OAuth 1.0a 액세스 토큰 | 동상 → Keys and Tokens → Generate | `xxxxxxxxxx...` |
+| `TWITTER_ACCESS_TOKEN_SECRET` | 🔶 권장 | OAuth 1.0a 액세스 토큰 시크릿 | 동상 | `xxxxxxxxxx...` |
+
+> **API 티어**: Free 티어는 읽기 전용. 트윗 작성은 **Basic 이상** 필요 (월 $100).  
+> 미디어 업로드는 v1.1 API (`tweepy.API`), 트윗 게시는 v2 API (`tweepy.Client`) 사용.
+
+---
+
+## 10. Supabase (Phase 2 — 미구현)
 
 | 변수명 | 필요여부 | 설명 | 획득처 | 형식 예시 |
 |---|---|---|---|---|
@@ -131,7 +162,7 @@
 
 ---
 
-## 9. 테마 / 표시 설정 (선택)
+## 11. 테마 / 표시 설정 (선택)
 
 | 변수명 | 필요여부 | 설명 | 선택지 | 기본값 |
 |---|---|---|---|---|
@@ -143,7 +174,7 @@
 
 ---
 
-## 10. 기타 / 내부용
+## 12. 기타 / 내부용
 
 | 변수명 | 필요여부 | 설명 | 비고 |
 |---|---|---|---|
@@ -174,6 +205,15 @@
 □  NOTION_DATABASE_ID_AI_ISSUE   (AI 이슈 기능 사용 시)
 ✅ TELEGRAM_BOT_TOKEN
 ✅ TELEGRAM_CHAT_ID
+✅ TELEGRAM_CHAT_ID_STOCK
+
+SNS 카드뉴스 (PR #19 병합 후 필요)
+□  INSTAGRAM_ACCESS_TOKEN
+□  INSTAGRAM_BUSINESS_ACCOUNT_ID
+□  TWITTER_API_KEY
+□  TWITTER_API_SECRET
+□  TWITTER_ACCESS_TOKEN
+□  TWITTER_ACCESS_TOKEN_SECRET
 
 Phase 2 예정 (미등록)
 □  TEST_RECIPIENT_EMAILS
@@ -202,3 +242,6 @@ Phase 2 대체 후 삭제 예정
 | **사이트 빌드·배포** | `SITE_BASE_URL` |
 | **구독취소 (현재)** | `UNSUBSCRIBE_SECRET`, `GH_CONTENTS_TOKEN`, `GITHUB_REPOSITORY` |
 | **구독취소 (Phase 2)** | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
+| **카드뉴스 Instagram 발송** | `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_BUSINESS_ACCOUNT_ID` |
+| **카드뉴스 Twitter 발송** | `TWITTER_API_KEY`, `TWITTER_API_SECRET`, `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET` |
+| **카드뉴스 Telegram 발송** | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (기존 재사용) |
