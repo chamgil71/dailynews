@@ -69,17 +69,7 @@ jobs:
             echo "오늘 MD 파일 없음 — 백업 경로 실행"
           else
             # MD 파일이 있어도 핵심 요약이 비어있으면 재분석 필요
-            # (Claude Code 루틴 분석 실패 or stock_main.py LLM 실패 모두 대응)
-            ANALYSIS_OK=$(python3 -c "
-import re, sys
-try:
-    md = open('$MD_PATH').read()
-    m = re.search(r'## ■ 핵심 요약.*?\n\n(.+)', md, re.DOTALL)
-    has_content = bool(m and m.group(1).strip()[:3] not in ('', '---'))
-    print('true' if has_content else 'false')
-except Exception:
-    print('false')
-" 2>/dev/null)
+            ANALYSIS_OK=$(python3 -c "import re; md=open('$MD_PATH').read(); m=re.search(r'## ■ 핵심 요약.*?\n\n(.+)', md, re.DOTALL); print('true' if m and m.group(1).strip()[:3] not in ('','---') else 'false')" 2>/dev/null || echo "false")
             if [ "$ANALYSIS_OK" = "true" ]; then
               echo "exists=true" >> $GITHUB_OUTPUT
               echo "오늘 MD 파일 존재 + 분석 내용 확인 — 백업 경로 건너뜀"
