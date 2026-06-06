@@ -106,29 +106,32 @@ def main() -> None:
     analysis = analyze_stock(stock_data)
     logger.info(f"     시장 온도계: {analysis.get('temperature_display', '?')}")
 
-    # ── [3/5] 리포트 생성 및 저장 ─────────────────────────────────────────────
+    # ── [3/5] 품질 게이트 + 리포트 생성 및 저장 ──────────────────────────────
     logger.info("[3/5] 리포트 생성 및 저장 중...")
     from core.stock.report import generate, save
     md_content = generate(stock_data, analysis)
-    filepath = save(md_content, date_str)
-    logger.info(f"     저장: {filepath}")
 
-    # ── [4/5] 품질 게이트 ─────────────────────────────────────────────────────
+    # 분석 완료 여부를 저장 전에 판단 — 미완성이면 MD를 저장하지 않음
     analysis_ok = _is_analysis_complete(analysis)
     if not analysis_ok:
-        logger.warning("[품질게이트] AI 분석 미완성 — 이메일/발송 차단")
+        logger.warning("[품질게이트] AI 분석 미완성 — MD 저장 및 이메일/발송 차단")
         _send_failure_alert(date_str,
             f"summary={'있음' if analysis.get('summary') else '없음'}, "
             f"temperature_reason={'있음' if analysis.get('temperature_reason') else '없음'}"
         )
+        logger.info("=" * 55)
+        logger.info(f"분석 실패로 종료 — MD 파일 미저장 ({date_str})")
+        logger.info("=" * 55)
+        return
+
+    filepath = save(md_content, date_str)
+    logger.info(f"     저장: {filepath}")
 
     # ── [5/5] 이메일 발송 ────────────────────────────────────────────────────
     if _primary_ran:
         logger.info("[5/5] Primary 경로 실행 확인 — 이메일 발송 건너뜀")
     elif weekday >= 5:
         logger.info("[5/5] 주말 — 이메일 발송 건너뜀")
-    elif not analysis_ok:
-        logger.info("[5/5] 분석 미완성 — 이메일 발송 건너뜀")
     else:
         logger.info("[5/5] 이메일 발송 중...")
         from core.shared.mailer import send_email
