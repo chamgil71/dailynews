@@ -63,12 +63,28 @@ jobs:
         id: check_md
         run: |
           TODAY=$(TZ=Asia/Seoul date +%Y-%m-%d)
-          if [ -f "reports/stock/stock_${TODAY}.md" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "오늘 MD 파일 존재 — 백업 경로 건너뜀"
-          else
+          if [ ! -f "reports/stock/stock_${TODAY}.md" ]; then
             echo "exists=false" >> $GITHUB_OUTPUT
             echo "오늘 MD 파일 없음 — 백업 경로 실행"
+          else
+            # MD 파일이 있어도 analysis_ok != true 이면 재분석 필요
+            ANALYSIS_OK=$(python3 -c "
+import json, sys
+try:
+    data = json.load(open('publish/stock/stock-data.json'))
+    entries = data if isinstance(data, list) else [data]
+    entry = next((e for e in entries if e.get('date') == '${TODAY}'), None)
+    print('true' if entry and entry.get('analysis_ok') is True else 'false')
+except Exception as e:
+    print('false')
+" 2>/dev/null)
+            if [ "$ANALYSIS_OK" = "true" ]; then
+              echo "exists=true" >> $GITHUB_OUTPUT
+              echo "오늘 MD 파일 존재 + analysis_ok=true — 백업 경로 건너뜀"
+            else
+              echo "exists=false" >> $GITHUB_OUTPUT
+              echo "오늘 MD 파일 존재하나 analysis_ok != true — 백업 경로 실행"
+            fi
           fi
 
       # ── 백업 자동화 경로 (스케줄 or full 모드, 오늘 MD 없을 때만) ──────────
