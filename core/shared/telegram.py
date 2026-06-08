@@ -146,12 +146,18 @@ def send_stock_telegram(stock_data: dict, date_str: str = None) -> bool:
     if not date_str:
         date_str = datetime.now().strftime("%Y-%m-%d")
 
+    try:
+        _wd = ["월","화","수","목","금","토","일"][datetime.strptime(date_str, "%Y-%m-%d").weekday()]
+        date_label = f"{date_str} ({_wd})"
+    except (ValueError, IndexError):
+        date_label = date_str
+
     temp     = stock_data.get("temperature", {})
     market   = stock_data.get("market", {})
     summary  = stock_data.get("summary", "")
     keywords = stock_data.get("keywords", [])
 
-    lines = [f"📈 <b>Ms Stock Brief</b> — {html.escape(date_str)}", ""]
+    lines = [f"📈 <b>Ms Stock Brief</b> — {html.escape(date_label)}", ""]
     lines.append(f"🌡 <b>시장 온도계</b>: {html.escape(temp.get('display', '🟡 중립'))}")
     lines.append("")
 

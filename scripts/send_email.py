@@ -79,8 +79,8 @@ def _send_stock(date_str: str) -> None:
         logger.warning("[이메일/주식] 분석 미완성 — 발송 건너뜀")
         return
 
-    now     = datetime.now()
-    weekday = ["월","화","수","목","금","토","일"][now.weekday()]
+    report_dt = datetime.strptime(date_str, "%Y-%m-%d")
+    weekday   = ["월","화","수","목","금","토","일"][report_dt.weekday()]
     subject = STOCK_EMAIL_SUBJECT.format(date=date_str, weekday=weekday)
     ok = send_email(md_path.read_text(encoding="utf-8"), template="stock", subject_override=subject)
     logger.info(f"[이메일/주식] {'완료' if ok else '실패 또는 건너뜀'}")
