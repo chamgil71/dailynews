@@ -15,7 +15,7 @@
 | 채널 | 수집 | 빌드/배포 | 발송 |
 |------|------|----------|------|
 | 뉴스 | `news.yml` KST 03:15 | 동일 워크플로우 | 배포 완료 후 즉시 |
-| 주식 | Claude Code 루틴 09:25 | `stock_build.yml` 23:00 | `stock_send.yml` 익일 08:00 |
+| 주식 | Claude Code 루틴 21:25 | `stock_build.yml` 23:00 | `stock_send.yml` 익일 08:00 |
 | AI이슈 | `ai_issue.yml` 일 07:00 | 동일 워크플로우 | 배포 완료 후 즉시 |
 
 ### 핵심 파일 구조
@@ -59,7 +59,7 @@ publish/cardnews/
 
 ---
 
-## 현재 상태 (2026-06-06)
+## 현재 상태 (2026-06-08)
 
 ### 완료된 작업 (main 반영 완료)
 - [x] 3채널 파이프라인 발송 순서 통일 (수집→빌드→배포→이메일→텔레그램)
@@ -68,57 +68,43 @@ publish/cardnews/
 - [x] **PR #18** (`claude/pipeline-fix-clean` → `main`) 병합 완료 (2026-06-03)
 - [x] Gemini JSON 파싱 버그 / 주식 이메일 발송 체크 버그 / 주식 섹션 파싱 버그 수정 (2026-06-04)
 - [x] **사이트 UI 통합 · 검색 고도화** (2026-06-04) — 세션 4차
-  - `SITE_LOGO_HTML` 변수화, 로고명 "AI News Brief" 통일
-  - `publish/nav.js` 신설 — 공유 nav 모듈 (URL 깊이 자동 계산)
-  - AI이슈 탭 전 페이지 추가 (`NAV_SECTIONS`, `editorial.py`, `nav.js`)
-  - `build_search_index()` 3채널 확장 (뉴스·AI이슈·주식, `type` 필드)
-  - `index.html` / `archive.html` 통합 검색 업그레이드 (체크박스 필터)
-  - 서브페이지 4개 nav 탭 인디케이터 통일
 - [x] **PR #19** — 카드뉴스 3채널 SNS 자동 배포 병합 (2026-06-06)
-  - `scripts/build_cardnews.py` / `generate_cardnews_images.py` / `post_cardnews.py` / `post_instagram.py` — `--type news|ai-issue|stock`
-  - `.github/workflows/cardnews.yml` — 3개 채널 workflow_run 트리거
-  - `publish/cardnews/{news|ai-issue|stock}/` 서브디렉터리 구조
 - [x] **PR #20** — `stock_build.yml` analysis_ok 필드 체크 병합 후 추가 수정 (2026-06-06)
 - [x] `stock_send.yml` 스케줄 수정 — `0-4` → `0-5` (토요일 아침 금요일 데이터 발송)
-- [x] **주식 백업 파이프라인 품질 게이트 강화** (2026-06-06) — 이번 세션
-  - `stock_2026-06-05.md` LLM 분석 실패 원인 조사 → `stock_main.py`의 Gemini 호출 실패
-  - `run_stock.py`: 품질 게이트를 `save()` 호출 **전**으로 이동 (분석 실패 시 빈 MD 저장 차단)
-  - `run_stock.py`: 분석 실패 시 텔레그램(`TELEGRAM_CHAT_ID`) + 이메일 이중 알림 추가
-  - `stock_build.yml`: `stock-data.json` analysis_ok 체크 → **MD 본문 직접 파싱**으로 교체
-    - `analysis_ok` 필드는 실제로 쓰지 않아 항상 false였던 버그 수정
-    - `핵심 요약` 섹션에 실제 내용 여부로 분석 완성도 판단
-    - Claude Code 루틴 빈 분석·stock_main.py LLM 실패 양쪽 모두 커버
+- [x] **주식 파이프라인 버그 3종 수정** (2026-06-08) — 세션 7차
+  - `api/requirements.txt` 생성 — Vercel Python 함수 의존성 최소화 (requests만), 빌드 실패 수정
+  - `stock_build.yml` YAML 구문 오류 수정 — Python 멀티라인을 한 줄로 변경 (모든 stock_build 실패 원인)
+  - `stock_2026-06-05.md` 재생성 — 정상 분석 포함 (금 -5.54% 급락 기록)
+  - `send_email.py` 요일 레이블 버그 수정 — `now.weekday()` → `report_date.weekday()` (발송일 기준 → 리포트 날짜 기준)
+  - `telegram.py` `send_stock_telegram()` — 요일 레이블 추가 (예: "2026-06-08 (월)")
 
 ### 주식 파이프라인 완성된 흐름
 ```
-Claude Code 루틴 (21:25 KST):
+Claude Code 루틴 (21:25 KST, 평일):
   데이터 수집(MCP) → Claude 분석 → MD 저장 → git push
   → stock_build.yml push 트리거 → HTML 빌드·Pages 배포
 
-stock_build.yml 23:00 스케줄 (백업):
-  MD 없음?                     → stock_main.py 실행
-  MD 있는데 핵심 요약 비어있음?  → stock_main.py 실행 + 텔레그램/이메일 알림
-  MD 있고 내용 정상?            → 건너뜀
+stock_build.yml 23:00 스케줄 (백업, 월~금):
+  TODAY MD 없음?                → stock_main.py 실행
+  TODAY MD 있는데 핵심 요약 비어있음? → stock_main.py 실행 + 텔레그램/이메일 알림
+  TODAY MD 있고 내용 정상?       → 건너뜀
 
-stock_send.yml 익일 08:00:
+stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
   이메일 + Notion + 텔레그램(@msstockbrief) 발송
+  (최근 MD ≤3일 이내만 발송)
 ```
 
 ### 검증 필요 (다음 실행 시 확인)
+- [ ] 6/8(월) 루틴 실행 → `stock_2026-06-08.md` 생성 확인
+- [ ] 6/9(화) KST 08:00 `stock_send.yml` → 이메일·텔레그램 요일 레이블 "(월)" 정상 확인
 - [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 확인
-- [ ] `stock_send.yml` 토요일 자동 실행 → @msstockbrief 채널 수신 확인
-- [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 스텝 이후 이메일·텔레그램 실행 확인
+- [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 이후 이메일·텔레그램 실행 확인
 - [ ] `cardnews.yml` workflow_dispatch 수동 실행 → 텔레그램 수신 확인 (--type news)
-- [ ] 다음 주식 루틴 실행 시 분석 실패 발생하면 텔레그램 알림 수신 확인
-
-### 주의: 2026-06-05 주식 데이터
-- `stock_2026-06-05.md` 이번 세션에서 재생성 완료 (정상 분석 포함)
-- `stock-data.json`에 2026-06-05 항목 없음 → 다음 빌드(월요일 루틴 실행 후) 자동 반영
 
 ### 다음 개발 (우선순위 순)
-- [ ] `cardnews.yml` 텔레그램 발송 수동 검증 → 정상 수신 확인
 - [ ] 구독 시스템 구현 — Supabase + Vercel API (`docs/plan/roadmap.md` Phase 2 참고)
 - [ ] 탭별 색상 테마 (뉴스=파랑, AI이슈=보라, 주식=초록) — 동일 구조 색상만 변경
+- [ ] `cardnews.yml` 텔레그램 발송 수동 검증 → 정상 수신 확인
 
 ### 주요 아키텍처 메모
 - `publish/archive.html`은 **`themes/editorial.py::render_archive()`** 에서 직접 생성 (Jinja2 미사용)
