@@ -479,7 +479,7 @@ def render_archive(ctx: dict) -> str:
           var hiTitle = h.art.title.replace(re, '<mark style="background:#fef08a;border-radius:2px">$1</mark>');
           var titleA = h.art.link
             ? '<a href="' + h.art.link + '" target="_blank" rel="noopener">' + hiTitle + '</a>'
-            : hiTitle;
+            : '<a href="' + h.report_url + '" target="_blank">' + hiTitle + '</a>';
           var label = h.art.label ? '<span class="arc-label">' + h.art.label + '</span>' : '';
           html += '<div class="arc-result">' + badge + dateA + titleA + label + '</div>';
         }});
