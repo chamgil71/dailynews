@@ -122,6 +122,21 @@ _EXTRA_CSS = """
     .card { padding: 24px 20px; }
     .stats-row { flex-wrap: wrap; gap: 16px; }
   }
+
+  /* ── 아카이브 검색 결과 ── */
+  .arc-result { padding:10px 0; border-bottom:1px solid var(--color-border); font-size:.9rem; line-height:1.55; }
+  .arc-result:last-child { border-bottom:none; }
+  .arc-type { display:inline-block; font-size:.7rem; font-weight:700;
+               padding:2px 6px; border-radius:4px; margin-right:6px; vertical-align:middle; text-transform:uppercase; }
+  .arc-type-news  { background:var(--color-blue-50); color:var(--color-blue); }
+  .arc-type-ai    { background:#ede9fe; color:#6d28d9; }
+  .arc-type-stock { background:#dcfce7; color:#15803d; }
+  .arc-date { font-family:var(--font-sans); font-size:.8rem; color:var(--color-muted); margin-right:6px; }
+  .arc-date a { color:var(--color-muted); text-decoration:none; }
+  .arc-label { display:inline-block; font-size:.7rem; background:var(--color-bg); color:var(--color-muted);
+                border:1px solid var(--color-border); border-radius:4px; padding:2px 6px; margin-left:6px; }
+  .arc-result a { color:var(--color-text); text-decoration:none; font-weight:600; }
+  .arc-result a:hover { color:var(--color-blue); }
 """
 
 
@@ -166,21 +181,164 @@ def render_report(ctx: dict) -> str:
 
 def render_archive(ctx: dict) -> str:
     tokens = get_tokens(_NAME)
-    items = "".join(f"""
+    
+    news_items_html = "".join(f"""
     <li style="display:flex;justify-content:space-between;align-items:center;
                padding:16px 0;border-bottom:1px solid var(--color-border)">
       <a href="news/{it['date']}.html"
          style="font-weight:600;text-decoration:none;color:var(--color-text)">
-        {it['display']}
+        📄 {it['display']}
       </a>
       <span style="color:var(--color-muted);font-size:.85rem">{it['date']} →</span>
-    </li>""" for it in ctx['items'])
+    </li>""" for it in ctx.get('items', []))
+    
+    stock_items_html = "".join(f"""
+    <li style="display:flex;justify-content:space-between;align-items:center;
+               padding:16px 0;border-bottom:1px solid var(--color-border)">
+      <a href="stock/{it['date']}.html"
+         style="font-weight:600;text-decoration:none;color:var(--color-text)">
+        📊 {it['display']}
+      </a>
+      <span style="color:var(--color-muted);font-size:.85rem">{it['date']} →</span>
+    </li>""" for it in ctx.get('stock_items', [])) or "<li style='color:var(--color-muted);padding:16px 0'>주식 리포트 없음</li>"
+    
+    ai_items_html = "".join(f"""
+    <li style="display:flex;justify-content:space-between;align-items:center;
+               padding:16px 0;border-bottom:1px solid var(--color-border)">
+      <a href="ai-issue/{it['date']}.html"
+         style="font-weight:600;text-decoration:none;color:var(--color-text)">
+        🤖 {it['display']}
+      </a>
+      <span style="color:var(--color-muted);font-size:.85rem">{it['date']} →</span>
+    </li>""" for it in ctx.get('ai_items', [])) or "<li style='color:var(--color-muted);padding:16px 0'>AI이슈 보고서 없음</li>"
+
+    total = len(ctx.get('items', [])) + len(ctx.get('stock_items', [])) + len(ctx.get('ai_items', []))
+
     body = f"""
   <div class="card">
-    <div class="eyebrow">아카이브 · {len(ctx['items'])}개 리포트</div>
-    <h1 style="margin-bottom:32px">지나간 매일의 브리핑.</h1>
-    <ul style="list-style:none;padding:0">{items}</ul>
-  </div>"""
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:32px">
+      <div>
+        <div class="eyebrow">아카이브 · 총 {total}개 리포트</div>
+        <h1 style="margin:0">지나간 매일의 브리핑.</h1>
+      </div>
+      <!-- 통합 검색 -->
+      <div class="arch-search" style="flex:0 0 280px;min-width:200px">
+        <div style="position:relative;margin-bottom:8px">
+          <input id="arcSearchInput" type="text" placeholder="기사·이슈·시황 키워드…"
+            style="width:100%;padding:10px 14px 10px 36px;border:1px solid var(--color-border);
+                   border-radius:8px;background:var(--color-card);color:var(--color-text);
+                   font-family:inherit;font-size:.9rem;outline:none;transition:border-color .15s;" 
+            onfocus="this.style.borderColor='var(--color-blue)'"
+            onblur="this.style.borderColor='var(--color-border)'" />
+          <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:.95rem;pointer-events:none">🔍</span>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--color-muted)">
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="arcSfNews" checked style="accent-color:var(--color-blue)"> 📰 뉴스</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="arcSfAi" checked style="accent-color:var(--color-blue)"> 🤖 AI이슈</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="arcSfStock" checked style="accent-color:var(--color-blue)"> 📊 주식</label>
+        </div>
+        <div id="arcSearchResults"></div>
+      </div>
+    </div>
+
+    <!-- 탭 스위치 -->
+    <div style="margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:8px;display:flex;gap:20px;">
+      <button onclick="showTab('news')" id="tabNews" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid var(--color-blue);background:none;cursor:pointer;color:var(--color-text);font-weight:700">📰 뉴스 {len(ctx.get('items', []))}</button>
+      <button onclick="showTab('stock')" id="tabStock" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--color-muted)">📊 주식 {len(ctx.get('stock_items', []))}</button>
+      <button onclick="showTab('ai')" id="tabAi" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--color-muted)">🤖 AI이슈 {len(ctx.get('ai_items', []))}</button>
+    </div>
+
+    <!-- 리스트 패널 -->
+    <div id="tabPanelNews"><ul style="list-style:none;padding:0">{news_items_html}</ul></div>
+    <div id="tabPanelStock" style="display:none"><ul style="list-style:none;padding:0">{stock_items_html}</ul></div>
+    <div id="tabPanelAi" style="display:none"><ul style="list-style:none;padding:0">{ai_items_html}</ul></div>
+  </div>
+
+  <script>
+  var _active = 'news';
+  function showTab(t) {{
+    ['news','stock','ai'].forEach(function(k) {{
+      var cap = k.charAt(0).toUpperCase()+k.slice(1);
+      var panel = document.getElementById('tabPanel'+cap);
+      var tabBtn = document.getElementById('tab'+cap);
+      if (panel) panel.style.display = k===t ? '' : 'none';
+      if (tabBtn) {{
+        tabBtn.style.borderBottom = k===t ? '2px solid var(--color-blue)' : '2px solid transparent';
+        tabBtn.style.color = k===t ? 'var(--color-text)' : 'var(--color-muted)';
+        tabBtn.style.fontWeight = k===t ? '700' : '400';
+      }}
+    }});
+    _active = t;
+  }}
+
+  // 통합 검색
+  var _searchIndex = null, _searchLoading = false;
+  function _loadSearchIndex(cb) {{
+    if (_searchIndex) {{ cb(_searchIndex); return; }}
+    if (_searchLoading) {{ setTimeout(function() {{ _loadSearchIndex(cb); }}, 100); return; }}
+    _searchLoading = true;
+    fetch('search-index.json')
+      .then(function(r) {{ return r.json(); }})
+      .then(function(d) {{ _searchIndex = d; _searchLoading = false; cb(d); }})
+      .catch(function() {{ _searchLoading = false; _searchIndex = []; cb([]); }});
+  }}
+  function _runSearch() {{
+    var q   = document.getElementById('arcSearchInput').value.trim();
+    var res = document.getElementById('arcSearchResults');
+    var useNews  = document.getElementById('arcSfNews').checked;
+    var useAi    = document.getElementById('arcSfAi').checked;
+    var useStock = document.getElementById('arcSfStock').checked;
+    if (q.length < 2) {{ res.innerHTML = ''; return; }}
+    var ql = q.toLowerCase();
+    _loadSearchIndex(function(index) {{
+      var hits = [];
+      index.forEach(function(report) {{
+        var t = report.type || 'news';
+        if (t === 'news'     && !useNews)  return;
+        if (t === 'ai-issue' && !useAi)    return;
+        if (t === 'stock'    && !useStock) return;
+        report.articles.forEach(function(art) {{
+          if (art.title.toLowerCase().indexOf(ql) >= 0) {{
+            hits.push({{ type: t, date: report.date, display: report.display,
+                         report_url: report.report_url, art: art }});
+          }}
+        }});
+      }});
+      if (!hits.length) {{
+        res.innerHTML = '<p style="color:var(--color-muted);font-size:.85rem;padding:8px 0">검색 결과 없음</p>';
+        return;
+      }}
+      var typeLabel = {{ news:'뉴스', 'ai-issue':'AI', stock:'주식' }};
+      var typeCls   = {{ news:'arc-type-news', 'ai-issue':'arc-type-ai', stock:'arc-type-stock' }};
+      var re = new RegExp('(' + q.replace(/[.*+?^${{}}()|[\\]\\\\]/g,'\\\\$&') + ')', 'gi');
+      var html = '<p style="font-size:.75rem;color:var(--color-muted);margin-bottom:8px;font-family:monospace">'
+               + hits.length + '건 검색됨 (최대 100건)</p>';
+      hits.slice(0, 100).forEach(function(h) {{
+        var badge = '<span class="arc-type ' + typeCls[h.type] + '">' + typeLabel[h.type] + '</span>';
+        var dateA = '<span class="arc-date"><a href="' + h.report_url + '">' + h.date + '</a></span>';
+        var hiTitle = h.art.title.replace(re, '<mark style="background:#fef08a;border-radius:2px">$1</mark>');
+        var titleA = h.art.link
+          ? '<a href="' + h.art.link + '" target="_blank" rel="noopener">' + hiTitle + '</a>'
+          : '<a href="' + h.report_url + '" target="_blank">' + hiTitle + '</a>';
+        var label = h.art.label ? '<span class="arc-label">' + h.art.label + '</span>' : '';
+        html += '<div class="arc-result">' + badge + dateA + titleA + label + '</div>';
+      }});
+      res.innerHTML = html;
+    }});
+  }}
+  var _arcTimer;
+  document.getElementById('arcSearchInput').addEventListener('input', function() {{
+    clearTimeout(_arcTimer);
+    _arcTimer = setTimeout(_runSearch, 280);
+  }});
+  ['arcSfNews','arcSfAi','arcSfStock'].forEach(function(id) {{
+    document.getElementById(id).addEventListener('change', _runSearch);
+  }});
+  </script>
+"""
     return layout_html("아카이브", body, "archive",
                        ctx['site_title'], ctx['now'], tokens, _EXTRA_CSS)
 

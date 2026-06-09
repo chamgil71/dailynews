@@ -415,7 +415,10 @@ def render_archive(ctx: dict, theme_name: str) -> str:
         now=ctx["now"],
         nav=nav_html("archive"),
         items=ctx["items"],
+        stock_items=ctx.get("stock_items", []),
+        ai_items=ctx.get("ai_items", []),
         footer=FOOTER_CONFIG,
+        site_url=ctx.get("site_url", ""),
     )
 
 
