@@ -190,7 +190,7 @@ def generate_pillow(date_str: str, channel: str) -> list[Path]:
 
     # 채널별 데이터 로드
     if channel == "news":
-        reports = json.loads(Path(_ROOT, "publish", "reports-data.json").read_text())
+        reports = json.loads(Path(_ROOT, "publish", "news", "data.json").read_text())
         report  = next((r for r in reports if r["date"] == date_str), None)
         if not report:
             raise ValueError(f"reports-data.json에 {date_str} 없음")
@@ -210,7 +210,7 @@ def generate_pillow(date_str: str, channel: str) -> list[Path]:
         trends = []
 
     elif channel == "stock":
-        stock_path = Path(_ROOT, "publish", "stock", "stock-data.json")
+        stock_path = Path(_ROOT, "publish", "stock", "data.json")
         if not stock_path.exists():
             raise FileNotFoundError(f"주식 데이터 없음: {stock_path}")
         all_data = json.loads(stock_path.read_text(encoding="utf-8"))

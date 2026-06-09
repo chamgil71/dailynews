@@ -178,10 +178,10 @@ def build_archive_ctx(pages: list[tuple[str, str]] = None) -> dict:
         except Exception:
             return []
 
-    # JSON 인덱스 기준으로 읽음 — reports-data.json이 먼저 쓰여진 후 이 함수가 호출됨
-    items       = _from_json(f"{DOCS_DIR}/reports-data.json")
-    stock_items = _from_json(f"{DOCS_DIR}/stock/stock-data.json")
-    ai_items    = _from_json(f"{DOCS_DIR}/ai-issue/ai-issue-data.json")
+    # JSON 인덱스 기준으로 읽음 — news/data.json이 먼저 쓰여진 후 이 함수가 호출됨
+    items       = _from_json(f"{DOCS_DIR}/news/data.json")
+    stock_items = _from_json(f"{DOCS_DIR}/stock/data.json")
+    ai_items    = _from_json(f"{DOCS_DIR}/ai-issue/data.json")
 
     return {
         "display_date": "전체 목록",
@@ -264,7 +264,7 @@ def build_search_index() -> None:
             pass
 
     # ── 주식 ──────────────────────────────────────────────────────────────────
-    stock_path = Path(DOCS_DIR) / "stock/stock-data.json"
+    stock_path = Path(DOCS_DIR) / "stock/data.json"
     if stock_path.exists():
         try:
             for report in json.loads(stock_path.read_text(encoding="utf-8")):
@@ -351,9 +351,9 @@ def build(theme_name: str | None = None,
     Path(DOCS_DIR, "archive.html").write_text(archive_html, encoding="utf-8")
     print("  + archive.html")
 
-    # reports-data.json (SPA용 — news_en/news_ko 제외, 경량 인덱스)
+    # news/data.json (SPA용 — news_en/news_ko 제외, 경량 인덱스)
     # --from 빌드 시에는 기존 JSON 데이터와 병합
-    json_path = Path(DOCS_DIR, "reports-data.json")
+    json_path = Path(DOCS_DIR, "news/data.json")
     if from_date and not rebuild_all and json_path.exists():
         try:
             existing = json.loads(json_path.read_text(encoding="utf-8"))
@@ -372,12 +372,12 @@ def build(theme_name: str | None = None,
         json.dumps(reports_data, ensure_ascii=False, indent=None),
         encoding="utf-8"
     )
-    print(f"  + reports-data.json ({len(reports_data)}개 — news 목록 분리됨)")
+    print(f"  + news/data.json ({len(reports_data)}개 - news 목록 분리됨)")
 
     # reports.json (메타)
     meta = [{"date": d, "url": f"news/{d}.html"} for d, _ in
             sorted([(r["date"], "") for r in reports_data], key=lambda x: x[0], reverse=True)]
-    Path(DOCS_DIR, "reports.json").write_text(
+    Path(DOCS_DIR, "news/reports.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 

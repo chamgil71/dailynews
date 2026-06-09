@@ -197,9 +197,16 @@ def build(theme_name: str | None = None) -> None:
 
         out_path = os.path.join(STOCK_PUBLISH_DIR, f"{date_str}.html")
         Path(out_path).write_text(html, encoding="utf-8")
+        
+        # 날짜별 JSON 파일 생성 (뉴스 및 AI이슈와 통일)
+        stock_json_path = os.path.join(STOCK_PUBLISH_DIR, f"{date_str}.json")
+        Path(stock_json_path).write_text(
+            json.dumps(data, ensure_ascii=False), encoding="utf-8"
+        )
+        
         pages.append((date_str, out_path))
         stock_data.append(data)
-        print(f"  + stock/{date_str}.html")
+        print(f"  + stock/{date_str}.html + {date_str}.json")
 
     # index.html = 최신 리포트
     latest_ctx = build_stock_report_ctx(md_files[0], pages[0][0], stock_data[0])
@@ -217,12 +224,12 @@ def build(theme_name: str | None = None) -> None:
     )
     print("  + stock/archive.html")
 
-    # stock-data.json
-    Path(STOCK_PUBLISH_DIR, "stock-data.json").write_text(
+    # stock/data.json (뉴스 및 AI이슈와 파일명 통일)
+    Path(STOCK_PUBLISH_DIR, "data.json").write_text(
         json.dumps(stock_data, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
-    print(f"  + stock/stock-data.json ({len(stock_data)} reports)")
+    print(f"  + stock/data.json ({len(stock_data)} reports)")
     print(f"\nDone: {len(pages)} stock reports -> {STOCK_PUBLISH_DIR}/")
 
 

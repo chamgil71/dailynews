@@ -160,12 +160,12 @@ def main():
         "issues": weekly_indexes
     }
     
-    index_json_path = os.path.join(PUBLISH_DIR, "ai-issue-data.json")
+    index_json_path = os.path.join(PUBLISH_DIR, "data.json")
     Path(index_json_path).write_text(
         json.dumps(index_payload, ensure_ascii=False, indent=2),
         encoding="utf-8"
     )
-    print(f"  + publish/ai-issue/ai-issue-data.json 업데이트 완료 ({len(weekly_indexes)}개 아카이브 인덱스)")
+    print(f"  + publish/ai-issue/data.json 업데이트 완료 ({len(weekly_indexes)}개 아카이브 인덱스)")
     
     # 4. 아카이브 웹 목록 (publish/ai-issue/archive.html) 빌드
     # 테마 규격의 아카이브 렌더링에 적합한 컨텍스트 데이터 매핑

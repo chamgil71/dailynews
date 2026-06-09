@@ -526,7 +526,7 @@ def build_news(date_str: str | None = None, rebuild_all: bool = False) -> None:
     out_dir = CARDNEWS / "news"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    entries = json.loads((PUBLISH / "reports-data.json").read_text(encoding="utf-8"))
+    entries = json.loads((PUBLISH / "news" / "data.json").read_text(encoding="utf-8"))
     if date_str:
         entries = [e for e in entries if e.get("date") == date_str]
     elif not rebuild_all:
@@ -580,7 +580,7 @@ def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
     out_dir = CARDNEWS / "stock"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    stock_path = PUBLISH / "stock" / "stock-data.json"
+    stock_path = PUBLISH / "stock" / "data.json"
     if not stock_path.exists():
         print("  stock-data.json 없음")
         return
