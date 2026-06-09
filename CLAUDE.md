@@ -59,7 +59,7 @@ publish/cardnews/
 
 ---
 
-## 현재 상태 (2026-06-08)
+## 현재 상태 (2026-06-09)
 
 ### 완료된 작업 (main 반영 완료)
 - [x] 3채널 파이프라인 발송 순서 통일 (수집→빌드→배포→이메일→텔레그램)
@@ -77,6 +77,14 @@ publish/cardnews/
   - `stock_2026-06-05.md` 재생성 — 정상 분석 포함 (금 -5.54% 급락 기록)
   - `send_email.py` 요일 레이블 버그 수정 — `now.weekday()` → `report_date.weekday()` (발송일 기준 → 리포트 날짜 기준)
   - `telegram.py` `send_stock_telegram()` — 요일 레이블 추가 (예: "2026-06-08 (월)")
+- [x] **Gemini API 과부하 대응을 위한 백업 모델 폴백 구현** (2026-06-09)
+  - `config/settings.py`에 `GEMINI_MODEL_FALLBACK` 환경변수 옵션 정의 (기본값 `gemini-2.5-flash`).
+  - `core/news/analyzer.py` 및 `core/stock/analyzer.py`에 재시도 로직 강화 (`gemini-3.5-flash` 3회 실패 시 백업 모델로 3회 자동 추가 시도).
+- [x] **6/8 주식/6/7 AI이슈 발송 누락 및 미수신 건 분석 완료** (2026-06-09)
+  - 6/8 주식: 09:45에 뒤늦게 리포트가 머지되어 08:00에 실행된 `stock_send.yml`이 리포트를 감지하지 못하고 스킵함.
+  - 6/7 AI이슈: Actions 로그상 이메일/텔레그램이 정상 송신 완료(250 OK) 되었으므로, 수신자의 스팸함/프로모션 탭 검토 필요.
+- [x] **카드뉴스 이미지 구현 및 플랫폼 연동 현황 분석 완료** (2026-06-09)
+  - `build_cardnews.py` (HTML), `generate_cardnews_images.py` (Playwright/Pillow 렌더러), `post_cardnews.py` (멀티 SNS 전송) 구현 상태 및 Instagram/Twitter API 토큰 설정 미비 등 확인 완료.
 
 ### 주식 파이프라인 완성된 흐름
 ```
@@ -95,14 +103,15 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 ```
 
 ### 검증 필요 (다음 실행 시 확인)
-- [ ] 6/8(월) 루틴 실행 → `stock_2026-06-08.md` 생성 확인
-- [ ] 6/9(화) KST 08:00 `stock_send.yml` → 이메일·텔레그램 요일 레이블 "(월)" 정상 확인
+- [x] 6/8(월) 루틴 실행 → `stock_2026-06-08.md` 생성 확인
+- [x] 6/9(화) KST 08:00 `stock_send.yml` 실행 및 발송 누락 원인 규명 (요일 레이블 정상 작동 확인)
 - [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 확인
 - [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 이후 이메일·텔레그램 실행 확인
 - [ ] `cardnews.yml` workflow_dispatch 수동 실행 → 텔레그램 수신 확인 (--type news)
 
 ### 다음 개발 (우선순위 순)
 - [ ] 구독 시스템 구현 — Supabase + Vercel API (`docs/plan/roadmap.md` Phase 2 참고)
+- [ ] SNS 카드뉴스 자동 발송 기능 활성화 (`INSTAGRAM_ACCESS_TOKEN`, `TWITTER_API_KEY` 등 Secrets 등록 및 검증)
 - [ ] 탭별 색상 테마 (뉴스=파랑, AI이슈=보라, 주식=초록) — 동일 구조 색상만 변경
 - [ ] `cardnews.yml` 텔레그램 발송 수동 검증 → 정상 수신 확인
 
