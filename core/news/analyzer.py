@@ -18,7 +18,7 @@ from config.settings import (
     LLM_PROVIDER,
     OPENAI_API_KEY, GPT_MODEL_FULL, GPT_MODEL_MINI, GPT_MINI_THRESHOLD,
     ANTHROPIC_KEY,  CLAUDE_MODEL_FULL, CLAUDE_MODEL_MINI, CLAUDE_MINI_THRESHOLD,
-    GEMINI_API_KEY, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD,
+    GEMINI_API_KEY, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MODEL_FALLBACK, GEMINI_MINI_THRESHOLD,
     LLM_MAX_TOKENS,
 )
 from config.prompts import (
@@ -262,8 +262,8 @@ class GeminiAnalyzer(BaseAnalyzer):
         config = self._make_config(json_mode=True)
         # 503/429 과부하 대응: 최대 3회 재시도 (2s / 4s / 8s 백오프)
         models_to_try = [model_name]
-        if model_name == "gemini-3.5-flash":
-            models_to_try.append("gemini-2.5-flash")
+        if model_name == "gemini-3.5-flash" and GEMINI_MODEL_FALLBACK:
+            models_to_try.append(GEMINI_MODEL_FALLBACK)
 
         for model in models_to_try:
             for attempt in range(3):

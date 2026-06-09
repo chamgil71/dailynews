@@ -15,7 +15,7 @@ import re
 from config.stock_prompts import STOCK_ANALYSIS_PROMPT, TEMPERATURE_OPTIONS, TEMPERATURE_EMOJI
 from config.settings import (
     LLM_PROVIDER,
-    GEMINI_API_KEY, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD,
+    GEMINI_API_KEY, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MODEL_FALLBACK, GEMINI_MINI_THRESHOLD,
     OPENAI_API_KEY, GPT_MODEL_FULL, GPT_MODEL_MINI, GPT_MINI_THRESHOLD,
     ANTHROPIC_KEY, CLAUDE_MODEL_FULL, CLAUDE_MODEL_MINI, CLAUDE_MINI_THRESHOLD,
 )
@@ -131,8 +131,8 @@ def _call_llm(prompt: str) -> str:
         config = types.GenerateContentConfig(max_output_tokens=2000, temperature=0.3)
         # 재시도 3회 (2s / 4s / 8s)
         models_to_try = [GEMINI_MODEL_FULL]
-        if GEMINI_MODEL_FULL == "gemini-3.5-flash":
-            models_to_try.append("gemini-2.5-flash")
+        if GEMINI_MODEL_FULL == "gemini-3.5-flash" and GEMINI_MODEL_FALLBACK:
+            models_to_try.append(GEMINI_MODEL_FALLBACK)
 
         for model in models_to_try:
             for attempt in range(3):
