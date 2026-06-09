@@ -17,7 +17,7 @@
 * **📰 데일리 뉴스 브리핑**: RSS 피드(영어 4개, 한국어 2개)를 매일 새벽 자동 수집 → Gemini 분석 → 이메일 + 텔레그램 발행 (KST 03:15, GitHub Actions)
 * **📊 주식시황 브리핑**: 장 마감 후 Claude Code 루틴이 UsStockInfo MCP로 데이터 수집 → 분석 → push. 다음날 KST 08:00 이메일 발송 (stock_send.yml)
 * **🤖 AI이슈 주간 브리핑**: 매주 일요일 KST 07:00 GitHub Actions 자동 실행 → Gemini 수집·분석 → 이메일 + 텔레그램
-* **🎨 다이내믹 테마**: `classic`, `editorial`(신문형), `terminal`(Bloomberg 다크), `ink`, `forest`, `minimal` — config 한 줄로 전체 교체
+* **🎨 다이내믹 테마**: `classic`, `editorial`(신문형), `terminal`(Bloomberg 다크), `ink`, `forest`, `minimal` — config 한 줄로 전체 교체 (모든 테마에서 3채널 통합 아카이브 탭 및 실시간 검색 완벽 동기화 지원)
 * **📧 이메일 + 텔레그램**: 3채널 모두 이메일 발송 구현. 뉴스·AI이슈는 텔레그램 카드뉴스도 연동
 * **🔄 Vercel & GitHub Pages 듀얼 배포**: Vercel (메인, git push 트리거) + GitHub Pages (백업, Actions artifact)
 

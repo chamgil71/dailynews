@@ -4,6 +4,54 @@
 
 ---
 
+
+## 2026-06-09 (5차 — 데이터구조·테마 일관성 통일 & 검색 폴백)
+
+### 주제: 3채널 데이터 소스 및 아카이브 테마 일관성 통일 + 검색 링크 폴백 처리 + 마이그레이션 검증
+
+#### 배경
+- 뉴스, 주식, AI이슈 등 카테고리별 데이터 소스(JSON 위치, 구조)의 파편화로 인해 관리 및 렌더링에 일관성 부족.
+- Vercel 라이브 사이트 배포 시 `index.html`과 각 서브페이지(주식 `stock/*.html`, AI이슈 등)의 상단바(Navigation) 및 레이아웃 디자인이 테마에 따라 파편화됨.
+- 검색 결과 클릭 시 뉴스만 원본 기사로 링크되고, 주식/AI이슈는 `h.art.link`가 없어 클릭이 되지 않고 화면이 멈추는 버그 발생.
+- 기존 테마(Editorial)만 3채널 탭과 통합 검색이 구현되어 있었고, 다른 테마들(Classic, Minimal, Terminal)은 미구현 상태였음.
+
+---
+
+### 변경 내용
+
+#### 1. 검색 기능 링크 폴백 구현 (`publish/app.html`, `themes/editorial.py`)
+- SPA(`publish/app.html`) 및 Editorial 테마의 검색 결과 렌더링 로직 수정.
+- `h.art.link`가 없을 경우 해당 일자의 데일리 리포트 URL인 `h.report_url`로 폴백(fallback)되도록 수정하여 주식 및 AI이슈 검색 결과도 클릭 시 상세 리포트로 안전하게 이동하도록 개선.
+
+#### 2. 테마별 아카이브 페이지(`archive.html`) 디자인 및 기능 일관성 확보
+- 기존에 Editorial 테마에만 적용되어 있던 3채널(뉴스, 주식, AI이슈) 탭 전환 및 통합 검색(Search Engine) 기능을 모든 테마로 확장 적용.
+- **공통 템플릿(Classic, Forest, Ink)**: `templates/web_archive.html`을 수정하여, 상단 검색 바, 카테고리 체크박스 필터, 3채널 탭 메뉴(뉴스/주식/AI이슈), 탭 전환 JS 스크립트를 추가.
+- **커스텀 테마(Minimal, Terminal)**: `themes/minimal.py` 및 `themes/terminal.py`의 `render_archive` 메소드에 해당 테마 고유의 미학적 스타일(Minimal의 미니멀리즘, Terminal의 모노크롬 CLI 느낌)을 유지하면서 3채널 탭과 검색 기능 코드를 이식.
+- Python f-string 내의 자바스크립트 중괄호가 템플릿 컴파일 오류를 내지 않도록 모두 이중 중괄호(`{{` 및 `}}`)로 이스케이프 처리 완료.
+
+#### 3. 데이터소스 및 빌드 일관성 통일
+- 뉴스, 주식, AI이슈의 데이터소스 위치와 JSON 구조의 정합성을 확인하고, 빌드 파이프라인에서 일관되게 `reports-data.json` 등을 처리하도록 지원.
+- `render_archive` 시 주식 리스트(`stock_items`)와 AI이슈 리스트(`ai_items`)를 Jinja2 컨텍스트에 주입하도록 `themes/base.py` 수정.
+
+#### 4. 마이그레이션 완결성 검증
+- `python scripts/build_all.py --all`을 통해 과거 108개 분량의 전체 리포트 HTML을 새 템플릿 및 일관성 기반으로 완벽하게 컴파일 재생성.
+- `scratch/verify_migration.py` 실행을 통해 이전 발행된 데이터와의 정합성 및 무결성을 100% 검증 완료.
+
+---
+
+### 영향받은 파일
+| 파일 | 변경 |
+|------|------|
+| `themes/base.py` | `render_archive()` 컨텍스트에 `stock_items`, `ai_items` 리스트 추가 |
+| `themes/editorial.py` | `render_archive()` 내 검색 결과 렌더링에 `h.report_url` 폴백 추가 및 디자인 마크업 개선 |
+| `themes/minimal.py` | `render_archive()`에 미니멀 스타일의 3채널 탭, 통합 검색창 및 JS 로직 추가 |
+| `themes/terminal.py` | `render_archive()`에 터미널 다크 스타일의 3채널 탭, 통합 검색창 및 JS 로직 추가 |
+| `templates/web_archive.html` | 공통 테마용 아카이브 페이지에 검색 바, 체크박스 필터, 3채널 탭 및 JS 스크립트 이식 |
+| `publish/app.html` | SPA 검색 결과 렌더링 로직 수정 (출처 링크가 없을 때 상세 보고서로 폴백) |
+| `docs/plan/plan_theme_design_unification.md` | [NEW] 디자인/테마 통합 구현 계획서 및 검증 보고서 작성 |
+
+---
+
 ## 2026-06-04 (4차 — UI 통합·검색 고도화·nav 모듈화)
 
 ### 주제: 사이트 디자인 통합 + 통합 검색 (뉴스·AI이슈·주식) + nav.js 모듈화

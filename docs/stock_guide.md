@@ -260,7 +260,7 @@ build_stock_report_ctx(md_path, date_str, data)
 build(theme_name)
   → publish/stock/YYYY-MM-DD.html
   → publish/stock/index.html
-  → publish/stock/archive.html
+  → publish/stock/archive.html   (메인 통합 아카이브인 publish/archive.html#stock과 UI 및 기능 동기화 완료)
   → publish/stock/stock-data.json
 ```
 

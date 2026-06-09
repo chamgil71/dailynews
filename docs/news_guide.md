@@ -175,7 +175,7 @@ reports/news_YYYY-MM-DD.md   ← 같은 날 재실행 시 덮어씀
 ```
 publish/
   index.html          ← 최신 리포트 홈
-  archive.html        ← 전체 목록
+  archive.html        ← 뉴스·주식·AI이슈 3채널 통합 아카이브 및 검색 (2026-06-09 통합 완결)
   app.html            ← 동적 웹앱 (검색·필터)
   reports.json        ← 날짜 인덱스
   reports-data.json   ← 구조화 데이터 (이슈/키워드 포함)
@@ -197,7 +197,10 @@ publish/
 }
 ```
 
----
+### 5-1-2. [2026-06-09 추가] 3채널 통합 아카이브 (`archive.html`)
+- 기존의 아카이브 페이지는 테마별로 구현 상태가 상이하였으나, 현재는 모든 테마(Classic, Editorial, Minimal, Terminal 등)에서 **뉴스, 주식, AI이슈 3개 채널의 탭 전환** 및 **전체 리포트 통합 검색 엔진**을 일관되게 지원합니다.
+- 빌드 시 `build_site.py`에서 각 테마의 `render_archive(ctx)`를 호출하며, 이메일/뉴스/주식/AI이슈 데이터베이스가 함께 가공되어 컨텍스트(`stock_items`, `ai_items`)로 전달됩니다.
+- 검색 결과에서 출처 아웃바운드 링크가 존재하지 않는 주식 및 AI이슈 리포트 등의 항목을 클릭하면, 해당 날짜의 상세 보고서 페이지(`h.report_url`)로 안전하게 폴백(fallback)하여 정상 연동되도록 조치되었습니다.
 
 ### 5-2. [2026-05-24 추가] Marked.js & 테마 연동 클라이언트 렌더링 파이프라인 (순서도)
 

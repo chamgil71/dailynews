@@ -207,3 +207,23 @@ python scripts/build_site.py --all
 | `themes/ink.py` | ink | 잉크 신문 스타일. 붉은 accent |
 | `themes/forest.py` | forest | 핀테크 그린. 에메랄드 accent |
 | `themes/minimal.py` | minimal | 넓은 여백, Pretendard 기반 |
+
+---
+
+## 10. 아카이브 페이지 통합 및 기능 동기화
+
+2026-06-09 리팩토링을 통해 모든 테마의 아카이브 페이지(`archive.html`)가 기능적으로 통일되었습니다.
+
+### 주요 기능 사양
+- **3개 채널 탭 메뉴**: 뉴스 브리핑, 주식 시황, AI이슈에 대한 탭이 모든 테마에서 제공되며 클릭 시 부드럽게 목록이 교체됩니다.
+- **실시간 통합 검색**: 상단 검색 입력창과 체크박스 필터를 사용해 3개 카테고리의 모든 리포트를 실시간으로 조회하고 키워드 하이라이팅을 제공합니다.
+- **상세 리포트 이동**: 검색 결과 목록에서 기사 출처 링크(`h.art.link`)가 없을 경우, 당일 로컬 리포트 상세 페이지(`h.report_url`)로 안전하게 폴백(fallback)하여 정상적인 상세 이동을 보장합니다.
+
+### 테마별 구현 방식
+1. **표준 테마 (Classic, Ink, Forest)**:
+   - `themes/base.py`에서 `stock_items`와 `ai_items`를 Jinja2 컨텍스트에 추가 주입합니다.
+   - `templates/web_archive.html` 공통 템플릿 파일 하나에 UI 마크업과 JS 로직을 구현하여 테마별 CSS 토큰과 매핑합니다.
+2. **커스텀 테마 (Editorial, Minimal, Terminal)**:
+   - 각 테마 클래스(`themes/editorial.py`, `themes/minimal.py`, `themes/terminal.py`)의 `render_archive(ctx)` 메소드 내에 해당 테마 고유의 비주얼 스타일로 마크업과 JS 코드를 내장합니다.
+   - **주의**: Python f-string 기반의 레이아웃 코드로 구성되어 있으므로, 템플릿 내 자바스크립트용 단일 중괄호(`{}`)는 반드시 이중 중괄호(`{{`, `}}`)로 이스케이프하여 빌드 타임에 컴파일 에러가 발생하지 않도록 해야 합니다.
+
