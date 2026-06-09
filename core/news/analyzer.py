@@ -261,28 +261,40 @@ class GeminiAnalyzer(BaseAnalyzer):
         )
         config = self._make_config(json_mode=True)
         # 503/429 과부하 대응: 최대 3회 재시도 (2s / 4s / 8s 백오프)
-        for attempt in range(3):
-            try:
-                response = self.client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                    config=config,
-                )
-                return response.text.strip()
-            except Exception as e:
-                err_str = str(e)
-                if is_model_error(e):
-                    # 모델 만료·미존재: 재시도 불필요, 즉시 관리자 알림
-                    send_llm_failure_alert("gemini", model_name, e, context="news analyzer")
-                    raise
-                is_retryable = any(k in err_str for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED"))
-                if is_retryable and attempt < 2:
-                    wait = 2 ** (attempt + 1)
-                    gha_warning(f"Gemini 일시 과부하 — {wait}초 후 재시도 ({attempt+1}/3): {err_str[:80]}")
-                    time.sleep(wait)
-                else:
-                    send_llm_failure_alert("gemini", model_name, e, context="news analyzer")
-                    raise
+        models_to_try = [model_name]
+        if model_name == "gemini-3.5-flash":
+            models_to_try.append("gemini-2.5-flash")
+
+        for model in models_to_try:
+            for attempt in range(3):
+                try:
+                    response = self.client.models.generate_content(
+                        model=model,
+                        contents=prompt,
+                        config=config,
+                    )
+                    return response.text.strip()
+                except Exception as e:
+                    err_str = str(e)
+                    if is_model_error(e):
+                        if model == models_to_try[-1]:
+                            send_llm_failure_alert("gemini", model, e, context="news analyzer")
+                            raise
+                        else:
+                            gha_warning(f"Gemini {model} 치명적 오류, 폴백 모델 시도: {err_str[:80]}")
+                            break
+                    is_retryable = any(k in err_str for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED"))
+                    if is_retryable and attempt < 2:
+                        wait = 2 ** (attempt + 1)
+                        gha_warning(f"Gemini {model} 일시 과부하 — {wait}초 후 재시도 ({attempt+1}/3): {err_str[:80]}")
+                        time.sleep(wait)
+                    else:
+                        if model == models_to_try[-1]:
+                            send_llm_failure_alert("gemini", model, e, context="news analyzer")
+                            raise
+                        else:
+                            gha_warning(f"Gemini {model} 과부하 최종 실패, 폴백 모델 시도: {err_str[:80]}")
+                            break
 
     def analyze_by_lang(self, en_news: list, ko_news: list) -> dict:
         results = {"en": "", "ko": "", "combined": "", "structured": {},

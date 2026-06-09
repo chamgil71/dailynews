@@ -30,26 +30,48 @@ def _build_market_block(stock_data: dict) -> str:
     m = stock_data.get("market", {})
     lines = []
 
+    def _pct(val) -> str:
+        if val is None or val == "?":
+            return "N/A"
+        try:
+            return f"{float(val):+.2f}%"
+        except (ValueError, TypeError):
+            return "N/A"
+
+    def _bp(val) -> str:
+        if val is None or val == "N/A":
+            return "N/A"
+        try:
+            return f"{float(val):+.1f}bp"
+        except (ValueError, TypeError):
+            return "N/A"
+
     def _v(key: str, subkey: str, label: str, unit: str = "") -> str:
         val = m.get(key, {}).get(subkey)
         if val is None:
             return f"{label}: N/A"
         return f"{label}: {val:,.2f}{unit}"
 
+    us10y_val = m.get('us10y', {}).get('value')
+    us10y_bp = m.get('us10y', {}).get('change_bp')
+    us10y_str = f"미국 10년물 금리: {us10y_val:,.2f}%" if us10y_val is not None else "미국 10년물 금리: N/A"
+    if us10y_val is not None and us10y_bp is not None:
+        us10y_str += f"  ({_bp(us10y_bp)})"
+
     lines += [
         "[ 국내 지수 ]",
-        _v("kospi",   "close",      "코스피", "pt") + f"  ({m.get('kospi',{}).get('change_pct','?'):+.2f}%)",
-        _v("kosdaq",  "close",      "코스닥", "pt") + f"  ({m.get('kosdaq',{}).get('change_pct','?'):+.2f}%)",
-        _v("usd_krw", "close",      "원/달러", "원") + f"  ({m.get('usd_krw',{}).get('change_pct','?'):+.2f}%)",
+        _v("kospi",   "close",      "코스피", "pt") + f"  ({_pct(m.get('kospi',{}).get('change_pct'))})",
+        _v("kosdaq",  "close",      "코스닥", "pt") + f"  ({_pct(m.get('kosdaq',{}).get('change_pct'))})",
+        _v("usd_krw", "close",      "원/달러", "원") + f"  ({_pct(m.get('usd_krw',{}).get('change_pct'))})",
         "",
         "[ 미국 지수 ]",
-        _v("sp500",   "close",      "S&P 500") + f"  ({m.get('sp500',{}).get('change_pct','?'):+.2f}%)",
-        _v("nasdaq",  "close",      "나스닥")  + f"  ({m.get('nasdaq',{}).get('change_pct','?'):+.2f}%)",
-        _v("dow",     "close",      "다우존스")+ f"  ({m.get('dow',{}).get('change_pct','?'):+.2f}%)",
+        _v("sp500",   "close",      "S&P 500") + f"  ({_pct(m.get('sp500',{}).get('change_pct'))})",
+        _v("nasdaq",  "close",      "나스닥")  + f"  ({_pct(m.get('nasdaq',{}).get('change_pct'))})",
+        _v("dow",     "close",      "다우존스")+ f"  ({_pct(m.get('dow',{}).get('change_pct'))})",
         "",
         "[ 매크로 ]",
-        f"미국 10년물 금리: {m.get('us10y',{}).get('value','N/A')}%  ({m.get('us10y',{}).get('change_bp','N/A'):+.1f}bp)" if m.get('us10y',{}).get('value') else "미국 10년물 금리: N/A",
-        _v("wti",     "close",      "WTI 유가", "$") + f"  ({m.get('wti',{}).get('change_pct','?'):+.2f}%)",
+        us10y_str,
+        _v("wti",     "close",      "WTI 유가", "$") + f"  ({_pct(m.get('wti',{}).get('change_pct'))})",
     ]
 
     sectors = stock_data.get("sectors", {})
@@ -108,25 +130,38 @@ def _call_llm(prompt: str) -> str:
         client = genai.Client(api_key=GEMINI_API_KEY)
         config = types.GenerateContentConfig(max_output_tokens=2000, temperature=0.3)
         # 재시도 3회 (2s / 4s / 8s)
-        for attempt in range(3):
-            try:
-                resp = client.models.generate_content(
-                    model=GEMINI_MODEL_FULL, contents=prompt, config=config,
-                )
-                return resp.text.strip().replace('\r\n', '\n').replace('\r', '\n')
-            except Exception as e:
-                err_str = str(e)
-                if is_model_error(e):
-                    send_llm_failure_alert("gemini", GEMINI_MODEL_FULL, e, context="stock analyzer")
-                    raise
-                is_retryable = any(k in err_str for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED"))
-                if is_retryable and attempt < 2:
-                    wait = 2 ** (attempt + 1)
-                    gha_warning(f"Gemini 과부하 재시도 ({attempt+1}/3): {err_str[:80]}")
-                    time.sleep(wait)
-                else:
-                    send_llm_failure_alert("gemini", GEMINI_MODEL_FULL, e, context="stock analyzer")
-                    raise
+        models_to_try = [GEMINI_MODEL_FULL]
+        if GEMINI_MODEL_FULL == "gemini-3.5-flash":
+            models_to_try.append("gemini-2.5-flash")
+
+        for model in models_to_try:
+            for attempt in range(3):
+                try:
+                    resp = client.models.generate_content(
+                        model=model, contents=prompt, config=config,
+                    )
+                    return resp.text.strip().replace('\r\n', '\n').replace('\r', '\n')
+                except Exception as e:
+                    err_str = str(e)
+                    if is_model_error(e):
+                        if model == models_to_try[-1]:
+                            send_llm_failure_alert("gemini", model, e, context="stock analyzer")
+                            raise
+                        else:
+                            gha_warning(f"Gemini {model} 치명적 오류, 폴백 모델 시도: {err_str[:80]}")
+                            break
+                    is_retryable = any(k in err_str for k in ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED"))
+                    if is_retryable and attempt < 2:
+                        wait = 2 ** (attempt + 1)
+                        gha_warning(f"Gemini {model} 과부하 재시도 ({attempt+1}/3): {err_str[:80]}")
+                        time.sleep(wait)
+                    else:
+                        if model == models_to_try[-1]:
+                            send_llm_failure_alert("gemini", model, e, context="stock analyzer")
+                            raise
+                        else:
+                            gha_warning(f"Gemini {model} 과부하 최종 실패, 폴백 모델 시도: {err_str[:80]}")
+                            break
         return ""
 
     try:
