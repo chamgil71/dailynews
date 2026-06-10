@@ -44,16 +44,29 @@ def _get_email_theme() -> str:
 
 logger = logging.getLogger(__name__)
 
-# [구독취소 기능 주석 처리 - 향후 Supabase 이전 계획 반영 예정]
-# _UNSUB_FILE = Path(__file__).parent.parent / "storage" / "unsubscribed.txt"
-# 
-# def _get_unsubscribed() -> set[str]:
-#     # 구독 취소 비활성화 (공식 대시보드 방문 대체)
-#     return set()
+_SUPABASE_URL = os.getenv("SUPABASE_URL", "https://syxpwvmniwzohmxmvlyl.supabase.co")
+_SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
 
-def _get_recipients() -> list[str]:
-    # 구독 취소 필터링 없이 전체 수신자 목록 다이렉트 반환 (향후 Supabase DB 연동 계획)
+def _get_recipients(channel: str = "news") -> list[str]:
+    """Supabase에서 해당 채널 활성 구독자 조회. 미설정 시 RECIPIENT_EMAILS 환경변수 폴백."""
+    if _SUPABASE_KEY:
+        try:
+            import requests as _req
+            resp = _req.get(
+                f"{_SUPABASE_URL}/rest/v1/subscribers",
+                headers={"apikey": _SUPABASE_KEY, "Authorization": f"Bearer {_SUPABASE_KEY}"},
+                params={"status": "eq.active", "select": "email,channels"},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            return [
+                row["email"] for row in resp.json()
+                if row.get("channels", {}).get(channel, False)
+            ]
+        except Exception as e:
+            logger.warning(f"[구독자 조회] Supabase 조회 실패, 환경변수 폴백: {e}")
+
     return RECIPIENT_EMAILS
 
 
@@ -258,19 +271,23 @@ def send_email(md_content: str = "", html_content: str | None = None,
                theme_name: str | None = None,
                subject_override: str | None = None,
                template: str | None = None,
-               report_date: str | None = None) -> bool:
+               report_date: str | None = None,
+               channel: str = "news") -> bool:
     """이메일 발송.
-    template: "stock" → stock_email_template.html, None/"news" → email_template.html
-    report_date: 이메일 본문에 표시할 리포트 날짜 (YYYY-MM-DD). 미전달 시 실행일 사용.
+    template:    "stock" → email_stock.html, "ai-issue" → email_ai_issue.html, None/"news" → email_news.html
+    report_date: 이메일 본문 날짜 (YYYY-MM-DD). 미전달 시 실행일 사용.
+    channel:     Supabase 구독자 필터 채널 ("news" | "stock" | "ai_issue")
     우선순위: html_content > template 렌더러 > _md_to_html() 폴백
     """
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
         logger.warning("[이메일] GMAIL_USER 또는 GMAIL_APP_PASSWORD 미설정 — 발송 건너뜀")
         return False
 
-    recipients = _get_recipients()
+    # "ai-issue" → "ai_issue" (Supabase 컬럼명 맞춤)
+    sb_channel = channel.replace("-", "_")
+    recipients = _get_recipients(sb_channel)
     if not recipients:
-        logger.warning("[이메일] 발송 대상 없음 (RECIPIENT_EMAILS 미설정 또는 전원 구독 취소)")
+        logger.warning(f"[이메일/{channel}] 발송 대상 없음")
         return False
 
     date_str = datetime.now().strftime("%Y-%m-%d")

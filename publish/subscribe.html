@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>구독 신청 — AI News Daily</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', Arial, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    min-height: 100vh; margin: 0; padding: 40px 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wrap {
+    max-width: 500px; width: 100%;
+    background: #fff; border-radius: 20px; padding: 52px 44px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 36px;
+  }
+  .logo-badge {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900; color: #fff;
+  }
+  .logo-text { font-size: 1.3rem; font-weight: 800; color: #0f172a; }
+  .logo-sub  { font-size: .82rem; color: #64748b; margin-top: 2px; }
+  h1 { font-size: 1.6rem; color: #0f172a; margin: 0 0 8px; }
+  .desc { color: #64748b; font-size: .95rem; line-height: 1.6; margin-bottom: 32px; }
+  label.field { display: block; margin-bottom: 8px; font-weight: 700; color: #334155; font-size: .9rem; }
+  input[type=email] {
+    width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0;
+    border-radius: 10px; font-size: 1rem; font-family: inherit;
+    outline: none; transition: .15s; color: #0f172a;
+  }
+  input[type=email]:focus { border-color: #6366f1; }
+  .ch-section { margin: 28px 0; }
+  .ch-title { font-weight: 700; color: #334155; font-size: .9rem; margin-bottom: 14px; }
+  .ch-list { display: flex; flex-direction: column; gap: 12px; }
+  .ch-item {
+    display: flex; align-items: center; gap: 14px;
+    border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px 18px;
+    cursor: pointer; transition: .15s; user-select: none;
+  }
+  .ch-item:hover { border-color: #a5b4fc; background: #f8f7ff; }
+  .ch-item:has(input:checked) { border-color: #6366f1; background: #f5f3ff; }
+  .ch-item input[type=checkbox] {
+    width: 20px; height: 20px; accent-color: #6366f1; cursor: pointer; flex-shrink: 0;
+  }
+  .ch-info { flex: 1; }
+  .ch-name { font-weight: 700; color: #0f172a; font-size: .95rem; }
+  .ch-desc { font-size: .82rem; color: #64748b; margin-top: 2px; }
+  .ch-badge {
+    font-size: .72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  }
+  .badge-daily  { background: #dbeafe; color: #1d4ed8; }
+  .badge-weekly { background: #d1fae5; color: #065f46; }
+  .badge-daily2 { background: #ede9fe; color: #5b21b6; }
+  .btn {
+    width: 100%; padding: 16px; background: #6366f1; color: #fff; border: none;
+    border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: .15s; margin-top: 8px;
+  }
+  .btn:hover { background: #4f46e5; }
+  .btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+  .note {
+    margin-top: 20px; font-size: .82rem; color: #94a3b8;
+    text-align: center; line-height: 1.6;
+  }
+  .note a { color: #6366f1; text-decoration: none; }
+  .msg {
+    display: none; padding: 14px 18px; border-radius: 10px;
+    margin-bottom: 20px; font-size: .9rem; font-weight: 600;
+  }
+  .msg.success { background: #d1fae5; color: #065f46; display: block; }
+  .msg.error   { background: #fee2e2; color: #991b1b; display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-badge">AI</div>
+    <div>
+      <div class="logo-text">AI News Daily</div>
+      <div class="logo-sub">매일 AI가 정리하는 핵심 뉴스</div>
+    </div>
+  </div>
+
+  <h1>무료 구독 신청</h1>
+  <p class="desc">
+    이메일로 받아볼 채널을 선택하세요.<br>
+    확인 이메일 클릭 한 번으로 구독이 완료됩니다.
+  </p>
+
+  <div id="msg" class="msg"></div>
+
+  <form id="subForm">
+    <label class="field" for="email">이메일 주소</label>
+    <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
+
+    <div class="ch-section">
+      <div class="ch-title">받아볼 채널 선택</div>
+      <div class="ch-list">
+        <label class="ch-item">
+          <input type="checkbox" name="news" value="on" checked>
+          <div class="ch-info">
+            <div class="ch-name">📰 AI 뉴스 브리핑</div>
+            <div class="ch-desc">매일 아침 AI·테크 핵심 뉴스 요약</div>
+          </div>
+          <span class="ch-badge badge-daily">매일</span>
+        </label>
+        <label class="ch-item">
+          <input type="checkbox" name="stock" value="on">
+          <div class="ch-info">
+            <div class="ch-name">📈 주식 시황 브리핑</div>
+            <div class="ch-desc">평일 AI 분석 코스피·글로벌 시황</div>
+          </div>
+          <span class="ch-badge badge-daily2">평일</span>
+        </label>
+        <label class="ch-item">
+          <input type="checkbox" name="ai_issue" value="on">
+          <div class="ch-info">
+            <div class="ch-name">🤖 AI 주간 이슈</div>
+            <div class="ch-desc">매주 AI·빅테크 핵심 이슈 심층 분석</div>
+          </div>
+          <span class="ch-badge badge-weekly">주간</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn" type="submit" id="submitBtn">✉️ 구독 신청하기</button>
+  </form>
+
+  <p class="note">
+    스팸 없음 · 언제든 <a href="/api/unsubscribe">구독 취소</a> 가능 ·
+    채널은 나중에 <a href="/api/manage">변경</a> 가능
+  </p>
+</div>
+
+<script>
+document.getElementById('subForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const msg = document.getElementById('msg');
+  btn.disabled = true;
+  btn.textContent = '전송 중...';
+  msg.className = 'msg';
+  msg.style.display = 'none';
+
+  const form = e.target;
+  const data = new URLSearchParams(new FormData(form));
+
+  try {
+    const res = await fetch('/api/subscribe', { method: 'POST', body: data });
+    const html = await res.text();
+    // 서버가 HTML 페이지를 반환하면 해당 페이지로 이동
+    document.open(); document.write(html); document.close();
+  } catch (err) {
+    msg.textContent = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+    msg.className = 'msg error';
+    btn.disabled = false;
+    btn.textContent = '✉️ 구독 신청하기';
+  }
+});
+</script>
+</body>
+</html>

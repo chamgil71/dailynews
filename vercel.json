@@ -6,13 +6,17 @@
       "src": "publish/**",
       "use": "@vercel/static"
     },
-    {
-      "src": "api/unsubscribe.py",
-      "use": "@vercel/python"
-    }
+    { "src": "api/subscribe.py",   "use": "@vercel/python" },
+    { "src": "api/confirm.py",     "use": "@vercel/python" },
+    { "src": "api/unsubscribe.py", "use": "@vercel/python" },
+    { "src": "api/manage.py",      "use": "@vercel/python" }
   ],
   "routes": [
+    { "src": "/api/subscribe",            "dest": "/api/subscribe.py" },
+    { "src": "/api/confirm",              "dest": "/api/confirm.py" },
     { "src": "/api/unsubscribe",          "dest": "/api/unsubscribe.py" },
+    { "src": "/api/manage",               "dest": "/api/manage.py" },
+    { "src": "/subscribe",                "dest": "/publish/subscribe.html" },
     { "src": "/",                          "dest": "/publish/index.html" },
     { "src": "/archive",                   "dest": "/publish/archive.html" },
     { "src": "/reports\\.json",            "dest": "/publish/reports.json" },

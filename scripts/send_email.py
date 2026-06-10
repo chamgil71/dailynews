@@ -53,7 +53,7 @@ def _send_news(date_str: str, force: bool = False) -> None:
 
     if force:
         logger.info("[이메일/뉴스] 강제 발송 모드 — analysis_ok 플래그 무시")
-    ok = send_email(md_path.read_text(encoding="utf-8"))
+    ok = send_email(md_path.read_text(encoding="utf-8"), channel="news")
     logger.info(f"[이메일/뉴스] {'완료' if ok else '실패 또는 건너뜀'}")
 
 
@@ -82,7 +82,7 @@ def _send_stock(date_str: str) -> None:
     report_dt = datetime.strptime(date_str, "%Y-%m-%d")
     weekday   = ["월","화","수","목","금","토","일"][report_dt.weekday()]
     subject = STOCK_EMAIL_SUBJECT.format(date=date_str, weekday=weekday)
-    ok = send_email(md_path.read_text(encoding="utf-8"), template="stock", subject_override=subject, report_date=date_str)
+    ok = send_email(md_path.read_text(encoding="utf-8"), template="stock", subject_override=subject, report_date=date_str, channel="stock")
     logger.info(f"[이메일/주식] {'완료' if ok else '실패 또는 건너뜀'}")
 
 
@@ -138,7 +138,7 @@ def _send_ai_issue(date_str: str) -> None:
         sys.exit(1)
 
     subject = f"🤖 [AI Weekly] 이번 주 가장 주목할 AI 이슈 & 논문 픽 — {date_str}"
-    ok = send_email(html_content=html, subject_override=subject)
+    ok = send_email(html_content=html, subject_override=subject, channel="ai-issue")
     logger.info(f"[이메일/AI이슈] {'완료' if ok else '실패 또는 건너뜀'}")
 
 
