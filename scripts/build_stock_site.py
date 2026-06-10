@@ -40,46 +40,61 @@ os.makedirs(STOCK_PUBLISH_DIR, exist_ok=True)
 # ── MD 파싱 ──────────────────────────────────────────────────────────────────
 
 def _parse_temperature(raw: str) -> dict:
-    """'## 시장 온도계: 🔴/🟡/🟢 ...' 파싱."""
-    m = re.search(r'## 시장 온도계:\s*([🔴🟡🟢])\s*(\S+)', raw)
+    """'## 시장 온도계: 🔴/🟠/🟡/🟢/🔵 ...' 파싱."""
+    m = re.search(r'## 시장 온도계[:\s]+([🔴🟠🟡🟢🔵])\s*(\S+)', raw)
     if m:
         emoji  = m.group(1)
         label  = m.group(2).strip()
-        level  = {"🔴": "risk_off", "🟡": "neutral", "🟢": "risk_on"}.get(emoji, "neutral")
+        level  = {"🔴": "risk_off", "🟠": "rising", "🟡": "neutral",
+                  "🟢": "risk_on",  "🔵": "recession"}.get(emoji, "neutral")
         return {"emoji": emoji, "label": label, "display": f"{emoji} {label}", "level": level}
     return {"emoji": "🟡", "label": "중립", "display": "🟡 중립", "level": "neutral"}
 
 
 def _parse_market_table(raw: str) -> dict:
-    """국내/글로벌 지수 테이블에서 숫자 추출."""
+    """국내/글로벌 지수 테이블에서 숫자 추출 (v5 포맷 + 구 포맷 동시 지원)."""
     result = {}
     patterns = {
-        "kospi":   r'\| 코스피 \| ([^\|]+) \| ([^\|]+) \|',
-        "kosdaq":  r'\| 코스닥 \| ([^\|]+) \| ([^\|]+) \|',
-        "usd_krw": r'\| 원/달러 \| ([^\|]+)원 \| ([^\|]+) \|',
-        "sp500":   r'\| S&P 500 \| ([^\|]+) \| ([^\|]+) \|',
-        "nasdaq":  r'\| 나스닥 \| ([^\|]+) \| ([^\|]+) \|',
-        "us10y":   r'\| 미국 10년물 금리 \| ([^\|]+)% \| ([^\|]+)bp \|',
-        "wti":     r'\| WTI 유가 \| \$([^\|]+) \| ([^\|]+) \|',
+        "kospi":   r'\| 코스피 \| ([^\|]+?) \| ([^\|]+?) \|',
+        "kosdaq":  r'\| 코스닥 \| ([^\|]+?) \| ([^\|]+?) \|',
+        "usd_krw": r'\| 원/달러 \| ([^\|]+?) \| ([^\|]+?) \|',
+        "sp500":   r'\| S&P 500 \| ([^\|]+?) \| ([^\|]+?) \|',
+        "nasdaq":  r'\| 나스닥 \| ([^\|]+?) \| ([^\|]+?) \|',
+        # v5: '| 미 10년물 |', 구: '| 미국 10년물 금리 |'
+        "us10y":   r'\| 미(?:국 10년물 금리| 10년물) \| ([^\|]+?) \| ([^\|]+?) \|',
+        # v5: '| 89.45 달러 |', 구: '| $86.64 |'
+        "wti":     r'\| WTI 유가 \| \$?([0-9,.]+)(?:\s*달러)? \| ([^\|]+?) \|',
     }
     for key, pat in patterns.items():
         m = re.search(pat, raw)
         if m:
-            result[key] = {"close_str": m.group(1).strip(), "chg_str": m.group(2).strip()}
+            close = m.group(1).strip().rstrip('원').strip()
+            result[key] = {"close_str": close, "chg_str": m.group(2).strip()}
     return result
 
 
 def _parse_keywords(raw: str) -> list[dict]:
-    """핵심 키워드 TOP 5 (① ② ③ ④ ⑤ 마커) 파싱."""
+    """핵심 키워드 TOP 5 파싱.
+    - 구 포맷: **① [제목]** + 설명
+    - v5 포맷: #태그1 #태그2 ...
+    """
     keywords = []
-    m_section = re.search(r'## 3\. 핵심 키워드 TOP 5\n([\s\S]*?)(?=\n## |\Z)', raw)
+    m_section = re.search(r'## (?:3\. )?핵심 키워드[^\n]*\n([\s\S]*?)(?=\n---|\n## |\Z)', raw)
     if not m_section:
         return keywords
-    block = m_section.group(1)
-    for kw_m in re.finditer(r'\*\*[①②③④⑤]\s+(.+?)\*\*\n([\s\S]*?)(?=\*\*[①②③④⑤]|\Z)', block):
-        title = kw_m.group(1).strip()
-        body  = kw_m.group(2).strip()
-        keywords.append({"title": title, "body": body})
+    block = m_section.group(1).strip()
+
+    # 구 포맷: **① [제목]** + 본문
+    old_kws = re.findall(r'\*\*[①②③④⑤]\s+(.+?)\*\*([\s\S]*?)(?=\*\*[①②③④⑤]|\Z)', block)
+    if old_kws:
+        for title, body in old_kws:
+            keywords.append({"title": title.strip(), "body": body.strip()})
+        return keywords
+
+    # v5 포맷: #태그1 #태그2 ...
+    hashtags = re.findall(r'#(\S+)', block)
+    for tag in hashtags:
+        keywords.append({"title": tag, "body": ""})
     return keywords
 
 
