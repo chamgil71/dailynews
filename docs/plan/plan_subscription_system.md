@@ -5,6 +5,23 @@
 > **최초 작성**: 2026-05-29 / **v2 업데이트**: 2026-06-02  
 > **인프라 전제**: 별도 서버 없음 — GitHub Actions + Vercel Serverless + Supabase만 사용
 
+> ### ✅ 구현 완료 (2026-06-10)
+> 핵심 구독 흐름 구현 완료. 미구현 항목은 향후 보강 예정.
+>
+> | 기능 | 상태 |
+> |------|------|
+> | DB 스키마 (subscribers, subscription_tokens) | ✅ |
+> | RLS 활성화 | ✅ |
+> | `POST /api/subscribe` 구독 신청 | ✅ |
+> | `GET /api/confirm` 이메일 더블 옵트인 | ✅ |
+> | `GET /api/unsubscribe` 구독 취소 | ✅ |
+> | `GET/POST /api/manage` 채널 관리 | ✅ |
+> | `/subscribe` 구독 페이지 | ✅ |
+> | `mailer.py` Supabase 구독자 조회 | ✅ |
+> | 관리자 시스템 (is_admin, send_admin_alert) | ✅ |
+> | AI 분석 품질 게이트 연동 | ⬜ 미구현 |
+> | 재분석·재발송 관리 UI | ⬜ 미구현 |
+
 ---
 
 ## 💡 1. 핵심 아키텍처 개요
