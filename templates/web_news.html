@@ -18,32 +18,42 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ── 헤더 ── */
+  /* ── 헤더 (공통 구조 — index.html 기준 통일) ── */
   header {
     background: var(--color-navy);
     color: #fff;
-    padding: 0 24px;
+    padding: 0 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     height: 58px;
     position: sticky; top: 0; z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    gap: 0;
   }
-  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
-  header .logo .accent { color: var(--color-blue-light); }
-  header nav a {
-    color: rgba(255,255,255,.8);
-    text-decoration: none;
-    margin-left: 20px;
-    font-size: .9rem;
-    transition: color .15s, border-color .15s;
-    padding-bottom: 4px;
-    border-bottom: 2px solid transparent;
-    display: inline-flex; align-items: center; height: 100%;
+  header .logo { font-size: 1.1rem; font-weight: 700; letter-spacing: -.3px; margin-right: 24px; white-space: nowrap; cursor: pointer; }
+  header .logo span, header .logo .accent { color: var(--color-blue-light); }
+  .header-nav { display: flex; align-items: center; height: 100%; flex: 1; gap: 2px; }
+  .hnav-tab {
+    display: flex; align-items: center; height: 100%;
+    padding: 0 14px;
+    color: rgba(255,255,255,.65);
+    text-decoration: none; font-size: .88rem; font-weight: 500;
+    border-bottom: 3px solid transparent;
+    border-top: none; border-left: none; border-right: none;
+    cursor: pointer; background: none;
+    transition: color .15s, border-color .15s; white-space: nowrap;
   }
-  header nav a:hover { color: #fff; }
-  header nav a.active { color: #fff; font-weight: 600; border-bottom-color: var(--color-blue-light); }
+  .hnav-tab:hover { color: rgba(255,255,255,.9); }
+  .hnav-tab.active { color: #fff; font-weight: 600; border-bottom-color: var(--color-blue-light); }
+  .tab-label { pointer-events: none; }
+  .header-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .btn-icon {
+    background: none; border: none; color: rgba(255,255,255,.7);
+    cursor: pointer; padding: 6px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s, background .15s; text-decoration: none; font-size: 1rem;
+  }
+  .btn-icon:hover { color: #fff; background: rgba(255,255,255,.1); }
 
   /* ── 컨테이너 ── */
   .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
