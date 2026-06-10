@@ -111,8 +111,7 @@ def _parse_md_for_email(md: str) -> dict:
             "keyword_html": keyword_html, "news_en": news_en, "news_ko": news_ko}
 
 
-def _render_email_template(md: str, recipient_email: str, theme_name: str = "classic",
-                           report_date: str | None = None) -> str | None:
+def _render_email_template(md: str, recipient_email: str, theme_name: str = "classic") -> str | None:
     """Jinja2 템플릿으로 이메일 HTML 렌더링. 실패 시 None 반환(폴백 허용)."""
     if not _TEMPLATE_FILE.exists():
         logger.debug("[이메일 템플릿] storage/email_template.html 없음 → 기본 방식 사용")
@@ -134,10 +133,7 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
         unsubscribe_url = SITE_BASE_URL or ""
 
         sections = _parse_md_for_email(md)
-        if report_date:
-            dt = datetime.strptime(report_date, "%Y-%m-%d")
-        else:
-            dt = datetime.now()
+        now = datetime.now()
 
         env = Environment(loader=FileSystemLoader(str(_TEMPLATE_FILE.parent)),
                           autoescape=False)
@@ -145,8 +141,8 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
 
         return tmpl.render(
             c=c, t=t,
-            date=dt.strftime("%Y-%m-%d"),
-            display_date=dt.strftime("%Y년 %m월 %d일"),
+            date=now.strftime("%Y-%m-%d"),
+            display_date=now.strftime("%Y년 %m월 %d일"),
             site_title="AI News Daily",
             site_url=SITE_BASE_URL,
             unsubscribe_url=unsubscribe_url,
@@ -159,38 +155,47 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
 
 def _parse_md_for_stock_email(md: str) -> dict:
     """주식 MD에서 이메일 섹션 추출."""
-    summary_m  = re.search(r'## ■ 핵심 요약[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
-    keywords_m = re.search(r'## (?:3\. )?핵심 키워드[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
-    lt_m       = re.search(r'## (?:6\. )?장기투자[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
+    _SEP = r'(?=\n---|\n## |\Z)'
+    summary_m  = re.search(r'## ■ 핵심 요약[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    keywords_m = re.search(r'## (?:3\. )?핵심 키워드[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    notable_m  = re.search(r'## (?:4\. )?주목 섹터[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    risk_m     = re.search(r'## (?:5\. )?리스크[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    lt_m       = re.search(r'## (?:6\. )?장기투자[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
     temp_m     = re.search(r'## 시장 온도계[:\s]*(.*)', md)
     reason_m   = re.search(r'## 시장 온도계.*\n+>\s*(.*)', md)
 
-    summary_html    = markdown2.markdown(summary_m.group(1).strip(),  extras=["tables", "cuddled-lists"]) if summary_m  else ""
-    keywords_html   = markdown2.markdown(keywords_m.group(1).strip(), extras=["tables", "cuddled-lists"]) if keywords_m else ""
-    lt_comment_html = markdown2.markdown(lt_m.group(1).strip(),       extras=["tables", "cuddled-lists"]) if lt_m       else ""
+    _ext = ["tables", "cuddled-lists"]
+    summary_html    = markdown2.markdown(summary_m.group(1).strip(),  extras=_ext) if summary_m  else ""
+    keywords_html   = markdown2.markdown(keywords_m.group(1).strip(), extras=_ext) if keywords_m else ""
+    notable_html    = markdown2.markdown(notable_m.group(1).strip(),  extras=_ext) if notable_m  else ""
+    risk_html       = markdown2.markdown(risk_m.group(1).strip(),     extras=_ext) if risk_m     else ""
+    lt_comment_html = markdown2.markdown(lt_m.group(1).strip(),       extras=_ext) if lt_m       else ""
 
     temperature_display = temp_m.group(1).strip() if temp_m else "🟡 중립"
     temperature_reason  = reason_m.group(1).strip() if reason_m else ""
 
     if "리스크오프" in temperature_display or "🔴" in temperature_display:
         temperature_color = "#dc2626"
+    elif "🔵" in temperature_display or "침체" in temperature_display:
+        temperature_color = "#2563eb"
     elif "리스크온" in temperature_display or "🟢" in temperature_display:
         temperature_color = "#16a34a"
     else:
         temperature_color = "#ca8a04"
 
     return {
-        "summary_html":       summary_html,
-        "keywords_html":      keywords_html,
-        "lt_comment_html":    lt_comment_html,
+        "summary_html":        summary_html,
+        "keywords_html":       keywords_html,
+        "notable_html":        notable_html,
+        "risk_html":           risk_html,
+        "lt_comment_html":     lt_comment_html,
         "temperature_display": temperature_display,
-        "temperature_color":  temperature_color,
-        "temperature_reason": temperature_reason,
+        "temperature_color":   temperature_color,
+        "temperature_reason":  temperature_reason,
     }
 
 
-def _render_stock_email_template(md: str, recipient_email: str, theme_name: str = "classic",
-                                  report_date: str | None = None) -> str | None:
+def _render_stock_email_template(md: str, recipient_email: str, theme_name: str = "classic") -> str | None:
     """주식 시황 전용 Jinja2 템플릿 렌더링. 실패 시 None 반환."""
     if not _STOCK_TEMPLATE_FILE.exists():
         logger.debug("[주식 이메일 템플릿] stock_email_template.html 없음 → 기본 방식 사용")
@@ -210,10 +215,7 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
         unsubscribe_url = SITE_BASE_URL or ""
 
         sections = _parse_md_for_stock_email(md)
-        if report_date:
-            dt = datetime.strptime(report_date, "%Y-%m-%d")
-        else:
-            dt = datetime.now()
+        now = datetime.now()
 
         env = Environment(loader=FileSystemLoader(str(_STOCK_TEMPLATE_FILE.parent)),
                           autoescape=False)
@@ -221,8 +223,8 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
 
         return tmpl.render(
             c=c, t=t,
-            date=dt.strftime("%Y-%m-%d"),
-            display_date=dt.strftime("%Y년 %m월 %d일"),
+            date=now.strftime("%Y-%m-%d"),
+            display_date=now.strftime("%Y년 %m월 %d일"),
             site_url=SITE_BASE_URL,
             unsubscribe_url=unsubscribe_url,
             **sections,
@@ -253,11 +255,9 @@ def _md_to_html(md: str, recipient_email: str) -> str:
 def send_email(md_content: str = "", html_content: str | None = None,
                theme_name: str | None = None,
                subject_override: str | None = None,
-               template: str | None = None,
-               report_date: str | None = None) -> bool:
+               template: str | None = None) -> bool:
     """이메일 발송.
     template: "stock" → stock_email_template.html, None/"news" → email_template.html
-    report_date: 이메일 본문에 표시할 리포트 날짜 (YYYY-MM-DD). 미전달 시 실행일 사용.
     우선순위: html_content > template 렌더러 > _md_to_html() 폴백
     """
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
@@ -287,11 +287,11 @@ def send_email(md_content: str = "", html_content: str | None = None,
                         body = html_content
                     elif template == "stock":
                         _theme = theme_name or _get_email_theme()
-                        body = (_render_stock_email_template(md_content, email, _theme, report_date)
+                        body = (_render_stock_email_template(md_content, email, _theme)
                                 or _md_to_html(md_content, email))
                     else:
                         _theme = theme_name or _get_email_theme()
-                        body = (_render_email_template(md_content, email, _theme, report_date)
+                        body = (_render_email_template(md_content, email, _theme)
                                 or _md_to_html(md_content, email))
                     msg.attach(MIMEText(body, "html", "utf-8"))
                     smtp.sendmail(GMAIL_USER, email, msg.as_string())

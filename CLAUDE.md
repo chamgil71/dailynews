@@ -13,7 +13,7 @@
 
 ### 3채널 구조
 | 채널 | 수집 | 빌드/배포 | 발송 |
-|------|------|----------|------|
+|------|------|----------|---------|
 | 뉴스 | `news.yml` KST 03:15 | 동일 워크플로우 | 배포 완료 후 즉시 |
 | 주식 | Claude Code 루틴 21:25 | `stock_build.yml` 23:00 | `stock_send.yml` 익일 08:00 |
 | AI이슈 | `ai_issue.yml` 일 07:00 | 동일 워크플로우 | 배포 완료 후 즉시 |
@@ -57,9 +57,27 @@ publish/cardnews/
 - 작업 완료 → main 머지/cherry-pick → 세션 브랜치 삭제 (GitHub UI: /branches)
 - 세션 종료 전 반드시 "CLAUDE.md 업데이트해줘" 로 상태 기록
 
+## 주식 루틴 Step 6 — main 직접 push (중요)
+
+Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`이 불가.
+**반드시 `mcp__github__push_files` MCP 도구를 사용해 main 브랜치에 직접 커밋한다.**
+
+```
+도구: mcp__github__push_files
+파라미터:
+  owner: chamgil71
+  repo: dailynews
+  branch: main
+  message: "📊 주식 시황 YYYY-MM-DD"
+  files: [{ path: "reports/stock/stock_YYYY-MM-DD.md", content: <MD 전체 내용> }]
+```
+
+- git add/commit/push 명령어 사용 금지 (세션 브랜치로 푸시되어 PR 생성됨)
+- push 성공 시 stock_build.yml이 즉시 트리거 → 빌드·배포·이메일·텔레그램 자동 처리
+
 ---
 
-## 현재 상태 (2026-06-09)
+## 현재 상태 (2026-06-10)
 
 ### 완료된 작업 (main 반영 완료)
 - [x] 3채널 파이프라인 발송 순서 통일 (수집→빌드→배포→이메일→텔레그램)
@@ -85,11 +103,17 @@ publish/cardnews/
   - 6/7 AI이슈: Actions 로그상 이메일/텔레그램이 정상 송신 완료(250 OK) 되었으므로, 수신자의 스팸함/프로모션 탭 검토 필요.
 - [x] **카드뉴스 이미지 구현 및 플랫폼 연동 현황 분석 완료** (2026-06-09)
   - `build_cardnews.py` (HTML), `generate_cardnews_images.py` (Playwright/Pillow 렌더러), `post_cardnews.py` (멀티 SNS 전송) 구현 상태 및 Instagram/Twitter API 토큰 설정 미비 등 확인 완료.
+- [x] **주식 루틴 Step 6 push 방식 변경** (2026-06-10)
+  - 세션 브랜치 제약으로 `git push origin main` 대신 `mcp__github__push_files`로 main 직접 커밋
+  - CLAUDE.md에 "주식 루틴 Step 6" 섹션 추가 (반드시 MCP 도구 사용)
+- [x] **이메일 섹션 누락 버그 수정** (2026-06-10)
+  - `mailer.py` `_parse_md_for_stock_email()` — 주목 섹터(4), 리스크 요인(5) 파싱 추가; 정규식 룩어헤드 `^\n##` → `\n## ` 수정; 🔵 침체 온도계 색상 파란색 추가
+  - `email_stock.html` — 📌 주목 섹터, ⚠️ 리스크 요인 카드 섹션 추가 (핵심 키워드 뒤, 장기투자 앞)
 
 ### 주식 파이프라인 완성된 흐름
 ```
 Claude Code 루틴 (21:25 KST, 평일):
-  데이터 수집(MCP) → Claude 분석 → MD 저장 → git push
+  데이터 수집(MCP) → Claude 분석 → MD 저장 → mcp__github__push_files (main 직접)
   → stock_build.yml push 트리거 → HTML 빌드·Pages 배포
 
 stock_build.yml 23:00 스케줄 (백업, 월~금):
@@ -105,6 +129,7 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 ### 검증 필요 (다음 실행 시 확인)
 - [x] 6/8(월) 루틴 실행 → `stock_2026-06-08.md` 생성 확인
 - [x] 6/9(화) KST 08:00 `stock_send.yml` 실행 및 발송 누락 원인 규명 (요일 레이블 정상 작동 확인)
+- [ ] 6/10(수) KST 08:00 `stock_send.yml` — 6/9 리포트 이메일에 주목섹터·리스크요인 섹션 포함 여부 확인
 - [ ] `news.yml` 자동 실행 — Gemini JSON 파싱 성공 여부 확인
 - [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 이후 이메일·텔레그램 실행 확인
 - [ ] `cardnews.yml` workflow_dispatch 수동 실행 → 텔레그램 수신 확인 (--type news)
