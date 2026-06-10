@@ -124,7 +124,13 @@ def analyze_weekly_data(raw_weekly_data: dict) -> dict:
         prompt_comp = COMPANY_TRENDS_PROMPT.format(articles_text=articles_text)
         raw_res = analyzer._call(prompt_comp, len(articles[:40]))
         if raw_res and len(raw_res.strip()) > 50:
-            company_trends_md = raw_res.strip()
+            # Gemini가 {"summary": "..."} JSON으로 응답한 경우 summary 필드를 추출
+            parsed = _parse_json_block(raw_res)
+            if parsed and isinstance(parsed, dict) and "summary" in parsed:
+                company_trends_md = parsed["summary"]
+                logger.info("  → 주요 기업 동향: JSON 응답에서 summary 필드 추출")
+            else:
+                company_trends_md = raw_res.strip()
             logger.info("  → 주요 기업 동향 분석 완료")
     except Exception as e:
         logger.error(f"  ❌ [오류] 기업 동향 분석 에러: {e}")
@@ -168,7 +174,13 @@ def analyze_weekly_data(raw_weekly_data: dict) -> dict:
         prompt_out = OUTLOOK_PROMPT.format(articles_text=articles_text)
         raw_res = analyzer._call(prompt_out, len(articles[:40]))
         if raw_res and len(raw_res.strip()) > 50:
-            outlook_md = raw_res.strip()
+            # Gemini가 {"summary": "..."} JSON으로 응답한 경우 summary 필드를 추출
+            parsed = _parse_json_block(raw_res)
+            if parsed and isinstance(parsed, dict) and "summary" in parsed:
+                outlook_md = parsed["summary"]
+                logger.info("  → 차주 전망: JSON 응답에서 summary 필드 추출")
+            else:
+                outlook_md = raw_res.strip()
             logger.info("  → 차주 전망 분석 완료")
     except Exception as e:
         logger.error(f"  ❌ [오류] 전망 분석 에러: {e}")
