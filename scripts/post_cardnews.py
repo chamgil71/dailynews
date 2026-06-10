@@ -204,11 +204,119 @@ def post_twitter(channel: str, date_str: str) -> None:
     print(f"  ✅ Twitter 발송 완료 — tweet_id: {tweet_id}")
 
 
+# ── Threads ──────────────────────────────────────────────────────────────────
+THREADS_API = "https://graph.threads.net/v1.0"
+
+
+def _threads_post(path: str, params: dict) -> dict:
+    r = requests.post(f"{THREADS_API}{path}", params=params, timeout=30)
+    data = r.json()
+    if "error" in data:
+        raise RuntimeError(f"Threads API 오류: {data['error']}")
+    return data
+
+
+def _threads_get(path: str, params: dict) -> dict:
+    r = requests.get(f"{THREADS_API}{path}", params=params, timeout=30)
+    r.raise_for_status()
+    return r.json()
+
+
+def post_threads(channel: str, date_str: str) -> None:
+    token   = _env("THREADS_ACCESS_TOKEN")
+    user_id = _env("THREADS_USER_ID")
+
+    png_paths  = _png_paths(channel, date_str)
+    caption    = _build_caption(channel, date_str, include_link=True)
+    image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
+
+    # 1. 카루셀 아이템 컨테이너 생성
+    children = []
+    for i, url in enumerate(image_urls):
+        print(f"  [Threads] 아이템 컨테이너 생성 [{i+1}/{len(image_urls)}]")
+        data = _threads_post(f"/{user_id}/threads", {
+            "image_url":        url,
+            "media_type":       "IMAGE",
+            "is_carousel_item": "true",
+            "access_token":     token,
+        })
+        children.append(data["id"])
+        time.sleep(1)
+
+    # 2. 카루셀 컨테이너 생성
+    print("  [Threads] 카루셀 컨테이너 생성 중...")
+    carousel = _threads_post(f"/{user_id}/threads", {
+        "media_type":   "CAROUSEL",
+        "children":     ",".join(children),
+        "text":         caption,
+        "access_token": token,
+    })
+    creation_id = carousel["id"]
+
+    # 3. 상태 확인 후 게시
+    for _ in range(12):
+        status = _threads_get(f"/{creation_id}", {
+            "fields":       "status",
+            "access_token": token,
+        })
+        if status.get("status") == "FINISHED":
+            break
+        time.sleep(5)
+
+    result = _threads_post(f"/{user_id}/threads_publish", {
+        "creation_id":  creation_id,
+        "access_token": token,
+    })
+    print(f"  ✅ Threads 발송 완료 — id: {result.get('id')}")
+
+
+# ── Facebook Page ─────────────────────────────────────────────────────────────
+GRAPH_API = "https://graph.facebook.com/v21.0"
+
+
+def post_facebook(channel: str, date_str: str) -> None:
+    token   = _env("META_PAGE_ACCESS_TOKEN")
+    page_id = _env("FACEBOOK_PAGE_ID")
+
+    png_paths  = _png_paths(channel, date_str)
+    caption    = _build_caption(channel, date_str, include_link=True)
+    image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
+
+    # 1. 각 이미지 비공개 업로드 → photo_id 수집
+    photo_ids = []
+    for i, url in enumerate(image_urls):
+        print(f"  [Facebook] 이미지 업로드 [{i+1}/{len(image_urls)}]")
+        r = requests.post(f"{GRAPH_API}/{page_id}/photos", params={
+            "url":          url,
+            "published":    "false",
+            "access_token": token,
+        }, timeout=30)
+        data = r.json()
+        if "error" in data:
+            raise RuntimeError(f"Facebook 이미지 업로드 오류: {data['error']}")
+        photo_ids.append({"media_fbid": data["id"]})
+        time.sleep(1)
+
+    # 2. 멀티 사진 포스트 게시
+    print("  [Facebook] 멀티 사진 포스트 게시 중...")
+    r = requests.post(f"{GRAPH_API}/{page_id}/feed", params={
+        "message":        caption,
+        "attached_media": json.dumps(photo_ids),
+        "access_token":   token,
+    }, timeout=30)
+    data = r.json()
+    if "error" in data:
+        raise RuntimeError(f"Facebook 포스트 오류: {data['error']}")
+    print(f"  ✅ Facebook 발송 완료 — post_id: {data.get('id')}")
+
+
 # ── 메인 ──────────────────────────────────────────────────────────────────────
 PLATFORM_HANDLERS = {
     "instagram": post_instagram,
     "telegram":  post_telegram,
     "twitter":   post_twitter,
+    "threads":   post_threads,
+    "facebook":  post_facebook,
 }
 
 
