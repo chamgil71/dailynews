@@ -128,11 +128,15 @@ def _tg(token: str, method: str, **kwargs) -> dict:
 
 
 def post_telegram(channel: str, date_str: str) -> None:
-    token   = _env("TELEGRAM_BOT_TOKEN")
-    chat_id = _env("TELEGRAM_CHAT_ID")
-    png_paths = _png_paths(channel, date_str)
+    token = _env("TELEGRAM_BOT_TOKEN")
+    # 채널별 분기: stock → TELEGRAM_CHAT_ID_STOCK, 그 외 → TELEGRAM_CHAT_ID
+    if channel == "stock":
+        chat_id = _env("TELEGRAM_CHAT_ID_STOCK")
+    else:
+        chat_id = _env("TELEGRAM_CHAT_ID")
 
-    caption = _build_caption(channel, date_str, include_link=True)
+    png_paths = _png_paths(channel, date_str)
+    caption   = _build_caption(channel, date_str, include_link=True)
 
     media = []
     files = {}
@@ -146,12 +150,11 @@ def post_telegram(channel: str, date_str: str) -> None:
         media.append(item)
 
     label = _channel_label(channel)
-    print(f"  Telegram 미디어 그룹 발송 ({len(png_paths)}장) → chat_id={chat_id}")
+    print(f"  Telegram 미디어 그룹 발송 ({len(png_paths)}장) → {channel} 채널 (chat_id={chat_id})")
     result = _tg(token, "sendMediaGroup",
                  data={"chat_id": chat_id, "media": json.dumps(media)},
                  files=files)
 
-    last_msg_id = result[-1]["message_id"] if isinstance(result, list) else result["message_id"]
     link = f"https://ms-dailynews.vercel.app/cardnews/{channel}/{date_str}.html"
     _tg(token, "sendMessage",
         json={
