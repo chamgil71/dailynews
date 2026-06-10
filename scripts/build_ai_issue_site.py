@@ -213,5 +213,10 @@ def main():
     print("AI 주간 이슈 HTML 컴파일 전과정 성공 완료\n")
 
 
+def build(theme_name: str | None = None) -> None:
+    """build_all.py 오케스트레이터 호출용 — main()의 래퍼."""
+    main()
+
+
 if __name__ == "__main__":
     main()

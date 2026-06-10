@@ -23,12 +23,29 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from jinja2 import Environment, BaseLoader
+
 _ROOT = str(Path(__file__).parent.parent)
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 PUBLISH   = Path(_ROOT, "publish")
 CARDNEWS  = PUBLISH / "cardnews"
+_THEMES_FILE = Path(_ROOT, "config", "cardnews_themes.json")
+_CSS_FILE    = Path(_ROOT, "templates", "cardnews_card.css")
+
+
+def _load_channel_cfg(channel: str) -> dict:
+    cfg = json.loads(_THEMES_FILE.read_text(encoding="utf-8"))
+    return cfg["channels"][channel]
+
+
+def _render_css(accent: str, topbar: str) -> str:
+    tpl = Environment(loader=BaseLoader()).from_string(
+        _CSS_FILE.read_text(encoding="utf-8")
+    )
+    return tpl.render(accent=accent, topbar=topbar)
+
 
 CATEGORY_LABELS = {
     "ai_ml": "AI·ML", "technology": "기술", "economy": "경제",
@@ -38,28 +55,6 @@ CATEGORY_LABELS = {
     "model": "모델", "service": "서비스", "research": "연구",
     "policy": "정책", "industry": "산업", "infra": "인프라",
     "investment": "투자",
-}
-
-# 타입별 액센트 색상
-TYPE_ACCENT = {
-    "news":     "#38bdf8",   # sky
-    "ai-issue": "#a78bfa",   # violet
-    "stock":    "#34d399",   # emerald
-}
-TYPE_TOPBAR = {
-    "news":     "linear-gradient(90deg,#38bdf8,#6366f1,#a78bfa)",
-    "ai-issue": "linear-gradient(90deg,#a78bfa,#6366f1,#38bdf8)",
-    "stock":    "linear-gradient(90deg,#34d399,#059669,#0ea5e9)",
-}
-TYPE_LABEL = {
-    "news":     "AI News Brief",
-    "ai-issue": "AI Issue Brief",
-    "stock":    "Stock Brief",
-}
-TYPE_SUBLABEL = {
-    "news":     "매일 아침 AI가 정리하는 핵심 뉴스",
-    "ai-issue": "주간 AI·Tech 핵심 이슈",
-    "stock":    "AI가 분석하는 시장 시황",
 }
 
 ISSUE_COLORS = ["#f59e0b", "#818cf8", "#34d399"]
@@ -85,118 +80,6 @@ def _trunc(text: str, max_len: int) -> str:
     return text[:max_len] + "…" if len(text) > max_len else text
 
 
-# ── CSS (공통) ────────────────────────────────────────────────────────────────
-def _css(accent: str, topbar: str) -> str:
-    return f"""
-* {{ margin: 0; padding: 0; box-sizing: border-box; }}
-body {{
-  width: 1080px; background: #000;
-  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
-}}
-.card {{
-  width: 1080px; height: 1080px;
-  display: none; flex-direction: column;
-  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
-  position: relative; overflow: hidden;
-}}
-.card.active {{ display: flex; }}
-.card::before {{
-  content: ''; position: absolute;
-  top: -280px; right: -180px; width: 600px; height: 600px;
-  background: radial-gradient(circle, {accent}20 0%, transparent 65%);
-  pointer-events: none;
-}}
-.card::after {{
-  content: ''; position: absolute;
-  bottom: -200px; left: -120px; width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
-  pointer-events: none;
-}}
-.card-topbar {{
-  height: 5px; flex-shrink: 0;
-  background: {topbar};
-}}
-.card-inner {{
-  flex: 1; padding: 60px 80px 28px;
-  display: flex; flex-direction: column; justify-content: flex-start;
-  position: relative; z-index: 1;
-}}
-.card-inner.layout-issue {{ justify-content: space-between; }}
-.card-inner.layout-trends {{ justify-content: flex-start; }}
-.card-footer {{
-  padding: 18px 80px 28px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  border-top: 1px solid rgba(255,255,255,.07);
-  position: relative; z-index: 1;
-}}
-.site-tag {{ font-size: 24px; color: {accent}; font-weight: 600; }}
-.date-tag {{ font-size: 24px; color: #475569; }}
-.dots {{ display: flex; gap: 10px; align-items: center; }}
-.dot {{ width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }}
-.dot.active {{ background: {accent}; width: 32px; border-radius: 6px; }}
-
-/* ── Cover ── */
-.cover-logo {{ display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }}
-.logo-badge {{
-  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
-  background: linear-gradient(135deg, {accent}, #6366f1);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 900; color: #fff;
-}}
-.logo-main {{ font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }}
-.logo-sub  {{ font-size: 24px; color: #94a3b8; margin-top: 5px; }}
-.cover-date {{ font-size: 32px; color: {accent}; font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }}
-.cover-divider {{
-  height: 2px; margin-bottom: 28px;
-  background: linear-gradient(90deg, {accent}cc 0%, transparent 100%);
-}}
-.cover-headline {{ font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }}
-.cover-issues {{ display: flex; flex-direction: column; gap: 16px; }}
-.cover-issue {{
-  display: flex; align-items: flex-start; gap: 18px;
-  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
-  border-radius: 16px; padding: 18px 24px;
-}}
-.cover-icon {{ font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }}
-.cover-issue-text {{ font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }}
-.cover-tags {{ margin-top: 24px; font-size: 24px; color: #334155; }}
-
-/* ── Issue Card ── */
-.issue-top {{ display: flex; align-items: center; gap: 14px; }}
-.rank-icon {{ font-size: 48px; line-height: 1; }}
-.rank-label {{ font-size: 32px; font-weight: 700; letter-spacing: -.5px; }}
-.cat-badge {{
-  font-size: 24px; padding: 8px 22px;
-  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
-  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
-}}
-.issue-body {{ flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }}
-.issue-title {{
-  font-size: 50px; font-weight: 800; color: #f8fafc;
-  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
-}}
-.issue-divider {{ height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }}
-.issue-summary {{ font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }}
-.issue-bottom {{ font-size: 25px; color: #475569; font-weight: 500; }}
-.issue-bottom a {{ color: {accent}; text-decoration: none; }}
-
-/* ── Trends / Keywords Card ── */
-.trends-header {{ display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }}
-.trends-icon {{ font-size: 46px; line-height: 1; }}
-.trends-title {{ font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }}
-.trends-list {{ display: flex; flex-direction: column; gap: 24px; flex: 1; }}
-.trend-item {{
-  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
-  border-left: 5px solid {accent}; border-radius: 14px;
-  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
-}}
-.trend-header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }}
-.trend-icon {{ font-size: 30px; line-height: 1; }}
-.trend-keyword {{ font-size: 30px; font-weight: 700; color: {accent}; letter-spacing: -.3px; }}
-.trend-desc {{ font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }}
-"""
-
-
 # ── 공통 카드 HTML 래퍼 ───────────────────────────────────────────────────────
 def _card(idx: int, total: int, content: str, date_disp: str,
           layout: str = "", site_tag: str = "ms-dailynews.vercel.app") -> str:
@@ -217,14 +100,13 @@ def _card(idx: int, total: int, content: str, date_disp: str,
 </div>"""
 
 
-def _html_wrapper(title: str, accent: str, topbar: str, cards_html: str,
-                  label: str) -> str:
+def _html_wrapper(title: str, css: str, cards_html: str) -> str:
     return f"""<!DOCTYPE html>
 <html lang="ko"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=1080">
 <title>{title}</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
-<style>{_css(accent, topbar)}</style>
+<style>{css}</style>
 </head><body>
 {cards_html}
 <script>
@@ -238,7 +120,7 @@ def _html_wrapper(title: str, accent: str, topbar: str, cards_html: str,
 
 # ── 뉴스 카드 빌더 ────────────────────────────────────────────────────────────
 def _news_cover(issues: list[dict], date_str: str, total: int,
-                accent: str) -> str:
+                accent: str, ch: dict) -> str:
     lines = ""
     for i, iss in enumerate(issues[:3]):
         lines += f"""
@@ -250,15 +132,15 @@ def _news_cover(issues: list[dict], date_str: str, total: int,
   <div class="cover-logo">
     <div class="logo-badge">AI</div>
     <div>
-      <div class="logo-main">{TYPE_LABEL['news']}</div>
-      <div class="logo-sub">{TYPE_SUBLABEL['news']}</div>
+      <div class="logo-main">{ch['label']}</div>
+      <div class="logo-sub">{ch['sublabel']}</div>
     </div>
   </div>
   <div class="cover-date">{_fmt_date(date_str)}</div>
   <div class="cover-divider"></div>
   <div class="cover-headline">오늘의 핵심 이슈</div>
   <div class="cover-issues">{lines}</div>
-  <div class="cover-tags">#AI뉴스 #테크 #데일리브리핑 #인공지능</div>"""
+  <div class="cover-tags">{ch['hashtags']}</div>"""
     return _card(0, total, content, _fmt_date(date_str))
 
 
@@ -285,8 +167,7 @@ def _news_issue(issue: dict, rank: int, date_str: str,
     return _card(idx, total, content, _fmt_date(date_str), layout="issue")
 
 
-def _news_trends(trends: list[dict], date_str: str, idx: int, total: int,
-                 accent: str) -> str:
+def _news_trends(trends: list[dict], date_str: str, idx: int, total: int) -> str:
     items = ""
     for i, t in enumerate(trends[:3]):
         items += f"""
@@ -310,30 +191,31 @@ def build_news_html(date_str: str, entry: dict) -> str | None:
     ko = entry.get("structured", {}).get("ko", {})
     if not ko.get("issues"):
         return None
+    ch     = _load_channel_cfg("news")
     issues = ko["issues"][:3]
     trends = ko.get("trends", [])[:3]
-    accent = TYPE_ACCENT["news"]
+    accent = ch["accent"]
+    css    = _render_css(accent, ch["topbar"])
     total  = 1 + len(issues) + (1 if trends else 0)
-    cards  = _news_cover(issues, date_str, total, accent)
+    cards  = _news_cover(issues, date_str, total, accent, ch)
     for i, iss in enumerate(issues):
         cards += _news_issue(iss, i + 1, date_str, i + 1, total)
     if trends:
-        cards += _news_trends(trends, date_str, 1 + len(issues), total, accent)
-    return _html_wrapper(f"AI 뉴스 카드뉴스 {date_str}", accent,
-                         TYPE_TOPBAR["news"], cards, TYPE_LABEL["news"])
+        cards += _news_trends(trends, date_str, 1 + len(issues), total)
+    return _html_wrapper(f"AI 뉴스 카드뉴스 {date_str}", css, cards)
 
 
 # ── AI이슈 카드 빌더 ──────────────────────────────────────────────────────────
 def build_ai_issue_html(date_str: str, data: dict) -> str:
+    ch     = _load_channel_cfg("ai-issue")
     top10  = data.get("top10", [])
     top3   = top10[:3]
-    accent = TYPE_ACCENT["ai-issue"]
+    accent = ch["accent"]
+    css    = _render_css(accent, ch["topbar"])
     period = data.get("period", date_str)
-    # 트렌드 대신 paper_picks or weekly_tips 사용
     extras = data.get("paper_picks", []) or data.get("weekly_tips", [])
     total  = 1 + len(top3) + (1 if extras else 0)
 
-    # 커버
     lines = ""
     for i, item in enumerate(top3):
         lines += f"""
@@ -345,7 +227,7 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
   <div class="cover-logo">
     <div class="logo-badge">AI</div>
     <div>
-      <div class="logo-main">{TYPE_LABEL['ai-issue']}</div>
+      <div class="logo-main">{ch['label']}</div>
       <div class="logo-sub">{period}</div>
     </div>
   </div>
@@ -353,10 +235,9 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
   <div class="cover-divider"></div>
   <div class="cover-headline">이번 주 TOP 이슈</div>
   <div class="cover-issues">{lines}</div>
-  <div class="cover-tags">#AI이슈 #테크트렌드 #인공지능 #AINews</div>"""
+  <div class="cover-tags">{ch['hashtags']}</div>"""
     cards = _card(0, total, cover_content, _fmt_date(date_str))
 
-    # 이슈 카드
     for i, item in enumerate(top3):
         color = ISSUE_COLORS[i]
         icon  = ISSUE_ICONS[i]
@@ -378,11 +259,10 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
   <div class="issue-bottom">&#128206; 출처 {len(srcs)}개{link}</div>"""
         cards += _card(i + 1, total, content, _fmt_date(date_str), layout="issue")
 
-    # 추가 카드 (paper_picks / weekly_tips)
     if extras:
         items_html = ""
         for j, ex in enumerate(extras[:3]):
-            tip   = ex if isinstance(ex, str) else ex.get("title", str(ex))
+            tip = ex if isinstance(ex, str) else ex.get("title", str(ex))
             items_html += f"""
     <div class="trend-item">
       <div class="trend-header">
@@ -399,13 +279,14 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
         cards += _card(1 + len(top3), total, extra_content,
                        _fmt_date(date_str), layout="trends")
 
-    return _html_wrapper(f"AI이슈 카드뉴스 {date_str}", accent,
-                         TYPE_TOPBAR["ai-issue"], cards, TYPE_LABEL["ai-issue"])
+    return _html_wrapper(f"AI이슈 카드뉴스 {date_str}", css, cards)
 
 
 # ── 주식 카드 빌더 ────────────────────────────────────────────────────────────
 def build_stock_html(date_str: str, data: dict) -> str:
-    accent  = TYPE_ACCENT["stock"]
+    ch      = _load_channel_cfg("stock")
+    accent  = ch["accent"]
+    css     = _render_css(accent, ch["topbar"])
     temp    = data.get("temperature", {})
     temp_disp = temp.get("display", "")
     market  = data.get("market", {})
@@ -414,7 +295,6 @@ def build_stock_html(date_str: str, data: dict) -> str:
     keywords = data.get("keywords", [])[:4]
     total   = 2 + (1 if keywords else 0)
 
-    # 커버: 온도계 + 시황 요약
     sum_html = ""
     for line in summary_lines:
         parts = line.split("—", 1)
@@ -438,19 +318,18 @@ def build_stock_html(date_str: str, data: dict) -> str:
   <div class="cover-logo">
     <div class="logo-badge">&#128200;</div>
     <div>
-      <div class="logo-main">{TYPE_LABEL['stock']}</div>
-      <div class="logo-sub">{TYPE_SUBLABEL['stock']}</div>
+      <div class="logo-main">{ch['label']}</div>
+      <div class="logo-sub">{ch['sublabel']}</div>
     </div>
   </div>
   <div class="cover-date" style="font-size:36px">{temp_disp}&nbsp;&nbsp;{_fmt_date(date_str)}</div>
   <div class="cover-divider"></div>
   <div class="cover-headline">오늘의 시황 요약</div>
   <div class="cover-issues">{sum_html}</div>
-  <div class="cover-tags">#주식 #시황 #코스피 #투자</div>"""
+  <div class="cover-tags">{ch['hashtags']}</div>"""
     cards = _card(0, total, cover_content, _fmt_date(date_str))
 
-    # 시장 지표 카드
-    def _idx(key: str, label: str, sub_key: str = "") -> str:
+    def _idx(key: str, label: str) -> str:
         info = market.get(key, {})
         if not info:
             return ""
@@ -478,7 +357,6 @@ def build_stock_html(date_str: str, data: dict) -> str:
   </div>"""
     cards += _card(1, total, mkt_content, _fmt_date(date_str), layout="trends")
 
-    # 키워드 카드
     if keywords:
         kw_items = ""
         for j, kw in enumerate(keywords[:3]):
@@ -500,8 +378,7 @@ def build_stock_html(date_str: str, data: dict) -> str:
   <div class="trends-list">{kw_items}</div>"""
         cards += _card(2, total, kw_content, _fmt_date(date_str), layout="trends")
 
-    return _html_wrapper(f"주식 카드뉴스 {date_str}", accent,
-                         TYPE_TOPBAR["stock"], cards, TYPE_LABEL["stock"])
+    return _html_wrapper(f"주식 카드뉴스 {date_str}", css, cards)
 
 
 # ── 인덱스 업데이트 ───────────────────────────────────────────────────────────
@@ -582,7 +459,7 @@ def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
 
     stock_path = PUBLISH / "stock" / "data.json"
     if not stock_path.exists():
-        print("  stock-data.json 없음")
+        print("  stock data.json 없음")
         return
 
     entries = json.loads(stock_path.read_text(encoding="utf-8"))
