@@ -46,9 +46,10 @@ core/
   shared/mailer.py         ← 이메일 발송 (templates/email_stock.html 사용)
 
 scripts/
-  run_stock.py             ← 권장 진입점 (수집→분석→저장→이메일)
+  run_stock.py             ← 권장 진입점 (수집→분석→저장)
   build_stock_site.py      ← stock MD → HTML 빌드 (themes/ + templates/ 사용)
-  send_stock_email.py      ← push 트리거 경로 이메일 발송
+  send_email.py            ← 이메일 발송 (--type stock)
+  send_telegram.py         ← 텔레그램 발송 (--type stock, @msstockbrief)
 
 .github/workflows/
   stock_build.yml          ← push 트리거 + 정기 백업 워크플로우 (KST 23:00)
@@ -111,9 +112,9 @@ Step 6: git push → stock_build.yml push 트리거 발동
 4. git commit + GitHub Pages 배포
 
 익일 KST 08:00에 `stock_send.yml`이 실행:
-1. `scripts/send_stock_email.py` — 이메일 발송 (품질 게이트 포함, `continue-on-error: true`)
+1. `scripts/send_email.py --type stock` — 이메일 발송 (품질 게이트 포함, `continue-on-error: true`)
 2. `scripts/sync_notion.py` — Notion 주식시황 DB 동기화 (`continue-on-error: true`)
-3. [예정] 텔레그램 발송 (stub)
+3. `scripts/send_telegram.py --type stock` — 텔레그램 발송 (`@msstockbrief`, `continue-on-error: true`)
 
 ---
 
@@ -274,18 +275,19 @@ build(theme_name)
 
 ### 발송 경로
 
-| 경로 | 스크립트 | 템플릿 파라미터 |
-|------|---------|--------------|
-| push 트리거 | `scripts/send_stock_email.py` | `template="stock"` |
-| 직접 실행 | `scripts/run_stock.py` | `template="stock"` |
+| 경로 | 스크립트 |
+|------|---------|
+| stock_send.yml (익일 08:00) | `scripts/send_email.py --type stock --date YYYY-MM-DD` |
+| 수동 실행 | `python scripts/send_email.py --type stock` |
 
-### scripts/send_stock_email.py (push 트리거 경로)
+### scripts/send_email.py --type stock
 
 ```python
-latest_md = max(glob("reports/stock/stock_*.md"))
-email_md  = _email_body_from_md(latest_md)       # 핵심 섹션만 추출
-send_email(email_md, template="stock",            # stock 템플릿 지정 필수
-           subject_override=STOCK_EMAIL_SUBJECT)
+# send_email.py 내부 _send_stock() 호출
+report_dt = datetime.strptime(date_str, "%Y-%m-%d")
+weekday   = ["월","화","수","목","금","토","일"][report_dt.weekday()]
+subject   = STOCK_EMAIL_SUBJECT.format(date=date_str, weekday=weekday)
+send_email(md_path.read_text(), template="stock", subject_override=subject)
 ```
 
 ### 이메일 템플릿 (`templates/email_stock.html`)
@@ -398,4 +400,4 @@ STOCK_EMAIL_SUBJECT = "📊 주식 시황 브리핑 — {date} ({weekday})"
 
 ---
 
-*최종 업데이트: 2026-06-03*
+*최종 업데이트: 2026-06-08*

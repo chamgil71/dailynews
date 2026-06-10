@@ -4,6 +4,55 @@
 
 ---
 
+## 2026-06-08 (7차 — 주식 파이프라인 버그 3종 수정) [PR #22]
+
+### 주제: Vercel 빌드 실패·stock_build.yml YAML 오류·요일 레이블 버그 수정
+
+#### 변경 내용
+
+#### 1. `api/requirements.txt` 생성 (Vercel 빌드 실패 수정)
+- 기존: 루트 `requirements.txt` 15개 패키지 전체가 `api/unsubscribe.py`에 설치됨 → 250MB 초과
+- 수정: `api/requirements.txt` 신규 생성 (`requests>=2.28.0` 만 포함)
+
+#### 2. `stock_build.yml` YAML 구문 오류 수정
+- 원인: 이전 세션 커밋(`b67a33e`)이 Python 멀티라인 코드를 YAML `run: |` 블록 내 column 0에 삽입
+- 증상: `total_jobs=0` — 모든 stock_build 워크플로우 실행 실패
+- 수정: `check_md` 스텝의 Python 코드를 한 줄 one-liner로 변환
+
+#### 3. 주식 이메일·텔레그램 요일 레이블 버그 수정
+- `send_email.py`: `now.weekday()`(발송일 기준) → `report_date.weekday()`(리포트 날짜 기준)
+  - 예) 6/5(금) 데이터를 6/8(월)에 발송 시 제목 "(월)" → "(금)"
+- `telegram.py`: `send_stock_telegram()`에 요일 레이블 추가 (`2026-06-08 (월)` 형식)
+
+#### 4. `stock_2026-06-05.md` 재생성
+- 이전 세션에서 삭제된 파일 재생성 (코스피 -5.54%, 원달러 1,560원 급등 기록)
+
+---
+
+## 2026-06-06 (5·6차 — 카드뉴스 SNS 자동화·주식 품질 게이트 강화) [PR #19, #20]
+
+### 주제: 카드뉴스 3채널 SNS 자동 배포 + 주식 분석 품질 게이트
+
+#### 변경 내용
+
+#### 1. 카드뉴스 SNS 자동 배포 파이프라인 [PR #19]
+- `scripts/build_cardnews.py` — 3채널(`--type news|ai-issue|stock`) 카드뉴스 HTML 빌드
+- `scripts/generate_cardnews_images.py` — Playwright → 1080×1080 PNG 변환
+- `scripts/post_cardnews.py` — `--platform instagram|telegram|twitter` 통합 발송
+- `scripts/post_instagram.py` — Meta Graph API v21.0 카루셀 발송
+- `.github/workflows/cardnews.yml` — 3개 채널 완료 후 workflow_run 트리거
+- 출력: `publish/cardnews/{news|ai-issue|stock}/` 서브디렉터리
+
+#### 2. 주식 분석 품질 게이트 강화 [PR #20]
+- `run_stock.py`: 품질 게이트를 `save()` 호출 전으로 이동 (분석 실패 시 빈 MD 저장 차단)
+- `run_stock.py`: 분석 실패 시 텔레그램 + 이메일 이중 알림
+- `stock_build.yml`: `stock-data.json` analysis_ok 체크 → MD 본문 직접 파싱으로 교체
+
+#### 3. `stock_send.yml` 스케줄 수정
+- `0-4` → `0-5` (토요일 아침 금요일 데이터 발송 커버)
+
+---
+
 ## 2026-06-04 (4차 — UI 통합·검색 고도화·nav 모듈화)
 
 ### 주제: 사이트 디자인 통합 + 통합 검색 (뉴스·AI이슈·주식) + nav.js 모듈화

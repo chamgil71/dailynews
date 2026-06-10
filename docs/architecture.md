@@ -94,8 +94,8 @@ content   : 수집된 뉴스·주식 데이터 (MD)
 | MD 위치 | `reports/news_YYYY-MM-DD.md` | `reports/stock/stock_YYYY-MM-DD.md` | `reports/ai-issue/ai_issue_YYYY-MM-DD.md` |
 | 빌드 스크립트 | `build_site.py` | `build_stock_site.py` | `build_ai_issue_site.py` |
 | 출력 경로 | `publish/news/` | `publish/stock/` | `publish/ai-issue/` |
-| 이메일 발송 | `run_news.py` 내 즉시 발송 | `send_stock_email.py` (익일 08:00) | `send_ai_issue_email.py` (동일 워크플로우) |
-| 텔레그램 | ✓ (`send_telegram_cardnews`) | 예정 | ✓ (`send_ai_issue_telegram.py`) |
+| 이메일 발송 | `send_email.py --type news` | `send_email.py --type stock` (익일 08:00) | `send_email.py --type ai-issue` (동일 워크플로우) |
+| 텔레그램 | ✓ (`send_telegram.py --type news`) | ✓ (`send_telegram.py --type stock`, @msstockbrief) | ✓ (`send_telegram.py --type ai-issue`) |
 | Notion 동기화 | ✓ (news.yml) | ✓ (stock_send.yml) | ✓ (ai_issue.yml) |
 
 ---
@@ -259,8 +259,11 @@ dailynews/
 │   ├── build_site.py          # 뉴스 MD → HTML + archive.html
 │   ├── build_stock_site.py    # 주식 MD → HTML
 │   ├── build_ai_issue_site.py # AI이슈 MD → HTML
-│   ├── send_stock_email.py    # 주식 이메일 발송
-│   ├── send_ai_issue_email.py # AI이슈 이메일 발송
+│   ├── build_cardnews.py      # 카드뉴스 HTML 생성 (--type news|ai-issue|stock)
+│   ├── generate_cardnews_images.py  # HTML → 1080×1080 PNG (Playwright)
+│   ├── post_cardnews.py       # 카드뉴스 SNS 발송 (--platform instagram|telegram|twitter)
+│   ├── send_email.py          # 통합 이메일 발송 (--type news|stock|ai-issue)
+│   ├── send_telegram.py       # 통합 텔레그램 발송 (--type news|stock|ai-issue)
 │   └── sync_notion.py         # Notion 동기화 (3채널 공통)
 │
 ├── reports/
@@ -276,15 +279,20 @@ dailynews/
 │   ├── stock/
 │   │   ├── index.html / archive.html / stock-data.json
 │   │   └── YYYY-MM-DD.html
-│   └── ai-issue/
-│       ├── index.html / archive.html / ai-issue-data.json
-│       └── YYYY-MM-DD.html
+│   ├── ai-issue/
+│   │   ├── index.html / archive.html / ai-issue-data.json
+│   │   └── YYYY-MM-DD.html
+│   └── cardnews/
+│       ├── news/      YYYY-MM-DD.html + YYYY-MM-DD-{N}.png + data.json
+│       ├── ai-issue/  YYYY-MM-DD.html + YYYY-MM-DD-{N}.png + data.json
+│       └── stock/     YYYY-MM-DD.html + YYYY-MM-DD-{N}.png + data.json
 │
 ├── .github/workflows/
 │   ├── news.yml               # 뉴스 자동화 (매일 KST 03:15)
 │   ├── stock_build.yml        # 주식 빌드 (stock MD push 트리거 + KST 23:00 백업)
 │   ├── stock_send.yml         # 주식 발송 (익일 KST 08:00)
-│   └── ai_issue.yml           # AI이슈 주간 (일요일 KST 07:00)
+│   ├── ai_issue.yml           # AI이슈 주간 (일요일 KST 07:00)
+│   └── cardnews.yml           # 카드뉴스 빌드+SNS 발송 (3채널 workflow_run 트리거)
 │
 └── vercel.json                # Vercel 라우팅 설정
 ```
