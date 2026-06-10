@@ -155,33 +155,43 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
 
 def _parse_md_for_stock_email(md: str) -> dict:
     """주식 MD에서 이메일 섹션 추출."""
-    summary_m  = re.search(r'## ■ 핵심 요약[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
-    keywords_m = re.search(r'## (?:3\. )?핵심 키워드[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
-    lt_m       = re.search(r'## (?:6\. )?장기투자[^\n]*\n([\s\S]*?)(?=\n---|^\n##|\Z)', md, re.M)
+    _SEP = r'(?=\n---|\n## |\Z)'
+    summary_m  = re.search(r'## ■ 핵심 요약[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    keywords_m = re.search(r'## (?:3\. )?핵심 키워드[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    notable_m  = re.search(r'## (?:4\. )?주목 섹터[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    risk_m     = re.search(r'## (?:5\. )?리스크[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    lt_m       = re.search(r'## (?:6\. )?장기투자[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
     temp_m     = re.search(r'## 시장 온도계[:\s]*(.*)', md)
     reason_m   = re.search(r'## 시장 온도계.*\n+>\s*(.*)', md)
 
-    summary_html    = markdown2.markdown(summary_m.group(1).strip(),  extras=["tables", "cuddled-lists"]) if summary_m  else ""
-    keywords_html   = markdown2.markdown(keywords_m.group(1).strip(), extras=["tables", "cuddled-lists"]) if keywords_m else ""
-    lt_comment_html = markdown2.markdown(lt_m.group(1).strip(),       extras=["tables", "cuddled-lists"]) if lt_m       else ""
+    _ext = ["tables", "cuddled-lists"]
+    summary_html    = markdown2.markdown(summary_m.group(1).strip(),  extras=_ext) if summary_m  else ""
+    keywords_html   = markdown2.markdown(keywords_m.group(1).strip(), extras=_ext) if keywords_m else ""
+    notable_html    = markdown2.markdown(notable_m.group(1).strip(),  extras=_ext) if notable_m  else ""
+    risk_html       = markdown2.markdown(risk_m.group(1).strip(),     extras=_ext) if risk_m     else ""
+    lt_comment_html = markdown2.markdown(lt_m.group(1).strip(),       extras=_ext) if lt_m       else ""
 
     temperature_display = temp_m.group(1).strip() if temp_m else "🟡 중립"
     temperature_reason  = reason_m.group(1).strip() if reason_m else ""
 
     if "리스크오프" in temperature_display or "🔴" in temperature_display:
         temperature_color = "#dc2626"
+    elif "🔵" in temperature_display or "침체" in temperature_display:
+        temperature_color = "#2563eb"
     elif "리스크온" in temperature_display or "🟢" in temperature_display:
         temperature_color = "#16a34a"
     else:
         temperature_color = "#ca8a04"
 
     return {
-        "summary_html":       summary_html,
-        "keywords_html":      keywords_html,
-        "lt_comment_html":    lt_comment_html,
+        "summary_html":        summary_html,
+        "keywords_html":       keywords_html,
+        "notable_html":        notable_html,
+        "risk_html":           risk_html,
+        "lt_comment_html":     lt_comment_html,
         "temperature_display": temperature_display,
-        "temperature_color":  temperature_color,
-        "temperature_reason": temperature_reason,
+        "temperature_color":   temperature_color,
+        "temperature_reason":  temperature_reason,
     }
 
 
