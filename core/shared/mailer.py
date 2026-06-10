@@ -48,26 +48,87 @@ _SUPABASE_URL = os.getenv("SUPABASE_URL", "https://syxpwvmniwzohmxmvlyl.supabase
 _SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
 
+def _sb_query(params: dict) -> list[dict]:
+    """Supabase subscribers 테이블 조회 공통 헬퍼."""
+    import requests as _req
+    resp = _req.get(
+        f"{_SUPABASE_URL}/rest/v1/subscribers",
+        headers={"apikey": _SUPABASE_KEY, "Authorization": f"Bearer {_SUPABASE_KEY}"},
+        params=params,
+        timeout=10,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
 def _get_recipients(channel: str = "news") -> list[str]:
-    """Supabase에서 해당 채널 활성 구독자 조회. 미설정 시 RECIPIENT_EMAILS 환경변수 폴백."""
+    """Supabase에서 해당 채널 활성 구독자 이메일 조회. 미설정 시 RECIPIENT_EMAILS 폴백."""
     if _SUPABASE_KEY:
         try:
-            import requests as _req
-            resp = _req.get(
-                f"{_SUPABASE_URL}/rest/v1/subscribers",
-                headers={"apikey": _SUPABASE_KEY, "Authorization": f"Bearer {_SUPABASE_KEY}"},
-                params={"status": "eq.active", "select": "email,channels"},
-                timeout=10,
-            )
-            resp.raise_for_status()
-            return [
-                row["email"] for row in resp.json()
-                if row.get("channels", {}).get(channel, False)
-            ]
+            rows = _sb_query({"status": "eq.active", "select": "email,channels"})
+            # "ai-issue" → "ai_issue" (DB 컬럼명)
+            col = channel.replace("-", "_")
+            return [r["email"] for r in rows if r.get("channels", {}).get(col)]
         except Exception as e:
-            logger.warning(f"[구독자 조회] Supabase 조회 실패, 환경변수 폴백: {e}")
-
+            logger.warning(f"[구독자 조회] Supabase 실패, 환경변수 폴백: {e}")
     return RECIPIENT_EMAILS
+
+
+def _get_admin_emails() -> list[str]:
+    """Supabase에서 관리자(is_admin=true) 이메일 조회. 미설정 시 RECIPIENT_EMAILS 폴백."""
+    if _SUPABASE_KEY:
+        try:
+            rows = _sb_query({"status": "eq.active", "is_admin": "eq.true", "select": "email"})
+            return [r["email"] for r in rows]
+        except Exception as e:
+            logger.warning(f"[관리자 조회] Supabase 실패, 환경변수 폴백: {e}")
+    return RECIPIENT_EMAILS
+
+
+def send_admin_alert(subject: str, message: str, level: str = "warning") -> bool:
+    """관리자(is_admin=true)에게만 시스템 알림 이메일 발송.
+    level: 'info' | 'warning' | 'error'
+    """
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        return False
+
+    admins = _get_admin_emails()
+    if not admins:
+        return False
+
+    icons = {"info": "ℹ️", "warning": "⚠️", "error": "🔴"}
+    icon  = icons.get(level, "⚠️")
+    colors = {"info": "#3b82f6", "warning": "#f59e0b", "error": "#ef4444"}
+    color  = colors.get(level, "#f59e0b")
+
+    html = f"""<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;background:#f8fafc">
+<div style="background:#fff;border-radius:12px;padding:32px;border-left:5px solid {color}">
+  <h2 style="margin:0 0 16px;color:#0f172a">{icon} {subject}</h2>
+  <pre style="background:#f1f5f9;padding:16px;border-radius:8px;white-space:pre-wrap;
+              font-size:.9rem;color:#334155;overflow-x:auto">{message}</pre>
+  <p style="color:#94a3b8;font-size:.8rem;margin-top:24px">
+    AI News Daily 시스템 알림 · {SITE_BASE_URL}
+  </p>
+</div>
+</body></html>"""
+
+    try:
+        smtp = _connect_smtp()
+        with smtp:
+            smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            for admin in admins:
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = f"[AI News Daily 관리자] {subject}"
+                msg["From"]    = GMAIL_USER
+                msg["To"]      = admin
+                msg.attach(MIMEText(html, "html", "utf-8"))
+                smtp.sendmail(GMAIL_USER, admin, msg.as_string())
+                logger.info(f"[관리자 알림] → {admin}")
+        return True
+    except Exception as e:
+        logger.error(f"[관리자 알림 실패] {e}")
+        return False
 
 
 def _make_token(email: str) -> str:
