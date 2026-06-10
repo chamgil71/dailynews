@@ -111,7 +111,8 @@ def _parse_md_for_email(md: str) -> dict:
             "keyword_html": keyword_html, "news_en": news_en, "news_ko": news_ko}
 
 
-def _render_email_template(md: str, recipient_email: str, theme_name: str = "classic") -> str | None:
+def _render_email_template(md: str, recipient_email: str, theme_name: str = "classic",
+                           report_date: str | None = None) -> str | None:
     """Jinja2 템플릿으로 이메일 HTML 렌더링. 실패 시 None 반환(폴백 허용)."""
     if not _TEMPLATE_FILE.exists():
         logger.debug("[이메일 템플릿] storage/email_template.html 없음 → 기본 방식 사용")
@@ -133,7 +134,10 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
         unsubscribe_url = SITE_BASE_URL or ""
 
         sections = _parse_md_for_email(md)
-        now = datetime.now()
+        if report_date:
+            dt = datetime.strptime(report_date, "%Y-%m-%d")
+        else:
+            dt = datetime.now()
 
         env = Environment(loader=FileSystemLoader(str(_TEMPLATE_FILE.parent)),
                           autoescape=False)
@@ -141,8 +145,8 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
 
         return tmpl.render(
             c=c, t=t,
-            date=now.strftime("%Y-%m-%d"),
-            display_date=now.strftime("%Y년 %m월 %d일"),
+            date=dt.strftime("%Y-%m-%d"),
+            display_date=dt.strftime("%Y년 %m월 %d일"),
             site_title="AI News Daily",
             site_url=SITE_BASE_URL,
             unsubscribe_url=unsubscribe_url,
@@ -185,7 +189,8 @@ def _parse_md_for_stock_email(md: str) -> dict:
     }
 
 
-def _render_stock_email_template(md: str, recipient_email: str, theme_name: str = "classic") -> str | None:
+def _render_stock_email_template(md: str, recipient_email: str, theme_name: str = "classic",
+                                  report_date: str | None = None) -> str | None:
     """주식 시황 전용 Jinja2 템플릿 렌더링. 실패 시 None 반환."""
     if not _STOCK_TEMPLATE_FILE.exists():
         logger.debug("[주식 이메일 템플릿] stock_email_template.html 없음 → 기본 방식 사용")
@@ -205,7 +210,10 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
         unsubscribe_url = SITE_BASE_URL or ""
 
         sections = _parse_md_for_stock_email(md)
-        now = datetime.now()
+        if report_date:
+            dt = datetime.strptime(report_date, "%Y-%m-%d")
+        else:
+            dt = datetime.now()
 
         env = Environment(loader=FileSystemLoader(str(_STOCK_TEMPLATE_FILE.parent)),
                           autoescape=False)
@@ -213,8 +221,8 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
 
         return tmpl.render(
             c=c, t=t,
-            date=now.strftime("%Y-%m-%d"),
-            display_date=now.strftime("%Y년 %m월 %d일"),
+            date=dt.strftime("%Y-%m-%d"),
+            display_date=dt.strftime("%Y년 %m월 %d일"),
             site_url=SITE_BASE_URL,
             unsubscribe_url=unsubscribe_url,
             **sections,
@@ -245,9 +253,11 @@ def _md_to_html(md: str, recipient_email: str) -> str:
 def send_email(md_content: str = "", html_content: str | None = None,
                theme_name: str | None = None,
                subject_override: str | None = None,
-               template: str | None = None) -> bool:
+               template: str | None = None,
+               report_date: str | None = None) -> bool:
     """이메일 발송.
     template: "stock" → stock_email_template.html, None/"news" → email_template.html
+    report_date: 이메일 본문에 표시할 리포트 날짜 (YYYY-MM-DD). 미전달 시 실행일 사용.
     우선순위: html_content > template 렌더러 > _md_to_html() 폴백
     """
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
@@ -277,11 +287,11 @@ def send_email(md_content: str = "", html_content: str | None = None,
                         body = html_content
                     elif template == "stock":
                         _theme = theme_name or _get_email_theme()
-                        body = (_render_stock_email_template(md_content, email, _theme)
+                        body = (_render_stock_email_template(md_content, email, _theme, report_date)
                                 or _md_to_html(md_content, email))
                     else:
                         _theme = theme_name or _get_email_theme()
-                        body = (_render_email_template(md_content, email, _theme)
+                        body = (_render_email_template(md_content, email, _theme, report_date)
                                 or _md_to_html(md_content, email))
                     msg.attach(MIMEText(body, "html", "utf-8"))
                     smtp.sendmail(GMAIL_USER, email, msg.as_string())

@@ -82,7 +82,7 @@ def _send_stock(date_str: str) -> None:
     report_dt = datetime.strptime(date_str, "%Y-%m-%d")
     weekday   = ["월","화","수","목","금","토","일"][report_dt.weekday()]
     subject = STOCK_EMAIL_SUBJECT.format(date=date_str, weekday=weekday)
-    ok = send_email(md_path.read_text(encoding="utf-8"), template="stock", subject_override=subject)
+    ok = send_email(md_path.read_text(encoding="utf-8"), template="stock", subject_override=subject, report_date=date_str)
     logger.info(f"[이메일/주식] {'완료' if ok else '실패 또는 건너뜀'}")
 
 
