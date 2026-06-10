@@ -4,6 +4,40 @@
 
 ---
 
+## 2026-06-08 (7차 — 주식 파이프라인 버그 3종 수정)
+
+### 주제: 이메일 요일 레이블 버그 수정 + 주식 파이프라인 안정화
+
+#### 변경 내용
+
+1. **`scripts/send_email.py` 요일 레이블 버그 수정**
+   - 버그: `now.weekday()` (발송일 기준) → 발송일 요일이 이메일 제목에 표시됨
+   - 수정: `report_dt.weekday()` (리포트 날짜 기준) → 금요일 데이터가 월요일 아침 발송돼도 제목에 "(금)" 표시
+
+2. **`core/shared/telegram.py` 요일 레이블 추가**
+   - `send_stock_telegram()`에 `date_label = f"{date_str} ({_wd})"` 추가
+   - 텔레그램 메시지 헤더에도 리포트 날짜 기준 요일 표시
+
+3. **`api/requirements.txt` 생성**
+   - Vercel Python 함수 의존성 최소화 (`requests`만) → 빌드 실패 수정
+
+4. **`stock_build.yml` YAML 구문 오류 수정**
+   - Python 멀티라인 블록이 YAML heredoc과 충돌 → 한 줄 표현식으로 변경
+   - 이 오류가 모든 stock_build 워크플로우 실패의 원인이었음
+
+5. **`stock_2026-06-05.md` 재생성**
+   - 정상 분석 포함 (금 -5.54% 급락 이벤트 기록)
+
+#### 영향 파일
+| 파일 | 변경 |
+|------|------|
+| `scripts/send_email.py` | `_send_stock()` 요일 계산: 발송일 → 리포트 날짜 기준 |
+| `core/shared/telegram.py` | `send_stock_telegram()` 요일 레이블 추가 |
+| `api/requirements.txt` | [NEW] Vercel 함수 의존성 파일 |
+| `.github/workflows/stock_build.yml` | Python 멀티라인 구문 수정 |
+| `reports/stock/stock_2026-06-05.md` | 재생성 |
+
+---
 
 ## 2026-06-09 (5차 — 데이터구조·테마 일관성 통일 & 검색 폴백)
 

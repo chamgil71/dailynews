@@ -1,7 +1,7 @@
 # AI News Brief — 개발 로드맵
 
-> 최종 수정: 2026-06-03  
-> 기준: PR #18 병합 완료 (파이프라인 정합성·스크립트 통합 완료)  
+> 최종 수정: 2026-06-10  
+> 기준: PR #19 병합 완료 (카드뉴스 SNS 배포), PR #22 (주식 파이프라인 버그 수정)  
 > 상세 계획: 각 Phase 전용 문서 참조
 
 ---
@@ -57,52 +57,31 @@ send_log(id, content_type, report_date, channel,
 
 ---
 
-## Phase 3 — 카드뉴스 SNS 내보내기
+## ✅ Phase 3 — 카드뉴스 SNS 내보내기 (완료 — PR #19, 2026-06-06)
 
 > 상세: `docs/plan/plan_cardnews.md`, `docs/plan/plan_improvement.md` §2-4
 
-### 목표
-뉴스 이슈·키워드를 슬라이드형 카드뉴스 HTML로 자동 생성.  
-인스타그램·스레드 등 SNS용 1080×1080 PNG로 1클릭 내보내기.
+### 완료된 것
+- `scripts/build_cardnews.py` — 3채널(뉴스·AI이슈·주식) 카드뉴스 HTML 빌드
+- `scripts/generate_cardnews_images.py` — Playwright/Pillow → 1080×1080 PNG 생성
+- `scripts/post_cardnews.py` — SNS 발송 (텔레그램 완료, Instagram/Twitter/Threads 스켈레톤)
+- `scripts/post_instagram.py` — Instagram Graph API v21.0 카루셀
+- `.github/workflows/cardnews.yml` — 3채널 트리거 자동화
+- `publish/cardnews/{news|ai-issue|stock}/` — 채널별 HTML + PNG + data.json 출력
 
-### 현재 준비된 것
-- `build_site.py`에 `_parse_issues()`, `_parse_keywords()` 구현 완료
-- `publish/reports-data.json`에 `issues_en/ko`, `keywords_en/ko` 적재 중
-
-### 구현 내용
-1. **카드뉴스 HTML 템플릿** (`templates/cardnews.html`)
-   - 순수 CSS scroll-snap 가로 슬라이드 (외부 라이브러리 없음)
-   - 디자인 테마: `config/cardnews_themes.json` — glass_dark / neon_cyber / minimal_light
-2. **`scripts/build_cardnews.py`** — 날짜별 `publish/cardnews/YYYY-MM-DD.html` 빌드
-3. **SNS 내보내기 버튼** — `html2canvas` CDN, 1080×1080px PNG 다운로드
-4. **사이트 연동** — `app.html` 상단 Shorts 배너 영역으로 노출
-
-### 디자인 테마 구조
-```json
-{
-  "active_card_theme": "glass_dark",
-  "themes": {
-    "glass_dark":    { "bg_gradient": "...", "card_bg": "rgba(255,255,255,0.05)", ... },
-    "neon_cyber":    { "accent_color": "#a78bfa", ... },
-    "minimal_light": { "bg_gradient": "linear-gradient(135deg, #f8fafc ...)", ... }
-  }
-}
-```
+### 잔여 작업
+- Instagram/Twitter Secrets 설정 후 실제 발송 검증 (`INSTAGRAM_ACCESS_TOKEN` 등 미설정)
 
 ---
 
-## Phase 4 — 검색 고도화
+## ✅ Phase 4 — 검색 고도화 (완료 — 2026-06-04)
 
 > 상세: `docs/plan/plan_improvement.md` §2-6
 
-### 목표
-현재 당일 리포트 내 검색 → 전체 기간 과거 기사 전수 검색
-
-### 구현 방안 (B안 권장)
-- **빌드 시** `build_site.py`에서 `publish/search-index.json` 생성 (~100~200KB)
-  - 구조: `[{date, title, category, link, summary}, ...]`
-- **클라이언트**: `app.html`에서 검색 입력 시 인덱스 1회 fetch → 로컬 필터링
-- **UX**: 매칭 키워드 `<mark>` 하이라이팅, 결과 항목에 "해당 날짜 브리핑 전체 보기" 링크
+### 완료된 것
+- `publish/search-index.json` — `build_site.py` 빌드 시 자동 갱신 (뉴스 + AI이슈 + 주식 전체)
+- 클라이언트 검색: `app.html`에서 인덱스 1회 fetch → 로컬 필터링
+- 키워드 `<mark>` 하이라이팅, 결과에서 해당 날짜 브리핑 링크 제공
 
 ---
 
