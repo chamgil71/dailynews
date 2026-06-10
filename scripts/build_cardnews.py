@@ -23,8 +23,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from jinja2 import Environment, BaseLoader
-
 _ROOT = str(Path(__file__).parent.parent)
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
@@ -41,10 +39,9 @@ def _load_channel_cfg(channel: str) -> dict:
 
 
 def _render_css(accent: str, topbar: str) -> str:
-    tpl = Environment(loader=BaseLoader()).from_string(
-        _CSS_FILE.read_text(encoding="utf-8")
-    )
-    return tpl.render(accent=accent, topbar=topbar)
+    """CSS 커스텀 프로퍼티로 채널 색상을 주입. CSS 파일 자체는 순수 CSS."""
+    variables = f":root {{ --accent: {accent}; --topbar: {topbar}; }}"
+    return variables + "\n" + _CSS_FILE.read_text(encoding="utf-8")
 
 
 CATEGORY_LABELS = {
