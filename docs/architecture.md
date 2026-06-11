@@ -140,11 +140,15 @@ themes/
 ```
 themes/{name}.py::render_report(ctx)
     │
-    ├─ [editorial]  Python f-string으로 직접 HTML 생성
+    ├─ [editorial, 뉴스]  editorial.py::render_report() — 직접 HTML 생성
     │   → CSS가 Python 코드 안에 inline 포함
-    │   → web_*.html 템플릿 파일 미사용
+    │   → web_news.html 미사용
     │
-    └─ [classic 등]  base.py → Jinja2 렌더링
+    ├─ [editorial, 주식]  editorial.py::render_stock_report() → base.py 위임
+    │   → base.py::render_stock_report() + templates/web_stock.html (Jinja2)
+    │   → _COMMON_CSS 공유 블록 주입 (css_common 변수)
+    │
+    └─ [classic/ink/forest]  base.py → Jinja2 렌더링
         → css_root_vars(TOKENS) → :root { --color-navy: #xxx; }
         → templates/web_news.html 에서 var(--color-navy) 사용
         → CSS 커스텀 변수 방식 (웹 브라우저가 해석)
