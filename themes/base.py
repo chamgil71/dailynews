@@ -64,6 +64,12 @@ def css_root_vars(tokens: dict) -> str:
     --color-orange:      {c['orange']};
     --color-orange-50:   {c.get('orange_50', '#fff7ed')};
     --color-orange-200:  {c.get('orange_200', '#fed7aa')};
+    --color-up:          {c['green']};
+    --color-up-50:       {c.get('green_50', '#f0fdf4')};
+    --color-up-200:      {c.get('green_200', '#bbf7d0')};
+    --color-down:        #dc2626;
+    --color-down-50:     #fef2f2;
+    --color-down-200:    #fecaca;
     --font-sans:         {t['font_sans']};
     --leading-base:      {t['leading']};
   }}"""
@@ -86,9 +92,10 @@ def hub_sections_html(nav_prefix: str = "") -> str:
     active = [s for s in HUB_SECTIONS if s["enabled"]]
     if not active:
         return ""
+    abbr_map = {"news": "NW", "stock": "ST", "ai-issue": "AI", "archive": "AR"}
     cards = "".join(f"""
     <a href="{nav_prefix}{s['url']}" class="hub-section-card">
-      <span class="section-icon">{s['icon']}</span>
+      <span class="section-abbr">{abbr_map.get(s.get('key', ''), s['label'][:2].upper())}</span>
       <h3>{s['label']}</h3>
       <p>{s['desc']}</p>
     </a>""" for s in active)
@@ -98,7 +105,7 @@ def hub_sections_html(nav_prefix: str = "") -> str:
 def subscribe_card_html(subscribe_url: str) -> str:
     return f"""
   <div class="card subscribe-card">
-    <h3>📬 뉴스레터 구독</h3>
+    <h3>뉴스레터 구독</h3>
     <p style="color:var(--color-muted);margin:.5em 0 0">
       매일 오전 AI가 정리한 글로벌 뉴스 브리핑을 이메일로 받아보세요.
     </p>
@@ -145,7 +152,7 @@ def layout_html(
 </head>
 <body>
   <header>
-    <div class="logo">📰 AI <span class="accent">News</span> Brief</div>
+    <div class="logo">AI <span class="accent">News</span> Brief</div>
     <nav>
       {nav_html(active, nav_prefix)}
     </nav>
@@ -174,97 +181,65 @@ _COMMON_CSS = """
     line-height: var(--leading-base);
     -webkit-font-smoothing: antialiased;
   }
+
+  /* ── 헤더 ── */
   header {
     background: var(--color-navy);
     color: #fff;
-    padding: 0 24px;
+    padding: 0 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     height: 58px;
     position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    box-shadow: 0 2px 8px rgba(0,0,0,.22);
   }
-  header .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -.3px; }
+  header .logo {
+    font-size: 1.05rem; font-weight: 700; letter-spacing: -.3px;
+    margin-right: 24px; white-space: nowrap; cursor: pointer;
+  }
   header .logo .accent { color: var(--color-blue-light); }
-  header nav a {
-    color: rgba(255,255,255,.8);
-    text-decoration: none;
-    margin-left: 20px;
-    font-size: .9rem;
-    transition: color .15s;
+  .header-nav {
+    display: flex; align-items: center; height: 100%; flex: 1; gap: 2px;
   }
-  header nav a:hover,
-  header nav a.active { color: #fff; font-weight: 600; }
-  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
-  .card {
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 32px 36px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  .hnav-tab {
+    display: flex; align-items: center; height: 100%;
+    padding: 0 14px;
+    color: rgba(255,255,255,.6);
+    text-decoration: none; font-size: .875rem; font-weight: 500;
+    border-bottom: 3px solid transparent;
+    border-top: none; border-left: none; border-right: none;
+    cursor: pointer; background: none;
+    transition: color .15s, border-color .15s; white-space: nowrap;
   }
-  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
-       font-weight: 700; line-height: 1.3; }
-  h2 { font-size: 1.2rem; color: var(--color-blue); margin: 2em 0 .6em;
-       padding-bottom: 6px; border-bottom: 2px solid var(--color-border);
-       font-weight: 600; }
-  h3 { font-size: 1rem; color: var(--color-navy); margin: 1.4em 0 .4em;
-       font-weight: 600; }
-  p  { margin-bottom: .9em; }
-  a  { color: var(--color-blue); text-underline-offset: 2px; }
-  ul, ol { padding-left: 1.4em; margin-bottom: .9em; }
-  li { margin-bottom: .3em; }
-  hr { border: none; border-top: 1px solid var(--color-border); margin: 2em 0; }
-  code { background: var(--color-code-bg); padding: 2px 6px;
-         border-radius: 4px; font-size: .88em; }
-  blockquote {
-    border-left: 4px solid var(--color-blue);
-    padding: 8px 16px;
-    background: var(--color-blue-50);
-    border-radius: 0 8px 8px 0;
-    margin: 1em 0;
-    color: var(--color-muted);
+  .hnav-tab:hover { color: rgba(255,255,255,.9); }
+  .hnav-tab.active {
+    color: #fff; font-weight: 600;
+    border-bottom-color: var(--color-blue-light);
   }
-  mark { background: #fef08a; border-radius: 2px; padding: 0 2px; }
-  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-  .badge {
-    background: var(--color-blue-50);
-    color: var(--color-blue);
-    border: 1px solid var(--color-blue-200);
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: .78rem;
-    font-weight: 500;
+  .tab-label { pointer-events: none; }
+  .header-actions {
+    display: flex; align-items: center; gap: 8px; margin-left: auto;
   }
-  .badge-green {
-    background: var(--color-green-50);
-    color: var(--color-green);
-    border: 1px solid var(--color-green-200);
+  .btn-icon {
+    background: none; border: none; color: rgba(255,255,255,.65);
+    cursor: pointer; padding: 6px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s, background .15s; text-decoration: none;
   }
-  .badge-orange {
-    background: var(--color-orange-50);
-    color: var(--color-orange);
-    border: 1px solid var(--color-orange-200);
-  }
-  .archive-list { list-style: none; padding: 0; }
-  .archive-list li { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
-  .archive-list li:last-child { border-bottom: none; }
-  .archive-list a { font-weight: 500; font-size: 1rem; text-decoration: none; }
-  .archive-list a:hover { text-decoration: underline; }
-  .archive-list .date { color: var(--color-muted); font-size: .85rem; margin-top: 2px; }
+  .btn-icon:hover { color: #fff; background: rgba(255,255,255,.1); }
+
+  /* ── 허브 섹션 카드 ── */
   .hub-sections {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
     margin-bottom: 24px;
   }
   .hub-section-card {
     background: var(--color-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 24px;
+    border-radius: 10px;
+    padding: 20px 22px;
     text-decoration: none;
     color: var(--color-text);
     transition: border-color .15s, box-shadow .15s;
@@ -272,22 +247,178 @@ _COMMON_CSS = """
   }
   .hub-section-card:hover {
     border-color: var(--color-blue);
-    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
   }
-  .hub-section-card .section-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
-  .hub-section-card h3 { color: var(--color-navy); margin: 0 0 6px; }
-  .hub-section-card p { color: var(--color-muted); font-size: .9rem; margin: 0; }
+  .section-abbr {
+    display: inline-block;
+    font-family: ui-monospace, monospace;
+    font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+    color: var(--color-blue);
+    border: 1px solid var(--color-blue-200);
+    background: var(--color-blue-50);
+    padding: 2px 6px; border-radius: 3px;
+    margin-bottom: 10px;
+  }
+  .hub-section-card h3 { color: var(--color-navy); margin: 0 0 4px;
+    font-size: .95rem; font-weight: 700; }
+  .hub-section-card p { color: var(--color-muted); font-size: .85rem; margin: 0; }
+
+  /* ── 컨테이너 ── */
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+
+  /* ── 타이포그래피 ── */
+  h1 {
+    font-size: 1.5rem; color: var(--color-navy);
+    font-weight: 800; line-height: 1.25; margin-bottom: 8px;
+  }
+  .section-kicker {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--color-blue);
+    display: block; margin-bottom: 2px; font-family: ui-monospace, monospace;
+  }
+  h2 {
+    font-size: 1.15rem; color: var(--color-navy); margin: 2em 0 .6em;
+    padding-bottom: 6px; border-bottom: 2px solid var(--color-navy);
+    font-weight: 700; line-height: 1.3;
+  }
+  h3 {
+    font-size: .97rem; color: var(--color-navy);
+    margin: 1.3em 0 .4em; font-weight: 600;
+  }
+  p  { margin-bottom: .85em; }
+  a  { color: var(--color-blue); text-underline-offset: 2px; }
+  ul, ol { padding-left: 1.4em; margin-bottom: .85em; }
+  li { margin-bottom: .3em; }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 1.8em 0; }
+  code {
+    background: var(--color-code-bg); padding: 2px 6px;
+    border-radius: 4px; font-size: .87em;
+    font-family: ui-monospace, monospace;
+  }
+  blockquote {
+    border-left: 3px solid var(--color-blue);
+    padding: 8px 16px;
+    background: var(--color-blue-50);
+    border-radius: 0 6px 6px 0;
+    margin: 1em 0;
+    color: var(--color-muted);
+  }
+  mark { background: #fef08a; border-radius: 2px; padding: 0 2px; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--color-border); padding: 8px 12px;
+           text-align: left; font-size: .88rem; }
+  th { background: var(--color-blue-50); color: var(--color-navy); font-weight: 600; }
+
+  /* ── 태그 (배지 대체 — 이모지 없이, 모노스페이스) ── */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+  .tag {
+    font-size: 11px; font-weight: 600; letter-spacing: .05em;
+    border: 1px solid var(--color-border);
+    padding: 3px 9px; border-radius: 4px;
+    color: var(--color-muted);
+    font-family: ui-monospace, monospace;
+    white-space: nowrap;
+    background: var(--color-bg);
+  }
+  .tag-up   { background: var(--color-up-50);   color: var(--color-up);
+              border-color: var(--color-up-200); }
+  .tag-down { background: var(--color-down-50); color: var(--color-down);
+              border-color: var(--color-down-200); }
+
+  /* 구버전 .badge 호환 */
+  .meta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+  .badge { font-size: 11px; font-weight: 600; border: 1px solid var(--color-border);
+    padding: 3px 9px; border-radius: 4px; color: var(--color-muted);
+    font-family: ui-monospace, monospace; background: var(--color-bg); }
+  .badge-green { background: var(--color-up-50);   color: var(--color-up);
+                 border-color: var(--color-up-200); }
+  .badge-orange { background: var(--color-down-50); color: var(--color-down);
+                  border-color: var(--color-down-200); }
+
+  /* ── 온도 인디케이터 (주식 전용) ── */
+  .temp-indicator {
+    display: inline-block;
+    font-size: 11px; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; padding: 4px 12px;
+    border: 1.5px solid var(--color-border); border-radius: 4px;
+    font-family: ui-monospace, monospace; margin-bottom: 16px;
+  }
+  .temp-neutral  { color: var(--color-muted); }
+  .temp-risk-on  { background: var(--color-up-50);   color: var(--color-up);
+                   border-color: var(--color-up-200); }
+  .temp-risk-off { background: var(--color-down-50); color: var(--color-down);
+                   border-color: var(--color-down-200); }
+
+  /* 주식 수치 색상 */
+  .change-pos { color: var(--color-up);   font-weight: 600; }
+  .change-neg { color: var(--color-down); font-weight: 600; }
+
+  /* ── 뉴스 목록 ── */
+  .news-label {
+    display: inline-block; font-size: .72rem; font-weight: 600;
+    background: var(--color-bg); color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    padding: 1px 6px; border-radius: 3px; margin-right: 6px;
+    font-family: ui-monospace, monospace; white-space: nowrap;
+  }
+
+  /* ── 아카이브 목록 ── */
+  .archive-list { list-style: none; padding: 0; }
+  .archive-list li { border-bottom: 1px solid var(--color-border); padding: 12px 0; }
+  .archive-list li:last-child { border-bottom: none; }
+  .archive-list a { font-weight: 500; font-size: .95rem; text-decoration: none;
+                    color: var(--color-text); }
+  .archive-list a:hover { color: var(--color-blue); }
+  .archive-list .date { color: var(--color-muted); font-size: .82rem;
+    margin-top: 2px; font-family: ui-monospace, monospace; }
+
+  /* 아카이브 검색 타입 배지 */
+  .arc-result { padding: 8px 0; border-bottom: 1px solid var(--color-border);
+    font-size: .88rem; line-height: 1.55; }
+  .arc-result:last-child { border-bottom: none; }
+  .arc-type { display: inline-block; font-size: .68rem; font-weight: 700;
+    padding: 1px 5px; border-radius: 3px; margin-right: 4px;
+    vertical-align: middle; font-family: ui-monospace, monospace;
+    letter-spacing: .05em; }
+  .arc-type-news  { background: var(--color-blue-50);  color: var(--color-blue);
+                    border: 1px solid var(--color-blue-200); }
+  .arc-type-ai    { background: #f5f3ff; color: #5b21b6;
+                    border: 1px solid #ddd6fe; }
+  .arc-type-stock { background: var(--color-up-50);    color: var(--color-up);
+                    border: 1px solid var(--color-up-200); }
+  .arc-date { font-family: ui-monospace, monospace; font-size: .76rem;
+    color: var(--color-muted); margin-right: 4px; }
+  .arc-date a { color: var(--color-muted); text-decoration: none; }
+  .arc-label { display: inline-block; font-size: .68rem; background: var(--color-bg);
+    color: var(--color-muted); border: 1px solid var(--color-border);
+    border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
+  .arc-result a { color: var(--color-text); text-decoration: none; }
+  .arc-result a:hover { text-decoration: underline; }
+
+  /* ── 푸터 ── */
   footer {
     text-align: center;
     color: var(--color-muted);
     font-size: .8rem;
     padding: 24px;
     border-top: 1px solid var(--color-border);
+    line-height: 1.7;
   }
+
   @media (max-width: 600px) {
-    .card { padding: 20px; }
-    header .logo { font-size: 1rem; }
-    .hub-sections { grid-template-columns: 1fr; }
+    .card { padding: 18px 16px; }
+    header .logo { font-size: .95rem; }
+    .hub-sections { grid-template-columns: 1fr 1fr; }
   }
 """
 
@@ -382,6 +513,7 @@ def render_report(ctx: dict, theme_name: str) -> str:
     en_html, ko_html, kw_html = _split_analysis_sections(ctx["md_html"])
     return tmpl.render(
         css_root=css_root_vars(tokens),
+        css_common=_COMMON_CSS,
         font_link=_font_link(tokens),
         display_date=ctx["display_date"],
         date_str=ctx["date_str"],
@@ -408,6 +540,7 @@ def render_archive(ctx: dict, theme_name: str) -> str:
     tmpl   = _jinja_env().get_template("web_archive.html")
     return tmpl.render(
         css_root=css_root_vars(tokens),
+        css_common=_COMMON_CSS,
         font_link=_font_link(tokens),
         display_date="전체 목록",
         site_title=ctx["site_title"],
@@ -432,9 +565,15 @@ def render_stock_report(ctx: dict, theme_name: str) -> str:
         "neutral":  "temp-neutral",
         "risk_on":  "temp-risk-on",
     }.get(level, "temp-neutral")
+    temp_label = {
+        "risk_off": "▼ Risk-Off",
+        "neutral":  "● Neutral",
+        "risk_on":  "▲ Risk-On",
+    }.get(level, "● Neutral")
     tmpl = _jinja_env().get_template("web_stock.html")
     return tmpl.render(
         css_root=css_root_vars(tokens),
+        css_common=_COMMON_CSS,
         font_link=_font_link(tokens),
         display_date=ctx["display_date"],
         date_str=ctx["date_str"],
@@ -445,7 +584,7 @@ def render_stock_report(ctx: dict, theme_name: str) -> str:
         active_tab="stock",
         nav_prefix="../",
         md_html=ctx["md_html"],
-        temp_display=temp.get("display", "🟡 중립"),
+        temp_label=temp_label,
         temp_class=temp_class,
         footer=FOOTER_CONFIG,
     )
@@ -456,6 +595,7 @@ def render_stock_archive(ctx: dict, theme_name: str) -> str:
     tmpl   = _jinja_env().get_template("web_stock_archive.html")
     return tmpl.render(
         css_root=css_root_vars(tokens),
+        css_common=_COMMON_CSS,
         font_link=_font_link(tokens),
         display_date="주식 시황 전체 목록",
         site_title=ctx["site_title"],

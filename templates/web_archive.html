@@ -7,94 +7,37 @@
   {% if font_link %}{{ font_link | safe }}{% endif %}
   <style>
   {{ css_root | safe }}
+  {{ css_common | safe }}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: var(--font-sans);
-    background: var(--color-bg);
-    color: var(--color-text);
-    line-height: var(--leading-base);
-    -webkit-font-smoothing: antialiased;
+  /* ── 아카이브 전용 ── */
+  .tab-btn {
+    font-family: inherit; font-size: .88rem; font-weight: 500;
+    padding: 8px 0; border: none; border-bottom: 2px solid transparent;
+    background: none; cursor: pointer; color: var(--color-muted);
+    transition: color .15s, border-color .15s;
   }
-  /* ── 헤더 (공통 구조 — index.html 기준 통일) ── */
-  header {
-    background: var(--color-navy);
-    color: #fff;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    height: 58px;
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,.25);
-    gap: 0;
+  .tab-btn.active {
+    color: var(--color-navy); font-weight: 700;
+    border-bottom-color: var(--color-navy);
   }
-  header .logo { font-size: 1.1rem; font-weight: 700; letter-spacing: -.3px; margin-right: 24px; white-space: nowrap; cursor: pointer; }
-  header .logo span, header .logo .accent { color: var(--color-blue-light); }
-  .header-nav { display: flex; align-items: center; height: 100%; flex: 1; gap: 2px; }
-  .hnav-tab {
-    display: flex; align-items: center; height: 100%;
-    padding: 0 14px;
-    color: rgba(255,255,255,.65);
-    text-decoration: none; font-size: .88rem; font-weight: 500;
-    border-bottom: 3px solid transparent;
-    border-top: none; border-left: none; border-right: none;
-    cursor: pointer; background: none;
-    transition: color .15s, border-color .15s; white-space: nowrap;
+  .search-input {
+    width: 100%; padding: 8px 12px 8px 32px;
+    border: 1px solid var(--color-border); border-radius: 6px;
+    background: var(--color-card); color: var(--color-text);
+    font-family: inherit; font-size: .87rem; outline: none;
+    transition: border-color .15s;
   }
-  .hnav-tab:hover { color: rgba(255,255,255,.9); }
-  .hnav-tab.active { color: #fff; font-weight: 600; border-bottom-color: var(--color-blue-light); }
-  .tab-label { pointer-events: none; }
-  .header-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-  .btn-icon {
-    background: none; border: none; color: rgba(255,255,255,.7);
-    cursor: pointer; padding: 6px; border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    transition: color .15s, background .15s; text-decoration: none; font-size: 1rem;
+  .search-input:focus { border-color: var(--color-blue); }
+  .search-wrap { position: relative; margin-bottom: 8px; }
+  .search-icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--color-muted); pointer-events: none; font-size: .8rem;
   }
-  .btn-icon:hover { color: #fff; background: rgba(255,255,255,.1); }
-  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
-  .card {
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 32px 36px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  .filter-row {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    font-size: .78rem; color: var(--color-muted);
   }
-  h1 { font-size: 1.6rem; color: var(--color-navy); margin-bottom: 6px;
-       font-weight: 700; line-height: 1.3; }
-  a  { color: var(--color-blue); text-underline-offset: 2px; }
-
-  /* ── 아카이브 목록 ── */
-  .archive-list { list-style: none; padding: 0; }
-  .archive-list li { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
-  .archive-list li:last-child { border-bottom: none; }
-  .archive-list a { font-weight: 500; font-size: 1rem; text-decoration: none; }
-  .archive-list a:hover { text-decoration: underline; }
-  .archive-list .date { color: var(--color-muted); font-size: .85rem; margin-top: 2px; }
-
-  /* ── 아카이브 검색 결과 ── */
-  .arc-result { padding:8px 0; border-bottom:1px solid var(--color-border); font-size:.88rem; line-height:1.5; }
-  .arc-result:last-child { border-bottom:none; }
-  .arc-type { display:inline-block; font-size:.68rem; font-weight:600;
-               padding:1px 5px; border-radius:3px; margin-right:4px; vertical-align:middle; }
-  .arc-type-news  { background:var(--color-blue-50); color:var(--color-blue); }
-  .arc-type-ai    { background:#ede9fe; color:#6d28d9; }
-  .arc-type-stock { background:#dcfce7; color:#15803d; }
-  .arc-date { font-family:var(--font-sans); font-size:.76rem; color:var(--color-muted); margin-right:4px; }
-  .arc-date a { color:var(--color-muted); text-decoration:none; }
-  .arc-label { display:inline-block; font-size:.68rem; background:var(--color-bg); color:var(--color-muted);
-                border:1px solid var(--color-border); border-radius:3px; padding:1px 5px; margin-left:5px; }
-  .arc-result a { color:var(--color-text); text-decoration:none; }
-  .arc-result a:hover { text-decoration:underline; }
-
-  footer {
-    text-align: center;
-    color: var(--color-muted);
-    font-size: .8rem;
-    padding: 24px;
-    border-top: 1px solid var(--color-border);
-  }
+  .filter-row label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -104,46 +47,48 @@
   </header>
 
   <div class="container">
-    <div class="card" style="margin-bottom: 24px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:24px">
+    <div class="card">
+
+      <!-- 상단: 제목 + 검색 -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:20px">
         <div>
-          <h1>📚 전체 리포트 색인</h1>
-          <p style="color:var(--color-muted);margin:.5em 0 0">총 {{ items|length + stock_items|length + ai_items|length }}개 리포트</p>
+          <span class="section-kicker">Archive</span>
+          <h1 style="margin-bottom:4px">전체 리포트 색인</h1>
+          <p style="color:var(--color-muted);font-size:.85rem;margin:0">
+            총 {{ items|length + stock_items|length + ai_items|length }}개 리포트
+          </p>
         </div>
-        <!-- 통합 검색 -->
-        <div class="arch-search" style="flex:0 0 280px;min-width:200px">
-          <div style="position:relative;margin-bottom:6px">
-            <input id="arcSearchInput" type="text" placeholder="기사·이슈·시황 키워드…"
-              style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--color-border);
-                     border-radius:6px;background:var(--color-card);color:var(--color-text);
-                     font-family:inherit;font-size:.87rem;outline:none;" />
-            <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.8rem;pointer-events:none">🔍</span>
+        <div style="flex:0 0 260px;min-width:180px">
+          <div class="search-wrap">
+            <span class="search-icon">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="6.5" cy="6.5" r="5"/><path d="M11 11l3.5 3.5"/>
+              </svg>
+            </span>
+            <input id="arcSearchInput" type="text" class="search-input" placeholder="기사·이슈·시황 키워드…">
           </div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--color-muted)">
-            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfNews" checked style="accent-color:var(--color-blue)"> 📰 뉴스</label>
-            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfAi" checked style="accent-color:var(--color-blue)"> 🤖 AI이슈</label>
-            <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfStock" checked style="accent-color:var(--color-blue)"> 📊 주식</label>
+          <div class="filter-row">
+            <label><input type="checkbox" id="arcSfNews"  checked style="accent-color:var(--color-blue)"> 뉴스</label>
+            <label><input type="checkbox" id="arcSfAi"    checked style="accent-color:var(--color-blue)"> AI이슈</label>
+            <label><input type="checkbox" id="arcSfStock" checked style="accent-color:var(--color-blue)"> 주식</label>
           </div>
           <div id="arcSearchResults"></div>
         </div>
       </div>
 
-      <!-- 탭 메뉴 -->
-      <div style="margin-bottom:18px;border-bottom:1px solid var(--color-border);padding-bottom:8px;display:flex;gap:16px;">
-        <button onclick="showTab('news')" id="tabNews" style="font-family:inherit;font-size:.9rem;padding:6px 0;border:none;border-bottom:2px solid var(--color-blue);background:none;cursor:pointer;color:var(--color-text);font-weight:700">📰 뉴스 {{ items|length }}</button>
-        <button onclick="showTab('stock')" id="tabStock" style="font-family:inherit;font-size:.9rem;padding:6px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--color-muted)">📊 주식 {{ stock_items|length }}</button>
-        <button onclick="showTab('ai')" id="tabAi" style="font-family:inherit;font-size:.9rem;padding:6px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--color-muted)">🤖 AI이슈 {{ ai_items|length }}</button>
+      <!-- 탭 -->
+      <div style="border-bottom:1px solid var(--color-border);margin-bottom:16px;display:flex;gap:20px;">
+        <button onclick="showTab('news')"  id="tabNews"  class="tab-btn active">뉴스 {{ items|length }}</button>
+        <button onclick="showTab('stock')" id="tabStock" class="tab-btn">주식 {{ stock_items|length }}</button>
+        <button onclick="showTab('ai')"    id="tabAi"    class="tab-btn">AI이슈 {{ ai_items|length }}</button>
       </div>
 
-      <!-- 리스트 목록들 -->
+      <!-- 패널 -->
       <div id="tabPanelNews">
         <ul class="archive-list">
           {% for item in items %}
           <li>
-            <a href="news/{{ item.date }}.html">📄 {{ item.display }}</a>
+            <a href="news/{{ item.date }}.html">{{ item.display }}</a>
             <div class="date">{{ item.date }}</div>
           </li>
           {% endfor %}
@@ -154,12 +99,12 @@
           {% if stock_items %}
             {% for item in stock_items %}
             <li>
-              <a href="stock/{{ item.date }}.html">📊 {{ item.display }}</a>
+              <a href="stock/{{ item.date }}.html">{{ item.display }}</a>
               <div class="date">{{ item.date }}</div>
             </li>
             {% endfor %}
           {% else %}
-            <li style="color:var(--color-muted);padding:12px 0">주식 리포트 없음</li>
+            <li style="color:var(--color-muted);padding:12px 0;list-style:none">주식 리포트 없음</li>
           {% endif %}
         </ul>
       </div>
@@ -168,15 +113,16 @@
           {% if ai_items %}
             {% for item in ai_items %}
             <li>
-              <a href="ai-issue/{{ item.date }}.html">🤖 {{ item.display }}</a>
+              <a href="ai-issue/{{ item.date }}.html">{{ item.display }}</a>
               <div class="date">{{ item.date }}</div>
             </li>
             {% endfor %}
           {% else %}
-            <li style="color:var(--color-muted);padding:12px 0">AI이슈 보고서 없음</li>
+            <li style="color:var(--color-muted);padding:12px 0;list-style:none">AI이슈 보고서 없음</li>
           {% endif %}
         </ul>
       </div>
+
     </div>
   </div>
 
@@ -186,22 +132,17 @@
     <a href="https://github.com/{{ footer.repo }}" style="color:inherit">{{ footer.repo }}</a>
     · 생성: {{ now }} KST
   </footer>
+
   <script src="nav.js" defer></script>
   <script>
-  var _active = 'news';
   function showTab(t) {
     ['news','stock','ai'].forEach(function(k) {
-      var cap = k.charAt(0).toUpperCase()+k.slice(1);
-      var panel = document.getElementById('tabPanel'+cap);
-      var tabBtn = document.getElementById('tab'+cap);
-      if (panel) panel.style.display = k===t ? '' : 'none';
-      if (tabBtn) {
-        tabBtn.style.borderBottom = k===t ? '2px solid var(--color-blue)' : '2px solid transparent';
-        tabBtn.style.color = k===t ? 'var(--color-text)' : 'var(--color-muted)';
-        tabBtn.style.fontWeight = k===t ? '700' : '400';
-      }
+      var cap = k.charAt(0).toUpperCase() + k.slice(1);
+      var panel = document.getElementById('tabPanel' + cap);
+      var btn   = document.getElementById('tab' + cap);
+      if (panel) panel.style.display = k === t ? '' : 'none';
+      if (btn) btn.className = 'tab-btn' + (k === t ? ' active' : '');
     });
-    _active = t;
   }
 
   // 통합 검색
@@ -231,28 +172,27 @@
         if (t === 'ai-issue' && !useAi)    return;
         if (t === 'stock'    && !useStock) return;
         report.articles.forEach(function(art) {
-          if (art.title.toLowerCase().indexOf(ql) >= 0) {
+          if (art.title.toLowerCase().indexOf(ql) >= 0)
             hits.push({ type: t, date: report.date, display: report.display,
-                         report_url: report.report_url, art: art });
-          }
+                        report_url: report.report_url, art: art });
         });
       });
       if (!hits.length) {
-        res.innerHTML = '<p style="color:var(--color-muted);font-size:.85rem;padding:8px 0">검색 결과 없음</p>';
+        res.innerHTML = '<p style="color:var(--color-muted);font-size:.84rem;padding:8px 0">검색 결과 없음</p>';
         return;
       }
       var typeLabel = { news:'뉴스', 'ai-issue':'AI', stock:'주식' };
       var typeCls   = { news:'arc-type-news', 'ai-issue':'arc-type-ai', stock:'arc-type-stock' };
       var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
-      var html = '<p style="font-size:.75rem;color:var(--color-muted);margin-bottom:8px;font-family:monospace">'
-               + hits.length + '건 검색됨 (최대 100건)</p>';
+      var html = '<p style="font-size:.75rem;color:var(--color-muted);margin:8px 0 6px;font-family:monospace">'
+               + hits.length + '건 검색됨</p>';
       hits.slice(0, 100).forEach(function(h) {
         var badge = '<span class="arc-type ' + typeCls[h.type] + '">' + typeLabel[h.type] + '</span>';
         var dateA = '<span class="arc-date"><a href="' + h.report_url + '">' + h.date + '</a></span>';
         var hiTitle = h.art.title.replace(re, '<mark style="background:#fef08a;border-radius:2px">$1</mark>');
         var titleA = h.art.link
           ? '<a href="' + h.art.link + '" target="_blank" rel="noopener">' + hiTitle + '</a>'
-          : '<a href="' + h.report_url + '" target="_blank">' + hiTitle + '</a>';
+          : '<a href="' + h.report_url + '">' + hiTitle + '</a>';
         var label = h.art.label ? '<span class="arc-label">' + h.art.label + '</span>' : '';
         html += '<div class="arc-result">' + badge + dateA + titleA + label + '</div>';
       });
@@ -261,8 +201,7 @@
   }
   var _arcTimer;
   document.getElementById('arcSearchInput').addEventListener('input', function() {
-    clearTimeout(_arcTimer);
-    _arcTimer = setTimeout(_runSearch, 280);
+    clearTimeout(_arcTimer); _arcTimer = setTimeout(_runSearch, 260);
   });
   ['arcSfNews','arcSfAi','arcSfStock'].forEach(function(id) {
     document.getElementById(id).addEventListener('change', _runSearch);

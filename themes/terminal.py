@@ -540,9 +540,9 @@ def render_archive(ctx: dict) -> str:
 
 def render_stock_report(ctx: dict) -> str:
     from themes.base import render_stock_report as _base
-    return _base(ctx, "classic")
+    return _base(ctx, "terminal")
 
 
 def render_stock_archive(ctx: dict) -> str:
     from themes.base import render_stock_archive as _base
-    return _base(ctx, "classic")
+    return _base(ctx, "terminal")
