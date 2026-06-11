@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>주식 카드뉴스 2026-06-11</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #34d399; --topbar: linear-gradient(90deg,#34d399,#059669,#0ea5e9); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">&#128200;</div>
+    <div>
+      <div class="logo-main">Stock Brief</div>
+      <div class="logo-sub">AI가 분석하는 시장 시황</div>
+    </div>
+  </div>
+  <div class="cover-date" style="font-size:36px">🟡 중립&nbsp;&nbsp;2026년 6월 11일 (목)</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">오늘의 시황 요약</div>
+  <div class="cover-issues">
+    <div class="cover-issue">
+      <span class="cover-issue-text">이란의 호르무즈 해협 전면 차단 선언이라는 지정학적 충격으로 코스피는 장 초반 7,402선까지 급락(-4.2…</span>
+    </div></div>
+  <div class="cover-tags">#주식 #시황 #코스피 #투자</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 11일 (목)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-trends">
+  <div class="trends-header">
+    <span class="trends-icon">&#128200;</span>
+    <span class="trends-title">주요 시장 지표</span>
+  </div>
+  <div class="trends-list">
+    
+    <div class="trend-item" style="border-left-color:#34d399">
+      <div class="trend-header" style="margin-bottom:8px">
+        <span class="trend-keyword" style="font-size:28px">코스피</span>
+        <span style="font-size:26px;color:#f8fafc;font-weight:700;margin-left:auto">7,763.95</span>
+      </div>
+      <div class="trend-desc" style="font-size:24px">+0.43% ▲</div>
+    </div>
+    
+    <div class="trend-item" style="border-left-color:#34d399">
+      <div class="trend-header" style="margin-bottom:8px">
+        <span class="trend-keyword" style="font-size:28px">코스닥</span>
+        <span style="font-size:26px;color:#f8fafc;font-weight:700;margin-left:auto">996.93</span>
+      </div>
+      <div class="trend-desc" style="font-size:24px">+4.76% ▲</div>
+    </div>
+    
+    <div class="trend-item" style="border-left-color:#34d399">
+      <div class="trend-header" style="margin-bottom:8px">
+        <span class="trend-keyword" style="font-size:28px">USD/KRW</span>
+        <span style="font-size:26px;color:#f8fafc;font-weight:700;margin-left:auto">1,532.38</span>
+      </div>
+      <div class="trend-desc" style="font-size:24px">+0.69% ▲</div>
+    </div>
+    
+    <div class="trend-item" style="border-left-color:#34d399">
+      <div class="trend-header" style="margin-bottom:8px">
+        <span class="trend-keyword" style="font-size:28px">WTI</span>
+        <span style="font-size:26px;color:#f8fafc;font-weight:700;margin-left:auto">89.13</span>
+      </div>
+      <div class="trend-desc" style="font-size:24px">-1.00% ▼</div>
+    </div>
+  </div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 11일 (목)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-trends">
+  <div class="trends-header">
+    <span class="trends-icon">&#128269;</span>
+    <span class="trends-title">핵심 키워드</span>
+  </div>
+  <div class="trends-list">
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">&#128202;</span>
+        <span class="trend-keyword">이란호르무즈차단</span>
+      </div>
+      <div class="trend-desc"></div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">&#127919;</span>
+        <span class="trend-keyword">코스닥급등</span>
+      </div>
+      <div class="trend-desc"></div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">&#9889;</span>
+        <span class="trend-keyword">전력인프라</span>
+      </div>
+      <div class="trend-desc"></div>
+    </div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 6월 11일 (목)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
