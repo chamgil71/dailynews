@@ -348,6 +348,24 @@ _COMMON_CSS = """
               border-color: var(--color-up-200); }
   .tag-down { background: var(--color-down-50); color: var(--color-down);
               border-color: var(--color-down-200); }
+  /* 링크 태그 — hover + 44px 모바일 터치 타깃 */
+  a.tag {
+    position: relative;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--color-muted);
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  a.tag:hover {
+    background: var(--color-navy);
+    color: #fff;
+    border-color: var(--color-navy);
+  }
+  a.tag::after {
+    content: '';
+    position: absolute;
+    inset: -12px -2px;
+  }
 
   /* 구버전 .badge 호환 */
   .meta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }

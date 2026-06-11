@@ -75,10 +75,10 @@
     <div class="card">
       <h1>Daily News Brief</h1>
       <div class="tag-row">
-        <span class="tag">{{ display_date }}</span>
+        <a class="tag" href="../archive.html">{{ display_date }}</a>
         <span class="tag">AI 분석 {{ stats.sent_to_ai }}건</span>
-        <span class="tag">KO {{ stats.ko }}</span>
-        {% if stats.en %}<span class="tag">EN {{ stats.en }}</span>{% endif %}
+        <a class="tag" href="#ko-news">KO {{ stats.ko }}</a>
+        {% if stats.en %}<a class="tag" href="#en-news">EN {{ stats.en }}</a>{% endif %}
       </div>
     </div>
 
@@ -117,7 +117,7 @@
       <span class="section-kicker">Full List</span>
       <h2>수집 기사 전체 목록</h2>
       {% if news_en %}
-      <details>
+      <details id="en-news">
         <summary>영어 뉴스 ({{ news_en | length }}건)</summary>
         <ul class="news-items">
           {% for item in news_en %}
@@ -130,7 +130,7 @@
       </details>
       {% endif %}
       {% if news_ko %}
-      <details>
+      <details id="ko-news">
         <summary>한국어 뉴스 ({{ news_ko | length }}건)</summary>
         <ul class="news-items">
           {% for item in news_ko %}
