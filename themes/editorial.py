@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.theme_config import FOOTER_CONFIG, SITE_LOGO_HTML
+from config.theme_config import FOOTER_CONFIG, SITE_LOGO_HTML, SUBSCRIBE_URL
 
 TOKENS = {
     "meta": {
@@ -213,7 +213,10 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
         <h1 class="mh-title">{_masthead_title(site_title)}</h1>
       </a>
       <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
-      <div class="mh-nav">{nav_html}</div>
+      <div class="mh-nav">
+        {nav_html}
+        {'  <a href="' + SUBSCRIBE_URL + '" style="background:var(--accent);color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.04em">구독</a>' if SUBSCRIBE_URL else ''}
+      </div>
     </div>
 
     {body}

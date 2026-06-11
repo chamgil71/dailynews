@@ -29,7 +29,7 @@ THEME_EMAIL_DEFAULT   = "classic"    # 메일링뉴스 개별 테마 (기본: SI
 
 SITE_THEME    = os.getenv("SITE_THEME", SITE_THEME_DEFAULT)
 SITE_TITLE    = os.getenv("SITE_TITLE", "AI News Brief")
-SUBSCRIBE_URL = os.getenv("SUBSCRIBE_URL", "https://forms.gle/REPLACE_WITH_GOOGLE_FORM_ID")
+SUBSCRIBE_URL = os.getenv("SUBSCRIBE_URL") or (os.getenv("SITE_BASE_URL", "").rstrip("/") + "/subscribe")
 
 def _make_logo_html(title: str) -> str:
     """'AI News Brief' → '📰 AI <span class="accent">News</span> Brief'"""

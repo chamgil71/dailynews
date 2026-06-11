@@ -204,8 +204,11 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
         c = tokens["colors"]
         t = tokens["typography"]
 
-        # 구독 취소 URL (백엔드 제거에 따라 홈페이지 바로가기 링크로 우회 대체)
-        unsubscribe_url = SITE_BASE_URL or ""
+        _token = _make_token(recipient_email)
+        unsubscribe_url = (
+            f"{SITE_BASE_URL}/api/unsubscribe?email={recipient_email}&token={_token}"
+            if SITE_BASE_URL else ""
+        )
 
         sections = _parse_md_for_email(md)
         dt = datetime.strptime(report_date, "%Y-%m-%d") if report_date else datetime.now()
@@ -288,7 +291,11 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
         c = tokens["colors"]
         t = tokens["typography"]
 
-        unsubscribe_url = SITE_BASE_URL or ""
+        _token = _make_token(recipient_email)
+        unsubscribe_url = (
+            f"{SITE_BASE_URL}/api/unsubscribe?email={recipient_email}&token={_token}"
+            if SITE_BASE_URL else ""
+        )
 
         sections = _parse_md_for_stock_email(md)
         dt = datetime.strptime(report_date, "%Y-%m-%d") if report_date else datetime.now()

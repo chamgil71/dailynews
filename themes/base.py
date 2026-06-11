@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import importlib
 
-from config.theme_config import NAV_SECTIONS, HUB_SECTIONS, FOOTER_CONFIG, SITE_LOGO_HTML
+from config.theme_config import NAV_SECTIONS, HUB_SECTIONS, FOOTER_CONFIG, SITE_LOGO_HTML, SUBSCRIBE_URL
 
 _TEMPLATES = Path(__file__).parent.parent / "templates"
 
@@ -227,6 +227,14 @@ _COMMON_CSS = """
     transition: color .15s, background .15s; text-decoration: none;
   }
   .btn-icon:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .btn-subscribe {
+    font-size: 12px; font-weight: 700; letter-spacing: .03em;
+    padding: 5px 13px; border-radius: 20px;
+    background: var(--color-blue); color: #fff !important;
+    text-decoration: none; white-space: nowrap;
+    transition: opacity .15s;
+  }
+  .btn-subscribe:hover { opacity: .8; }
 
   /* legacy nav fallback (nav.js 교체 전 id="site-nav" 깜빡임 방지) */
   header nav a {
@@ -564,6 +572,7 @@ def render_report(ctx: dict, theme_name: str) -> str:
         news_ko=data.get("news_ko", []),
         footer=FOOTER_CONFIG,
         site_url=ctx.get("site_url", ""),
+        subscribe_url=SUBSCRIBE_URL,
     )
 
 
@@ -619,6 +628,8 @@ def render_stock_report(ctx: dict, theme_name: str) -> str:
         temp_label=temp_label,
         temp_class=temp_class,
         footer=FOOTER_CONFIG,
+        site_url=ctx.get("site_url", ""),
+        subscribe_url=SUBSCRIBE_URL,
     )
 
 
