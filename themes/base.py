@@ -228,6 +228,20 @@ _COMMON_CSS = """
   }
   .btn-icon:hover { color: #fff; background: rgba(255,255,255,.1); }
 
+  /* legacy nav fallback (nav.js 교체 전 id="site-nav" 깜빡임 방지) */
+  header nav a {
+    color: rgba(255,255,255,.6); text-decoration: none;
+    padding: 0 14px; font-size: .875rem;
+    display: flex; align-items: center; height: 100%;
+  }
+  header nav a.active { color: #fff; font-weight: 600; }
+
+  /* 탭별 활성 border 색상 (뉴스=파랑, AI이슈=보라, 주식=초록) */
+  .hnav-tab[data-section="news"].active     { border-bottom-color: var(--color-blue-light); }
+  .hnav-tab[data-section="ai-issue"].active { border-bottom-color: #a78bfa; }
+  .hnav-tab[data-section="stock"].active    { border-bottom-color: var(--color-up); }
+  .hnav-tab[data-section="archive"].active  { border-bottom-color: var(--color-blue-light); }
+
   /* ── 허브 섹션 카드 ── */
   .hub-sections {
     display: grid;
