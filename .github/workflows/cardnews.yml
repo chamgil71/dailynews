@@ -129,7 +129,7 @@ jobs:
         if: ${{ github.event.inputs.build_only != 'true' }}
         run: |
           TYPE="${{ steps.channel.outputs.type }}"
-          FIRST_PNG=$(ls publish/cardnews/$TYPE/*.png 2>/dev/null | sort | head -1)
+          FIRST_PNG=$(ls publish/cardnews/$TYPE/*.png 2>/dev/null | sort | tail -1)
           if [ -z "$FIRST_PNG" ]; then
             echo "PNG 파일 없음 — CDN 대기 생략"
             exit 0
