@@ -80,6 +80,33 @@ def _channel_label(channel: str) -> str:
     return {"news": "뉴스", "ai-issue": "AI이슈", "stock": "주식"}.get(channel, channel)
 
 
+def _verify_url(url: str, max_wait: int = 120) -> bool:
+    """GitHub Raw CDN 전파 여부 확인. 접근 가능하면 True 반환."""
+    interval = 10
+    for attempt in range(1, max_wait // interval + 2):
+        try:
+            r = requests.head(url, timeout=10, allow_redirects=True)
+            if r.status_code == 200:
+                return True
+        except requests.RequestException:
+            pass
+        if attempt * interval < max_wait:
+            time.sleep(interval)
+    return False
+
+
+def _assert_urls_accessible(image_urls: list[str], platform: str) -> None:
+    """첫 번째 이미지 URL 접근 가능 여부 확인 (CDN 전파 보장)."""
+    if not image_urls:
+        return
+    url = image_urls[0]
+    if not _verify_url(url, max_wait=120):
+        raise RuntimeError(
+            f"{platform}: GitHub Raw CDN 미전파 — {url} 에 접근할 수 없습니다. "
+            f"workflow에서 CDN 대기 스텝 없이 직접 실행 시 발생할 수 있습니다."
+        )
+
+
 def _build_caption(channel: str, date_str: str, include_link: bool = True) -> str:
     try:
         entry = _load_index(channel, date_str)
@@ -111,6 +138,9 @@ def _build_caption(channel: str, date_str: str, include_link: bool = True) -> st
 # ── Instagram ─────────────────────────────────────────────────────────────────
 def post_instagram(channel: str, date_str: str) -> None:
     from scripts.post_instagram import post_cardnews as _post
+    png_paths  = _png_paths(channel, date_str)
+    image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
+    _assert_urls_accessible(image_urls, "Instagram")
     _post(channel, date_str)
 
 
@@ -233,6 +263,8 @@ def post_threads(channel: str, date_str: str) -> None:
     caption    = _build_caption(channel, date_str, include_link=True)
     image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
 
+    _assert_urls_accessible(image_urls, "Threads")
+
     # 1. 카루셀 아이템 컨테이너 생성
     children = []
     for i, url in enumerate(image_urls):
@@ -284,6 +316,8 @@ def post_facebook(channel: str, date_str: str) -> None:
     png_paths  = _png_paths(channel, date_str)
     caption    = _build_caption(channel, date_str, include_link=True)
     image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
+
+    _assert_urls_accessible(image_urls, "Facebook")
 
     # 1. 각 이미지 비공개 업로드 → photo_id 수집
     photo_ids = []

@@ -121,6 +121,33 @@ jobs:
           git pull --rebase --autostash -X ours origin main
           git push
 
+      # ── GitHub Raw CDN 전파 대기 (SNS 발송 전 필수) ────────────────────────
+      # Instagram/Threads/Facebook 은 GitHub Raw URL 로 이미지를 서버에서 직접 fetch
+      # git push 직후 CDN 에 파일이 없으면 404 → API 업로드 실패
+      # 최대 5분(20 × 15s) 대기 후 접근 가능 확인 시 발송 진행
+      - name: GitHub CDN 전파 대기
+        if: ${{ github.event.inputs.build_only != 'true' }}
+        run: |
+          TYPE="${{ steps.channel.outputs.type }}"
+          FIRST_PNG=$(ls publish/cardnews/$TYPE/*.png 2>/dev/null | sort | head -1)
+          if [ -z "$FIRST_PNG" ]; then
+            echo "PNG 파일 없음 — CDN 대기 생략"
+            exit 0
+          fi
+          FILENAME=$(basename "$FIRST_PNG")
+          URL="https://raw.githubusercontent.com/chamgil71/dailynews/main/publish/cardnews/$TYPE/$FILENAME"
+          echo "CDN 전파 확인 중: $URL"
+          for i in $(seq 1 20); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+            echo "  시도 $i/20: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ CDN 전파 확인 완료 (${i}회차)"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "⚠ 최대 대기 시간(5분) 초과 — 발송 계속 시도"
+
       # ── SNS 발송 (멀티 플랫폼) ────────────────────────────────────────────
       - name: SNS 발송
         if: ${{ github.event.inputs.build_only != 'true' }}

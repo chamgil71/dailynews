@@ -12,7 +12,7 @@
   python scripts/post_instagram.py --date 2026-06-04
 
 이미지 URL 전략:
-  PNG는 GitHub raw URL로 공개 접근 (push 후 즉시 사용 가능)
+  PNG는 GitHub raw URL로 공개 접근 (push 후 CDN 전파까지 최대 수 분 소요)
   https://raw.githubusercontent.com/{owner}/{repo}/main/publish/cardnews/{date}-{n}.png
 
 Instagram API 흐름:
