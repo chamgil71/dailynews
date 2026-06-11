@@ -187,7 +187,7 @@ def render_archive(ctx: dict) -> str:
                padding:16px 0;border-bottom:1px solid var(--color-border)">
       <a href="news/{it['date']}.html"
          style="font-weight:600;text-decoration:none;color:var(--color-text)">
-        📄 {it['display']}
+        {it['display']}
       </a>
       <span style="color:var(--color-muted);font-size:.85rem">{it['date']} →</span>
     </li>""" for it in ctx.get('items', []))
@@ -197,7 +197,7 @@ def render_archive(ctx: dict) -> str:
                padding:16px 0;border-bottom:1px solid var(--color-border)">
       <a href="stock/{it['date']}.html"
          style="font-weight:600;text-decoration:none;color:var(--color-text)">
-        📊 {it['display']}
+        {it['display']}
       </a>
       <span style="color:var(--color-muted);font-size:.85rem">{it['date']} →</span>
     </li>""" for it in ctx.get('stock_items', [])) or "<li style='color:var(--color-muted);padding:16px 0'>주식 리포트 없음</li>"
@@ -207,7 +207,7 @@ def render_archive(ctx: dict) -> str:
                padding:16px 0;border-bottom:1px solid var(--color-border)">
       <a href="ai-issue/{it['date']}.html"
          style="font-weight:600;text-decoration:none;color:var(--color-text)">
-        🤖 {it['display']}
+        {it['display']}
       </a>
       <span style="color:var(--color-muted);font-size:.85rem">{it['date']} →</span>
     </li>""" for it in ctx.get('ai_items', [])) or "<li style='color:var(--color-muted);padding:16px 0'>AI이슈 보고서 없음</li>"
@@ -234,11 +234,11 @@ def render_archive(ctx: dict) -> str:
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--color-muted)">
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
-            <input type="checkbox" id="arcSfNews" checked style="accent-color:var(--color-blue)"> 📰 뉴스</label>
+            <input type="checkbox" id="arcSfNews" checked style="accent-color:var(--color-blue)"> 뉴스</label>
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
-            <input type="checkbox" id="arcSfAi" checked style="accent-color:var(--color-blue)"> 🤖 AI이슈</label>
+            <input type="checkbox" id="arcSfAi" checked style="accent-color:var(--color-blue)"> AI이슈</label>
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
-            <input type="checkbox" id="arcSfStock" checked style="accent-color:var(--color-blue)"> 📊 주식</label>
+            <input type="checkbox" id="arcSfStock" checked style="accent-color:var(--color-blue)"> 주식</label>
         </div>
         <div id="arcSearchResults"></div>
       </div>
@@ -246,9 +246,9 @@ def render_archive(ctx: dict) -> str:
 
     <!-- 탭 스위치 -->
     <div style="margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:8px;display:flex;gap:20px;">
-      <button onclick="showTab('news')" id="tabNews" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid var(--color-blue);background:none;cursor:pointer;color:var(--color-text);font-weight:700">📰 뉴스 {len(ctx.get('items', []))}</button>
-      <button onclick="showTab('stock')" id="tabStock" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--color-muted)">📊 주식 {len(ctx.get('stock_items', []))}</button>
-      <button onclick="showTab('ai')" id="tabAi" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--color-muted)">🤖 AI이슈 {len(ctx.get('ai_items', []))}</button>
+      <button onclick="showTab('news')" id="tabNews" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid var(--color-blue);background:none;cursor:pointer;color:var(--color-text);font-weight:700">뉴스 {len(ctx.get('items', []))}</button>
+      <button onclick="showTab('stock')" id="tabStock" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--color-muted)">주식 {len(ctx.get('stock_items', []))}</button>
+      <button onclick="showTab('ai')" id="tabAi" style="font-family:inherit;font-size:.95rem;padding:6px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--color-muted)">AI이슈 {len(ctx.get('ai_items', []))}</button>
     </div>
 
     <!-- 리스트 패널 -->

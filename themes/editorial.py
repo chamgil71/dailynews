@@ -181,10 +181,10 @@ def _masthead_title(site_title: str) -> str:
 
 def _layout(title: str, body: str, active: str, site_title: str, now: str, site_url: str = "", nav_prefix: str = "") -> str:
     nav_items = [
-        ("news",     "index.html",   "📰 뉴스 브리핑"),
-        ("ai-issue", "ai-issue/",    "🤖 AI이슈"),
-        ("stock",    "stock/",       "📊 주식 시황"),
-        ("archive",  "archive.html", "📚 아카이브"),
+        ("news",     "index.html",   "뉴스 브리핑"),
+        ("ai-issue", "ai-issue/",    "AI이슈"),
+        ("stock",    "stock/",       "주식 시황"),
+        ("archive",  "archive.html", "아카이브"),
     ]
     nav_html = "  ".join(
         f'<a href="{nav_prefix}{url}" class="{"on" if active == key else ""}">{label}</a>'
@@ -356,9 +356,9 @@ def render_archive(ctx: dict) -> str:
             f'</li>'
         )
 
-    news_html  = "".join(_li(it, f'news/{it["date"]}.html',     "📰") for it in news_list)  or "<li style='color:var(--muted);padding:12px 0'>뉴스 리포트 없음</li>"
-    stock_html = "".join(_li(it, f'stock/{it["date"]}.html',    "📊") for it in stock_list) or "<li style='color:var(--muted);padding:12px 0'>주식 리포트 없음</li>"
-    ai_html    = "".join(_li(it, f'ai-issue/{it["date"]}.html', "🤖") for it in ai_list)    or "<li style='color:var(--muted);padding:12px 0'>AI이슈 보고서 없음</li>"
+    news_html  = "".join(_li(it, f'news/{it["date"]}.html',     "") for it in news_list)  or "<li style='color:var(--muted);padding:12px 0'>뉴스 리포트 없음</li>"
+    stock_html = "".join(_li(it, f'stock/{it["date"]}.html',    "") for it in stock_list) or "<li style='color:var(--muted);padding:12px 0'>주식 리포트 없음</li>"
+    ai_html    = "".join(_li(it, f'ai-issue/{it["date"]}.html', "") for it in ai_list)    or "<li style='color:var(--muted);padding:12px 0'>AI이슈 보고서 없음</li>"
 
     tab_style  = "font-family:inherit;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;padding:4px 0;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;color:var(--muted);margin-right:20px"
     tab_active = tab_style.replace("border-bottom:2px solid transparent", "border-bottom:2px solid var(--rule)").replace("color:var(--muted)", "color:var(--text);font-weight:700")
@@ -381,20 +381,20 @@ def render_archive(ctx: dict) -> str:
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--muted)">
             <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfNews"  checked style="accent-color:#1d4ed8"> 📰 뉴스</label>
+              <input type="checkbox" id="arcSfNews"  checked style="accent-color:#1d4ed8"> 뉴스</label>
             <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfAi"    checked style="accent-color:#6d28d9"> 🤖 AI이슈</label>
+              <input type="checkbox" id="arcSfAi"    checked style="accent-color:#6d28d9"> AI이슈</label>
             <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfStock" checked style="accent-color:#15803d"> 📊 주식</label>
+              <input type="checkbox" id="arcSfStock" checked style="accent-color:#15803d"> 주식</label>
           </div>
           <div id="arcSearchResults"></div>
         </div>
       </div>
 
       <div style="margin-bottom:8px;border-bottom:1px solid var(--rule);padding-bottom:4px">
-        <button onclick="showTab('news')"  id="tabNews"  style="{tab_active}">📰 뉴스 {len(news_list)}</button>
-        <button onclick="showTab('stock')" id="tabStock" style="{tab_style}">📊 주식 {len(stock_list)}</button>
-        <button onclick="showTab('ai')"    id="tabAi"    style="{tab_style}">🤖 AI이슈 {len(ai_list)}</button>
+        <button onclick="showTab('news')"  id="tabNews"  style="{tab_active}">뉴스 {len(news_list)}</button>
+        <button onclick="showTab('stock')" id="tabStock" style="{tab_style}">주식 {len(stock_list)}</button>
+        <button onclick="showTab('ai')"    id="tabAi"    style="{tab_style}">AI이슈 {len(ai_list)}</button>
       </div>
 
       <div id="tabPanelNews"  ><ul>{news_html}</ul></div>

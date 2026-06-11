@@ -374,21 +374,21 @@ def render_archive(ctx: dict) -> str:
     news_rows = "".join(f"""
         <tr>
           <td class="date">{it['date']}</td>
-          <td><a href="news/{it['date']}.html">📄 {it['display']}</a></td>
+          <td><a href="news/{it['date']}.html">{it['display']}</a></td>
           <td style="color:var(--ink-mute);text-align:right">→</td>
         </tr>""" for it in ctx.get("items", []))
     
     stock_rows = "".join(f"""
         <tr>
           <td class="date">{it['date']}</td>
-          <td><a href="stock/{it['date']}.html">📊 {it['display']}</a></td>
+          <td><a href="stock/{it['date']}.html">{it['display']}</a></td>
           <td style="color:var(--ink-mute);text-align:right">→</td>
         </tr>""" for it in ctx.get("stock_items", [])) or "<tr><td colspan='3' style='color:var(--ink-mute);text-align:center;padding:12px 0'>NO STOCK REPORTS</td></tr>"
         
     ai_rows = "".join(f"""
         <tr>
           <td class="date">{it['date']}</td>
-          <td><a href="ai-issue/{it['date']}.html">🤖 {it['display']}</a></td>
+          <td><a href="ai-issue/{it['date']}.html">{it['display']}</a></td>
           <td style="color:var(--ink-mute);text-align:right">→</td>
         </tr>""" for it in ctx.get("ai_items", [])) or "<tr><td colspan='3' style='color:var(--ink-mute);text-align:center;padding:12px 0'>NO AI ISSUE REPORTS</td></tr>"
 
@@ -417,11 +417,11 @@ def render_archive(ctx: dict) -> str:
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:var(--ink-soft)">
             <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfNews" checked style="accent-color:var(--amber)"> 📰 NEWS</label>
+              <input type="checkbox" id="arcSfNews" checked style="accent-color:var(--amber)"> NEWS</label>
             <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfAi" checked style="accent-color:var(--amber)"> 🤖 AI</label>
+              <input type="checkbox" id="arcSfAi" checked style="accent-color:var(--amber)"> AI</label>
             <label style="display:flex;align-items:center;gap:3px;cursor:pointer">
-              <input type="checkbox" id="arcSfStock" checked style="accent-color:var(--amber)"> 📊 STOCK</label>
+              <input type="checkbox" id="arcSfStock" checked style="accent-color:var(--amber)"> STOCK</label>
           </div>
           <div id="arcSearchResults"></div>
         </div>
