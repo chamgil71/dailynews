@@ -203,12 +203,13 @@ def sync_news_to_notion(news_items: list, date_str: str = None) -> int:
     return success_count
 
 
-def sync_stock_to_notion(date_str: str, summary: str, market_data: dict = None) -> bool:
+def sync_stock_to_notion(date_str: str, summary: str, market_data: dict = None, temperature: str = None) -> bool:
     """
     일일 주식 시황 브리핑을 Notion 주식 데이터베이스에 기록합니다.
     - date_str: "2026-05-26"
     - summary: 핵심 요약 텍스트 (3줄 요약)
     - market_data: {"kospi": ..., "kosdaq": ..., "sp500": ..., "exchange_rate": ...} 등
+    - temperature: 시장 온도계 값 (예: "🟠 상승")
     """
     if not NOTION_KEY or not NOTION_DB_STOCK:
         logger.warning("[Notion 주식] NOTION_API_KEY 또는 NOTION_DATABASE_ID_STOCK 환경변수가 누락되어 동기화를 건너뜁니다.")
@@ -221,12 +222,13 @@ def sync_stock_to_notion(date_str: str, summary: str, market_data: dict = None) 
     schema = get_database_schema(NOTION_DB_STOCK)
 
     # ── 컬럼 매핑 ──
-    col_title    = "제목"
-    col_date     = "날짜"
-    col_summary  = "요약"
-    col_kospi    = "코스피"
-    col_sp500    = "S&P500"
-    col_exchange = "환율"
+    col_title       = "제목"
+    col_date        = "날짜"
+    col_summary     = "요약"
+    col_kospi       = "코스피"
+    col_sp500       = "S&P500"
+    col_exchange    = "환율"
+    col_temperature = "시장온도"
 
     if schema:
         for name, prop in schema.items():
@@ -253,13 +255,17 @@ def sync_stock_to_notion(date_str: str, summary: str, market_data: dict = None) 
             if name in schema:
                 col_exchange = name
                 break
+        for name in ["시장온도", "온도계", "Temperature", "temperature"]:
+            if name in schema:
+                col_temperature = name
+                break
 
     market_data = market_data or {}
     properties = {}
 
-    # 제목: "주식 시황 2026-05-26"
+    # 제목: "📊 주식 시황 브리핑 — 2026-05-26"
     properties[col_title] = {
-        "title": [{"text": {"content": f"주식 시황 {date_str}"}}]
+        "title": [{"text": {"content": f"📊 주식 시황 브리핑 — {date_str}"}}]
     }
 
     # 날짜
@@ -292,6 +298,14 @@ def sync_stock_to_notion(date_str: str, summary: str, market_data: dict = None) 
     _set_number_col(col_kospi,    market_data.get("kospi"))
     _set_number_col(col_sp500,    market_data.get("sp500"))
     _set_number_col(col_exchange, market_data.get("exchange_rate"))
+
+    # 시장 온도계 (select 또는 rich_text)
+    if temperature and col_temperature in (schema or {}):
+        is_select = schema and schema.get(col_temperature, {}).get("type") == "select"
+        if is_select:
+            properties[col_temperature] = {"select": {"name": temperature}}
+        else:
+            properties[col_temperature] = {"rich_text": [{"text": {"content": temperature}}]}
 
     payload = {
         "parent": {"database_id": NOTION_DB_STOCK},

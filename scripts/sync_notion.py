@@ -74,24 +74,29 @@ def sync_news(date_str: str) -> int:
 # 주식 동기화
 # ──────────────────────────────────────────────
 
-def _parse_stock_md(md_path: Path) -> tuple[str, dict]:
-    """stock_YYYY-MM-DD.md에서 핵심 요약과 주요 지표 파싱"""
+def _parse_stock_md(md_path: Path) -> tuple[str, dict, str]:
+    """stock_YYYY-MM-DD.md에서 핵심 키워드(Summary용)·주요 지표·시장온도 파싱"""
     text = md_path.read_text(encoding="utf-8")
 
-    # 핵심 요약 3줄
-    summary_lines = []
-    in_summary = False
-    for line in text.splitlines():
-        if "핵심 요약" in line:
-            in_summary = True
-            continue
-        if in_summary:
-            stripped = line.strip()
-            if stripped.startswith("- "):
-                summary_lines.append(stripped[2:])
-            elif stripped.startswith("#") and summary_lines:
-                break
-    summary = "\n".join(summary_lines[:3])
+    # ── Summary: 핵심 키워드 TOP 5 섹션에서 [키워드] 설명 형식으로 추출 ──
+    # 형식 A: "① 키워드: 설명 1~2문장"  (루틴 의도 형식)
+    # 형식 B: "#키워드1 #키워드2 ..."    (현재 실제 생성 형식)
+    summary = ""
+    kw_section = ""
+    kw_m = re.search(r"##\s*3\.\s*핵심 키워드[^\n]*\n(.*?)(?=\n##\s|\Z)", text, re.DOTALL)
+    if kw_m:
+        kw_section = kw_m.group(1).strip()
+
+    if kw_section:
+        # 형식 A: ① 키워드: 설명
+        described = re.findall(r"[①②③④⑤]\s*([^:\n：]+)[：:]\s*(.+)", kw_section)
+        if described:
+            summary = "\n".join(f"[{kw.strip()}] {desc.strip()}" for kw, desc in described[:5])
+        else:
+            # 형식 B: #해시태그 나열
+            tags = re.findall(r"#([\w가-힣]+)", kw_section)
+            if tags:
+                summary = "\n".join(f"[{tag}]" for tag in tags[:5])
 
     # 주요 지표 파싱 (테이블에서 수치 추출)
     market_data = {}
@@ -110,7 +115,13 @@ def _parse_stock_md(md_path: Path) -> tuple[str, dict]:
             except ValueError:
                 pass
 
-    return summary, market_data
+    # 시장 온도계 파싱: "## 시장 온도계: 🟠 상승"
+    temperature = ""
+    temp_m = re.search(r"##\s*시장 온도계[:\s]*(🔴 과열|🟠 상승|🟡 중립|🟢 하락|🔵 침체)", text)
+    if temp_m:
+        temperature = temp_m.group(1).strip()
+
+    return summary, market_data, temperature
 
 
 def sync_stock(date_str: str) -> bool:
@@ -120,10 +131,11 @@ def sync_stock(date_str: str) -> bool:
         logger.error(f"[주식] 파일 없음: {md_path}")
         return False
 
-    summary, market_data = _parse_stock_md(md_path)
+    summary, market_data, temperature = _parse_stock_md(md_path)
+    logger.info(f"[주식] 파싱 결과 — 요약:{bool(summary)}, 코스피:{market_data.get('kospi')}, 온도:{temperature or '없음'}")
 
     from core.shared.notion import sync_stock_to_notion
-    ok = sync_stock_to_notion(date_str, summary, market_data)
+    ok = sync_stock_to_notion(date_str, summary, market_data, temperature)
     logger.info(f"[주식] {date_str} → Notion {'완료' if ok else '실패'}")
     return ok
 
