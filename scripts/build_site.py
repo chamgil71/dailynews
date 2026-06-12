@@ -397,18 +397,33 @@ def build(theme_name: str | None = None,
         
         themes_dir = Path(Path(__file__).parent.parent, "themes")
         import importlib
-        
+
         # 일관된 순서 지정을 위한 정렬 기준
         theme_order = ["classic", "minimal", "ink", "forest", "editorial", "terminal"]
         found_themes = []
-        
+
+        # themes/skins/ 및 themes/layouts/ 서브디렉터리에서 테마 탐색
+        theme_candidates = [
+            (p.stem, f"themes.skins.{p.stem}")
+            for p in (themes_dir / "skins").glob("*.py")
+            if p.stem != "__init__"
+        ] + [
+            (p.stem, f"themes.layouts.{p.stem}")
+            for p in (themes_dir / "layouts").glob("*.py")
+            if p.stem != "__init__"
+        ]
+        # 레거시: themes/*.py 루트 파일도 폴백으로 탐색 (skins/layouts에 없는 경우만)
+        found_names = {n for n, _ in theme_candidates}
         for p in themes_dir.glob("*.py"):
             name = p.stem
-            if name in ["base", "__init__"]:
+            if name in ["base", "__init__"] or name in found_names:
                 continue
+            theme_candidates.append((name, f"themes.{name}"))
+
+        for name, module_path in theme_candidates:
             try:
                 # 임포트 시 충돌 방지 및 정상 탑재
-                mod = importlib.import_module(f"themes.{name}")
+                mod = importlib.import_module(module_path)
                 if hasattr(mod, "TOKENS"):
                     found_themes.append((name, mod.TOKENS))
             except Exception as e:
@@ -479,7 +494,31 @@ def build(theme_name: str | None = None,
         app_html = app_html.replace('<body data-theme="classic">', f'<body data-theme="{news_theme}">')
         # 구독 URL 주입
         app_html = app_html.replace("SUBSCRIBE_URL_PLACEHOLDER", SUBSCRIBE_URL or "https://ms-dailynews.vercel.app/subscribe")
-        
+
+        # NAV_INJECT: templates/header.html 의 <nav> 내용 추출 → app.html 주입
+        # SPA 루트 맥락: nav_prefix="", active_tab="news" (기본 섹션)
+        header_tmpl_path = Path(Path(__file__).parent.parent, "templates", "header.html")
+        if header_tmpl_path.exists():
+            header_src = header_tmpl_path.read_text(encoding="utf-8")
+            nav_m = re.search(
+                r'<nav class="header-nav">([\s\S]*?)</nav>',
+                header_src,
+            )
+            if nav_m:
+                # Jinja2 조건식/변수를 SPA 루트 맥락으로 정적 해석
+                nav_inner = nav_m.group(1)
+                # nav_prefix="" → {{ nav_prefix }} 제거
+                nav_inner = nav_inner.replace("{{ nav_prefix }}", "")
+                # active_tab="news" → news 탭에 active 추가, 나머지 제거
+                nav_inner = re.sub(
+                    r"\{% if active_tab == '(\w[\w-]*)' %\} active\{% endif %\}",
+                    lambda m: " active" if m.group(1) == "news" else "",
+                    nav_inner,
+                )
+                # 나머지 Jinja2 블록 제거 (안전망)
+                nav_inner = re.sub(r"\{%.*?%\}", "", nav_inner)
+                app_html = app_html.replace("    <!-- NAV_INJECT -->", nav_inner.rstrip())
+
         app_dst.write_text(app_html, encoding="utf-8")
         print(f"  + index.html (← app.html, dynamic compiled {len(found_themes)} themes, default_theme: {active_theme})")
     else:

@@ -1,4 +1,4 @@
-# themes/layouts/editorial.py
+# themes/editorial.py
 """Editorial 테마 — 신문 마스트헤드, Noto Serif KR, 드롭캡.
 
 [커스텀 레이아웃 테마] base.py 미사용. render_*() 함수가 Python f-string으로 HTML 직접 생성.
@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config.theme_config import FOOTER_CONFIG, SITE_LOGO_HTML, SUBSCRIBE_URL
 

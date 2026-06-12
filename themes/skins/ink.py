@@ -1,4 +1,4 @@
-# themes/skins/ink.py
+# themes/ink.py
 """Ink 테마 — 신문 스타일, 붉은 accent, 뉴트럴 배경.
 
 [표준 테마] base.py + templates/web_*.html 경유. 레이아웃 수정 → templates/, 색상 수정 → TOKENS.

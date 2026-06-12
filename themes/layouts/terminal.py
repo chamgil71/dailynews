@@ -1,4 +1,4 @@
-# themes/layouts/terminal.py
+# themes/terminal.py
 """Terminal Dark 테마 — Bloomberg 터미널 스타일, 다크 모노스페이스.
 
 [커스텀 레이아웃 테마] base.py 미사용. render_*() 함수가 Python f-string으로 HTML 직접 생성.
@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config.theme_config import FOOTER_CONFIG
 

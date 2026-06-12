@@ -1,12 +1,9 @@
-# themes/layouts/minimal.py
+# themes/minimal.py
 """Minimal 테마 — Pretendard, 넓은 여백, 오렌지 accent.
 
 [커스텀 레이아웃 테마] base.py 미사용. render_*() 함수가 Python f-string으로 HTML 직접 생성.
 레이아웃·색상 모두 이 파일에서 수정.
 """
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 TOKENS = {
     "meta": {

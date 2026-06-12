@@ -3,14 +3,15 @@
 토큰 기반 렌더링 엔진.
 
 역할 분담:
-  templates/*.html  → HTML 구조 (Jinja2 템플릿)
-  themes/{name}.py  → 색상·폰트 토큰 (TOKENS dict)
-  themes/base.py    → 토큰 로드 + Jinja2 렌더링 (이 파일)
+  templates/*.html      → HTML 구조 (Jinja2 템플릿)
+  themes/skins/{name}.py    → 표준 스킨 토큰 (TOKENS dict)
+  themes/layouts/{name}.py  → 커스텀 레이아웃 테마 (자체 render_*() 구현)
+  themes/base.py        → 토큰 로드 + Jinja2 렌더링 (이 파일)
 
-표준 렌더러 (classic/ink/forest 등 토큰 교체형 테마):
+표준 렌더러 (skins/classic, skins/ink, skins/forest 등 토큰 교체형 테마):
   render_report(), render_archive(), render_stock_report(), render_stock_archive()
 
-커스텀 레이아웃 테마 (editorial/terminal/minimal):
+커스텀 레이아웃 테마 (layouts/editorial, layouts/terminal, layouts/minimal):
   자체 render_*() 구현을 가지며, 웹 레이아웃을 Python에서 직접 정의.
   layout_html()을 헬퍼로 사용할 수 있음.
 """
@@ -32,12 +33,21 @@ _TEMPLATES = Path(__file__).parent.parent / "templates"
 # ── 토큰 조회 ─────────────────────────────────────────────────────────────────
 
 def get_tokens(theme_name: str) -> dict:
-    try:
-        mod = importlib.import_module(f"themes.{theme_name}")
-        return mod.TOKENS
-    except (ModuleNotFoundError, AttributeError):
-        from themes.classic import TOKENS
-        return TOKENS
+    """테마 토큰(TOKENS dict) 반환.
+
+    탐색 순서:
+      1. themes.layouts.{name}  (커스텀 레이아웃 테마)
+      2. themes.skins.{name}    (표준 스킨 테마)
+      3. themes.skins.classic   (폴백)
+    """
+    for candidate in (f"themes.layouts.{theme_name}", f"themes.skins.{theme_name}"):
+        try:
+            mod = importlib.import_module(candidate)
+            return mod.TOKENS
+        except (ModuleNotFoundError, AttributeError):
+            pass
+    from themes.skins.classic import TOKENS
+    return TOKENS
 
 
 # ── CSS :root 변수 블록 (테마 토큰 → CSS 변수) ────────────────────────────────
