@@ -962,6 +962,14 @@ function md2html(md) {
   if (!md) return "";
   return marked.parse(md);
 }
+function extractMdField(val) {
+  if (!val || typeof val !== 'string') return val || '';
+  const trimmed = val.trim();
+  if (trimmed.startsWith('{')) {
+    try { const p = JSON.parse(trimmed); return p.summary || val; } catch (e) {}
+  }
+  return val;
+}
 
 // ── 데이터 로드 ───────────────────────────────────────────────────────────────
 async function loadReports() {
@@ -1258,7 +1266,7 @@ function renderAIIssue(data) {
         <span style="font-size:.75rem; color:var(--blue); font-weight:600">${esc(tip.tool_name)}</span>
       </div>
       <div style="font-size:.82rem; color:var(--muted); margin-bottom:8px; line-height:1.5">${esc(tip.guide).replace(/\n/g, "<br>")}</div>
-      <pre style="background:#0f172a; color:#38bdf8; padding:10px; border-radius:6px; font-size:.78rem; overflow-x:auto; font-family:monospace">${esc(tip.prompt_example)}</pre>
+      <pre style="background:#0f172a; color:#38bdf8; padding:10px; border-radius:6px; font-size:.78rem; overflow-x:auto; white-space:pre-wrap; word-break:break-word; font-family:monospace">${esc(tip.prompt_example)}</pre>
     </div>`).join("");
 
   // 4. 주가
@@ -1298,7 +1306,7 @@ function renderAIIssue(data) {
     <h3 style="font-size:.95rem; color:var(--navy); margin:18px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">■ 주요 이슈 심층 분석 (TOP 3)</h3>
     <div>${top3Html}</div>
 
-    <div class="analysis" style="margin-top:20px">${md2html(company_trends)}</div>
+    <div class="analysis" style="margin-top:20px">${md2html(extractMdField(company_trends))}</div>
 
     <h3 style="font-size:.95rem; color:var(--navy); margin:24px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">💡 이번 주 AI 실용 팁</h3>
     <div>${tipsHtml}</div>
@@ -1309,7 +1317,7 @@ function renderAIIssue(data) {
     <h3 style="font-size:.95rem; color:var(--navy); margin:24px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">🔬 주목 논문 Pick (Research Radar)</h3>
     <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:20px">${paperHtml}</div>
 
-    <div class="analysis" style="margin-top:20px">${md2html(next_week_outlook)}</div>
+    <div class="analysis" style="margin-top:20px">${md2html(extractMdField(next_week_outlook))}</div>
   </div>`;
 }
 
