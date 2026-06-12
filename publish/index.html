@@ -679,14 +679,14 @@
   <div class="logo" onclick="window.location.reload()" style="cursor:pointer;">📰 AI <span>News</span> Brief</div>
 
   <nav class="header-nav">
-    <a class="hnav-tab active" href="index.html" data-section="news"><span class="tab-label">뉴스 브리핑</span></a>
-    <a class="hnav-tab" href="ai-issue/" data-section="ai-issue"><span class="tab-label">AI이슈</span></a>
-    <a class="hnav-tab" href="stock/" data-section="stock"><span class="tab-label">주식 시황</span></a>
-    <a class="hnav-tab" href="archive.html" data-section="archive"><span class="tab-label">아카이브</span></a>
+    <a class="hnav-tab active" href="index.html" data-section="news">📰<span class="tab-label"> 뉴스 브리핑</span></a>
+    <a class="hnav-tab" href="ai-issue/" data-section="ai-issue">🤖<span class="tab-label"> AI이슈</span></a>
+    <a class="hnav-tab" href="stock/" data-section="stock">📈<span class="tab-label"> 주식 시황</span></a>
+    <a class="hnav-tab" href="archive.html" data-section="archive">📚<span class="tab-label"> 아카이브</span></a>
   </nav>
 
   <div class="header-actions">
-    <a href="https://ms-dailynews.vercel.app/subscribe" class="btn-subscribe">구독</a>
+    <a href="/subscribe" class="btn-subscribe">구독</a>
     <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-icon" title="GitHub">
       <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
     </a>
@@ -995,6 +995,14 @@ function md2html(md) {
   if (!md) return "";
   return marked.parse(md);
 }
+function extractMdField(val) {
+  if (!val || typeof val !== 'string') return val || '';
+  const trimmed = val.trim();
+  if (trimmed.startsWith('{')) {
+    try { const p = JSON.parse(trimmed); return p.summary || val; } catch (e) {}
+  }
+  return val;
+}
 
 // ── 데이터 로드 ───────────────────────────────────────────────────────────────
 async function loadReports() {
@@ -1291,7 +1299,7 @@ function renderAIIssue(data) {
         <span style="font-size:.75rem; color:var(--blue); font-weight:600">${esc(tip.tool_name)}</span>
       </div>
       <div style="font-size:.82rem; color:var(--muted); margin-bottom:8px; line-height:1.5">${esc(tip.guide).replace(/\n/g, "<br>")}</div>
-      <pre style="background:#0f172a; color:#38bdf8; padding:10px; border-radius:6px; font-size:.78rem; overflow-x:auto; font-family:monospace">${esc(tip.prompt_example)}</pre>
+      <pre style="background:#0f172a; color:#38bdf8; padding:10px; border-radius:6px; font-size:.78rem; overflow-x:auto; white-space:pre-wrap; word-break:break-word; font-family:monospace">${esc(tip.prompt_example)}</pre>
     </div>`).join("");
 
   // 4. 주가
@@ -1331,7 +1339,7 @@ function renderAIIssue(data) {
     <h3 style="font-size:.95rem; color:var(--navy); margin:18px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">■ 주요 이슈 심층 분석 (TOP 3)</h3>
     <div>${top3Html}</div>
 
-    <div class="analysis" style="margin-top:20px">${md2html(company_trends)}</div>
+    <div class="analysis" style="margin-top:20px">${md2html(extractMdField(company_trends))}</div>
 
     <h3 style="font-size:.95rem; color:var(--navy); margin:24px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">💡 이번 주 AI 실용 팁</h3>
     <div>${tipsHtml}</div>
@@ -1342,7 +1350,7 @@ function renderAIIssue(data) {
     <h3 style="font-size:.95rem; color:var(--navy); margin:24px 0 10px; border-bottom:2px solid var(--border); padding-bottom:4px">🔬 주목 논문 Pick (Research Radar)</h3>
     <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:20px">${paperHtml}</div>
 
-    <div class="analysis" style="margin-top:20px">${md2html(next_week_outlook)}</div>
+    <div class="analysis" style="margin-top:20px">${md2html(extractMdField(next_week_outlook))}</div>
   </div>`;
 }
 
