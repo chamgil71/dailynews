@@ -7,6 +7,11 @@ SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 
 def _h(extra: dict | None = None) -> dict:
+    if not SUPABASE_KEY:
+        raise EnvironmentError(
+            "SUPABASE_SERVICE_KEY 환경변수가 비어 있습니다. "
+            "Vercel 대시보드 → Project Settings → Environment Variables에서 추가하세요."
+        )
     h = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",

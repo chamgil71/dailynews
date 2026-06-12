@@ -477,6 +477,8 @@ def build(theme_name: str | None = None,
 
         # body 초기 data-theme = 뉴스 테마 (초기 섹션이 뉴스이므로)
         app_html = app_html.replace('<body data-theme="classic">', f'<body data-theme="{news_theme}">')
+        # 구독 URL 주입
+        app_html = app_html.replace("SUBSCRIBE_URL_PLACEHOLDER", SUBSCRIBE_URL or "https://ms-dailynews.vercel.app/subscribe")
         
         app_dst.write_text(app_html, encoding="utf-8")
         print(f"  + index.html (← app.html, dynamic compiled {len(found_themes)} themes, default_theme: {active_theme})")
