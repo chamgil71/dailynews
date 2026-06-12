@@ -117,9 +117,9 @@ jobs:
           if [ "${{ github.event.inputs.mode }}" = "reanalyze" ]; then
             DATE="${{ github.event.inputs.target_date }}"
             if [ -z "$DATE" ]; then DATE=$(date +'%Y-%m-%d'); fi
-            MSG="♻️ Reanalyze $DATE [skip ci]"
+            MSG="♻️ Reanalyze $DATE"
           else
-            MSG="📰 Daily report $(date +'%Y-%m-%d') [skip ci]"
+            MSG="📰 Daily report $(date +'%Y-%m-%d')"
           fi
           git diff --staged --quiet || git commit -m "$MSG"
           git pull --rebase --autostash -X theirs origin main

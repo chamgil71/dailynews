@@ -193,7 +193,7 @@ def post_telegram(channel: str, date_str: str) -> None:
             "parse_mode": "HTML",
             "reply_markup": {
                 "inline_keyboard": [[
-                    {"text": "🌐 웹에서 보기", "url": link},
+                    {"text": "🌐 웹에서 보기", "url": "https://ms-dailynews.vercel.app/"},
                     {"text": "📂 전체 아카이브", "url": "https://ms-dailynews.vercel.app/archive.html"},
                 ]]
             },
