@@ -122,6 +122,29 @@ def _preprocess_raw_md(raw: str) -> str:
     )
 
 
+def _preprocess_display(raw: str) -> str:
+    """HTML 렌더링용 추가 전처리.
+    - 핵심 요약 각 줄 → - bullet (단락 분리)
+    - 핵심 키워드 ① 제목: 설명 → - **[제목]** 설명 (제목 강조)
+    """
+    def _bulletize_summary(m):
+        header = m.group(1)
+        body = m.group(2)
+        lines = [l for l in body.split('\n') if l.strip()]
+        return header + '\n' + '\n'.join('- ' + l for l in lines) + '\n'
+    raw = re.sub(
+        r'(## ■ 핵심 요약[^\n]*\n)([\s\S]*?)(?=\n---|\n##\s)',
+        _bulletize_summary,
+        raw,
+    )
+    raw = re.sub(
+        r'[①②③④⑤]\s+([^:\n]+?):\s*(.+)',
+        lambda m: f'- **[{m.group(1).strip()}]** {m.group(2).strip()}',
+        raw,
+    )
+    return raw
+
+
 def parse_stock_md(md_path: str, date_str: str) -> dict:
     """
     stock MD 파일 → 구조화 데이터.
@@ -150,6 +173,7 @@ def _display_date(date_str: str) -> str:
 def build_stock_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
     raw      = Path(md_path).read_text(encoding="utf-8")
     raw      = _preprocess_raw_md(raw)
+    raw      = _preprocess_display(raw)
     md_html  = markdown2.markdown(
         raw,
         extras=["tables", "fenced-code-blocks", "strike", "cuddled-lists", "header-ids"],

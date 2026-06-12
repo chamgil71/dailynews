@@ -393,11 +393,13 @@ _COMMON_CSS = """
     border: 1.5px solid var(--color-border); border-radius: 4px;
     font-family: ui-monospace, monospace; margin-bottom: 16px;
   }
-  .temp-neutral  { color: var(--color-muted); }
-  .temp-risk-on  { background: var(--color-up-50);   color: var(--color-up);
-                   border-color: var(--color-up-200); }
-  .temp-risk-off { background: var(--color-down-50); color: var(--color-down);
-                   border-color: var(--color-down-200); }
+  .temp-neutral   { color: var(--color-muted); }
+  .temp-risk-on   { background: var(--color-up-50);   color: var(--color-up);
+                    border-color: var(--color-up-200); }
+  .temp-rising    { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+  .temp-risk-off  { background: var(--color-down-50); color: var(--color-down);
+                    border-color: var(--color-down-200); }
+  .temp-recession { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
 
   /* 주식 수치 색상 */
   .change-pos { color: var(--color-up);   font-weight: 600; }
@@ -602,15 +604,13 @@ def render_stock_report(ctx: dict, theme_name: str) -> str:
     temp   = data.get("temperature", {})
     level  = temp.get("level", "neutral")
     temp_class = {
-        "risk_off": "temp-risk-off",
-        "neutral":  "temp-neutral",
-        "risk_on":  "temp-risk-on",
+        "risk_off":  "temp-risk-off",
+        "rising":    "temp-rising",
+        "neutral":   "temp-neutral",
+        "risk_on":   "temp-risk-on",
+        "recession": "temp-recession",
     }.get(level, "temp-neutral")
-    temp_label = {
-        "risk_off": "▼ Risk-Off",
-        "neutral":  "● Neutral",
-        "risk_on":  "▲ Risk-On",
-    }.get(level, "● Neutral")
+    temp_label = temp.get("display", "🟡 중립")
     tmpl = _jinja_env().get_template("web_stock.html")
     return tmpl.render(
         css_root=css_root_vars(tokens),
