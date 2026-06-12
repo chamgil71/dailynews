@@ -32,6 +32,29 @@ PUBLISH_DIR = "publish/ai-issue"
 os.makedirs(PUBLISH_DIR, exist_ok=True)
 
 
+def _extract_md_field(val: str) -> str:
+    """Gemini가 {"summary":"..."} JSON으로 반환한 마크다운 필드를 정규화."""
+    if not isinstance(val, str):
+        return val
+    trimmed = val.strip()
+    if trimmed.startswith('{'):
+        try:
+            parsed = json.loads(trimmed)
+            if isinstance(parsed, dict) and "summary" in parsed:
+                return parsed["summary"]
+        except Exception:
+            pass
+    return val
+
+
+def _normalize_json_sidecar(data: dict) -> dict:
+    """company_trends / next_week_outlook 필드의 JSON wrapper를 제거한다."""
+    for field in ("company_trends", "next_week_outlook"):
+        if field in data:
+            data[field] = _extract_md_field(data[field])
+    return data
+
+
 def parse_weekly_json_for_summary(json_path: Path) -> dict:
     """주간 JSON 사이드카를 파싱하여 app.html용 컴팩트한 요약 메타 데이터를 추출합니다."""
     try:
@@ -145,11 +168,18 @@ def main():
         out_html_path = os.path.join(PUBLISH_DIR, f"{date_str}.html")
         Path(out_html_path).write_text(html_content, encoding="utf-8")
         
-        # 개별 JSON 도 아카이브 publish 폴더로 복사 이동 (SPA lazy-load 목적)
+        # 개별 JSON 을 정규화 후 publish 폴더에 저장 (JSON wrapper 필드 자동 정리)
         out_json_path = os.path.join(PUBLISH_DIR, f"{date_str}.json")
         if json_path.exists():
-            import shutil
-            shutil.copy2(str(json_path), out_json_path)
+            try:
+                raw_data = json.loads(json_path.read_text(encoding="utf-8"))
+                cleaned = _normalize_json_sidecar(raw_data)
+                Path(out_json_path).write_text(
+                    json.dumps(cleaned, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+            except Exception:
+                import shutil
+                shutil.copy2(str(json_path), out_json_path)
             
         pages.append((date_str, out_html_path))
         print(f"  + publish/ai-issue/{date_str}.html & {date_str}.json 빌드 완료")
