@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>AI 뉴스 카드뉴스 2026-06-13</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #38bdf8; --topbar: linear-gradient(90deg,#38bdf8,#6366f1,#a78bfa); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">AI</div>
+    <div>
+      <div class="logo-main">AI News Brief</div>
+      <div class="logo-sub">매일 아침 AI가 정리하는 핵심 뉴스</div>
+    </div>
+  </div>
+  <div class="cover-date">2026년 6월 13일 (토)</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">오늘의 핵심 이슈</div>
+  <div class="cover-issues">
+    <div class="cover-issue">
+      <span class="cover-icon" style="color:#f59e0b">&#128293;</span>
+      <span class="cover-issue-text">샘 올트먼 오픈AI CEO, 방한 전격 연기</span>
+    </div>
+    <div class="cover-issue">
+      <span class="cover-icon" style="color:#818cf8">&#128226;</span>
+      <span class="cover-issue-text">스페이스X, 사상 최대 규모 IPO 성공 및 뉴욕증시 화려한 …</span>
+    </div>
+    <div class="cover-issue">
+      <span class="cover-icon" style="color:#34d399">&#128161;</span>
+      <span class="cover-issue-text">노무라증권, 반도체 슈퍼사이클 진입 및 국내 증시 낙관론 전망</span>
+    </div></div>
+  <div class="cover-tags">#AI뉴스 #테크 #데일리브리핑 #인공지능</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 13일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#f59e0b">
+    <span class="rank-icon">&#128293;</span>
+    <span class="rank-label">핵심 이슈 1</span>
+    <span class="cat-badge">AI·ML</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">샘 올트먼 오픈AI CEO, 방한 전격 연기</div>
+    <div class="issue-divider" style="background:#f59e0b"></div>
+    <div class="issue-summary">샘 올트먼 오픈AI CEO가 불가피한 개인 사정으로 한국을 포함한 아시아 방문 일정을 전격 연기했다. 이번 방한을 통해 국내 주요 기업들과의 파트너십 및 협력을 강화할 예정이었으나, 오픈AI 코리아 측은 한국과의 협력 및 계획은 변함없이 지속될 것이라고 밝혔다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://news.google.com/rss/articles/CBMiW0FVX3lxTE5aZjBuU0lQNi1pTHpGejVCakhGR3Y2ZG4zanFLNi1TQ0p5OUkzRkVWVHc0YzhNVHVhUm01WWx3T0dMbG5nSnI2RmJJaWRhcUdEdTZiVU1wQ05QMknSAWBBVV95cUxPcGNPMi1lUW5yMUk2TTBWTEx4RkVNVUhLNTB3VzJfNjJxR3MwZEo3MEhWUTNmQnpFZ2o0OFl2Unh5RGxhVVhEMzRGRVBUNWFlUTZhcWNPT3hxU3dra1MzN28?oc=5'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 13일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#818cf8">
+    <span class="rank-icon">&#128226;</span>
+    <span class="rank-label">핵심 이슈 2</span>
+    <span class="cat-badge">한국경제</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">스페이스X, 사상 최대 규모 IPO 성공 및 뉴욕증시 화려한 데뷔</div>
+    <div class="issue-divider" style="background:#818cf8"></div>
+    <div class="issue-summary">일론 머스크가 이끄는 우주기업 스페이스X가 공모가 135달러로 사상 최대 규모의 기업공개(IPO)를 단행하며 뉴욕증시에 데뷔했다. 상장 첫날 주가가 공모가 대비 20% 이상 급등하며 시장의 낙관론을 이끌었으나, 미·중 갈등 여파로 중국 및 홍콩 투자자들의 참여는 전면 배제되었다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 3개&nbsp;·&nbsp;<a href='https://news.google.com/rss/articles/CBMiT0FVX3lxTE9oQVZtSkxRb1MtdHlxRDB2bFh0X3ZhTXB2bUtGZVJlMkNWRXdKOWdIR3JTT19EcHNwakI2dndHeGMyOXB3TWFhY2xweHhBdkE?oc=5'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 13일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#34d399">
+    <span class="rank-icon">&#128161;</span>
+    <span class="rank-label">핵심 이슈 3</span>
+    <span class="cat-badge">한국경제</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">노무라증권, 반도체 슈퍼사이클 진입 및 국내 증시 낙관론 전망</div>
+    <div class="issue-divider" style="background:#34d399"></div>
+    <div class="issue-summary">노무라증권은 AI 산업 확산에 따른 메모리 반도체 수요 급증을 바탕으로 반도체 슈퍼사이클이 본격적인 상승 국면에 진입했다고 진단했다. 이에 따라 코스피 지수가 11,000선까지 도달할 수 있다는 파격적인 전망을 내놓으며 국내 반도체 대형주들의 강세를 예고했다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://www.etnews.com/20260612000313'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 13일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-4">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-trends">
+  <div class="trends-header">
+    <span class="trends-icon">&#128200;</span>
+    <span class="trends-title">주목할 트렌드 키워드</span>
+  </div>
+  <div class="trends-list">
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">&#128202;</span>
+        <span class="trend-keyword">#반도체 슈퍼사이클</span>
+      </div>
+      <div class="trend-desc">AI 반도체 수요 폭증에 힘입어 메모리 반도체 시장이 장기 상승 국면에 진입했다는 분석이 지배적입니다.</div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">&#127919;</span>
+        <span class="trend-keyword">#AI 에이전트</span>
+      </div>
+      <div class="trend-desc">단순 챗봇을 넘어 업무를 스스로 최적화하고 수행하는 에이전트 기술과 이를 뒷받침하는 데이터 설계 전략이 주목받고 있습니다.</div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-header">
+        <span class="trend-icon">&#9889;</span>
+        <span class="trend-keyword">#스페이스X IPO</span>
+      </div>
+      <div class="trend-desc">우주 산업 대장주의 성공적인 상장으로 글로벌 우주·항공 및 첨단 기술 자본 시장에 훈풍이 불고 있습니다.</div>
+    </div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 6월 13일 (토)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
