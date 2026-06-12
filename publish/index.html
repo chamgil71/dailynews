@@ -10,6 +10,9 @@
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3073080552425149"
+       crossorigin="anonymous"></script>
   <style>
     /* ── CSS 변수 (테마 토큰) ── */
     :root {
@@ -275,8 +278,17 @@
     }
     .stat-item .num { font-size: 1.2rem; font-weight: 700; color: var(--blue); }
     .stat-item .lbl { font-size: .67rem; color: var(--muted); margin-top: 1px; }
-    /* 날짜 목록 */
-    .date-list { list-style: none; }
+    /* 날짜 목록 — 7개까지 표시 후 스크롤 */
+    .date-list {
+      list-style: none;
+      max-height: 224px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .date-list::-webkit-scrollbar { width: 4px; }
+    .date-list::-webkit-scrollbar-track { background: transparent; }
+    .date-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
     .date-list li a {
       display: flex; align-items: center; gap: 7px;
       padding: 7px 2px;
@@ -292,6 +304,28 @@
       background: var(--border); flex-shrink: 0;
     }
     .date-list li a.active .date-dot { background: var(--blue); }
+
+    /* 광고 카드 */
+    .ad-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 10px;
+      text-align: center;
+      min-height: 100px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ad-label {
+      font-size: .65rem; color: var(--muted);
+      text-align: center; margin-bottom: 4px;
+      letter-spacing: .05em;
+    }
+    .ad-banner {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 8px; margin-bottom: 16px;
+      text-align: center;
+    }
 
     /* ── 메인 콘텐츠 ── */
     .main-area { min-width: 0; }
@@ -704,6 +738,20 @@
       <ul class="date-list" id="dateList"></ul>
     </div>
 
+    <!-- 사이드바 광고 -->
+    <div id="sidebarAdCard">
+      <p class="ad-label">광고</p>
+      <div class="ad-card">
+        <ins class="adsbygoogle"
+             style="display:block;width:228px;height:200px"
+             data-ad-client="ca-pub-3073080552425149"
+             data-ad-slot="AUTO"
+             data-ad-format="rectangle"
+             data-full-width-responsive="false"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
     <!-- 아카이브 전용 통계 카드 (archive 탭에서만 표시) -->
     <div class="sidebar-card arc-stat-card arc-active" id="arcNewsCard" onclick="selectArcGroup('news')" style="display:none">
       <h3>📰 뉴스 브리핑</h3>
@@ -735,6 +783,18 @@
 
   <!-- ── 우: 메인 콘텐츠 ── -->
   <main class="main-area">
+
+    <!-- 메인 상단 광고 배너 -->
+    <div class="ad-banner">
+      <p class="ad-label">광고</p>
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-3073080552425149"
+           data-ad-slot="AUTO"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
 
     <!-- 뉴스 섹션 -->
     <div id="newsSection">
