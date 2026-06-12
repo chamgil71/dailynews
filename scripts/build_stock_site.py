@@ -75,6 +75,7 @@ def _parse_market_table(raw: str) -> dict:
 
 def _parse_keywords(raw: str) -> list[dict]:
     """핵심 키워드 TOP 5 파싱.
+    - v6 포맷: ① 제목: 설명 (한 줄)
     - 구 포맷: **① [제목]** + 설명
     - v5 포맷: #태그1 #태그2 ...
     """
@@ -83,6 +84,13 @@ def _parse_keywords(raw: str) -> list[dict]:
     if not m_section:
         return keywords
     block = m_section.group(1).strip()
+
+    # v6 포맷: ① 제목: 설명 (볼드 없음, 한 줄)
+    v6_kws = re.findall(r'[①②③④⑤]\s+([^:\n]+):\s*(.+)', block)
+    if v6_kws:
+        for title, body in v6_kws:
+            keywords.append({"title": title.strip(), "body": body.strip()})
+        return keywords
 
     # 구 포맷: **① [제목]** + 본문
     old_kws = re.findall(r'\*\*[①②③④⑤]\s+(.+?)\*\*([\s\S]*?)(?=\*\*[①②③④⑤]|\Z)', block)
