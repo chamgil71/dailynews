@@ -175,21 +175,25 @@
 
 ---
 
-## Step 6: Git 저장 및 Push
+## Step 6: GitHub에 직접 Push (mcp__github__push_files)
 
-생성한 MD 파일을 저장하고 main 브랜치에 push하라:
+**⚠️ 웹 루틴은 세션 브랜치에서 실행되므로 `git push origin main`이 불가. 반드시 MCP 도구를 사용해 main에 직접 커밋한다.**
 
-```bash
-git add reports/stock/stock_YYYY-MM-DD.md
-git commit -m "📊 주식 시황 YYYY-MM-DD"
-git push origin main
+```
+도구: mcp__github__push_files
+파라미터:
+  owner: chamgil71
+  repo: dailynews
+  branch: main
+  message: "📊 주식 시황 YYYY-MM-DD"
+  files: [{ path: "reports/stock/stock_YYYY-MM-DD.md", content: <MD 전체 내용> }]
 ```
 
 push 성공 시 GitHub Actions `stock_build.yml`이 자동으로:
 
 - HTML 빌드 및 GitHub Pages 배포
-- 이메일 발송
-- Notion 동기화 (NOTION_DATABASE_ID_STOCK Secret 사용)
+- 이메일 발송 (익일 08:00 KST, stock_send.yml)
+- Notion 동기화
 - 히스토리 업데이트
 
 **Step 6 완료 후 루틴 종료.**
