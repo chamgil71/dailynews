@@ -280,6 +280,34 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
 
 
 # ── 주식 카드 빌더 ────────────────────────────────────────────────────────────
+def _stock_sectors_card(sectors: list[dict], date_str: str, idx: int, total: int) -> str:
+    items = ""
+    for s in sectors[:9]:
+        chg = s.get("change", "")
+        if "▲" in chg or (chg.startswith("+") and "▼" not in chg):
+            color = "#34d399"
+        elif "▼" in chg or chg.startswith("-"):
+            color = "#f87171"
+        else:
+            color = "#94a3b8"
+        items += (
+            f'<div style="display:flex;align-items:center;justify-content:space-between;'
+            f'padding:9px 0;border-bottom:1px solid #334155">'
+            f'<span style="font-size:21px;color:#94a3b8;width:130px;flex-shrink:0">{s.get("sector","")}</span>'
+            f'<span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">{s.get("name","")}</span>'
+            f'<span style="font-size:21px;color:{color};font-weight:700;white-space:nowrap">{chg}</span>'
+            f'</div>'
+        )
+    content = (
+        '<div class="trends-header">'
+        '<span class="trends-icon">&#128202;</span>'
+        '<span class="trends-title">섹터 동향</span>'
+        '</div>'
+        f'<div style="padding:0 4px">{items}</div>'
+    )
+    return _card(idx, total, content, _fmt_date(date_str))
+
+
 def build_stock_html(date_str: str, data: dict) -> str:
     ch      = _load_channel_cfg("stock")
     accent  = ch["accent"]
@@ -290,7 +318,8 @@ def build_stock_html(date_str: str, data: dict) -> str:
     summary_lines = [l.strip().lstrip("- ") for l in
                      data.get("summary", "").split("\n") if l.strip()][:3]
     keywords = data.get("keywords", [])[:4]
-    total   = 2 + (1 if keywords else 0)
+    sectors  = data.get("sectors", [])
+    total   = 2 + (1 if keywords else 0) + (1 if sectors else 0)
 
     sum_html = ""
     for line in summary_lines:
@@ -354,6 +383,7 @@ def build_stock_html(date_str: str, data: dict) -> str:
   </div>"""
     cards += _card(1, total, mkt_content, _fmt_date(date_str), layout="trends")
 
+    kw_idx = 2
     if keywords:
         kw_items = ""
         for j, kw in enumerate(keywords[:3]):
@@ -373,7 +403,11 @@ def build_stock_html(date_str: str, data: dict) -> str:
     <span class="trends-title">핵심 키워드</span>
   </div>
   <div class="trends-list">{kw_items}</div>"""
-        cards += _card(2, total, kw_content, _fmt_date(date_str), layout="trends")
+        cards += _card(kw_idx, total, kw_content, _fmt_date(date_str), layout="trends")
+        kw_idx += 1
+
+    if sectors:
+        cards += _stock_sectors_card(sectors, date_str, kw_idx, total)
 
     return _html_wrapper(f"주식 카드뉴스 {date_str}", css, cards)
 
@@ -472,7 +506,7 @@ def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
         d    = e.get("date", "")
         html = build_stock_html(d, e)
         (out_dir / f"{d}.html").write_text(html, encoding="utf-8")
-        n = 2 + (1 if e.get("keywords") else 0)
+        n = 2 + (1 if e.get("keywords") else 0) + (1 if e.get("sectors") else 0)
         print(f"  + cardnews/stock/{d}.html  ({n} cards)")
         built += 1
 

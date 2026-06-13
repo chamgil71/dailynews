@@ -112,6 +112,36 @@ def _parse_summary(raw: str) -> str:
     return m.group(1).strip() if m else ""
 
 
+def _parse_sectors(raw: str) -> list[dict]:
+    """섹터 동향 테이블 파싱.
+    v6: ### 2-1. 섹터 요약 (카드뉴스용) — 섹터당 1행, 9행
+    구  : ## 2. 섹터 동향 — flat 단일 테이블
+    반환: [{"sector": str, "name": str, "price": str, "change": str}, ...]
+    """
+    # v6: 2-1. 섹터 요약 서브섹션 우선
+    m = re.search(
+        r'### 2-1\. 섹터 요약[^\n]*\n([\s\S]*?)(?=###|\n---|\n## |\Z)', raw
+    )
+    if not m:
+        # 구 포맷: ## 2. 섹터 동향 단일 테이블
+        m = re.search(
+            r'## 2\. 섹터 동향[^\n]*\n([\s\S]*?)(?=\n---|\n## |\Z)', raw
+        )
+    if not m:
+        return []
+
+    sectors: list[dict] = []
+    for row in re.finditer(
+        r'\|\s*([^|\-][^|]*?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|',
+        m.group(1),
+    ):
+        sector, name, price, change = (row.group(i).strip() for i in range(1, 5))
+        if not sector or sector == "섹터" or "---" in sector:
+            continue
+        sectors.append({"sector": sector, "name": name, "price": price, "change": change})
+    return sectors
+
+
 def _preprocess_raw_md(raw: str) -> str:
     """핵심 요약의 '제목 — 내용' 형식을 '제목 \n  - 내용'으로 변환."""
     return re.sub(
@@ -158,6 +188,7 @@ def parse_stock_md(md_path: str, date_str: str) -> dict:
         "market":      _parse_market_table(raw),
         "summary":     _parse_summary(raw),
         "keywords":    _parse_keywords(raw),
+        "sectors":     _parse_sectors(raw),
     }
 
 
