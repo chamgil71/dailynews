@@ -139,12 +139,15 @@ def build_caption(channel: str, date_str: str) -> str:
     except ValueError:
         display = date_str
 
+    _CHANNEL_PATH = {"news": "", "ai-issue": "ai-issue/", "stock": "stock/"}
+    site_url = f"https://ms-dailynews.vercel.app/{_CHANNEL_PATH.get(channel, '')}"
+
     label = {"news": "뉴스", "ai-issue": "AI이슈", "stock": "주식"}.get(channel, channel)
     lines = [f"📰 {display} {label} 브리핑\n"]
     for i, title in enumerate(issue_titles[:3]):
         icons = ["🔥", "📢", "💡"]
         lines.append(f"{icons[i]} {title}")
-    lines.append(f"\n🔗 ms-dailynews.vercel.app/cardnews/{channel}/{date_str}.html")
+    lines.append(f"\n🔗 {site_url}")
     lines.append("\n#AI뉴스 #테크뉴스 #데일리뉴스 #인공지능 #AINews #TechNews #DailyBriefing")
 
     return "\n".join(lines)

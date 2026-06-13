@@ -107,6 +107,19 @@ def _assert_urls_accessible(image_urls: list[str], platform: str) -> None:
         )
 
 
+_CHANNEL_SITE_PATH = {
+    "news":     "",
+    "ai-issue": "ai-issue/",
+    "stock":    "stock/",
+}
+
+SITE_BASE = "https://ms-dailynews.vercel.app"
+
+
+def _channel_site_url(channel: str) -> str:
+    return f"{SITE_BASE}/{_CHANNEL_SITE_PATH.get(channel, '')}"
+
+
 def _build_caption(channel: str, date_str: str, include_link: bool = True) -> str:
     try:
         entry = _load_index(channel, date_str)
@@ -129,7 +142,7 @@ def _build_caption(channel: str, date_str: str, include_link: bool = True) -> st
         lines.append(f"{icons[i]} {title}")
 
     if include_link:
-        lines.append(f"\n🔗 ms-dailynews.vercel.app/cardnews/{channel}/{date_str}.html")
+        lines.append(f"\n🔗 {_channel_site_url(channel)}")
 
     lines.append("\n#AI뉴스 #테크뉴스 #데일리뉴스 #인공지능 #AINews #TechNews")
     return "\n".join(lines)
@@ -185,16 +198,16 @@ def post_telegram(channel: str, date_str: str) -> None:
                  data={"chat_id": chat_id, "media": json.dumps(media)},
                  files=files)
 
-    link = f"https://ms-dailynews.vercel.app/cardnews/{channel}/{date_str}.html"
+    site_url = _channel_site_url(channel)
     _tg(token, "sendMessage",
         json={
             "chat_id":    chat_id,
-            "text":       f"📖 {label} 카드뉴스 전체 보기",
+            "text":       f"📖 {label} 브리핑 전체 보기",
             "parse_mode": "HTML",
             "reply_markup": {
                 "inline_keyboard": [[
-                    {"text": "🌐 웹에서 보기", "url": "https://ms-dailynews.vercel.app/"},
-                    {"text": "📂 전체 아카이브", "url": "https://ms-dailynews.vercel.app/archive.html"},
+                    {"text": "🌐 웹에서 보기", "url": site_url},
+                    {"text": "📂 전체 아카이브", "url": f"{SITE_BASE}/archive.html"},
                 ]]
             },
         })
