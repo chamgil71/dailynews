@@ -131,12 +131,16 @@ def _parse_sectors(raw: str) -> list[dict]:
         return []
 
     sectors: list[dict] = []
-    for row in re.finditer(
-        r'\|\s*([^|\-][^|]*?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|',
-        m.group(1),
-    ):
-        sector, name, price, change = (row.group(i).strip() for i in range(1, 5))
-        if not sector or sector == "섹터" or "---" in sector:
+    for line in m.group(1).split("\n"):
+        line = line.strip()
+        if not line.startswith("|") or "---" in line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        parts = [p for p in parts if p != ""]
+        if len(parts) < 4:
+            continue
+        sector, name, price, change = parts[0], parts[1], parts[2], parts[3]
+        if not sector or sector == "섹터":
             continue
         sectors.append({"sector": sector, "name": name, "price": price, "change": change})
     return sectors
