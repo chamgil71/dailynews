@@ -194,12 +194,16 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
     try:
         from jinja2 import Environment, FileSystemLoader
 
-        # 테마 토큰 로드
-        try:
-            mod = importlib.import_module(f"themes.{theme_name}")
-            tokens = mod.TOKENS
-        except (ModuleNotFoundError, AttributeError):
-            from themes.classic import TOKENS as tokens  # type: ignore
+        # 테마 토큰 로드 (skins/ 하위 경로 우선, 없으면 classic 폴백)
+        tokens = None
+        for candidate in (f"themes.skins.{theme_name}", f"themes.{theme_name}"):
+            try:
+                tokens = importlib.import_module(candidate).TOKENS
+                break
+            except (ModuleNotFoundError, AttributeError):
+                pass
+        if tokens is None:
+            tokens = importlib.import_module("themes.skins.classic").TOKENS
 
         c = tokens["colors"]
         t = tokens["typography"]
@@ -282,11 +286,15 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
     try:
         from jinja2 import Environment, FileSystemLoader
 
-        try:
-            mod = importlib.import_module(f"themes.{theme_name}")
-            tokens = mod.TOKENS
-        except (ModuleNotFoundError, AttributeError):
-            from themes.classic import TOKENS as tokens  # type: ignore
+        tokens = None
+        for candidate in (f"themes.skins.{theme_name}", f"themes.{theme_name}"):
+            try:
+                tokens = importlib.import_module(candidate).TOKENS
+                break
+            except (ModuleNotFoundError, AttributeError):
+                pass
+        if tokens is None:
+            tokens = importlib.import_module("themes.skins.classic").TOKENS
 
         c = tokens["colors"]
         t = tokens["typography"]
