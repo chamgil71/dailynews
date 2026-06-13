@@ -86,6 +86,24 @@ def _send_stock(date_str: str) -> None:
     logger.info(f"[이메일/주식] {'완료' if ok else '실패 또는 건너뜀'}")
 
 
+# ── weekly-stock ─────────────────────────────────────────────────────────────
+def _send_weekly_stock(date_str: str) -> None:
+    md_path = Path(_ROOT) / "reports" / "stock" / f"weekly_{date_str}.md"
+    if not md_path.exists():
+        logger.error(f"[이메일/주간주식] MD 파일 없음: {md_path}")
+        sys.exit(1)
+
+    report_dt = datetime.strptime(date_str, "%Y-%m-%d")
+    subject = f"📅 [주간 시황] {date_str} 주간 주식 종합 브리핑"
+    ok = send_email(
+        md_path.read_text(encoding="utf-8"),
+        subject_override=subject,
+        report_date=date_str,
+        channel="stock",
+    )
+    logger.info(f"[이메일/주간주식] {'완료' if ok else '실패 또는 건너뜀'}")
+
+
 # ── ai-issue ──────────────────────────────────────────────────────────────────
 def _build_ai_issue_html(data: dict, date_str: str) -> str:
     from jinja2 import Environment, BaseLoader
@@ -145,7 +163,7 @@ def _send_ai_issue(date_str: str) -> None:
 # ── 진입점 ────────────────────────────────────────────────────────────────────
 def main() -> None:
     parser = argparse.ArgumentParser(description="통합 이메일 발송기")
-    parser.add_argument("--type", choices=["news", "stock", "ai-issue"], required=True)
+    parser.add_argument("--type", choices=["news", "stock", "weekly-stock", "ai-issue"], required=True)
     parser.add_argument("--date", default=KST_TODAY, help="대상 날짜 (YYYY-MM-DD)")
     parser.add_argument("--force", action="store_true", help="AI 분석 실패 플래그 무시하고 강제 발송 (news 전용)")
     args = parser.parse_args()
@@ -154,7 +172,7 @@ def main() -> None:
     if args.type == "news":
         _send_news(args.date, force=args.force)
     else:
-        {"stock": _send_stock, "ai-issue": _send_ai_issue}[args.type](args.date)
+        {"stock": _send_stock, "weekly-stock": _send_weekly_stock, "ai-issue": _send_ai_issue}[args.type](args.date)
 
 
 if __name__ == "__main__":

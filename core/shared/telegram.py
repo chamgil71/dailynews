@@ -209,6 +209,81 @@ def send_stock_telegram(stock_data: dict, date_str: str = None) -> bool:
         return False
 
 
+def send_weekly_stock_telegram(data: dict, date_str: str = None) -> bool:
+    """주간 주식 시황 종합을 @msstockbrief 채널로 발송."""
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id   = os.getenv("TELEGRAM_CHAT_ID_STOCK")
+
+    if not bot_token or not chat_id:
+        logger.warning("[Telegram/주간주식] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID_STOCK 미설정 — 발송 건너뜀")
+        return False
+
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+    week_range     = data.get("week_range", "")
+    temp           = data.get("temperature", {})
+    summary        = data.get("summary", "")
+    hot_themes     = data.get("hot_themes", [])
+    weekly_indices = data.get("weekly_indices", [])
+    next_week      = data.get("next_week_schedule", [])
+
+    header = html.escape(week_range or date_str)
+    lines = [f"📅 <b>Ms Stock Weekly</b> — {header}", ""]
+    lines.append(f"🌡 <b>주간 온도계</b>: {html.escape(temp.get('display', '🟡 중립'))}")
+    lines.append("")
+
+    if summary:
+        lines.append(f"📌 <b>주간 총평</b>: {html.escape(summary)}")
+        lines.append("")
+
+    if weekly_indices:
+        lines.append("📊 <b>주간 지수 성과</b>")
+        for row in weekly_indices[:4]:
+            lines.append(
+                f"  {html.escape(row.get('label',''))}: "
+                f"{html.escape(row.get('close',''))} "
+                f"({html.escape(row.get('change',''))})"
+            )
+        lines.append("")
+
+    if hot_themes:
+        lines.append("🔥 <b>이번 주 핫 테마</b>")
+        for t in hot_themes[:3]:
+            lines.append(f"  • <b>{html.escape(t.get('title',''))}</b>")
+        lines.append("")
+
+    if next_week:
+        lines.append("📅 <b>차주 주요 일정</b>")
+        for row in next_week[:3]:
+            lines.append(
+                f"  {html.escape(row.get('date',''))}: {html.escape(row.get('event',''))}"
+            )
+        lines.append("")
+
+    link_url = f"{SITE_BASE_URL}/stock/" if SITE_BASE_URL else ""
+    if link_url:
+        lines.append(f'📰 <a href="{link_url}">전체 시황 보기</a>')
+
+    message_text = "\n".join(lines)
+    api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": message_text, "parse_mode": "HTML",
+               "disable_web_page_preview": True}
+
+    try:
+        response = requests.post(api_url, json=payload, timeout=10)
+        res_data = response.json()
+        if response.status_code == 200 and res_data.get("ok"):
+            logger.info("[Telegram/주간주식] 발송 완료")
+            return True
+        else:
+            logger.error(f"[Telegram/주간주식] 발송 실패: {res_data.get('description', '알 수 없는 오류')}")
+            return False
+    except Exception as e:
+        logger.error(f"[Telegram/주간주식] 통신 오류: {e}")
+        return False
+
+
 def send_ai_issue_telegram(report_data: dict, date_str: str = None) -> bool:
     """
     주간 AI Issue 보고서 요약을 텔레그램으로 발송.

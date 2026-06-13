@@ -75,6 +75,26 @@ def _send_stock(date_str: str) -> None:
     logger.info(f"[텔레그램/주식] {'완료' if ok else '실패 또는 건너뜀'}")
 
 
+# ── weekly-stock ─────────────────────────────────────────────────────────────
+def _send_weekly_stock(date_str: str) -> None:
+    from core.shared.telegram import send_weekly_stock_telegram
+    from scripts.build_stock_site import parse_weekly_md
+
+    md_path = Path(_ROOT) / "reports" / "stock" / f"weekly_{date_str}.md"
+    if not md_path.exists():
+        logger.error(f"[텔레그램/주간주식] MD 파일 없음: {md_path}")
+        sys.exit(1)
+
+    try:
+        data = parse_weekly_md(str(md_path), date_str)
+    except Exception as e:
+        logger.error(f"[텔레그램/주간주식] MD 파싱 에러: {e}")
+        sys.exit(1)
+
+    ok = send_weekly_stock_telegram(data, date_str)
+    logger.info(f"[텔레그램/주간주식] {'완료' if ok else '실패 또는 건너뜀'}")
+
+
 # ── ai-issue ──────────────────────────────────────────────────────────────────
 def _send_ai_issue(date_str: str) -> None:
     from core.shared.telegram import send_ai_issue_telegram
@@ -97,7 +117,7 @@ def _send_ai_issue(date_str: str) -> None:
 # ── 진입점 ────────────────────────────────────────────────────────────────────
 def main() -> None:
     parser = argparse.ArgumentParser(description="통합 텔레그램 발송기")
-    parser.add_argument("--type", choices=["news", "stock", "ai-issue"], required=True)
+    parser.add_argument("--type", choices=["news", "stock", "weekly-stock", "ai-issue"], required=True)
     parser.add_argument("--date", default=KST_TODAY, help="대상 날짜 (YYYY-MM-DD)")
     parser.add_argument("--force", action="store_true", help="AI 분석 실패 플래그 무시하고 강제 발송 (news 전용)")
     args = parser.parse_args()
@@ -106,7 +126,7 @@ def main() -> None:
     if args.type == "news":
         _send_news(args.date, force=args.force)
     else:
-        {"stock": _send_stock, "ai-issue": _send_ai_issue}[args.type](args.date)
+        {"stock": _send_stock, "weekly-stock": _send_weekly_stock, "ai-issue": _send_ai_issue}[args.type](args.date)
 
 
 if __name__ == "__main__":

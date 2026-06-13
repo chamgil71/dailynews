@@ -11,7 +11,7 @@ name: Stock Briefing Send
 
 on:
   schedule:
-    - cron: '0 23 * * 0-5'    # UTC 23:00 일~금 = KST 08:00 월~토 (금요일 데이터 → 토요일 아침 발송)
+    - cron: '0 23 * * 0-6'    # UTC 23:00 일~토 = KST 08:00 월~일 (주간 리포트는 일요일 아침 발송)
   workflow_dispatch:
     inputs:
       date:
@@ -44,25 +44,47 @@ jobs:
       - name: 발송 대상 리포트 확인
         id: find_report
         run: |
-          # workflow_dispatch 에서 날짜 지정 시 해당 파일 우선
+          # workflow_dispatch 에서 날짜 지정 시 해당 파일 우선 (일일 또는 주간 자동 감지)
           if [ -n "${{ github.event.inputs.date }}" ]; then
-            CANDIDATE="reports/stock/stock_${{ github.event.inputs.date }}.md"
-            if [ -f "$CANDIDATE" ]; then
-              LATEST="$CANDIDATE"
-              REPORT_DATE="${{ github.event.inputs.date }}"
+            INPUT_DATE="${{ github.event.inputs.date }}"
+            if [ -f "reports/stock/weekly_${INPUT_DATE}.md" ]; then
+              LATEST="reports/stock/weekly_${INPUT_DATE}.md"
+              REPORT_DATE="$INPUT_DATE"
+              REPORT_TYPE="weekly"
+            elif [ -f "reports/stock/stock_${INPUT_DATE}.md" ]; then
+              LATEST="reports/stock/stock_${INPUT_DATE}.md"
+              REPORT_DATE="$INPUT_DATE"
+              REPORT_TYPE="daily"
             else
-              echo "지정 날짜(${{ github.event.inputs.date }}) 리포트 없음 — 건너뜀"
+              echo "지정 날짜(${INPUT_DATE}) 리포트 없음 — 건너뜀"
               echo "exists=false" >> $GITHUB_OUTPUT
               exit 0
             fi
           else
-            LATEST=$(ls reports/stock/stock_*.md 2>/dev/null | sort -r | head -1)
-            if [ -z "$LATEST" ]; then
+            # 일일/주간 중 가장 최신 파일 선택
+            LATEST_DAILY=$(ls reports/stock/stock_*.md 2>/dev/null | sort -r | head -1)
+            LATEST_WEEKLY=$(ls reports/stock/weekly_*.md 2>/dev/null | sort -r | head -1)
+            DAILY_DATE=""
+            WEEKLY_DATE=""
+            [ -n "$LATEST_DAILY"  ] && DAILY_DATE=$(basename "$LATEST_DAILY"  | sed 's/stock_\(.*\)\.md/\1/')
+            [ -n "$LATEST_WEEKLY" ] && WEEKLY_DATE=$(basename "$LATEST_WEEKLY" | sed 's/weekly_\(.*\)\.md/\1/')
+
+            if [ -z "$DAILY_DATE" ] && [ -z "$WEEKLY_DATE" ]; then
               echo "reports/stock/ 에 MD 파일 없음 — 건너뜀"
               echo "exists=false" >> $GITHUB_OUTPUT
               exit 0
             fi
-            REPORT_DATE=$(basename "$LATEST" | sed 's/stock_\(.*\)\.md/\1/')
+
+            # 날짜 문자열 비교 (YYYY-MM-DD 형식이므로 사전순 = 날짜순)
+            if [ -n "$WEEKLY_DATE" ] && [[ "$WEEKLY_DATE" > "$DAILY_DATE" ]]; then
+              LATEST="$LATEST_WEEKLY"
+              REPORT_DATE="$WEEKLY_DATE"
+              REPORT_TYPE="weekly"
+            else
+              LATEST="$LATEST_DAILY"
+              REPORT_DATE="$DAILY_DATE"
+              REPORT_TYPE="daily"
+            fi
           fi
 
           # 3일 이상 지난 리포트는 재발송 방지
@@ -71,15 +93,16 @@ jobs:
             echo "리포트 날짜: $REPORT_DATE (${DAYS_OLD}일 경과) — 오래된 리포트 발송 건너뜀"
             echo "exists=false" >> $GITHUB_OUTPUT
           else
-            echo "발송 대상: $LATEST (${DAYS_OLD}일 전)"
-            echo "exists=true"      >> $GITHUB_OUTPUT
+            echo "발송 대상: $LATEST [$REPORT_TYPE] (${DAYS_OLD}일 전)"
+            echo "exists=true"            >> $GITHUB_OUTPUT
             echo "report_date=$REPORT_DATE" >> $GITHUB_OUTPUT
             echo "report_file=$LATEST"      >> $GITHUB_OUTPUT
+            echo "report_type=$REPORT_TYPE" >> $GITHUB_OUTPUT
           fi
 
-      # ── 이메일 발송 ─────────────────────────────────────────────────────────
-      - name: 이메일 발송
-        if: steps.find_report.outputs.exists == 'true'
+      # ── 이메일 발송 (일일) ──────────────────────────────────────────────────
+      - name: 이메일 발송 (일일)
+        if: steps.find_report.outputs.exists == 'true' && steps.find_report.outputs.report_type == 'daily'
         run: python scripts/send_email.py --type stock --date ${{ steps.find_report.outputs.report_date }}
         env:
           GMAIL_USER:          ${{ secrets.GMAIL_USER }}
@@ -88,9 +111,20 @@ jobs:
           SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
         continue-on-error: true
 
-      # ── Notion 동기화 ────────────────────────────────────────────────────────
+      # ── 이메일 발송 (주간) ──────────────────────────────────────────────────
+      - name: 이메일 발송 (주간)
+        if: steps.find_report.outputs.exists == 'true' && steps.find_report.outputs.report_type == 'weekly'
+        run: python scripts/send_email.py --type weekly-stock --date ${{ steps.find_report.outputs.report_date }}
+        env:
+          GMAIL_USER:          ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
+          SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
+
+      # ── Notion 동기화 (일일만) ────────────────────────────────────────────
       - name: Notion 주식시황 동기화
-        if: steps.find_report.outputs.exists == 'true'
+        if: steps.find_report.outputs.exists == 'true' && steps.find_report.outputs.report_type == 'daily'
         run: |
           python scripts/sync_notion.py \
             --type stock \
@@ -100,10 +134,20 @@ jobs:
           NOTION_DATABASE_ID_STOCK:      ${{ secrets.NOTION_DATABASE_ID_STOCK }}
         continue-on-error: true
 
-      # ── 텔레그램 발송 (@msstockbrief) ───────────────────────────────────────
-      - name: 텔레그램 발송
-        if: steps.find_report.outputs.exists == 'true'
+      # ── 텔레그램 발송 (일일) ────────────────────────────────────────────────
+      - name: 텔레그램 발송 (일일)
+        if: steps.find_report.outputs.exists == 'true' && steps.find_report.outputs.report_type == 'daily'
         run: python scripts/send_telegram.py --type stock --date ${{ steps.find_report.outputs.report_date }}
+        env:
+          TELEGRAM_BOT_TOKEN:     ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_STOCK: ${{ secrets.TELEGRAM_CHAT_ID_STOCK }}
+          SITE_BASE_URL:          ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
+
+      # ── 텔레그램 발송 (주간) ────────────────────────────────────────────────
+      - name: 텔레그램 발송 (주간)
+        if: steps.find_report.outputs.exists == 'true' && steps.find_report.outputs.report_type == 'weekly'
+        run: python scripts/send_telegram.py --type weekly-stock --date ${{ steps.find_report.outputs.report_date }}
         env:
           TELEGRAM_BOT_TOKEN:     ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID_STOCK: ${{ secrets.TELEGRAM_CHAT_ID_STOCK }}
