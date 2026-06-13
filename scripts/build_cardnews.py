@@ -412,6 +412,132 @@ def build_stock_html(date_str: str, data: dict) -> str:
     return _html_wrapper(f"주식 카드뉴스 {date_str}", css, cards)
 
 
+# ── 주간 주식 카드 빌더 ──────────────────────────────────────────────────────
+def build_weekly_stock_html(date_str: str, data: dict) -> str:
+    ch         = _load_channel_cfg("stock")
+    accent     = ch["accent"]
+    css        = _render_css(accent, ch["topbar"])
+    temp       = data.get("temperature", {})
+    temp_disp  = temp.get("display", "")
+    summary    = data.get("summary", "")
+    week_range = data.get("week_range", "")
+    hot_themes = data.get("hot_themes", [])[:3]
+    weekly_indices   = data.get("weekly_indices", [])
+    next_week_sched  = data.get("next_week_schedule", [])
+    total = 4
+
+    # ── 카드 1: Cover ─────────────────────────────────────────────────────────
+    theme_preview = ""
+    for i, t in enumerate(hot_themes[:3]):
+        theme_preview += (
+            f'<div class="cover-issue">'
+            f'<span class="cover-icon" style="color:{ISSUE_COLORS[i]}">{ISSUE_ICONS[i]}</span>'
+            f'<span class="cover-issue-text">{_trunc(t.get("title",""), 34)}</span>'
+            f'</div>'
+        )
+    cover_content = f"""
+  <div class="cover-logo">
+    <div class="logo-badge">&#128197;</div>
+    <div>
+      <div class="logo-main">주간 시황 종합</div>
+      <div class="logo-sub">{week_range or _fmt_date(date_str)}</div>
+    </div>
+  </div>
+  <div class="cover-date" style="font-size:32px">{temp_disp}</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">주간 총평</div>
+  <div class="cover-issues">
+    <div class="cover-issue">
+      <span class="cover-issue-text">{_trunc(summary, 100)}</span>
+    </div>
+    {theme_preview}
+  </div>
+  <div class="cover-tags">{ch['hashtags']}</div>"""
+    cards = _card(0, total, cover_content, _fmt_date(date_str))
+
+    # ── 카드 2: 주간 지수 성과 ────────────────────────────────────────────────
+    idx_items = ""
+    for row in weekly_indices[:6]:
+        label  = row.get("label",  "")
+        close  = row.get("close",  "")
+        change = row.get("change", "")
+        if "▲" in change or (change.startswith("+") and "▼" not in change):
+            c = "#34d399"
+        elif "▼" in change or change.startswith("-"):
+            c = "#f87171"
+        else:
+            c = "#94a3b8"
+        idx_items += (
+            f'<div style="display:flex;align-items:center;justify-content:space-between;'
+            f'padding:9px 0;border-bottom:1px solid #334155">'
+            f'<span style="font-size:21px;color:#94a3b8;width:110px;flex-shrink:0">{label}</span>'
+            f'<span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">{close}</span>'
+            f'<span style="font-size:21px;color:{c};font-weight:700;white-space:nowrap">{change}</span>'
+            f'</div>'
+        )
+    idx_content = (
+        '<div class="trends-header">'
+        '<span class="trends-icon">&#128200;</span>'
+        '<span class="trends-title">주간 지수 성과</span>'
+        '</div>'
+        f'<div style="padding:0 4px">{idx_items}</div>'
+    )
+    cards += _card(1, total, idx_content, _fmt_date(date_str))
+
+    # ── 카드 3: 핫 테마 TOP 3 ─────────────────────────────────────────────────
+    theme_items = ""
+    for i, t in enumerate(hot_themes[:3]):
+        color      = ISSUE_COLORS[i]
+        icon       = ISSUE_ICONS[i]
+        title      = t.get("title", "")
+        desc       = t.get("description", "")
+        first_line = desc.split("\n")[0].strip() if desc else ""
+        theme_items += (
+            f'<div style="margin-bottom:14px">'
+            f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+            f'<span style="color:{color};font-size:24px">{icon}</span>'
+            f'<span style="font-size:26px;font-weight:700;color:#f1f5f9">{_trunc(title, 24)}</span>'
+            f'</div>'
+            f'<div style="font-size:21px;color:#94a3b8;line-height:1.4">{_trunc(first_line, 70)}</div>'
+            f'</div>'
+        )
+    themes_content = (
+        '<div class="trends-header">'
+        '<span class="trends-icon">&#128293;</span>'
+        '<span class="trends-title">이번 주 핫 테마 TOP 3</span>'
+        '</div>'
+        f'<div style="padding:0 4px">{theme_items}</div>'
+    )
+    cards += _card(2, total, themes_content, _fmt_date(date_str))
+
+    # ── 카드 4: 차주 주요 일정 ────────────────────────────────────────────────
+    sched_items = ""
+    for row in next_week_sched[:6]:
+        date_val = row.get("date",   "")
+        event    = row.get("event",  "")
+        impact   = row.get("impact", "")
+        sched_items += (
+            f'<div style="display:flex;align-items:flex-start;'
+            f'padding:8px 0;border-bottom:1px solid #334155;gap:8px">'
+            f'<span style="font-size:19px;color:{accent};width:100px;flex-shrink:0;font-weight:600">'
+            f'{date_val}</span>'
+            f'<div style="flex:1">'
+            f'<div style="font-size:21px;color:#f1f5f9;font-weight:500">{_trunc(event, 28)}</div>'
+            f'<div style="font-size:18px;color:#94a3b8">{_trunc(impact, 36)}</div>'
+            f'</div></div>'
+        )
+    sched_content = (
+        '<div class="trends-header">'
+        '<span class="trends-icon">&#128197;</span>'
+        '<span class="trends-title">차주 주요 일정</span>'
+        '</div>'
+        f'<div style="padding:0 4px">{sched_items}</div>'
+    )
+    cards += _card(3, total, sched_content, _fmt_date(date_str))
+
+    return _html_wrapper(f"주간 주식 시황 {date_str}", css, cards)
+
+
 # ── 인덱스 업데이트 ───────────────────────────────────────────────────────────
 def _update_index(type_dir: Path, channel: str) -> None:
     index = []
@@ -503,11 +629,17 @@ def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
 
     built = 0
     for e in entries:
-        d    = e.get("date", "")
-        html = build_stock_html(d, e)
+        d         = e.get("date", "")
+        is_weekly = e.get("type") == "weekly"
+        if is_weekly:
+            html = build_weekly_stock_html(d, e)
+            n    = 4
+        else:
+            html = build_stock_html(d, e)
+            n    = 2 + (1 if e.get("keywords") else 0) + (1 if e.get("sectors") else 0)
         (out_dir / f"{d}.html").write_text(html, encoding="utf-8")
-        n = 2 + (1 if e.get("keywords") else 0) + (1 if e.get("sectors") else 0)
-        print(f"  + cardnews/stock/{d}.html  ({n} cards)")
+        tag = " [주간]" if is_weekly else ""
+        print(f"  + cardnews/stock/{d}.html  ({n} cards){tag}")
         built += 1
 
     if built:

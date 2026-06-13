@@ -146,6 +146,128 @@ def _parse_sectors(raw: str) -> list[dict]:
     return sectors
 
 
+# ── 주간 MD 파서 ──────────────────────────────────────────────────────────────
+
+def _parse_week_range(raw: str) -> str:
+    """'> 기간: ...' 에서 주간 범위 추출."""
+    m = re.search(r'기간:\s*([^|\n]+?)(?:\s*\||\n)', raw)
+    return m.group(1).strip() if m else ""
+
+
+def _parse_weekly_summary(raw: str) -> str:
+    """## ■ 주간 한줄 총평 파싱."""
+    m = re.search(r'## ■ 주간 한줄 총평[^\n]*\n([\s\S]*?)(?=\n---|\n## )', raw)
+    return m.group(1).strip() if m else ""
+
+
+def _parse_weekly_temperature(raw: str) -> dict:
+    """## 주간 온도계: 🟠 강세 파싱."""
+    m = re.search(r'## 주간 온도계[:\s]+([🔴🟠🟡🟢🔵])\s*(\S+)', raw)
+    if m:
+        emoji = m.group(1)
+        label = m.group(2).strip()
+        level = {"🔴": "risk_off", "🟠": "rising", "🟡": "neutral",
+                 "🟢": "risk_on",  "🔵": "recession"}.get(emoji, "neutral")
+        return {"emoji": emoji, "label": label, "display": f"{emoji} {label}", "level": level}
+    return {"emoji": "🟡", "label": "중립", "display": "🟡 중립", "level": "neutral"}
+
+
+def _parse_weekly_indices(raw: str) -> list[dict]:
+    """## 1. 주간 지수 성과 테이블 파싱 → [{"label","open","close","change"}, ...]"""
+    m = re.search(r'## 1\. 주간 지수 성과[^\n]*\n([\s\S]*?)(?=\n---|\n## )', raw)
+    if not m:
+        return []
+    rows = []
+    for line in m.group(1).split("\n"):
+        line = line.strip()
+        if not line.startswith("|") or "---" in line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        parts = [p for p in parts if p != ""]
+        if len(parts) < 4:
+            continue
+        label, open_val, close_val, change = parts[0], parts[1], parts[2], parts[3]
+        if not label or label in ("지수", "항목"):
+            continue
+        rows.append({"label": label, "open": open_val, "close": close_val, "change": change})
+    return rows
+
+
+def _parse_weekly_sectors(raw: str) -> list[dict]:
+    """## 2. 섹터 주간 성과 (상위+하위) → [{"sector","name","price","change"}, ...]"""
+    m = re.search(r'## 2\. 섹터 주간 성과[^\n]*\n([\s\S]*?)(?=\n---|\n## )', raw)
+    if not m:
+        return []
+    sectors = []
+    for line in m.group(1).split("\n"):
+        line = line.strip()
+        if not line.startswith("|") or "---" in line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        parts = [p for p in parts if p != ""]
+        if len(parts) < 3:
+            continue
+        sector, name, change = parts[0], parts[1], parts[2]
+        if not sector or sector in ("섹터",):
+            continue
+        sectors.append({"sector": sector, "name": name, "price": "", "change": change})
+    return sectors
+
+
+def _parse_hot_themes(raw: str) -> list[dict]:
+    """## 3. 이번 주 핫 테마 TOP 3 파싱 → [{"rank","title","description"}, ...]"""
+    m = re.search(r'## 3\. 이번 주 핫 테마[^\n]*\n([\s\S]*?)(?=\n---|\n## |\Z)', raw)
+    if not m:
+        return []
+    block = m.group(1)
+    themes = []
+    blocks = re.findall(
+        r'### [①②③]\s*\[?([^\]\n]+)\]?\n([\s\S]*?)(?=### [①②③]|\Z)', block
+    )
+    for i, (title, body) in enumerate(blocks):
+        themes.append({"rank": i + 1, "title": title.strip(), "description": body.strip()})
+    return themes
+
+
+def _parse_next_week_schedule(raw: str) -> list[dict]:
+    """## 4. 차주 주요 일정 테이블 → [{"date","event","impact"}, ...]"""
+    m = re.search(r'## 4\. 차주 주요 일정[^\n]*\n([\s\S]*?)(?=\n---|\n## |\Z)', raw)
+    if not m:
+        return []
+    rows = []
+    for line in m.group(1).split("\n"):
+        line = line.strip()
+        if not line.startswith("|") or "---" in line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        parts = [p for p in parts if p != ""]
+        if len(parts) < 3:
+            continue
+        date_val, event, impact = parts[0], parts[1], parts[2]
+        if not date_val or date_val in ("날짜",):
+            continue
+        rows.append({"date": date_val, "event": event, "impact": impact})
+    return rows
+
+
+def parse_weekly_md(md_path: str, date_str: str) -> dict:
+    """weekly_*.md → 구조화 데이터. data.json 에 포함됨."""
+    raw = Path(md_path).read_text(encoding="utf-8")
+    return {
+        "date":               date_str,
+        "type":               "weekly",
+        "week_range":         _parse_week_range(raw),
+        "temperature":        _parse_weekly_temperature(raw),
+        "market":             {},
+        "summary":            _parse_weekly_summary(raw),
+        "keywords":           [],
+        "sectors":            _parse_weekly_sectors(raw),
+        "weekly_indices":     _parse_weekly_indices(raw),
+        "hot_themes":         _parse_hot_themes(raw),
+        "next_week_schedule": _parse_next_week_schedule(raw),
+    }
+
+
 def _preprocess_raw_md(raw: str) -> str:
     """핵심 요약의 '제목 — 내용' 형식을 '제목 \n  - 내용'으로 변환."""
     return re.sub(
@@ -236,8 +358,9 @@ def build_stock_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
     }
 
 
-def build_stock_archive_ctx(pages: list[tuple[str, str]]) -> dict:
-    items = [{"date": d, "display": _display_date(d)} for d, _ in pages]
+def build_stock_archive_ctx(pages: list[tuple[str, str, str]]) -> dict:
+    """pages: [(date_str, html_path, "daily"|"weekly"), ...]"""
+    items = [{"date": d, "display": _display_date(d), "type": t} for d, _, t in pages]
     return {
         "display_date":     "주식 시황 전체 목록",
         "date_str":         "",
@@ -260,56 +383,70 @@ def build(theme_name: str | None = None) -> None:
     theme = load_theme(active_theme)
     print(f"[stock-build] theme={active_theme}")
 
-    md_files = sorted(glob.glob(f"{STOCK_REPORTS_DIR}/stock_*.md"), reverse=True)
-    if not md_files:
-        print(f"  reports/stock/ 에 MD 파일 없음")
+    daily_files  = sorted(glob.glob(f"{STOCK_REPORTS_DIR}/stock_*.md"),  reverse=True)
+    weekly_files = sorted(glob.glob(f"{STOCK_REPORTS_DIR}/weekly_*.md"), reverse=True)
+    # 날짜 기준 내림차순 통합 정렬
+    all_files = sorted(
+        daily_files + weekly_files,
+        key=lambda p: re.sub(r'^(stock|weekly)_', '', Path(p).stem),
+        reverse=True,
+    )
+    if not all_files:
+        print("  reports/stock/ 에 MD 파일 없음")
         return
 
-    pages:       list[tuple[str, str]] = []
-    stock_data:  list[dict]            = []
+    pages:      list[tuple[str, str, str]] = []  # (date_str, html_path, type)
+    stock_data: list[dict] = []
+    latest_daily_md:   str | None  = None
+    latest_daily_data: dict | None = None
 
-    for md_path in md_files:
-        date_str = Path(md_path).name.replace("stock_", "").replace(".md", "")
-        data     = parse_stock_md(md_path, date_str)
-        ctx      = build_stock_report_ctx(md_path, date_str, data)
+    renderer = getattr(theme, "render_stock_report", None) or theme.render_report
 
-        # 테마에 render_stock_report 가 있으면 사용, 없으면 render_report fallback
-        renderer = getattr(theme, "render_stock_report", None) or theme.render_report
-        html     = renderer(ctx)
+    for md_path in all_files:
+        stem      = Path(md_path).name
+        is_weekly = stem.startswith("weekly_")
+        if is_weekly:
+            date_str = stem.replace("weekly_", "").replace(".md", "")
+            data     = parse_weekly_md(md_path, date_str)
+        else:
+            date_str = stem.replace("stock_", "").replace(".md", "")
+            data     = parse_stock_md(md_path, date_str)
+
+        ctx  = build_stock_report_ctx(md_path, date_str, data)
+        html = renderer(ctx)
 
         out_path = os.path.join(STOCK_PUBLISH_DIR, f"{date_str}.html")
         Path(out_path).write_text(html, encoding="utf-8")
-        
-        # 날짜별 JSON 파일 생성 (뉴스 및 AI이슈와 통일)
-        stock_json_path = os.path.join(STOCK_PUBLISH_DIR, f"{date_str}.json")
-        Path(stock_json_path).write_text(
-            json.dumps(data, ensure_ascii=False), encoding="utf-8"
-        )
-        
-        pages.append((date_str, out_path))
-        stock_data.append(data)
-        print(f"  + stock/{date_str}.html + {date_str}.json")
 
-    # index.html = 최신 리포트
-    latest_ctx = build_stock_report_ctx(md_files[0], pages[0][0], stock_data[0])
-    renderer   = getattr(theme, "render_stock_report", None) or theme.render_report
-    Path(STOCK_PUBLISH_DIR, "index.html").write_text(
-        renderer(latest_ctx), encoding="utf-8"
-    )
+        stock_json_path = os.path.join(STOCK_PUBLISH_DIR, f"{date_str}.json")
+        Path(stock_json_path).write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+        ptype = "weekly" if is_weekly else "daily"
+        pages.append((date_str, out_path, ptype))
+        stock_data.append(data)
+        print(f"  + stock/{date_str}.html [{ptype}] + {date_str}.json")
+
+        if not is_weekly and latest_daily_md is None:
+            latest_daily_md   = md_path
+            latest_daily_data = data
+
+    # index.html = 최신 일일 리포트 (주간 제외)
+    if latest_daily_md and latest_daily_data:
+        index_ctx = build_stock_report_ctx(latest_daily_md, latest_daily_data["date"], latest_daily_data)
+    else:
+        index_ctx = build_stock_report_ctx(all_files[0], pages[0][0], stock_data[0])
+    Path(STOCK_PUBLISH_DIR, "index.html").write_text(renderer(index_ctx), encoding="utf-8")
     print("  + stock/index.html")
 
     # archive.html
-    archive_ctx = build_stock_archive_ctx(pages)
+    archive_ctx   = build_stock_archive_ctx(pages)
     arch_renderer = getattr(theme, "render_stock_archive", None) or theme.render_archive
-    Path(STOCK_PUBLISH_DIR, "archive.html").write_text(
-        arch_renderer(archive_ctx), encoding="utf-8"
-    )
+    Path(STOCK_PUBLISH_DIR, "archive.html").write_text(arch_renderer(archive_ctx), encoding="utf-8")
     print("  + stock/archive.html")
 
-    # stock/data.json (뉴스 및 AI이슈와 파일명 통일)
+    # data.json
     Path(STOCK_PUBLISH_DIR, "data.json").write_text(
-        json.dumps(stock_data, ensure_ascii=False, indent=2),
-        encoding="utf-8",
+        json.dumps(stock_data, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     print(f"  + stock/data.json ({len(stock_data)} reports)")
     print(f"\nDone: {len(pages)} stock reports -> {STOCK_PUBLISH_DIR}/")

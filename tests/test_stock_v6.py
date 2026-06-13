@@ -290,6 +290,208 @@ if dj_path.exists():
 
 
 # ─────────────────────────────────────────────────────────────
+# 10. 주간 루틴 파서
+# ─────────────────────────────────────────────────────────────
+print("\n[10] 주간 MD 파서")
+
+from scripts.build_stock_site import (
+    _parse_week_range, _parse_weekly_summary, _parse_weekly_temperature,
+    _parse_weekly_indices, _parse_weekly_sectors, _parse_hot_themes,
+    _parse_next_week_schedule, parse_weekly_md,
+)
+
+WEEKLY_MD = """
+# 📅 주간 주식 시황 종합 — 2026-06-14 (주)
+
+> 기간: 2026-06-09(월) ~ 2026-06-13(금) | 생성: 2026-06-14 09:30 KST
+
+---
+
+## ■ 주간 한줄 총평
+
+방산·반도체 주도 강세, 바이오 조정 속 지수 주간 +2% 상승.
+
+---
+
+## 1. 주간 지수 성과
+
+| 지수 | 주간 시가 | 주간 종가 | 주간 변동 |
+|---|---|---|---|
+| 코스피 | 2,600.0 | 2,650.3 | +1.93% ▲ |
+| 코스닥 | 840.0 | 850.1 | +1.20% ▲ |
+| S&P 500 | 5,250.0 | 5,300.2 | +0.96% ▲ |
+| 나스닥 | 18,200.0 | 18,500.0 | +1.65% ▲ |
+| 원/달러 | - | 1,380.5원 | 주간 변동폭 |
+
+---
+
+## 2. 섹터 주간 성과
+
+### 상위 섹터
+
+| 섹터 | 대표종목 | 주간 누적 |
+|---|---|---|
+| 방산 | 한화에어로스페이스 | +5.2% |
+| 반도체 | 삼성전자 | +3.1% |
+| 전력인프라 | HD현대일렉트릭 | +2.8% |
+
+### 하위 섹터
+
+| 섹터 | 대표종목 | 주간 누적 |
+|---|---|---|
+| 바이오 | 삼성바이오로직스 | -1.5% |
+| 로봇 | 레인보우로보틱스 | -0.8% |
+
+---
+
+## 3. 이번 주 핫 테마 TOP 3
+
+### ① [방산 수출]
+방위산업 글로벌 수요 급증으로 한화에어로스페이스 사상 최고가 경신.
+
+### ② [AI 반도체]
+엔비디아 차세대 칩 발표 기대로 SK하이닉스 HBM 수혜 지속.
+
+### ③ [전력인프라]
+미국 데이터센터 전력 수요 증가로 관련 종목 동반 상승.
+
+---
+
+## 4. 차주 주요 일정
+
+| 날짜 | 이벤트 | 예상 영향 |
+|---|---|---|
+| 06-16(월) | 엔비디아 GTC | 반도체 변동성 |
+| 06-17(화) | FOMC 의사록 | 금리 방향성 |
+| 06-19(목) | 한국 금통위 | 원화 환율 |
+
+---
+
+## 5. 차주 전략 포인트
+
+1. 방산·전력인프라 핵심 포지션 유지
+2. 바이오 단기 반등 매도 기회 활용
+3. FOMC 이후 달러/원 변동 주시
+
+---
+
+## 주간 온도계: 🟠 강세
+
+> 방산·반도체 쌍두마차로 코스피 주간 +1.93% 상승, 거래대금 증가.
+
+"""
+
+check("week_range 파싱",         _parse_week_range(WEEKLY_MD) != "")
+check("weekly_summary 파싱",     "강세" in _parse_weekly_summary(WEEKLY_MD))
+
+wt = _parse_weekly_temperature(WEEKLY_MD)
+check("weekly_temperature 파싱", wt["emoji"] == "🟠", wt.get("display"))
+check("weekly_temperature level", wt["level"] == "rising")
+
+wi = _parse_weekly_indices(WEEKLY_MD)
+check("weekly_indices 5행",      len(wi) == 5, f"실제: {len(wi)}")
+check("weekly_indices 첫 항목",   wi[0]["label"] == "코스피", wi[0].get("label"))
+check("weekly_indices change",   "▲" in wi[0]["change"])
+check("weekly_indices 헤더 제외", all(r["label"] != "지수" for r in wi))
+
+ws = _parse_weekly_sectors(WEEKLY_MD)
+check("weekly_sectors 상위+하위", len(ws) == 5, f"실제: {len(ws)}")
+check("weekly_sectors 첫 섹터",   ws[0]["sector"] == "방산", ws[0].get("sector"))
+check("weekly_sectors change",   ws[0]["change"] == "+5.2%", ws[0].get("change"))
+
+ht = _parse_hot_themes(WEEKLY_MD)
+check("hot_themes 3개",          len(ht) == 3, f"실제: {len(ht)}")
+check("hot_themes rank",         ht[0]["rank"] == 1)
+check("hot_themes title",        ht[0]["title"] == "방산 수출", ht[0].get("title"))
+check("hot_themes description",  "한화에어로스페이스" in ht[0].get("description", ""))
+
+ns = _parse_next_week_schedule(WEEKLY_MD)
+check("next_week_schedule 3행",  len(ns) == 3, f"실제: {len(ns)}")
+check("next_week_schedule date", ns[0]["date"] == "06-16(월)", ns[0].get("date"))
+check("next_week_schedule event",ns[0]["event"] == "엔비디아 GTC", ns[0].get("event"))
+
+
+# ─────────────────────────────────────────────────────────────
+# 11. parse_weekly_md 전체 구조
+# ─────────────────────────────────────────────────────────────
+print("\n[11] parse_weekly_md — 전체 구조")
+
+import tempfile, os as _os
+with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8") as f:
+    f.write(WEEKLY_MD)
+    tmp_weekly = f.name
+
+try:
+    wd = parse_weekly_md(tmp_weekly, "2026-06-14")
+    check("type=weekly",              wd["type"] == "weekly")
+    check("date 일치",                wd["date"] == "2026-06-14")
+    check("week_range 존재",          bool(wd.get("week_range")))
+    check("weekly_indices 리스트",    isinstance(wd["weekly_indices"], list) and len(wd["weekly_indices"]) > 0)
+    check("sectors 리스트",           isinstance(wd["sectors"], list) and len(wd["sectors"]) > 0)
+    check("hot_themes 리스트",        isinstance(wd["hot_themes"], list) and len(wd["hot_themes"]) > 0)
+    check("next_week_schedule 리스트",isinstance(wd["next_week_schedule"], list) and len(wd["next_week_schedule"]) > 0)
+    check("market 빈 dict",           wd["market"] == {})
+    check("keywords 빈 리스트",        wd["keywords"] == [])
+finally:
+    _os.unlink(tmp_weekly)
+
+
+# ─────────────────────────────────────────────────────────────
+# 12. build_weekly_stock_html — 카드 구조
+# ─────────────────────────────────────────────────────────────
+print("\n[12] build_weekly_stock_html — 카드 구조")
+
+from scripts.build_cardnews import build_weekly_stock_html
+
+WEEKLY_DATA = {
+    "date":       "2026-06-14",
+    "type":       "weekly",
+    "week_range": "2026-06-09 ~ 2026-06-13",
+    "temperature": {"display": "🟠 강세", "level": "rising"},
+    "market":     {},
+    "summary":    "방산·반도체 주도 강세, 바이오 조정 속 지수 주간 +2% 상승.",
+    "keywords":   [],
+    "sectors":    [
+        {"sector": "방산", "name": "한화에어로스페이스", "price": "", "change": "+5.2%"},
+    ],
+    "weekly_indices": [
+        {"label": "코스피", "open": "2,600.0", "close": "2,650.3", "change": "+1.93% ▲"},
+        {"label": "코스닥", "open": "840.0",   "close": "850.1",   "change": "+1.20% ▲"},
+    ],
+    "hot_themes": [
+        {"rank": 1, "title": "방산 수출",   "description": "한화에어로스페이스 사상 최고가."},
+        {"rank": 2, "title": "AI 반도체",   "description": "SK하이닉스 HBM 수혜."},
+        {"rank": 3, "title": "전력인프라",   "description": "미국 데이터센터 전력 수요."},
+    ],
+    "next_week_schedule": [
+        {"date": "06-16(월)", "event": "엔비디아 GTC",  "impact": "반도체 변동성"},
+        {"date": "06-17(화)", "event": "FOMC 의사록",   "impact": "금리 방향성"},
+    ],
+}
+
+html_weekly = build_weekly_stock_html("2026-06-14", WEEKLY_DATA)
+cards_weekly = re.findall(r'id="card-\d+"', html_weekly)
+check("주간 카드 4장",            len(cards_weekly) == 4, f"실제: {len(cards_weekly)}")
+check("주간 총평 포함",           "주간 총평" in html_weekly)
+check("주간 지수 성과 포함",      "주간 지수 성과" in html_weekly)
+check("핫 테마 포함",             "핫 테마" in html_weekly)
+check("차주 주요 일정 포함",      "차주 주요 일정" in html_weekly)
+check("코스피 데이터 포함",       "코스피" in html_weekly)
+check("방산 수출 테마 포함",      "방산 수출" in html_weekly)
+check("엔비디아 GTC 일정 포함",   "엔비디아 GTC" in html_weekly)
+check("주간 지수 상승 green",     "#34d399" in html_weekly)
+
+# weekly_build.yml 존재 및 트리거 확인
+print("\n  [12b] weekly_build.yml 확인")
+weekly_yml_path = Path(".github/workflows/weekly_build.yml")
+check("weekly_build.yml 존재",    weekly_yml_path.exists())
+if weekly_yml_path.exists():
+    wyml = weekly_yml_path.read_text(encoding="utf-8")
+    check("weekly_build.yml 트리거 weekly_*.md",  "weekly_*.md" in wyml)
+    check("weekly_build.yml GitHub Pages 배포",   "deploy-pages" in wyml)
+
+
+# ─────────────────────────────────────────────────────────────
 # 결과 요약
 # ─────────────────────────────────────────────────────────────
 total = sum(1 for line in open(__file__) if "check(" in line and "check_" not in line)
