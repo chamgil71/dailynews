@@ -162,3 +162,18 @@ jobs:
       #   env:
       #     VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       #     VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # ── 파이프라인 모니터링 알림 (성공/실패 무관 항상 실행) ──────────────────
+      - name: 파이프라인 결과 알림
+        if: always() && github.event.inputs.mode != 'reanalyze'
+        run: |
+          STATUS="${{ job.status }}"
+          [ "$STATUS" = "success" ] && STATUS_ARG="success" || STATUS_ARG="failure"
+          python scripts/notify_pipeline.py \
+            --type news \
+            --status $STATUS_ARG \
+            --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+        env:
+          TELEGRAM_BOT_TOKEN:      ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_MONITOR: ${{ secrets.TELEGRAM_CHAT_ID_MONITOR }}
+        continue-on-error: true

@@ -143,3 +143,19 @@ jobs:
       - name: GitHub Pages 배포
         id: deploy
         uses: actions/deploy-pages@v4
+
+      # ── 파이프라인 모니터링 알림 (성공/실패 무관 항상 실행) ──────────────────
+      - name: 파이프라인 결과 알림
+        if: always()
+        run: |
+          TODAY=$(TZ=Asia/Seoul date +'%Y-%m-%d')
+          STATUS="${{ job.status }}"
+          [ "$STATUS" = "success" ] && STATUS_ARG="success" || STATUS_ARG="failure"
+          python scripts/notify_pipeline.py \
+            --type stock \
+            --status $STATUS_ARG \
+            --date $TODAY
+        env:
+          TELEGRAM_BOT_TOKEN:       ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_MONITOR: ${{ secrets.TELEGRAM_CHAT_ID_MONITOR }}
+        continue-on-error: true
