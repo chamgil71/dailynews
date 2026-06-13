@@ -1,7 +1,7 @@
 # scripts/build_ai_issue_site.py
 """
 주간 AI 이슈 HTML 빌더 스크립트.
-reports/ai-issue/ai_issue_*.md -> publish/ai-issue/*.html 및 publish/ai-issue/ai-issue-data.json 인덱스를 생성합니다.
+reports/ai-issue/ai_issue_*.md -> publish/ai-issue/*.html 및 publish/ai-issue/data.json 인덱스를 생성합니다.
 """
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def _normalize_json_sidecar(data: dict) -> dict:
 
 
 def parse_weekly_json_for_summary(json_path: Path) -> dict:
-    """주간 JSON 사이드카를 파싱하여 app.html용 컴팩트한 요약 메타 데이터를 추출합니다."""
+    """주간 JSON 사이드카를 파싱하여 app.html용 콤팩트한 요약 메타 데이터를 추출합니다."""
     try:
         data = json.loads(json_path.read_text(encoding="utf-8"))
         top10 = data.get("top10", [])
@@ -146,6 +146,9 @@ def main():
     theme = load_theme(active_theme)
     print(f"  → 적용 디자인 테마: {active_theme}")
     
+    # render_ai_issue_report 전용 렌더러 사용 (없으면 render_report 폴백)
+    renderer = getattr(theme, "render_ai_issue_report", None) or theme.render_report
+    
     pages = []
     weekly_indexes = []
     
@@ -163,7 +166,7 @@ def main():
         
         # 2. 개별 날짜별 HTML 빌드
         ctx = build_weekly_report_ctx(p, date_str, summary)
-        html_content = theme.render_report(ctx)
+        html_content = renderer(ctx)
         
         out_html_path = os.path.join(PUBLISH_DIR, f"{date_str}.html")
         Path(out_html_path).write_text(html_content, encoding="utf-8")
@@ -184,7 +187,7 @@ def main():
         pages.append((date_str, out_html_path))
         print(f"  + publish/ai-issue/{date_str}.html & {date_str}.json 빌드 완료")
         
-    # 3. 요약 인덱스 파일 publish/ai-issue/ai-issue-data.json 저장 (git 추적 대상)
+    # 3. 요약 인덱스 파일 publish/ai-issue/data.json 저장 (git 추적 대상)
     index_payload = {
         "updated": datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d"),
         "issues": weekly_indexes
@@ -198,7 +201,6 @@ def main():
     print(f"  + publish/ai-issue/data.json 업데이트 완료 ({len(weekly_indexes)}개 아카이브 인덱스)")
     
     # 4. 아카이브 웹 목록 (publish/ai-issue/archive.html) 빌드
-    # 테마 규격의 아카이브 렌더링에 적합한 컨텍스트 데이터 매핑
     archive_items = []
     for idx_item in weekly_indexes:
         archive_items.append({
