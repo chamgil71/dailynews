@@ -1,5 +1,6 @@
 # themes/editorial.py
-"""Editorial 테마 — 신문 마스트헤드, Noto Serif KR, 드롭캡.
+"""
+Editorial 테마 — 신문 마스트헤드, Noto Serif KR, 드롭캡.
 
 [커스텀 레이아웃 테마] base.py 미사용. render_*() 함수가 Python f-string으로 HTML 직접 생성.
 레이아웃·색상 모두 이 파일에서 수정. templates/web_*.html 은 이 테마에서 사용 안 함.
@@ -77,7 +78,7 @@ _CSS = """
     padding-top:6px; border-top:1px solid var(--rule-soft); margin-top:10px; }
   .mh-nav { display:flex; justify-content:center; gap:32px; margin-top:14px;
     font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.08em;
-    text-transform:uppercase; }
+    text-transform:uppercase; align-items:center; }
   .mh-nav a { color:var(--ink-soft); text-decoration:none; }
   .mh-nav a.on { color:var(--accent); font-weight:700;
     border-bottom:2px solid var(--accent); padding-bottom:2px; }
@@ -91,6 +92,15 @@ _CSS = """
   .brief-stat .num { font-family:'Noto Serif KR',serif; font-size:24px;
     font-weight:700; font-style:italic; }
   .brief-stat .lab { font-size:10px; letter-spacing:.15em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  /* AI이슈 전용 통계 (작게) */
+  .brief-stats-sm { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .brief-stats-sm .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:6px; letter-spacing:.08em; font-size:10px; }
+  .brief-stat-sm { display:flex; gap:8px; align-items:baseline; margin-top:6px; }
+  .brief-stat-sm .num-sm { font-size:14px; font-weight:700;
+    font-family:'IBM Plex Mono',monospace; }
+  .brief-stat-sm .lab { font-size:9px; letter-spacing:.12em;
     color:var(--ink-mute); text-transform:uppercase; }
   .kicker { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em;
     text-transform:uppercase; color:var(--accent); margin-bottom:8px;
@@ -179,6 +189,18 @@ def _masthead_title(site_title: str) -> str:
     return site_title
 
 
+_SUB_ICON = (
+    '<a href="' + SUBSCRIBE_URL + '" title="뉴스레터 구독" '
+    'style="display:inline-flex;align-items:center;justify-content:center;'
+    'width:20px;height:20px;border:1.5px solid var(--accent);border-radius:50%;'
+    'text-decoration:none;margin-left:8px;vertical-align:middle;flex-shrink:0">'
+    '<svg viewBox="0 0 16 16" width="10" height="10" fill="var(--accent)">'
+    '<path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0'
+    'A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7'
+    'a5.002 5.002 0 0 0-3.005-4.901z"/></svg></a>'
+) if SUBSCRIBE_URL else ''
+
+
 def _layout(title: str, body: str, active: str, site_title: str, now: str, site_url: str = "", nav_prefix: str = "") -> str:
     nav_items = [
         ("news",     "index.html",   "뉴스 브리핑"),
@@ -215,7 +237,7 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
       <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
       <div class="mh-nav">
         {nav_html}
-        {'  <a href="' + SUBSCRIBE_URL + '" style="background:var(--accent);color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.04em">구독</a>' if SUBSCRIBE_URL else ''}
+        {_SUB_ICON}
       </div>
     </div>
 
@@ -344,6 +366,55 @@ def render_report(ctx: dict) -> str:
     return _layout(ctx["display_date"], body, "news", ctx["site_title"], ctx["now"], ctx.get("site_url", ""), nav_prefix="../")
 
 
+def render_ai_issue_report(ctx: dict) -> str:
+    """AI이슈 주간 전용 editorial 렌더링."""
+    structured = ctx.get("structured", {})
+    s = ctx["data"].get("stats", {})
+    top10 = structured.get("top10", [])
+    period = structured.get("period", "")
+
+    # 에디터 노트: TOP 이슈 요약 (상위 3개 타이틀)
+    if top10:
+        lede_items = "".join(
+            f'<li style="margin-bottom:7px"><b>{i+1}.</b> {item.get("title", "")}</li>'
+            for i, item in enumerate(top10[:3])
+        )
+        lede_html = (
+            f'<ul style="margin:10px 0 0;padding-left:1.2em;'
+            f'font-size:17px;line-height:1.6">{lede_items}</ul>'
+        )
+    else:
+        cnt = s.get("sent_to_ai", 10)
+        lede_html = f'<p class="lede">이번 주 AI 이슈 {cnt}건을 분석했습니다.</p>'
+
+    total = s.get("total", "-")
+    en    = s.get("en",    "-")
+    ko    = s.get("ko",    "-")
+
+    body = f"""
+    <div class="brief">
+      <div class="brief-stats-sm">
+        <span class="lbl">주간 통계</span>
+        <div class="brief-stat-sm"><span class="num-sm">{total}</span><span class="lab">이슈</span></div>
+        <div class="brief-stat-sm"><span class="num-sm">{en}</span><span class="lab">글로벌</span></div>
+        <div class="brief-stat-sm"><span class="num-sm">{ko}</span><span class="lab">국내</span></div>
+      </div>
+      <div>
+        <div class="kicker">AI 이슈 브리핑{" · " + period if period else ""}</div>
+        {lede_html}
+      </div>
+      <div class="byline">
+        AI Editor<br>{FOOTER_CONFIG['generator']}<br>─<br>{ctx['date_str']}
+      </div>
+    </div>
+    <div class="prose">{ctx['md_html']}</div>"""
+
+    return _layout(
+        ctx["display_date"], body, "ai-issue",
+        ctx["site_title"], ctx["now"], ctx.get("site_url", ""), nav_prefix="../"
+    )
+
+
 def render_archive(ctx: dict) -> str:
     """통합 아카이브: 마스트헤드 + 3탭(뉴스/주식/AI이슈) + 검색."""
     news_list  = ctx.get("items", [])
@@ -353,7 +424,7 @@ def render_archive(ctx: dict) -> str:
 
     def _li(it: dict, href: str, icon: str) -> str:
         return (
-            f'<li data-label="{it["display"]}">'
+            f'<li data-label="{it["display"]}">' 
             f'<a href="{href}">{icon} {it["display"]}</a>'
             f'<span class="d">{it["date"]}</span>'
             f'</li>'
