@@ -1,6 +1,6 @@
 # scripts/ 파일 가이드
 
-> 최종 업데이트: 2026-06-10  
+> 최종 업데이트: 2026-06-13  
 > `scripts/` 폴더의 각 Python 파일의 역할·사용법·의존관계를 정리합니다.
 
 ---
@@ -30,6 +30,9 @@ scripts/
 ├── 발송
 │   ├── send_email.py
 │   └── send_telegram.py
+│
+├── 모니터링
+│   └── notify_pipeline.py
 │
 ├── 동기화·마이그레이션
 │   ├── sync_notion.py
@@ -190,7 +193,22 @@ python scripts/send_telegram.py --type stock --date 2026-06-09
 
 ---
 
-## 5. 동기화·마이그레이션
+## 5. 모니터링
+
+### `notify_pipeline.py`
+**역할**: 뉴스·주식·AI이슈 파이프라인 성공/실패 결과를 텔레그램 모니터링 채널에 알림 발송.  
+**성공 시**: 채널별 핵심 지표 포함 (뉴스: 기사 수·AI 분석 건수·TOP3 이슈 / 주식: 온도계·핵심 요약 3줄 / AI이슈: period·TOP3·카테고리 통계)  
+**실패 시**: 채널명 + 날짜시각 + GitHub Actions 링크  
+**사용처**: 모든 워크플로우 마지막 스텝 (`if: always()`)  
+**환경변수**: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID_MONITOR` — 미설정 시 `sys.exit(0)` (워크플로우 영향 없음)  
+```bash
+python scripts/notify_pipeline.py --type news --status success --date 2026-06-13
+python scripts/notify_pipeline.py --type stock --status failure
+```
+
+---
+
+## 6. 동기화·마이그레이션
 
 ### `sync_notion.py`
 **역할**: 리포트를 Notion 데이터베이스에 동기화.  
@@ -216,7 +234,7 @@ python scripts/migrate_json_sidecars.py
 
 ---
 
-## 6. 유지보수·분석
+## 7. 유지보수·분석
 
 ### `reanalyze.py`
 **역할**: 기존 MD 파일 재분석. `--mode smart`(AI 분석 실패 항목만) 또는 `--mode full`(전체).  
@@ -243,10 +261,10 @@ python scripts/validate_ai_issue_sources.py
 
 | GitHub Actions 워크플로우 | 실행 스크립트 |
 |------------------------|------------|
-| `news.yml` | `run_news.py` → `build_site.py` → `send_email.py` → `send_telegram.py` |
-| `stock_build.yml` | `stock_main.py` → `build_stock_site.py` → `build_site.py` |
+| `news.yml` | `run_news.py` → `build_site.py` → `send_email.py` → `send_telegram.py` → `notify_pipeline.py` |
+| `stock_build.yml` | `stock_main.py` → `build_stock_site.py` → `build_site.py` → `notify_pipeline.py` |
 | `stock_send.yml` | `send_email.py --type stock` → `sync_notion.py` → `send_telegram.py --type stock` |
-| `ai_issue.yml` | `run_ai_issue.py` → `build_ai_issue_site.py` → `build_site.py` → `send_email.py` → `send_telegram.py` |
+| `ai_issue.yml` | `run_ai_issue.py` → `build_ai_issue_site.py` → `build_site.py` → `send_email.py` → `send_telegram.py` → `notify_pipeline.py` |
 | `cardnews.yml` | `build_cardnews.py` → `generate_cardnews_images.py` → `post_cardnews.py` |
 
 ---

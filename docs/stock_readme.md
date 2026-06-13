@@ -30,7 +30,7 @@
        ├─ Step 3: NaverSearch.search_news → 국내 뉴스 헤드라인
        ├─ Step 4: Claude 분석 (핵심요약·온도계·키워드·섹터·리스크)
        ├─ Step 5: Write → reports/stock/stock_YYYY-MM-DD.md 저장
-       └─ Step 6: git push → stock_build.yml 자동 트리거
+       └─ Step 6: mcp__github__push_files → main 직접 커밋 → stock_build.yml 자동 트리거
 
 [2단계 — GitHub Actions: stock_build.yml]
   push 트리거 (즉시) 또는 backup cron KST 23:00
@@ -44,9 +44,9 @@
   매일 KST 08:00 (익일 아침)
        │
        ├─ 최신 MD 자동 감지 (3일 이내)
-       ├─ send_stock_email.py → 이메일 발송 (품질 게이트 포함)
+       ├─ send_email.py --type stock → 이메일 발송 (품질 게이트 포함)
        ├─ sync_notion.py → Notion 주식시황 DB 동기화
-       └─ [예정] send_stock_telegram.py → 텔레그램 발송
+       └─ send_telegram.py --type stock → 텔레그램 발송 (@msstockbrief)
 ```
 
 ---
@@ -84,16 +84,17 @@ Repository → Settings → Secrets and variables → Actions
 |--------|------|------|
 | `GMAIL_USER` | 이메일 발송 | ✅ |
 | `GMAIL_APP_PASSWORD` | Gmail 앱 비밀번호 | ✅ |
-| `RECIPIENT_EMAILS` | 수신자 목록 (콤마 구분) | ✅ |
+| `RECIPIENT_EMAILS` | Supabase 장애 시 비상 폴백 수신자 | ✅ |
 | `NOTION_API_KEY` | Notion 동기화 | ✅ |
 | `NOTION_DATABASE_ID_STOCK` | Notion 주식시황 DB ID | ✅ |
-| `SITE_BASE_URL` | GitHub Pages URL | 권장 |
+| `SITE_BASE_URL` | 배포 사이트 URL | ✅ |
 | `LLM_PROVIDER` | 백업 경로 LLM (gemini) | 백업용 |
 | `GEMINI_API_KEY` | 백업 경로 분석 | 백업용 |
 | `NAVER_CLIENT_ID` | 네이버 뉴스 API | 백업용 |
 | `NAVER_CLIENT_SECRET` | 네이버 뉴스 API | 백업용 |
-| `TELEGRAM_BOT_TOKEN` | 텔레그램 발송 (향후) | 예정 |
-| `TELEGRAM_CHAT_ID` | 텔레그램 채널 (향후) | 예정 |
+| `TELEGRAM_BOT_TOKEN` | 텔레그램 봇 공통 토큰 | ✅ |
+| `TELEGRAM_CHAT_ID_STOCK` | @msstockbrief 채널 ID | ✅ |
+| `TELEGRAM_CHAT_ID_MONITOR` | 파이프라인 모니터링 채널 ID | 권장 |
 
 ### 워크플로우 파일
 
@@ -106,7 +107,7 @@ Repository → Settings → Secrets and variables → Actions
 
 ## 품질 게이트
 
-`send_stock_email.py`는 발송 전 MD 분석 품질을 자동 검증합니다:
+`send_email.py --type stock`은 발송 전 MD 분석 품질을 자동 검증합니다:
 
 - `## ■ 핵심 요약` 섹션 내용이 10자 이상
 - `## 시장 온도계` 근거 문장이 5자 이상
@@ -144,7 +145,6 @@ Repository → Settings → Secrets and variables → Actions
 
 ## 관련 문서
 
-- [루틴 프롬프트 v5](stock_routine_prompt_v5.md) — Claude Code 루틴에 붙여넣기할 전체 프롬프트
+- [루틴 프롬프트 v5](stock_routine.md) — Claude Code 루틴에 붙여넣기할 전체 프롬프트
 - [개발자 가이드](stock_guide.md) — 코드 구조, 유지보수, 확장
-- [작업 로그](worklog.md) — 개발 이력 및 변경사항
 - [통합 README](../README.md) — 뉴스 + 주식시황 전체 개요

@@ -122,6 +122,7 @@ UNSUBSCRIBE_SECRET     = (위 생성값)
 | `TELEGRAM_BOT_TOKEN` | ✅ 필수 | 봇 인증 토큰 | 텔레그램 앱 → **@BotFather** → `/newbot` → 이름/아이디 입력 → 토큰 발급 (`숫자:문자열` 형식) |
 | `TELEGRAM_CHAT_ID` | ✅ 필수 | 뉴스·AI이슈 채널 ID | ① 채널에 봇을 관리자로 추가 → ② `api.telegram.org/bot{토큰}/getUpdates` 호출 후 `chat.id` 확인 또는 **@userinfobot**에 채널 포워딩 ③ 채널·슈퍼그룹은 반드시 `-100` 접두사 (예: `-1001234567890`) |
 | `TELEGRAM_CHAT_ID_STOCK` | ✅ 필수 | 주식 전용 채널 ID (@msstockbrief) | 동일 방법 |
+| `TELEGRAM_CHAT_ID_MONITOR` | 🔶 권장 | 파이프라인 모니터링 전용 채널 ID | 별도 모니터링 채널 생성 후 동일 방법으로 ID 확인. **미설정 시 알림 없이 조용히 건너뜀** (워크플로우 실패 영향 없음) |
 
 ---
 
@@ -217,6 +218,7 @@ Notion
   ✅ TELEGRAM_BOT_TOKEN
   ✅ TELEGRAM_CHAT_ID
   ✅ TELEGRAM_CHAT_ID_STOCK
+  🔶 TELEGRAM_CHAT_ID_MONITOR  (파이프라인 모니터링 전용, 미설정 시 건너뜀)
 
 SNS — Instagram
   ✅ INSTAGRAM_ACCESS_TOKEN
@@ -267,3 +269,4 @@ SNS — Twitter/X (미발급)
 | 카드뉴스 Threads | `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN` |
 | 카드뉴스 Telegram | `TELEGRAM_BOT_TOKEN` + 채널별 CHAT_ID (stock은 `_STOCK` 자동 분기) |
 | 카드뉴스 Twitter | `TWITTER_API_KEY/SECRET`, `TWITTER_ACCESS_TOKEN/SECRET` |
+| 파이프라인 모니터링 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID_MONITOR` |

@@ -80,7 +80,7 @@
   └─ 첫 이미지에 캡션: 날짜 + 채널 브리핑 + 이슈 TOP 3 + 원사이트 링크
 
 [버튼 메시지] "📖 {채널} 카드뉴스 전체 보기"
-  └─ [🌐 웹에서 보기]  [📂 전체 아카이브]
+  └─ [🌐 웹에서 보기]  →  채널별 콘텐츠 페이지 (news→/, ai-issue→/ai-issue/, stock→/stock/)
 ```
 
 **채널 분기:**
@@ -117,10 +117,17 @@
 📢 {이슈 제목 2}
 💡 {이슈 제목 3}
 
-🔗 ms-dailynews.vercel.app/cardnews/{channel}/{date}.html
+🔗 {채널별 콘텐츠 페이지 URL}
 
 #AI뉴스 #테크뉴스 #데일리뉴스 #인공지능 #AINews #TechNews
 ```
+
+**채널별 링크 URL:**
+- `news` → `https://ms-dailynews.vercel.app/`
+- `ai-issue` → `https://ms-dailynews.vercel.app/ai-issue/`
+- `stock` → `https://ms-dailynews.vercel.app/stock/`
+
+> 카드뉴스 HTML(`/cardnews/{channel}/{date}.html`)은 Playwright 렌더링용 내부 파일이므로 SNS 링크로 사용하지 않는다.
 
 **채널별 해시태그:**
 - `news`: `#AI뉴스 #테크뉴스 #데일리뉴스 #인공지능 #AINews #TechNews`

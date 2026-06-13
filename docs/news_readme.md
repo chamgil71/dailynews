@@ -118,7 +118,8 @@ Repository → Settings → Secrets and variables → Actions
 | `SITE_BASE_URL` | https://chamgil71.github.io/dailynews |
 | `SITE_THEME` | editorial (또는 classic/terminal/minimal/ink/forest) |
 | `TELEGRAM_BOT_TOKEN` | 텔레그램 봇 토큰 |
-| `TELEGRAM_CHAT_ID` | 텔레그램 채널 ID |
+| `TELEGRAM_CHAT_ID` | 뉴스 텔레그램 채널 ID |
+| `TELEGRAM_CHAT_ID_MONITOR` | 파이프라인 모니터링 채널 ID (선택) |
 | `NOTION_API_KEY` | Notion 통합 키 |
 | `NOTION_DATABASE_ID_NEWS` | Notion 뉴스 DB ID |
 
@@ -149,21 +150,21 @@ Repository → Settings → Pages → Source: GitHub Actions
 
 ## 테마 선택
 
-### 레이아웃 테마 (전체 레이아웃·폰트 변경)
+### layouts 테마 (독립 HTML 직접 생성)
 
-| 테마 | 특징 |
-|------|------|
-| `classic` | 네이비 헤더, 카드 레이아웃 (기본) |
-| `editorial` | 신문 마스트헤드, Noto Serif KR |
-| `terminal` | Bloomberg 다크 터미널, JetBrains Mono |
+| 테마 | 경로 | 특징 |
+|------|------|------|
+| `editorial` | `themes/layouts/editorial.py` | 신문 마스트헤드, Noto Serif KR. **현재 기본** |
+| `terminal` | `themes/layouts/terminal.py` | Bloomberg 다크 터미널, JetBrains Mono |
+| `minimal` | `themes/layouts/minimal.py` | 오렌지 accent + 넓은 여백 |
 
-### 색상 변형 테마 (레이아웃 유지, 색상만 교체)
+### skins 테마 (TOKENS 색상·폰트만 제공, templates 사용)
 
-| 테마 | 특징 |
-|------|------|
-| `ink` | 붉은 accent (신문 ink) |
-| `forest` | 에메랄드 accent (핀테크 그린) |
-| `minimal` | 오렌지 accent + 넓은 여백 |
+| 테마 | 경로 | 특징 |
+|------|------|------|
+| `classic` | `themes/skins/classic.py` | 네이비 헤더, 카드 레이아웃 |
+| `ink` | `themes/skins/ink.py` | 붉은 accent (신문 ink) |
+| `forest` | `themes/skins/forest.py` | 에메랄드 accent (핀테크 그린) |
 
 ### 섹션별 독립 설정
 

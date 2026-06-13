@@ -8,24 +8,58 @@
 
 ## 1. 현재 테마 시스템 구조
 
+### 테마 파일 분류
+
+테마는 두 종류로 분리되어 있다:
+
+```
+themes/
+├── base.py                  ← Jinja2 렌더링 엔진 (skins 전용)
+├── __init__.py              ← load_theme() — 탐색 순서: layouts.{name} → skins.{name} → skins.classic
+│
+├── layouts/                 ← 독립 HTML 생성 (Jinja2 미사용, render_*() 직접 생성)
+│   ├── editorial.py         신문 마스트헤드. Noto Serif KR. 현재 기본
+│   ├── terminal.py          Bloomberg 다크. JetBrains Mono
+│   └── minimal.py           넓은 여백. 오렌지 accent
+│
+└── skins/                   ← TOKENS 색상·폰트만 제공 (base.py + templates/*.html 사용)
+    ├── classic.py            남색 카드
+    ├── ink.py                붉은 accent
+    └── forest.py             에메랄드
+```
+
+**`load_theme()` 탐색 순서**: `layouts.{name}` → `skins.{name}` → `skins.classic` (폴백)
+
+### 렌더링 경로
+
 프로젝트는 **두 가지 독립적인 렌더링 경로**를 운용한다.
 
 ```
 [원본 Markdown 파일]
        │
-       ├─► (경로 A: 서버 빌드)
-       │     themes/*.py  TOKENS
-       │       └─► build_site.py
-       │              └─► publish/news/YYYY-MM-DD.html  (테마 완전 반영)
+       ├─► (경로 A: 서버 빌드 — editorial/terminal/minimal)
+       │     themes/layouts/{name}.py
+       │       └─► render_report() 직접 HTML 생성
+       │              └─► publish/news/YYYY-MM-DD.html
+       │
+       ├─► (경로 A-2: 서버 빌드 — classic/ink/forest)
+       │     themes/skins/{name}.py  TOKENS
+       │       └─► themes/base.py  Jinja2 렌더링
+       │              └─► templates/web_news.html
+       │                     └─► publish/news/YYYY-MM-DD.html
        │
        └─► (경로 B: SPA)
              app.html  (빌드 시 DYNAMIC 플레이스홀더 교체)
                └─► index.html  →  브라우저에서 JSON lazy-fetch
 ```
 
-### 경로 A — 서버 빌드
+### 경로 A — 서버 빌드 (layouts)
 
-`scripts/build_site.py`가 `themes/{name}.py` 의 `TOKENS` 딕셔너리를 읽어 CSS 변수·폰트·칩을 HTML에 직접 주입하고, 날짜별 정적 파일(`publish/news/YYYY-MM-DD.html`)을 생성한다.
+`editorial` 등 layouts 테마는 `render_report()` 메서드가 HTML을 직접 f-string으로 생성한다. Jinja2 템플릿을 사용하지 않는다.
+
+### 경로 A-2 — 서버 빌드 (skins)
+
+`skins` 테마는 `TOKENS` 딕셔너리만 제공한다. `themes/base.py`가 이 TOKENS를 읽어 Jinja2로 `templates/web_news.html` 등 템플릿을 렌더링한다.
 
 ### 경로 B — SPA
 
@@ -117,7 +151,15 @@ state.stockTheme = localStorage.getItem("theme-stock") || SECTION_DEFAULTS.stock
 
 ## 6. 신규 테마 추가 체크리스트
 
-### Step 1: `themes/새테마.py` 파일 생성
+### Step 1: 테마 파일 생성
+
+**skins 계열** (TOKENS만 제공, base.py + templates 사용):
+`themes/skins/새테마.py` 생성
+
+**layouts 계열** (HTML 직접 생성, render_report() 필요):
+`themes/layouts/새테마.py` 생성 — 이 경우 `render_report()`, `render_stock_report()`, `render_archive()` 메서드 구현 필요
+
+skins 계열 예시:
 
 ```python
 TOKENS = {
@@ -146,7 +188,7 @@ TOKENS = {
 
 ### Step 2: 자동 감지 확인
 
-`build_site.py`가 `themes/*.py`를 자동 스캔한다. 별도 등록이 필요 없다. 파일만 생성하면 칩 목록에 자동 추가된다.
+`build_site.py`가 `themes/skins/*.py` 및 `themes/layouts/*.py`를 자동 스캔한다. 별도 등록이 필요 없다. 파일만 생성하면 칩 목록에 자동 추가된다.
 
 ### Step 3: `config/theme_config.py`에 적용
 
@@ -178,7 +220,7 @@ python scripts/build_site.py --all
 
 ## 8. 토큰 매핑 표
 
-`themes/*.py`의 `colors` / `typography` 키가 SPA CSS 변수 및 이메일 템플릿 변수와 어떻게 연결되는지 정리한 표다.
+`themes/skins/*.py`의 `colors` / `typography` 키가 SPA CSS 변수 및 이메일 템플릿 변수와 어떻게 연결되는지 정리한 표다.
 
 | `themes/*.py` colors 키 | SPA CSS 변수 | 이메일 템플릿 변수 | 역할 |
 |---|---|---|---|
@@ -199,14 +241,23 @@ python scripts/build_site.py --all
 
 ## 9. 참고: 현재 적용 중인 테마 파일 목록
 
+### layouts/ (독립 HTML 생성)
+
 | 파일 | 테마명 | 특징 |
 |---|---|---|
-| `themes/classic.py` | classic | Classic Navy. 진한 네이비 계열. 기본 레이아웃 |
-| `themes/editorial.py` | editorial | 신문 스타일. Noto Serif KR + 미색 배경 + 적갈색 accent |
-| `themes/terminal.py` | terminal | 개발자 터미널. 딥블랙 배경 + 그린 텍스트 + IBM Plex Mono |
-| `themes/ink.py` | ink | 잉크 신문 스타일. 붉은 accent |
-| `themes/forest.py` | forest | 핀테크 그린. 에메랄드 accent |
-| `themes/minimal.py` | minimal | 넓은 여백, Pretendard 기반 |
+| `themes/layouts/editorial.py` | editorial | 신문 마스트헤드. Noto Serif KR + 미색 배경. **현재 기본** |
+| `themes/layouts/terminal.py` | terminal | Bloomberg 다크. 딥블랙 배경 + 그린 텍스트 + JetBrains Mono |
+| `themes/layouts/minimal.py` | minimal | 넓은 여백. Pretendard + 오렌지 accent |
+
+### skins/ (TOKENS 색상·폰트만 제공)
+
+| 파일 | 테마명 | 특징 |
+|---|---|---|
+| `themes/skins/classic.py` | classic | Classic Navy. 진한 네이비 계열. **skins 폴백 기본** |
+| `themes/skins/ink.py` | ink | 잉크 신문 스타일. 붉은 accent |
+| `themes/skins/forest.py` | forest | 핀테크 그린. 에메랄드 accent |
+
+> **이메일 렌더링**: `mailer.py`는 `themes.skins.{name}` 경로로 TOKENS를 로드한다. layouts 테마 이름을 `SECTION_THEMES["email"]`에 지정하면 `skins.classic`으로 자동 폴백된다.
 
 ---
 
