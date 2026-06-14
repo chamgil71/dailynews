@@ -39,7 +39,6 @@ def _load_channel_cfg(channel: str) -> dict:
 
 
 def _render_css(accent: str, topbar: str) -> str:
-    """CSS 커스텀 프로퍼티로 채널 색상을 주입. CSS 파일 자체는 순수 CSS."""
     variables = f":root {{ --accent: {accent}; --topbar: {topbar}; }}"
     return variables + "\n" + _CSS_FILE.read_text(encoding="utf-8")
 
@@ -78,7 +77,6 @@ def _trunc(text: str, max_len: int) -> str:
 
 
 def _render_label(ch: dict) -> str:
-    """채널 레이블의 키워드(News/Issue/Stock)를 채널 accent 색으로 강조."""
     label   = ch.get("label", "")
     keyword = ch.get("keyword", "")
     accent  = ch.get("accent", "")
@@ -86,6 +84,38 @@ def _render_label(ch: dict) -> str:
         colored = f'<span style="color:{accent}">{keyword}</span>'
         return label.replace(keyword, colored, 1)
     return label
+
+
+def _chg_color(chg: str) -> str:
+    if "▲" in chg or (chg.startswith("+") and "▼" not in chg):
+        return "#34d399"
+    if "▼" in chg or chg.startswith("-"):
+        return "#f87171"
+    return "#94a3b8"
+
+
+def _stat_row(col1: str, col2: str, col3: str, *, col1_w: str = "130px") -> str:
+    """3열 통계 행 (label | value | change) — 섹터·지수 공용."""
+    return (
+        f'<div style="display:flex;align-items:center;justify-content:space-between;'
+        f'padding:9px 0;border-bottom:1px solid #334155">'
+        f'<span style="font-size:21px;color:#94a3b8;width:{col1_w};flex-shrink:0">{col1}</span>'
+        f'<span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">{col2}</span>'
+        f'<span style="font-size:21px;color:{_chg_color(col3)};font-weight:700;'
+        f'white-space:nowrap">{col3}</span>'
+        f'</div>'
+    )
+
+
+def _stat_section(icon: str, title: str, rows_html: str) -> str:
+    """아이콘·제목 헤더 + 통계 행 묶음."""
+    return (
+        '<div class="trends-header">'
+        f'<span class="trends-icon">{icon}</span>'
+        f'<span class="trends-title">{title}</span>'
+        '</div>'
+        f'<div style="padding:0 4px">{rows_html}</div>'
+    )
 
 
 # ── 공통 카드 HTML 래퍼 ───────────────────────────────────────────────────────
@@ -131,11 +161,12 @@ def _news_cover(issues: list[dict], date_str: str, total: int,
                 accent: str, ch: dict) -> str:
     lines = ""
     for i, iss in enumerate(issues[:3]):
-        lines += f"""
-    <div class="cover-issue">
-      <span class="cover-icon" style="color:{ISSUE_COLORS[i]}">{ISSUE_ICONS[i]}</span>
-      <span class="cover-issue-text">{_trunc(iss.get('title',''), 34)}</span>
-    </div>"""
+        lines += (
+            f'<div class="cover-issue">'
+            f'<span class="cover-icon" style="color:{ISSUE_COLORS[i]}">{ISSUE_ICONS[i]}</span>'
+            f'<span class="cover-issue-text">{_trunc(iss.get("title",""), 34)}</span>'
+            f'</div>'
+        )
     content = f"""
   <div class="cover-logo">
     <div class="logo-badge">AI</div>
@@ -178,14 +209,15 @@ def _news_issue(issue: dict, rank: int, date_str: str,
 def _news_trends(trends: list[dict], date_str: str, idx: int, total: int) -> str:
     items = ""
     for i, t in enumerate(trends[:3]):
-        items += f"""
-    <div class="trend-item">
-      <div class="trend-header">
-        <span class="trend-icon">{TREND_ICONS[i]}</span>
-        <span class="trend-keyword">#{t.get('keyword','')}</span>
-      </div>
-      <div class="trend-desc">{_trunc(t.get('description',''), 80)}</div>
-    </div>"""
+        items += (
+            f'<div class="trend-item">'
+            f'<div class="trend-header">'
+            f'<span class="trend-icon">{TREND_ICONS[i]}</span>'
+            f'<span class="trend-keyword">#{t.get("keyword","")}</span>'
+            f'</div>'
+            f'<div class="trend-desc">{_trunc(t.get("description",""), 80)}</div>'
+            f'</div>'
+        )
     content = f"""
   <div class="trends-header">
     <span class="trends-icon">&#128200;</span>
@@ -224,13 +256,13 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
     extras = data.get("paper_picks", []) or data.get("weekly_tips", [])
     total  = 1 + len(top3) + (1 if extras else 0)
 
-    lines = ""
-    for i, item in enumerate(top3):
-        lines += f"""
-    <div class="cover-issue">
-      <span class="cover-icon" style="color:{ISSUE_COLORS[i]}">{ISSUE_ICONS[i]}</span>
-      <span class="cover-issue-text">{_trunc(item.get('title',''), 34)}</span>
-    </div>"""
+    lines = "".join(
+        f'<div class="cover-issue">'
+        f'<span class="cover-icon" style="color:{ISSUE_COLORS[i]}">{ISSUE_ICONS[i]}</span>'
+        f'<span class="cover-issue-text">{_trunc(item.get("title",""), 34)}</span>'
+        f'</div>'
+        for i, item in enumerate(top3)
+    )
     cover_content = f"""
   <div class="cover-logo">
     <div class="logo-badge">AI</div>
@@ -268,16 +300,16 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
         cards += _card(i + 1, total, content, _fmt_date(date_str), layout="issue")
 
     if extras:
-        items_html = ""
-        for j, ex in enumerate(extras[:3]):
-            tip = ex if isinstance(ex, str) else ex.get("title", str(ex))
-            items_html += f"""
-    <div class="trend-item">
-      <div class="trend-header">
-        <span class="trend-icon">{TREND_ICONS[j % 3]}</span>
-        <span class="trend-keyword">{_trunc(tip, 30)}</span>
-      </div>
-    </div>"""
+        items_html = "".join(
+            f'<div class="trend-item">'
+            f'<div class="trend-header">'
+            f'<span class="trend-icon">{TREND_ICONS[j % 3]}</span>'
+            f'<span class="trend-keyword">'
+            f'{_trunc(ex if isinstance(ex, str) else ex.get("title", str(ex)), 30)}'
+            f'</span>'
+            f'</div></div>'
+            for j, ex in enumerate(extras[:3])
+        )
         extra_content = f"""
   <div class="trends-header">
     <span class="trends-icon">&#128240;</span>
@@ -291,40 +323,11 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
 
 
 # ── 주식 카드 빌더 ────────────────────────────────────────────────────────────
-def _stock_sectors_card(sectors: list[dict], date_str: str, idx: int, total: int) -> str:
-    items = ""
-    for s in sectors[:9]:
-        chg = s.get("change", "")
-        if "▲" in chg or (chg.startswith("+") and "▼" not in chg):
-            color = "#34d399"
-        elif "▼" in chg or chg.startswith("-"):
-            color = "#f87171"
-        else:
-            color = "#94a3b8"
-        items += (
-            f'<div style="display:flex;align-items:center;justify-content:space-between;'
-            f'padding:9px 0;border-bottom:1px solid #334155">'
-            f'<span style="font-size:21px;color:#94a3b8;width:130px;flex-shrink:0">{s.get("sector","")}</span>'
-            f'<span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">{s.get("name","")}</span>'
-            f'<span style="font-size:21px;color:{color};font-weight:700;white-space:nowrap">{chg}</span>'
-            f'</div>'
-        )
-    content = (
-        '<div class="trends-header">'
-        '<span class="trends-icon">&#128202;</span>'
-        '<span class="trends-title">섹터 동향</span>'
-        '</div>'
-        f'<div style="padding:0 4px">{items}</div>'
-    )
-    return _card(idx, total, content, _fmt_date(date_str))
-
-
 def build_stock_html(date_str: str, data: dict) -> str:
     ch      = _load_channel_cfg("stock")
     accent  = ch["accent"]
     css     = _render_css(accent, ch["topbar"])
-    temp    = data.get("temperature", {})
-    temp_disp = temp.get("display", "")
+    temp_disp = data.get("temperature", {}).get("display", "")
     market  = data.get("market", {})
     summary_lines = [l.strip().lstrip("- ") for l in
                      data.get("summary", "").split("\n") if l.strip()][:3]
@@ -338,18 +341,21 @@ def build_stock_html(date_str: str, data: dict) -> str:
         bold  = parts[0].strip() if len(parts) > 1 else ""
         rest  = parts[1].strip() if len(parts) > 1 else line
         if bold:
-            sum_html += f"""
-    <div class="cover-issue">
-      <div>
-        <div style="font-size:28px;font-weight:700;color:#f1f5f9;margin-bottom:6px">{_trunc(bold,30)}</div>
-        <div style="font-size:25px;color:#94a3b8;line-height:1.5">{_trunc(rest,60)}</div>
-      </div>
-    </div>"""
+            sum_html += (
+                f'<div class="cover-issue">'
+                f'<div>'
+                f'<div style="font-size:28px;font-weight:700;color:#f1f5f9;margin-bottom:6px">'
+                f'{_trunc(bold, 30)}</div>'
+                f'<div style="font-size:25px;color:#94a3b8;line-height:1.5">'
+                f'{_trunc(rest, 60)}</div>'
+                f'</div></div>'
+            )
         else:
-            sum_html += f"""
-    <div class="cover-issue">
-      <span class="cover-issue-text">{_trunc(line, 60)}</span>
-    </div>"""
+            sum_html += (
+                f'<div class="cover-issue">'
+                f'<span class="cover-issue-text">{_trunc(line, 60)}</span>'
+                f'</div>'
+            )
 
     cover_content = f"""
   <div class="cover-logo">
@@ -366,20 +372,21 @@ def build_stock_html(date_str: str, data: dict) -> str:
   <div class="cover-tags">{ch['hashtags']}</div>"""
     cards = _card(0, total, cover_content, _fmt_date(date_str))
 
-    def _idx(key: str, label: str) -> str:
+    def _mkt_row(key: str, label: str) -> str:
         info = market.get(key, {})
         if not info:
             return ""
         close = info.get("close_str", "")
         chg   = info.get("chg_str", "")
-        return f"""
-    <div class="trend-item" style="border-left-color:{accent}">
-      <div class="trend-header" style="margin-bottom:8px">
-        <span class="trend-keyword" style="font-size:28px">{label}</span>
-        <span style="font-size:26px;color:#f8fafc;font-weight:700;margin-left:auto">{close}</span>
-      </div>
-      <div class="trend-desc" style="font-size:24px">{chg}</div>
-    </div>"""
+        return (
+            f'<div class="trend-item" style="border-left-color:{accent}">'
+            f'<div class="trend-header" style="margin-bottom:8px">'
+            f'<span class="trend-keyword" style="font-size:28px">{label}</span>'
+            f'<span style="font-size:26px;color:#f8fafc;font-weight:700;margin-left:auto">{close}</span>'
+            f'</div>'
+            f'<div class="trend-desc" style="font-size:24px">{chg}</div>'
+            f'</div>'
+        )
 
     mkt_content = f"""
   <div class="trends-header">
@@ -387,27 +394,27 @@ def build_stock_html(date_str: str, data: dict) -> str:
     <span class="trends-title">주요 시장 지표</span>
   </div>
   <div class="trends-list">
-    {_idx('kospi',   '코스피')}
-    {_idx('kosdaq',  '코스닥')}
-    {_idx('usd_krw', 'USD/KRW')}
-    {_idx('wti',     'WTI')}
+    {_mkt_row('kospi',   '코스피')}
+    {_mkt_row('kosdaq',  '코스닥')}
+    {_mkt_row('usd_krw', 'USD/KRW')}
+    {_mkt_row('wti',     'WTI')}
   </div>"""
     cards += _card(1, total, mkt_content, _fmt_date(date_str), layout="trends")
 
     kw_idx = 2
     if keywords:
-        kw_items = ""
-        for j, kw in enumerate(keywords[:3]):
-            title = kw.get("title", "") if isinstance(kw, dict) else str(kw)
-            body  = kw.get("body",  "") if isinstance(kw, dict) else ""
-            kw_items += f"""
-    <div class="trend-item">
-      <div class="trend-header">
-        <span class="trend-icon">{TREND_ICONS[j % 3]}</span>
-        <span class="trend-keyword">{_trunc(title, 22)}</span>
-      </div>
-      <div class="trend-desc">{_trunc(body, 80)}</div>
-    </div>"""
+        kw_items = "".join(
+            f'<div class="trend-item">'
+            f'<div class="trend-header">'
+            f'<span class="trend-icon">{TREND_ICONS[j % 3]}</span>'
+            f'<span class="trend-keyword">'
+            f'{_trunc(kw.get("title","") if isinstance(kw, dict) else str(kw), 22)}'
+            f'</span></div>'
+            f'<div class="trend-desc">'
+            f'{_trunc(kw.get("body","") if isinstance(kw, dict) else "", 80)}'
+            f'</div></div>'
+            for j, kw in enumerate(keywords[:3])
+        )
         kw_content = f"""
   <div class="trends-header">
     <span class="trends-icon">&#128269;</span>
@@ -418,7 +425,13 @@ def build_stock_html(date_str: str, data: dict) -> str:
         kw_idx += 1
 
     if sectors:
-        cards += _stock_sectors_card(sectors, date_str, kw_idx, total)
+        rows = "".join(
+            _stat_row(s.get("sector",""), s.get("name",""), s.get("change",""))
+            for s in sectors[:9]
+        )
+        cards += _card(kw_idx, total,
+                       _stat_section("&#128202;", "섹터 동향", rows),
+                       _fmt_date(date_str))
 
     return _html_wrapper(f"주식 카드뉴스 {date_str}", css, cards)
 
@@ -428,24 +441,19 @@ def build_weekly_stock_html(date_str: str, data: dict) -> str:
     ch         = _load_channel_cfg("stock")
     accent     = ch["accent"]
     css        = _render_css(accent, ch["topbar"])
-    temp       = data.get("temperature", {})
-    temp_disp  = temp.get("display", "")
+    temp_disp  = data.get("temperature", {}).get("display", "")
     summary    = data.get("summary", "")
     week_range = data.get("week_range", "")
     hot_themes = data.get("hot_themes", [])[:3]
-    weekly_indices   = data.get("weekly_indices", [])
-    next_week_sched  = data.get("next_week_schedule", [])
     total = 4
 
-    # ── 카드 1: Cover ─────────────────────────────────────────────────────────
-    theme_preview = ""
-    for i, t in enumerate(hot_themes[:3]):
-        theme_preview += (
-            f'<div class="cover-issue">'
-            f'<span class="cover-icon" style="color:{ISSUE_COLORS[i]}">{ISSUE_ICONS[i]}</span>'
-            f'<span class="cover-issue-text">{_trunc(t.get("title",""), 34)}</span>'
-            f'</div>'
-        )
+    theme_preview = "".join(
+        f'<div class="cover-issue">'
+        f'<span class="cover-icon" style="color:{ISSUE_COLORS[i]}">{ISSUE_ICONS[i]}</span>'
+        f'<span class="cover-issue-text">{_trunc(t.get("title",""), 34)}</span>'
+        f'</div>'
+        for i, t in enumerate(hot_themes)
+    )
     cover_content = f"""
   <div class="cover-logo">
     <div class="logo-badge">&#128197;</div>
@@ -466,85 +474,48 @@ def build_weekly_stock_html(date_str: str, data: dict) -> str:
   <div class="cover-tags">{ch['hashtags']}</div>"""
     cards = _card(0, total, cover_content, _fmt_date(date_str))
 
-    # ── 카드 2: 주간 지수 성과 ────────────────────────────────────────────────
-    idx_items = ""
-    for row in weekly_indices[:6]:
-        label  = row.get("label",  "")
-        close  = row.get("close",  "")
-        change = row.get("change", "")
-        if "▲" in change or (change.startswith("+") and "▼" not in change):
-            c = "#34d399"
-        elif "▼" in change or change.startswith("-"):
-            c = "#f87171"
-        else:
-            c = "#94a3b8"
-        idx_items += (
-            f'<div style="display:flex;align-items:center;justify-content:space-between;'
-            f'padding:9px 0;border-bottom:1px solid #334155">'
-            f'<span style="font-size:21px;color:#94a3b8;width:110px;flex-shrink:0">{label}</span>'
-            f'<span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">{close}</span>'
-            f'<span style="font-size:21px;color:{c};font-weight:700;white-space:nowrap">{change}</span>'
-            f'</div>'
-        )
-    idx_content = (
-        '<div class="trends-header">'
-        '<span class="trends-icon">&#128200;</span>'
-        '<span class="trends-title">주간 지수 성과</span>'
-        '</div>'
-        f'<div style="padding:0 4px">{idx_items}</div>'
+    idx_rows = "".join(
+        _stat_row(r.get("label",""), r.get("close",""), r.get("change",""), col1_w="110px")
+        for r in data.get("weekly_indices", [])[:6]
     )
-    cards += _card(1, total, idx_content, _fmt_date(date_str))
+    cards += _card(1, total,
+                   _stat_section("&#128200;", "주간 지수 성과", idx_rows),
+                   _fmt_date(date_str))
 
-    # ── 카드 3: 핫 테마 TOP 3 ─────────────────────────────────────────────────
-    theme_items = ""
-    for i, t in enumerate(hot_themes[:3]):
-        color      = ISSUE_COLORS[i]
-        icon       = ISSUE_ICONS[i]
-        title      = t.get("title", "")
-        desc       = t.get("description", "")
-        first_line = desc.split("\n")[0].strip() if desc else ""
-        theme_items += (
-            f'<div style="margin-bottom:14px">'
-            f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
-            f'<span style="color:{color};font-size:24px">{icon}</span>'
-            f'<span style="font-size:26px;font-weight:700;color:#f1f5f9">{_trunc(title, 24)}</span>'
-            f'</div>'
-            f'<div style="font-size:21px;color:#94a3b8;line-height:1.4">{_trunc(first_line, 70)}</div>'
-            f'</div>'
-        )
-    themes_content = (
-        '<div class="trends-header">'
-        '<span class="trends-icon">&#128293;</span>'
-        '<span class="trends-title">이번 주 핫 테마 TOP 3</span>'
-        '</div>'
-        f'<div style="padding:0 4px">{theme_items}</div>'
+    theme_items = "".join(
+        f'<div style="margin-bottom:14px">'
+        f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+        f'<span style="color:{ISSUE_COLORS[i]};font-size:24px">{ISSUE_ICONS[i]}</span>'
+        f'<span style="font-size:26px;font-weight:700;color:#f1f5f9">'
+        f'{_trunc(t.get("title",""), 24)}</span>'
+        f'</div>'
+        f'<div style="font-size:21px;color:#94a3b8;line-height:1.4">'
+        f'{_trunc((t.get("description","") or "").split(chr(10))[0].strip(), 70)}'
+        f'</div></div>'
+        for i, t in enumerate(hot_themes)
     )
-    cards += _card(2, total, themes_content, _fmt_date(date_str))
+    cards += _card(2, total,
+                   _stat_section("&#128293;", "이번 주 핫 테마 TOP 3",
+                                 f'<div style="padding:0 4px">{theme_items}</div>'),
+                   _fmt_date(date_str))
 
-    # ── 카드 4: 차주 주요 일정 ────────────────────────────────────────────────
-    sched_items = ""
-    for row in next_week_sched[:6]:
-        date_val = row.get("date",   "")
-        event    = row.get("event",  "")
-        impact   = row.get("impact", "")
-        sched_items += (
-            f'<div style="display:flex;align-items:flex-start;'
-            f'padding:8px 0;border-bottom:1px solid #334155;gap:8px">'
-            f'<span style="font-size:19px;color:{accent};width:100px;flex-shrink:0;font-weight:600">'
-            f'{date_val}</span>'
-            f'<div style="flex:1">'
-            f'<div style="font-size:21px;color:#f1f5f9;font-weight:500">{_trunc(event, 28)}</div>'
-            f'<div style="font-size:18px;color:#94a3b8">{_trunc(impact, 36)}</div>'
-            f'</div></div>'
-        )
-    sched_content = (
-        '<div class="trends-header">'
-        '<span class="trends-icon">&#128197;</span>'
-        '<span class="trends-title">차주 주요 일정</span>'
-        '</div>'
-        f'<div style="padding:0 4px">{sched_items}</div>'
+    sched_rows = "".join(
+        f'<div style="display:flex;align-items:flex-start;'
+        f'padding:8px 0;border-bottom:1px solid #334155;gap:8px">'
+        f'<span style="font-size:19px;color:{accent};width:100px;flex-shrink:0;font-weight:600">'
+        f'{r.get("date","")}</span>'
+        f'<div style="flex:1">'
+        f'<div style="font-size:21px;color:#f1f5f9;font-weight:500">'
+        f'{_trunc(r.get("event",""), 28)}</div>'
+        f'<div style="font-size:18px;color:#94a3b8">'
+        f'{_trunc(r.get("impact",""), 36)}</div>'
+        f'</div></div>'
+        for r in data.get("next_week_schedule", [])[:6]
     )
-    cards += _card(3, total, sched_content, _fmt_date(date_str))
+    cards += _card(3, total,
+                   _stat_section("&#128197;", "차주 주요 일정",
+                                 f'<div style="padding:0 4px">{sched_rows}</div>'),
+                   _fmt_date(date_str))
 
     return _html_wrapper(f"주간 주식 시황 {date_str}", css, cards)
 
@@ -642,15 +613,10 @@ def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
     for e in entries:
         d         = e.get("date", "")
         is_weekly = e.get("type") == "weekly"
-        if is_weekly:
-            html = build_weekly_stock_html(d, e)
-            n    = 4
-        else:
-            html = build_stock_html(d, e)
-            n    = 2 + (1 if e.get("keywords") else 0) + (1 if e.get("sectors") else 0)
+        html      = build_weekly_stock_html(d, e) if is_weekly else build_stock_html(d, e)
+        n         = 4 if is_weekly else 2 + (1 if e.get("keywords") else 0) + (1 if e.get("sectors") else 0)
         (out_dir / f"{d}.html").write_text(html, encoding="utf-8")
-        tag = " [주간]" if is_weekly else ""
-        print(f"  + cardnews/stock/{d}.html  ({n} cards){tag}")
+        print(f"  + cardnews/stock/{d}.html  ({n} cards){' [주간]' if is_weekly else ''}")
         built += 1
 
     if built:
