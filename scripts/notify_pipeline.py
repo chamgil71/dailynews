@@ -27,9 +27,10 @@ _KST = timezone(timedelta(hours=9))
 
 ACTIONS_URL = "https://github.com/chamgil71/dailynews/actions"
 SITE_URLS = {
-    "news":     "https://ms-dailynews.vercel.app/",
-    "ai-issue": "https://ms-dailynews.vercel.app/ai-issue/",
-    "stock":    "https://ms-dailynews.vercel.app/stock/",
+    "news":         "https://ms-dailynews.vercel.app/",
+    "ai-issue":     "https://ms-dailynews.vercel.app/ai-issue/",
+    "stock":        "https://ms-dailynews.vercel.app/stock/",
+    "weekly-stock": "https://ms-dailynews.vercel.app/stock/",
 }
 
 
@@ -192,6 +193,60 @@ def _msg_stock_success(date_str: str) -> str:
     )
 
 
+def _msg_weekly_stock_success(date_str: str) -> str:
+    md_path = _ROOT / "reports" / "stock" / f"weekly_{date_str}.md"
+
+    one_liner = ""
+    period = ""
+    top3_themes: list[str] = []
+    kospi_chg = kosdaq_chg = sp500_chg = ""
+
+    if md_path.exists():
+        try:
+            text = md_path.read_text(encoding="utf-8")
+            # 기간
+            m = re.search(r"기간:\s*(.+?)\s*\|", text)
+            if m:
+                period = m.group(1).strip()
+            # 주간 한줄 총평
+            m2 = re.search(r"## ■ 주간 한줄 총평\s*\n+([\s\S]+?)(?=\n---|\n## |\Z)", text)
+            if m2:
+                one_liner = m2.group(1).strip().splitlines()[0][:80]
+            # 주간 지수 성과 (코스피·코스닥·S&P 변동)
+            for ticker, var in [("코스피", "kospi_chg"), ("코스닥", "kosdaq_chg"), ("S&P 500", "sp500_chg")]:
+                m3 = re.search(rf"\|\s*{ticker}\s*\|[^|]+\|[^|]+\|\s*([+\-\d.]+%[^|]*)\|", text)
+                if m3:
+                    locals()[var]  # just to avoid "assigned but never used"
+                    if ticker == "코스피":    kospi_chg  = m3.group(1).strip()
+                    elif ticker == "코스닥":  kosdaq_chg = m3.group(1).strip()
+                    else:                      sp500_chg  = m3.group(1).strip()
+            # 핫 테마 TOP 3
+            m4 = re.findall(r"### [①②③]\s+(.+)", text)
+            top3_themes = [t.strip()[:40] for t in m4[:3]]
+        except Exception:
+            pass
+
+    period_line = f"📆 기간: {period}\n" if period else ""
+    idx_block = ""
+    if kospi_chg or kosdaq_chg or sp500_chg:
+        idx_block = (
+            f"  코스피 {kospi_chg}  코스닥 {kosdaq_chg}\n"
+            f"  S&P 500 {sp500_chg}\n"
+        )
+    theme_icons = ["🔥", "⚡", "💡"]
+    theme_block = "".join(f"  {theme_icons[i]} {t}\n" for i, t in enumerate(top3_themes))
+
+    return (
+        f"✅ *주간 주식시황 완료*\n"
+        f"📅 {date_str}  |  {_now_kst()}\n"
+        f"{period_line}\n"
+        f"{'💬 ' + one_liner + chr(10) if one_liner else ''}\n"
+        f"📊 주간 지수\n{idx_block or '  (데이터 없음)'}\n"
+        f"{'🏆 이번 주 핫 테마'+chr(10)+theme_block if theme_block else ''}"
+        f"\n🌐 {SITE_URLS['weekly-stock']}"
+    )
+
+
 # ── 실패 메시지 ────────────────────────────────────────────────────────────────
 
 def _msg_failure(channel: str, date_str: str) -> str:
@@ -210,7 +265,7 @@ def _msg_failure(channel: str, date_str: str) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="파이프라인 결과 텔레그램 알림")
     parser.add_argument("--type", dest="channel",
-                        choices=["news", "stock", "ai-issue"], required=True)
+                        choices=["news", "stock", "ai-issue", "weekly-stock"], required=True)
     parser.add_argument("--status", choices=["success", "failure"], default="failure")
     parser.add_argument("--date",
                         default=datetime.now(_KST).strftime("%Y-%m-%d"),
@@ -231,6 +286,8 @@ def main() -> None:
             msg = _msg_news_success(args.date)
         elif args.channel == "ai-issue":
             msg = _msg_ai_issue_success(args.date)
+        elif args.channel == "weekly-stock":
+            msg = _msg_weekly_stock_success(args.date)
         else:
             msg = _msg_stock_success(args.date)
     else:
