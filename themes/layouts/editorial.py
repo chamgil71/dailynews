@@ -1,5 +1,6 @@
 # themes/editorial.py
-"""Editorial 테마 — 신문 마스트헤드, Noto Serif KR, 드롭캡.
+"""
+Editorial 테마 — 신문 마스트헤드, Noto Serif KR, 드롭캡.
 
 [커스텀 레이아웃 테마] base.py 미사용. render_*() 함수가 Python f-string으로 HTML 직접 생성.
 레이아웃·색상 모두 이 파일에서 수정. templates/web_*.html 은 이 테마에서 사용 안 함.
@@ -10,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.theme_config import FOOTER_CONFIG, SITE_LOGO_HTML, SUBSCRIBE_URL
+from config.theme_config import FOOTER_CONFIG, SITE_LOGO_HTML, SUBSCRIBE_URL, SECTION_ACCENTS
 
 TOKENS = {
     "meta": {
@@ -75,12 +76,50 @@ _CSS = """
   .mh-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.3em;
     text-align:center; color:var(--ink-soft); text-transform:uppercase;
     padding-top:6px; border-top:1px solid var(--rule-soft); margin-top:10px; }
-  .mh-nav { display:flex; justify-content:center; gap:32px; margin-top:14px;
-    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.08em;
-    text-transform:uppercase; }
-  .mh-nav a { color:var(--ink-soft); text-decoration:none; }
-  .mh-nav a.on { color:var(--accent); font-weight:700;
-    border-bottom:2px solid var(--accent); padding-bottom:2px; }
+  /* ── Site Header (모든 페이지 공통 상단 바) ── */
+  .site-header {
+    background:#2b231a; color:#ece2cf;
+    padding:0 24px; display:flex; align-items:center; height:58px;
+    position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .site-header .logo {
+    font-size:.95rem; font-weight:700; color:#ece2cf;
+    text-decoration:none; margin-right:24px; white-space:nowrap; cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .site-header .logo span { color:var(--accent); }
+  .header-nav { display:flex; align-items:center; height:100%; flex:1; gap:2px; }
+  .hnav-tab {
+    display:flex; align-items:center; gap:7px; height:100%;
+    padding:0 14px; color:rgba(236,226,207,.6);
+    text-decoration:none; font-size:.8rem; font-weight:500;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.02em;
+    border-bottom:3px solid transparent;
+    transition:color .15s, border-color .15s, background .15s; white-space:nowrap;
+  }
+  .hnav-tab:hover { color:rgba(236,226,207,.9); }
+  .hnav-tab.active { color:#ece2cf; font-weight:700; }
+  .hnav-tab[data-section="news"].active     { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .hnav-tab[data-section="ai-issue"].active { border-bottom-color:#a78bfa; background:rgba(167,139,250,.1); }
+  .hnav-tab[data-section="stock"].active    { border-bottom-color:#4ade80; background:rgba(74,222,128,.1); }
+  .hnav-tab[data-section="archive"].active  { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .tab-label { pointer-events:none; }
+  .site-header .hdr-actions { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .btn-hdr {
+    background:none; border:none; color:rgba(236,226,207,.65);
+    cursor:pointer; padding:6px; border-radius:5px;
+    display:inline-flex; align-items:center; justify-content:center;
+    text-decoration:none; transition:color .15s, background .15s;
+  }
+  .btn-hdr:hover { color:#ece2cf; background:rgba(255,255,255,.1); }
+  @media (max-width:600px) {
+    .site-header { padding:0 12px; }
+    .site-header .logo { font-size:.85rem; margin-right:8px; }
+    .tab-label { display:none; }
+    .hnav-tab { padding:0 10px; gap:0; }
+  }
 
   .brief { display:grid; grid-template-columns:200px 1fr 160px; gap:24px;
     border-bottom:1px solid var(--rule); padding:18px 0 22px; margin-bottom:28px; }
@@ -91,6 +130,15 @@ _CSS = """
   .brief-stat .num { font-family:'Noto Serif KR',serif; font-size:24px;
     font-weight:700; font-style:italic; }
   .brief-stat .lab { font-size:10px; letter-spacing:.15em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  /* AI이슈 전용 통계 (작게) */
+  .brief-stats-sm { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .brief-stats-sm .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:6px; letter-spacing:.08em; font-size:10px; }
+  .brief-stat-sm { display:flex; gap:8px; align-items:baseline; margin-top:6px; }
+  .brief-stat-sm .num-sm { font-size:14px; font-weight:700;
+    font-family:'IBM Plex Mono',monospace; }
+  .brief-stat-sm .lab { font-size:9px; letter-spacing:.12em;
     color:var(--ink-mute); text-transform:uppercase; }
   .kicker { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em;
     text-transform:uppercase; color:var(--accent); margin-bottom:8px;
@@ -179,17 +227,38 @@ def _masthead_title(site_title: str) -> str:
     return site_title
 
 
+# ── 탭 SVG 아이콘 (emoji 대체, 모든 플랫폼/OS에서 균일하게 렌더) ──
+_SVG_NEWS    = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v2h3a1 1 0 0 0 1-1v-1zm-5 2v-2H6v2h4zm-5 0v-2H1v1a1 1 0 0 0 1 1h3zm-4-4h4V8H1v4zm0-5h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg>'
+_SVG_AI      = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14A2.5 2.5 0 0 1 11.5 12V14H11v1.5a.5.5 0 0 1-1 0V14H9v1.5a.5.5 0 0 1-1 0V14H7v1.5a.5.5 0 0 1-1 0V14H5.5A2.5 2.5 0 0 1 3 11.5H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3A2.5 2.5 0 0 1 5.5 4V2H5V.5A.5.5 0 0 1 5 0zm-.5 4.5v7A1.5 1.5 0 0 0 6 13h4a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 10 3H6A1.5 1.5 0 0 0 4.5 4.5zM6 5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/></svg>'
+_SVG_STOCK   = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/></svg>'
+_SVG_ARCHIVE = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>'
+_SVG_MAIL    = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg>'
+_SVG_GITHUB  = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>'
+
+_NAV_TABS = [
+    ("news",     "index.html",   "뉴스 브리핑", _SVG_NEWS),
+    ("ai-issue", "ai-issue/",    "AI이슈",      _SVG_AI),
+    ("stock",    "stock/",       "주식 시황",    _SVG_STOCK),
+    ("archive",  "archive.html", "아카이브",     _SVG_ARCHIVE),
+]
+
+
 def _layout(title: str, body: str, active: str, site_title: str, now: str, site_url: str = "", nav_prefix: str = "") -> str:
-    nav_items = [
-        ("news",     "index.html",   "뉴스 브리핑"),
-        ("ai-issue", "ai-issue/",    "AI이슈"),
-        ("stock",    "stock/",       "주식 시황"),
-        ("archive",  "archive.html", "아카이브"),
-    ]
-    nav_html = "  ".join(
-        f'<a href="{nav_prefix}{url}" class="{"on" if active == key else ""}">{label}</a>'
-        for key, url, label in nav_items
+    # 탭 네비게이션 (SVG 아이콘 + 텍스트 레이블, SPA/stock 페이지와 동일 구조)
+    nav_links = "".join(
+        f'<a class="hnav-tab{" active" if active == key else ""}" href="{nav_prefix}{url}"'
+        f' data-section="{key}">{icon}<span class="tab-label"> {label}</span></a>'
+        for key, url, label, icon in _NAV_TABS
     )
+    subscribe_btn = (
+        f'<a href="{SUBSCRIBE_URL}" class="btn-hdr" title="뉴스레터 구독">{_SVG_MAIL}</a>'
+    ) if SUBSCRIBE_URL else ""
+
+    # 탭별 메인색 반영 (뉴스=파랑, AI이슈=보라, 주식=초록)
+    accent_override = ""
+    section_color = SECTION_ACCENTS.get(active)
+    if section_color:
+        accent_override = f'<style>:root{{--accent:{section_color};}}</style>'
     footer = FOOTER_CONFIG
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -200,8 +269,19 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
   <title>{title} — {site_title}</title>
   {_FONTS}
   <style>{_CSS}</style>
+  {accent_override}
 </head>
 <body>
+  <header class="site-header">
+    <a class="logo" href="{nav_prefix}index.html">AI <span>News</span> Brief</a>
+    <nav class="header-nav">
+      {nav_links}
+    </nav>
+    <div class="hdr-actions">
+      {subscribe_btn}
+      <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-hdr" title="GitHub">{_SVG_GITHUB}</a>
+    </div>
+  </header>
   <div class="wrap">
     <div class="masthead">
       <div class="mh-top">
@@ -213,10 +293,6 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
         <h1 class="mh-title">{_masthead_title(site_title)}</h1>
       </a>
       <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
-      <div class="mh-nav">
-        {nav_html}
-        {'  <a href="' + SUBSCRIBE_URL + '" style="background:var(--accent);color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.04em">구독</a>' if SUBSCRIBE_URL else ''}
-      </div>
     </div>
 
     {body}
@@ -344,6 +420,55 @@ def render_report(ctx: dict) -> str:
     return _layout(ctx["display_date"], body, "news", ctx["site_title"], ctx["now"], ctx.get("site_url", ""), nav_prefix="../")
 
 
+def render_ai_issue_report(ctx: dict) -> str:
+    """AI이슈 주간 전용 editorial 렌더링."""
+    structured = ctx.get("structured", {})
+    s = ctx["data"].get("stats", {})
+    top10 = structured.get("top10", [])
+    period = structured.get("period", "")
+
+    # 에디터 노트: TOP 이슈 요약 (상위 3개 타이틀)
+    if top10:
+        lede_items = "".join(
+            f'<li style="margin-bottom:7px"><b>{i+1}.</b> {item.get("title", "")}</li>'
+            for i, item in enumerate(top10[:3])
+        )
+        lede_html = (
+            f'<ul style="margin:10px 0 0;padding-left:1.2em;'
+            f'font-size:17px;line-height:1.6">{lede_items}</ul>'
+        )
+    else:
+        cnt = s.get("sent_to_ai", 10)
+        lede_html = f'<p class="lede">이번 주 AI 이슈 {cnt}건을 분석했습니다.</p>'
+
+    total = s.get("total", "-")
+    en    = s.get("en",    "-")
+    ko    = s.get("ko",    "-")
+
+    body = f"""
+    <div class="brief">
+      <div class="brief-stats-sm">
+        <span class="lbl">주간 통계</span>
+        <div class="brief-stat-sm"><span class="num-sm">{total}</span><span class="lab">이슈</span></div>
+        <div class="brief-stat-sm"><span class="num-sm">{en}</span><span class="lab">글로벌</span></div>
+        <div class="brief-stat-sm"><span class="num-sm">{ko}</span><span class="lab">국내</span></div>
+      </div>
+      <div>
+        <div class="kicker">AI 이슈 브리핑{" · " + period if period else ""}</div>
+        {lede_html}
+      </div>
+      <div class="byline">
+        AI Editor<br>{FOOTER_CONFIG['generator']}<br>─<br>{ctx['date_str']}
+      </div>
+    </div>
+    <div class="prose">{ctx['md_html']}</div>"""
+
+    return _layout(
+        ctx["display_date"], body, "ai-issue",
+        ctx["site_title"], ctx["now"], ctx.get("site_url", ""), nav_prefix="../"
+    )
+
+
 def render_archive(ctx: dict) -> str:
     """통합 아카이브: 마스트헤드 + 3탭(뉴스/주식/AI이슈) + 검색."""
     news_list  = ctx.get("items", [])
@@ -353,7 +478,7 @@ def render_archive(ctx: dict) -> str:
 
     def _li(it: dict, href: str, icon: str) -> str:
         return (
-            f'<li data-label="{it["display"]}">'
+            f'<li data-label="{it["display"]}">' 
             f'<a href="{href}">{icon} {it["display"]}</a>'
             f'<span class="d">{it["date"]}</span>'
             f'</li>'

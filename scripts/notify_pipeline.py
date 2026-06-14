@@ -218,9 +218,11 @@ def main() -> None:
     args = parser.parse_args()
 
     token   = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID_MONITOR", "").strip()
+    # MONITOR 채널 우선, 없으면 기본 채널로 폴백
+    chat_id = (os.environ.get("TELEGRAM_CHAT_ID_MONITOR", "").strip()
+               or os.environ.get("TELEGRAM_CHAT_ID", "").strip())
     if not token or not chat_id:
-        print("[notify] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID_MONITOR 미설정 — 알림 건너뜀",
+        print("[notify] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID(_MONITOR) 미설정 — 알림 건너뜀",
               file=sys.stderr)
         sys.exit(0)  # 미설정 시 워크플로우 실패 전파 방지
 

@@ -110,6 +110,10 @@ def _send_ai_issue(date_str: str) -> None:
         logger.error(f"[텔레그램/AI이슈] JSON 파싱 에러: {e}")
         sys.exit(1)
 
+    if not data.get("top10"):
+        logger.error("[텔레그램/AI이슈] top10 공란 — 불완전 보고서로 판단, 발송 건너뜀")
+        sys.exit(1)
+
     ok = send_ai_issue_telegram(data, date_str)
     logger.info(f"[텔레그램/AI이슈] {'완료' if ok else '실패 또는 건너뜀'}")
 

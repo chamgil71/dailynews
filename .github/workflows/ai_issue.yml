@@ -64,7 +64,7 @@ jobs:
         env:
           NOTION_API_KEY:                ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID_AI_ISSUE:   ${{ secrets.NOTION_DATABASE_ID_AI_ISSUE }}
-        continue-on-error: true  # Notion 장애 시 이후 빌드·발송 차단 방지
+        continue-on-error: true
 
       - name: HTML 빌드 (ai-issue 전용)
         run: python scripts/build_ai_issue_site.py
@@ -81,15 +81,17 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "actions@github.com"
           git add reports/ai-issue/
-          # 날짜별 빌드 리포트 (gitignore 대상 강제 추적)
-          git add -f publish/ai-issue/20??-??-??.html \
-                     publish/ai-issue/20??-??-??.json 2>/dev/null || true
-          # 통합 인덱스 파일들 (항상 최신 배포)
-          git add -f publish/ai-issue/index.html \
-                     publish/ai-issue/archive.html \
-                     publish/ai-issue/ai-issue-data.json 2>/dev/null || true
-          git add -f publish/app.html publish/index.html publish/archive.html \
-                     publish/reports-data.json 2>/dev/null || true
+          # 날짜별 빌드 리포트 (gitignore 대상 강제 추적) — 파일별 단독 add
+          for f in publish/ai-issue/20??-??-??.html publish/ai-issue/20??-??-??.json; do
+            [ -f "$f" ] && git add -f "$f" || true
+          done
+          # 통합 인덱스 파일들 — 각각 단독 add (다중파일 or-true 패턴 금지)
+          git add -f publish/ai-issue/index.html   2>/dev/null || true
+          git add -f publish/ai-issue/archive.html 2>/dev/null || true
+          git add -f publish/ai-issue/data.json    2>/dev/null || true
+          git add -f publish/app.html    2>/dev/null || true
+          git add -f publish/index.html  2>/dev/null || true
+          git add -f publish/archive.html 2>/dev/null || true
           git add -f publish/search-index.json 2>/dev/null || true
           git diff --staged --quiet || \
             git commit -m "🤖 AI Issue Weekly $(date +'%Y-%m-%d')"
@@ -132,4 +134,21 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
           SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+        continue-on-error: true
+
+      # ── 파이프라인 결과 알림 (성공/실패 무관 항상 실행) ─────────────────────
+      - name: 파이프라인 결과 알림
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          [ "$STATUS" = "success" ] && STATUS_ARG="success" || STATUS_ARG="failure"
+          TARGET_DATE="${{ github.event.inputs.target_date }}"
+          if [ -z "${TARGET_DATE}" ]; then TARGET_DATE=$(TZ=Asia/Seoul date +'%Y-%m-%d'); fi
+          python scripts/notify_pipeline.py \
+            --type ai-issue \
+            --status $STATUS_ARG \
+            --date ${TARGET_DATE}
+        env:
+          TELEGRAM_BOT_TOKEN:       ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_MONITOR: ${{ secrets.TELEGRAM_CHAT_ID_MONITOR }}
         continue-on-error: true

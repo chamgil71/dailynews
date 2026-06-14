@@ -483,7 +483,7 @@ def build(theme_name: str | None = None,
         # 섹션별 기본 테마 주입 (config/theme_config.py → SECTION_DEFAULTS JS 상수)
         news_theme  = SECTION_THEMES.get("news",  "classic")
         stock_theme = SECTION_THEMES.get("stock", "classic")
-        section_defaults_js = json.dumps({"news": news_theme, "stock": stock_theme})
+        section_defaults_js = json.dumps({"news": news_theme, "stock": stock_theme, "ai-issue": news_theme})
         app_html = re.sub(
             r'const SECTION_DEFAULTS = \{[^}]*\}; /\* BUILD_SECTION_DEFAULTS \*/',
             f'const SECTION_DEFAULTS = {section_defaults_js}; /* BUILD_SECTION_DEFAULTS */',
@@ -517,6 +517,10 @@ def build(theme_name: str | None = None,
                 )
                 # 나머지 Jinja2 블록 제거 (안전망)
                 nav_inner = re.sub(r"\{%.*?%\}", "", nav_inner)
+                # SPA 맥락: ai-issue/stock 탭은 href="#"으로 변경
+                # (모바일에서 JS 핸들러보다 탭이 빠를 때 editorial 서브페이지로 이동하는 경합 방지)
+                nav_inner = nav_inner.replace('href="ai-issue/"', 'href="#"')
+                nav_inner = nav_inner.replace('href="stock/"', 'href="#"')
                 app_html = app_html.replace("    <!-- NAV_INJECT -->", nav_inner.rstrip())
 
         app_dst.write_text(app_html, encoding="utf-8")
