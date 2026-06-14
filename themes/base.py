@@ -227,6 +227,12 @@ _COMMON_CSS = """
     border-bottom-color: var(--color-blue-light);
   }
   .tab-label { pointer-events: none; }
+  @media (max-width: 600px) {
+    header { padding: 0 12px; }
+    header .logo { font-size: .95rem; margin-right: 6px; }
+    .tab-label { display: none; }
+    .hnav-tab { padding: 0 10px; }
+  }
   .header-actions {
     display: flex; align-items: center; gap: 8px; margin-left: auto;
   }
@@ -254,11 +260,11 @@ _COMMON_CSS = """
   }
   header nav a.active { color: #fff; font-weight: 600; }
 
-  /* 탭별 활성 border 색상 (뉴스=파랑, AI이슈=보라, 주식=초록) */
-  .hnav-tab[data-section="news"].active     { border-bottom-color: var(--color-blue-light); }
-  .hnav-tab[data-section="ai-issue"].active { border-bottom-color: #a78bfa; }
-  .hnav-tab[data-section="stock"].active    { border-bottom-color: var(--color-up); }
-  .hnav-tab[data-section="archive"].active  { border-bottom-color: var(--color-blue-light); }
+  /* 탭별 활성 border 색상 + 배경 강조 (뉴스=파랑, AI이슈=보라, 주식=초록) */
+  .hnav-tab[data-section="news"].active     { border-bottom-color: #60a5fa; background: rgba(96,165,250,.12); }
+  .hnav-tab[data-section="ai-issue"].active { border-bottom-color: #a78bfa; background: rgba(167,139,250,.12); }
+  .hnav-tab[data-section="stock"].active    { border-bottom-color: #4ade80; background: rgba(74,222,128,.12); }
+  .hnav-tab[data-section="archive"].active  { border-bottom-color: #60a5fa; background: rgba(96,165,250,.12); }
 
   /* ── 허브 섹션 카드 ── */
   .hub-sections {

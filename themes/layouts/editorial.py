@@ -76,12 +76,50 @@ _CSS = """
   .mh-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.3em;
     text-align:center; color:var(--ink-soft); text-transform:uppercase;
     padding-top:6px; border-top:1px solid var(--rule-soft); margin-top:10px; }
-  .mh-nav { display:flex; justify-content:center; gap:32px; margin-top:14px;
-    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.08em;
-    text-transform:uppercase; align-items:center; }
-  .mh-nav a { color:var(--ink-soft); text-decoration:none; }
-  .mh-nav a.on { color:var(--accent); font-weight:700;
-    border-bottom:2px solid var(--accent); padding-bottom:2px; }
+  /* ── Site Header (모든 페이지 공통 상단 바) ── */
+  .site-header {
+    background:#2b231a; color:#ece2cf;
+    padding:0 24px; display:flex; align-items:center; height:52px;
+    position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .site-header .logo {
+    font-size:.95rem; font-weight:700; color:#ece2cf;
+    text-decoration:none; margin-right:24px; white-space:nowrap; cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .site-header .logo span { color:var(--accent); }
+  .header-nav { display:flex; align-items:center; height:100%; flex:1; gap:2px; }
+  .hnav-tab {
+    display:flex; align-items:center; gap:7px; height:100%;
+    padding:0 14px; color:rgba(236,226,207,.6);
+    text-decoration:none; font-size:.8rem; font-weight:500;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.02em;
+    border-bottom:3px solid transparent;
+    transition:color .15s, border-color .15s, background .15s; white-space:nowrap;
+  }
+  .hnav-tab:hover { color:rgba(236,226,207,.9); }
+  .hnav-tab.active { color:#ece2cf; font-weight:700; }
+  .hnav-tab[data-section="news"].active     { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .hnav-tab[data-section="ai-issue"].active { border-bottom-color:#a78bfa; background:rgba(167,139,250,.1); }
+  .hnav-tab[data-section="stock"].active    { border-bottom-color:#4ade80; background:rgba(74,222,128,.1); }
+  .hnav-tab[data-section="archive"].active  { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .tab-label { pointer-events:none; }
+  .site-header .hdr-actions { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .btn-hdr {
+    background:none; border:none; color:rgba(236,226,207,.65);
+    cursor:pointer; padding:6px; border-radius:5px;
+    display:inline-flex; align-items:center; justify-content:center;
+    text-decoration:none; transition:color .15s, background .15s;
+  }
+  .btn-hdr:hover { color:#ece2cf; background:rgba(255,255,255,.1); }
+  @media (max-width:600px) {
+    .site-header { padding:0 12px; }
+    .site-header .logo { font-size:.85rem; margin-right:8px; }
+    .tab-label { display:none; }
+    .hnav-tab { padding:0 10px; gap:0; }
+  }
 
   .brief { display:grid; grid-template-columns:200px 1fr 160px; gap:24px;
     border-bottom:1px solid var(--rule); padding:18px 0 22px; margin-bottom:28px; }
@@ -189,37 +227,38 @@ def _masthead_title(site_title: str) -> str:
     return site_title
 
 
-_SUB_ICON = (
-    '<a href="' + SUBSCRIBE_URL + '" title="뉴스레터 구독" '
-    'style="display:inline-flex;align-items:center;justify-content:center;'
-    'width:20px;height:20px;border:1.5px solid var(--accent);border-radius:50%;'
-    'text-decoration:none;margin-left:8px;vertical-align:middle;flex-shrink:0">'
-    '<svg viewBox="0 0 16 16" width="10" height="10" fill="var(--accent)">'
-    '<path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0'
-    'A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7'
-    'a5.002 5.002 0 0 0-3.005-4.901z"/></svg></a>'
-) if SUBSCRIBE_URL else ''
+# ── 탭 SVG 아이콘 (emoji 대체, 모든 플랫폼/OS에서 균일하게 렌더) ──
+_SVG_NEWS    = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v2h3a1 1 0 0 0 1-1v-1zm-5 2v-2H6v2h4zm-5 0v-2H1v1a1 1 0 0 0 1 1h3zm-4-4h4V8H1v4zm0-5h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg>'
+_SVG_AI      = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14A2.5 2.5 0 0 1 11.5 12V14H11v1.5a.5.5 0 0 1-1 0V14H9v1.5a.5.5 0 0 1-1 0V14H7v1.5a.5.5 0 0 1-1 0V14H5.5A2.5 2.5 0 0 1 3 11.5H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3A2.5 2.5 0 0 1 5.5 4V2H5V.5A.5.5 0 0 1 5 0zm-.5 4.5v7A1.5 1.5 0 0 0 6 13h4a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 10 3H6A1.5 1.5 0 0 0 4.5 4.5zM6 5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/></svg>'
+_SVG_STOCK   = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/></svg>'
+_SVG_ARCHIVE = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>'
+_SVG_MAIL    = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg>'
+_SVG_GITHUB  = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>'
+
+_NAV_TABS = [
+    ("news",     "index.html",   "뉴스 브리핑", _SVG_NEWS),
+    ("ai-issue", "ai-issue/",    "AI이슈",      _SVG_AI),
+    ("stock",    "stock/",       "주식 시황",    _SVG_STOCK),
+    ("archive",  "archive.html", "아카이브",     _SVG_ARCHIVE),
+]
 
 
 def _layout(title: str, body: str, active: str, site_title: str, now: str, site_url: str = "", nav_prefix: str = "") -> str:
-    nav_items = [
-        ("news",     "index.html",   "뉴스 브리핑"),
-        ("ai-issue", "ai-issue/",    "AI이슈"),
-        ("stock",    "stock/",       "주식 시황"),
-        ("archive",  "archive.html", "아카이브"),
-    ]
-    nav_html = "  ".join(
-        f'<a href="{nav_prefix}{url}" class="{"on" if active == key else ""}">{label}</a>'
-        for key, url, label in nav_items
+    # 탭 네비게이션 (SVG 아이콘 + 텍스트 레이블, SPA/stock 페이지와 동일 구조)
+    nav_links = "".join(
+        f'<a class="hnav-tab{" active" if active == key else ""}" href="{nav_prefix}{url}"'
+        f' data-section="{key}">{icon}<span class="tab-label"> {label}</span></a>'
+        for key, url, label, icon in _NAV_TABS
     )
-    # 탭별 메인색 반영 (뉴스=파랑, AI이슈=보라, 주식=초록). archive 등은 editorial 기본색 유지.
+    subscribe_btn = (
+        f'<a href="{SUBSCRIBE_URL}" class="btn-hdr" title="뉴스레터 구독">{_SVG_MAIL}</a>'
+    ) if SUBSCRIBE_URL else ""
+
+    # 탭별 메인색 반영 (뉴스=파랑, AI이슈=보라, 주식=초록)
     accent_override = ""
     section_color = SECTION_ACCENTS.get(active)
     if section_color:
-        accent_override = (
-            f'<style>:root{{--accent:{section_color};}}'
-            f'.hnav-tab,.mh-nav a.on{{--accent:{section_color};}}</style>'
-        )
+        accent_override = f'<style>:root{{--accent:{section_color};}}</style>'
     footer = FOOTER_CONFIG
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -233,6 +272,16 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
   {accent_override}
 </head>
 <body>
+  <header class="site-header">
+    <a class="logo" href="{nav_prefix}index.html">AI <span>News</span> Brief</a>
+    <nav class="header-nav">
+      {nav_links}
+    </nav>
+    <div class="hdr-actions">
+      {subscribe_btn}
+      <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-hdr" title="GitHub">{_SVG_GITHUB}</a>
+    </div>
+  </header>
   <div class="wrap">
     <div class="masthead">
       <div class="mh-top">
@@ -244,10 +293,6 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
         <h1 class="mh-title">{_masthead_title(site_title)}</h1>
       </a>
       <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
-      <div class="mh-nav">
-        {nav_html}
-        {_SUB_ICON}
-      </div>
     </div>
 
     {body}
