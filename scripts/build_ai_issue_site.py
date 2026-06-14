@@ -155,9 +155,21 @@ def main():
     for md_file_path in md_files:
         p = Path(md_file_path)
         date_str = p.stem.replace("ai_issue_", "")
-        
+
         # 1. JSON 요약 정보 획득
         json_path = p.with_suffix(".json")
+
+        # 불완전(top10 공란) 보고서는 페이지를 만들지 않고 건너뛴다 (raw/공란 출력 방지)
+        if json_path.exists():
+            try:
+                _chk = json.loads(json_path.read_text(encoding="utf-8"))
+                if not _chk.get("top10"):
+                    print(f"  ⚠ {p.name}: top10 공란 — 불완전 보고서로 판단, 빌드 건너뜀")
+                    continue
+            except Exception as e:
+                print(f"  ⚠ {p.name}: JSON 파싱 실패({e}) — 빌드 건너뜀")
+                continue
+
         summary = parse_weekly_json_for_summary(json_path) if json_path.exists() else {
             "date": date_str, "period": "주간 데이터 분석", "top3": [], "category_counts": {},
             "stats": {"total": 0, "en": 0, "ko": 0, "sent_to_ai": 0},

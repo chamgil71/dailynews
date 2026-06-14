@@ -36,7 +36,7 @@
     padding-top:6px; border-top:1px solid var(--rule-soft); margin-top:10px; }
   .mh-nav { display:flex; justify-content:center; gap:32px; margin-top:14px;
     font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.08em;
-    text-transform:uppercase; }
+    text-transform:uppercase; align-items:center; }
   .mh-nav a { color:var(--ink-soft); text-decoration:none; }
   .mh-nav a.on { color:var(--accent); font-weight:700;
     border-bottom:2px solid var(--accent); padding-bottom:2px; }
@@ -50,6 +50,15 @@
   .brief-stat .num { font-family:'Noto Serif KR',serif; font-size:24px;
     font-weight:700; font-style:italic; }
   .brief-stat .lab { font-size:10px; letter-spacing:.15em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  /* AI이슈 전용 통계 (작게) */
+  .brief-stats-sm { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .brief-stats-sm .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:6px; letter-spacing:.08em; font-size:10px; }
+  .brief-stat-sm { display:flex; gap:8px; align-items:baseline; margin-top:6px; }
+  .brief-stat-sm .num-sm { font-size:14px; font-weight:700;
+    font-family:'IBM Plex Mono',monospace; }
+  .brief-stat-sm .lab { font-size:9px; letter-spacing:.12em;
     color:var(--ink-mute); text-transform:uppercase; }
   .kicker { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em;
     text-transform:uppercase; color:var(--accent); margin-bottom:8px;
@@ -129,6 +138,7 @@
     .prose ul, .arch ul { columns:1; }
   }
 </style>
+  <style>:root{--accent:#7c3aed;}.hnav-tab,.mh-nav a.on{--accent:#7c3aed;}</style>
 </head>
 <body>
   <div class="wrap">
@@ -143,24 +153,22 @@
       </a>
       <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
       <div class="mh-nav">
-        <a href="../index.html" class="on">뉴스 브리핑</a>  <a href="../ai-issue/" class="">AI이슈</a>  <a href="../stock/" class="">주식 시황</a>  <a href="../archive.html" class="">아카이브</a>
-          <a href="/subscribe" style="background:var(--accent);color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.04em">구독</a>
+        <a href="../index.html" class="">뉴스 브리핑</a>  <a href="../ai-issue/" class="on">AI이슈</a>  <a href="../stock/" class="">주식 시황</a>  <a href="../archive.html" class="">아카이브</a>
+        <a href="/subscribe" title="뉴스레터 구독" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:1.5px solid var(--accent);border-radius:50%;text-decoration:none;margin-left:8px;vertical-align:middle;flex-shrink:0"><svg viewBox="0 0 16 16" width="10" height="10" fill="var(--accent)"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7a5.002 5.002 0 0 0-3.005-4.901z"/></svg></a>
       </div>
     </div>
 
     
     <div class="brief">
-      <div class="brief-stats">
-        <span class="lbl">오늘의 통계</span>
-        <div class="brief-stat"><span class="num">10</span><span class="lab">건 수집</span></div>
-        <div class="brief-stat"><span class="num">10</span><span class="lab">AI 분석</span></div>
-        <div class="brief-stat"><span class="num">0</span><span class="lab">국내</span></div>
-        
+      <div class="brief-stats-sm">
+        <span class="lbl">주간 통계</span>
+        <div class="brief-stat-sm"><span class="num-sm">10</span><span class="lab">이슈</span></div>
+        <div class="brief-stat-sm"><span class="num-sm">10</span><span class="lab">글로벌</span></div>
+        <div class="brief-stat-sm"><span class="num-sm">0</span><span class="lab">국내</span></div>
       </div>
       <div>
-        <div class="kicker">에디터 노트 · TODAY'S LEDE</div>
-        <p class="lede">AI가 매일 아침 수십 개 언론사의 헤드라인을 한 면에 정리합니다.
-        오늘 분석된 10건의 기사 핵심을 아래에서 읽어보세요.</p>
+        <div class="kicker">AI 이슈 브리핑 · 2026-05-25 ~ 2026-05-31</div>
+        <ul style="margin:10px 0 0;padding-left:1.2em;font-size:17px;line-height:1.6"><li style="margin-bottom:7px"><b>1.</b> OpenAI, Codex 기반 AI 에이전트 기능 강화 및 기업 적용 사례 확대</li><li style="margin-bottom:7px"><b>2.</b> Google, Gemini Omni 및 3.5 모델 시연 및 I/O 2026 주요 발표 요약</li><li style="margin-bottom:7px"><b>3.</b> OpenAI, 바이오디펜스 및 공중 보건 강화를 위한 'Rosalind Biodefense' 공개</li></ul>
       </div>
       <div class="byline">
         AI Editor<br>Gemini 2.0 Flash<br>─<br>2026-05-31
@@ -559,13 +567,12 @@ LLM 추론 시 가장 큰 병목 중 하나인 어텐션 연산을 효율화하�
 
 <p>※ 본 보고서는 인공지능에 의해 정기 자동 취합 및 분석된 전문 기술 보고서이며, 어떠한 투자 권유도 포함하지 않습니다.</p>
 </div>
-    
 
     <div class="foot">
       <span>AI News Brief</span>
       <span>Generated by Gemini 2.0 Flash</span>
       <span>chamgil71/dailynews</span>
-      <span>생성 2026-06-13 02:02 KST</span>
+      <span>생성 2026-06-14 11:21 KST</span>
     </div>
   </div>
 </body>

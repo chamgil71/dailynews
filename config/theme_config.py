@@ -47,6 +47,14 @@ SECTION_THEMES: dict[str, str] = {
     "email": os.getenv("THEME_EMAIL",  THEME_EMAIL_DEFAULT or SITE_THEME),  # 메일링뉴스 (email_news.html은 classic 컬러키 전용)
 }
 
+# ── 채널(탭)별 메인 강조색 (단일 소스) ─────────────────────────────────────────
+# SPA 상단바·서브페이지·이메일이 공유. 뉴스=파랑, AI이슈=보라, 주식=초록.
+SECTION_ACCENTS: dict[str, str] = {
+    "news":     "#2563eb",
+    "ai-issue": "#7c3aed",
+    "stock":    "#16a34a",
+}
+
 # ── 푸터 설정 ──────────────────────────────────────────────────────────────────
 FOOTER_CONFIG: dict[str, str] = {
     "generator":   os.getenv("FOOTER_GENERATOR", "Gemini 2.0 Flash"),

@@ -103,19 +103,28 @@ def analyze_weekly_data(raw_weekly_data: dict) -> dict:
     analyzer = get_analyzer()
     
     # ── [A+B] 이번 주 TOP 10 & 3대 심층 분석 (JSON) ──
+    # TOP 10은 보고서의 핵심 본문. JSON 파싱이 실패(주로 토큰 한도 초과로 인한 잘림)하면
+    # top10이 비어 이메일·HTML이 공란이 되므로, 재시도 후에도 비면 명확히 실패시킨다.
     logger.info("[LLM 1/5] TOP 10 및 TOP 3 심층 분석 연산 중...")
     top10_detail_data = {"top10": [], "top3_detail": []}
-    try:
-        prompt_main = MAIN_ANALYSIS_PROMPT.format(articles_text=articles_text)
-        raw_res = analyzer._call(prompt_main, len(articles[:40]))
-        parsed = _parse_json_block(raw_res)
-        if parsed and isinstance(parsed, dict):
-            top10_detail_data = parsed
-            logger.info(f"  → TOP 10 선별 완료 (선별 건수: {len(top10_detail_data.get('top10', []))}개)")
-        else:
-            logger.error("  ❌ [오류] TOP 10 JSON 파싱 실패. 폴백 데이터 세팅.")
-    except Exception as e:
-        logger.error(f"  ❌ [오류] TOP 10 분석 실패: {e}")
+    prompt_main = MAIN_ANALYSIS_PROMPT.format(articles_text=articles_text)
+    for attempt in range(1, 4):  # 최대 3회 재시도
+        try:
+            raw_res = analyzer._call(prompt_main, len(articles[:40]))
+            parsed = _parse_json_block(raw_res)
+            if parsed and isinstance(parsed, dict) and parsed.get("top10"):
+                top10_detail_data = parsed
+                logger.info(f"  → TOP 10 선별 완료 (선별 건수: {len(top10_detail_data.get('top10', []))}개, 시도 {attempt})")
+                break
+            logger.error(f"  ❌ [오류] TOP 10 JSON 파싱 실패 또는 top10 공란 (시도 {attempt}/3)")
+        except Exception as e:
+            logger.error(f"  ❌ [오류] TOP 10 분석 실패 (시도 {attempt}/3): {e}")
+
+    if not top10_detail_data.get("top10"):
+        # 부분(잘린) 보고서를 저장/발송하지 않도록 전체 실행을 중단시킨다.
+        raise RuntimeError(
+            "TOP 10 분석 결과가 비어 있습니다. 잘린/불완전 보고서 저장을 방지하기 위해 중단합니다."
+        )
         
     # ── [C] 주요 AI 기업 동향 (Markdown) ──
     logger.info("[LLM 2/5] 주요 AI 기업 주간 동향 마크다운 생성 중...")

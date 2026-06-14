@@ -148,6 +148,11 @@ def _send_ai_issue(date_str: str) -> None:
         logger.error(f"[이메일/AI이슈] JSON 파싱 에러: {e}")
         sys.exit(1)
 
+    # 빈 top10(=잘린/불완전 데이터)으로 공란 이메일이 발송되는 것을 방지
+    if not data.get("top10"):
+        logger.error("[이메일/AI이슈] top10 데이터 공란 — 불완전 보고서로 판단, 발송 건너뜀")
+        sys.exit(1)
+
     try:
         html = _build_ai_issue_html(data, date_str)
         logger.info(f"[이메일/AI이슈] 템플릿 컴파일 완료 ({len(html.encode()) // 1024}KB)")

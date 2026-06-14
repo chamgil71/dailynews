@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.theme_config import FOOTER_CONFIG, SITE_LOGO_HTML, SUBSCRIBE_URL
+from config.theme_config import FOOTER_CONFIG, SITE_LOGO_HTML, SUBSCRIBE_URL, SECTION_ACCENTS
 
 TOKENS = {
     "meta": {
@@ -212,6 +212,14 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
         f'<a href="{nav_prefix}{url}" class="{"on" if active == key else ""}">{label}</a>'
         for key, url, label in nav_items
     )
+    # 탭별 메인색 반영 (뉴스=파랑, AI이슈=보라, 주식=초록). archive 등은 editorial 기본색 유지.
+    accent_override = ""
+    section_color = SECTION_ACCENTS.get(active)
+    if section_color:
+        accent_override = (
+            f'<style>:root{{--accent:{section_color};}}'
+            f'.hnav-tab,.mh-nav a.on{{--accent:{section_color};}}</style>'
+        )
     footer = FOOTER_CONFIG
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -222,6 +230,7 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
   <title>{title} — {site_title}</title>
   {_FONTS}
   <style>{_CSS}</style>
+  {accent_override}
 </head>
 <body>
   <div class="wrap">
