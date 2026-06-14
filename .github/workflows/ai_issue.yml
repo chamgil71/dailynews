@@ -81,15 +81,17 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "actions@github.com"
           git add reports/ai-issue/
-          # 날짜별 빌드 리포트 (gitignore 대상 강제 추적)
-          git add -f publish/ai-issue/20??-??-??.html \
-                     publish/ai-issue/20??-??-??.json 2>/dev/null || true
-          # 통합 인덱스 파일들 (항상 최신 배포)
-          git add -f publish/ai-issue/index.html \
-                     publish/ai-issue/archive.html \
-                     publish/ai-issue/data.json 2>/dev/null || true
-          git add -f publish/app.html publish/index.html publish/archive.html \
-                     publish/reports-data.json 2>/dev/null || true
+          # 날짜별 빌드 리포트 (gitignore 대상 강제 추적) — 파일별 단독 add
+          for f in publish/ai-issue/20??-??-??.html publish/ai-issue/20??-??-??.json; do
+            [ -f "$f" ] && git add -f "$f" || true
+          done
+          # 통합 인덱스 파일들 — 각각 단독 add (다중파일 or-true 패턴 금지)
+          git add -f publish/ai-issue/index.html   2>/dev/null || true
+          git add -f publish/ai-issue/archive.html 2>/dev/null || true
+          git add -f publish/ai-issue/data.json    2>/dev/null || true
+          git add -f publish/app.html    2>/dev/null || true
+          git add -f publish/index.html  2>/dev/null || true
+          git add -f publish/archive.html 2>/dev/null || true
           git add -f publish/search-index.json 2>/dev/null || true
           git diff --staged --quiet || \
             git commit -m "🤖 AI Issue Weekly $(date +'%Y-%m-%d')"

@@ -301,7 +301,18 @@ def send_ai_issue_telegram(report_data: dict, date_str: str = None) -> bool:
 
     period = report_data.get("period", date_str)
     top10 = report_data.get("top10", [])
-    outlook = report_data.get("next_week_outlook", "")
+    _raw_outlook = report_data.get("next_week_outlook", "")
+    # Gemini가 JSON 문자열로 반환하는 경우 파싱하여 포인트 목록으로 변환
+    if isinstance(_raw_outlook, str) and _raw_outlook.strip().startswith("{"):
+        try:
+            import json as _json
+            _obj = _json.loads(_raw_outlook)
+            _points = _obj.get("points", [])
+            outlook = " / ".join(p.get("point", "") for p in _points[:3] if p.get("point"))
+        except Exception:
+            outlook = _raw_outlook
+    else:
+        outlook = _raw_outlook
 
     lines = [f"🤖 <b>AI Issue Weekly</b> — {html.escape(period)}", ""]
 
