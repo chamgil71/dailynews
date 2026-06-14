@@ -122,6 +122,7 @@ def send_admin_alert(subject: str, message: str, level: str = "warning") -> bool
                 msg["Subject"] = f"[AI News Daily 관리자] {subject}"
                 msg["From"]    = GMAIL_USER
                 msg["To"]      = admin
+                msg.attach(MIMEText(_html_to_plain(html), "plain", "utf-8"))
                 msg.attach(MIMEText(html, "html", "utf-8"))
                 smtp.sendmail(GMAIL_USER, admin, msg.as_string())
                 logger.info(f"[관리자 알림] → {admin}")
@@ -134,6 +135,24 @@ def send_admin_alert(subject: str, message: str, level: str = "warning") -> bool
 def _make_token(email: str) -> str:
     key = (UNSUBSCRIBE_SECRET or "fallback-secret").encode()
     return hmac.new(key, email.lower().encode(), hashlib.sha256).hexdigest()[:16]
+
+
+def _html_to_plain(html: str) -> str:
+    """HTML → 가독성 있는 plain text 변환 (text/plain MIME 폴백용)."""
+    # <style> / <script> 블록 제거
+    text = re.sub(r'<(style|script)[^>]*>.*?</\1>', '', html, flags=re.S | re.I)
+    # 주요 블록 태그 → 줄바꿈
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.I)
+    text = re.sub(r'</?(p|div|tr|li|h[1-6]|section|article)[^>]*>', '\n', text, flags=re.I)
+    # 나머지 태그 제거
+    text = re.sub(r'<[^>]+>', '', text)
+    # HTML 엔티티 디코딩
+    text = text.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>') \
+               .replace('&nbsp;', ' ').replace('&quot;', '"').replace('&#39;', "'")
+    # 연속 공백·줄바꿈 정리
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = re.sub(r'[ \t]{2,}', ' ', text)
+    return text.strip()
 
 
 def _connect_smtp() -> smtplib.SMTP:
@@ -390,6 +409,7 @@ def send_email(md_content: str = "", html_content: str | None = None,
                         _theme = theme_name or _get_email_theme()
                         body = (_render_email_template(md_content, email, _theme, report_date)
                                 or _md_to_html(md_content, email))
+                    msg.attach(MIMEText(_html_to_plain(body), "plain", "utf-8"))
                     msg.attach(MIMEText(body, "html", "utf-8"))
                     smtp.sendmail(GMAIL_USER, email, msg.as_string())
                     success_count += 1
