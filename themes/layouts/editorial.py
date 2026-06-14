@@ -243,10 +243,13 @@ _NAV_TABS = [
 ]
 
 
-def _layout(title: str, body: str, active: str, site_title: str, now: str, site_url: str = "", nav_prefix: str = "") -> str:
+def _layout(title: str, body: str, active: str, site_title: str, now: str, site_url: str = "", nav_prefix: str = "", nav_hrefs: dict | None = None) -> str:
     # 탭 네비게이션 (SVG 아이콘 + 텍스트 레이블, SPA/stock 페이지와 동일 구조)
+    # nav_hrefs: 특정 탭의 href를 개별 재정의. 미지정 탭은 nav_prefix + url 기본값 사용.
+    # 예) archive.html → {"ai-issue": "index.html#ai-issue", "stock": "index.html#stock"}
+    _overrides = nav_hrefs or {}
     nav_links = "".join(
-        f'<a class="hnav-tab{" active" if active == key else ""}" href="{nav_prefix}{url}"'
+        f'<a class="hnav-tab{" active" if active == key else ""}" href="{_overrides.get(key, nav_prefix + url)}"'
         f' data-section="{key}">{icon}<span class="tab-label"> {label}</span></a>'
         for key, url, label, icon in _NAV_TABS
     )
@@ -624,7 +627,14 @@ def render_archive(ctx: dict) -> str:
     }});
     </script>"""
 
-    return _layout("아카이브", body, "archive", ctx["site_title"], ctx["now"], ctx.get("site_url", ""))
+    # archive에서 ai-issue/stock 탭 클릭 시 editorial 서브페이지(다른 디자인)가 아닌
+    # SPA(index.html)로 복귀하여 해당 탭을 자동 활성화.
+    # SPA는 #ai-issue, #stock 해시를 감지해 해당 섹션을 초기 활성화함.
+    return _layout(
+        "아카이브", body, "archive",
+        ctx["site_title"], ctx["now"], ctx.get("site_url", ""),
+        nav_hrefs={"ai-issue": "index.html#ai-issue", "stock": "index.html#stock"},
+    )
 
 
 def render_stock_report(ctx: dict) -> str:

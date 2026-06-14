@@ -1813,6 +1813,15 @@ function copyCmdStock() {
   }
 
   renderDateList();
+
+  // ── hash routing ─────────────────────────────────────────────────────────────
+  // archive.html 등 외부 페이지에서 index.html#ai-issue, index.html#stock 으로 진입 시
+  // 해당 탭을 자동 활성화. 해시는 URL에서 제거해 브라우저 히스토리를 깔끔하게 유지.
+  const _initHash = location.hash.slice(1);
+  if (_initHash === 'ai-issue' || _initHash === 'stock') {
+    switchSection(_initHash);
+    history.replaceState(null, '', location.pathname);
+  }
 })();
 </script>
 </body>
