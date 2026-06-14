@@ -133,3 +133,20 @@ jobs:
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
           SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
         continue-on-error: true
+
+      # ── 파이프라인 결과 알림 (성공/실패 무관 항상 실행) ─────────────────────
+      - name: 파이프라인 결과 알림
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          [ "$STATUS" = "success" ] && STATUS_ARG="success" || STATUS_ARG="failure"
+          TARGET_DATE="${{ github.event.inputs.target_date }}"
+          if [ -z "${TARGET_DATE}" ]; then TARGET_DATE=$(TZ=Asia/Seoul date +'%Y-%m-%d'); fi
+          python scripts/notify_pipeline.py \
+            --type ai-issue \
+            --status $STATUS_ARG \
+            --date ${TARGET_DATE}
+        env:
+          TELEGRAM_BOT_TOKEN:       ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_MONITOR: ${{ secrets.TELEGRAM_CHAT_ID_MONITOR }}
+        continue-on-error: true

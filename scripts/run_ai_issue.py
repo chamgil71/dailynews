@@ -27,6 +27,25 @@ logging.basicConfig(
 logger = logging.getLogger("run_ai_issue")
 
 
+def _telegram_alert(message: str) -> None:
+    """분석 실패 시 텔레그램 즉시 알림 (환경변수 미설정이면 무시)."""
+    import os, urllib.request, urllib.parse
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id   = os.getenv("TELEGRAM_CHAT_ID")
+    if not bot_token or not chat_id:
+        logger.warning("[Telegram 알림] 환경변수 미설정 — 건너뜀")
+        return
+    try:
+        params = urllib.parse.urlencode({"chat_id": chat_id, "text": message})
+        urllib.request.urlopen(
+            f"https://api.telegram.org/bot{bot_token}/sendMessage?{params}",
+            timeout=10,
+        )
+        logger.info("[Telegram 알림] 전송 완료")
+    except Exception as e:
+        logger.warning(f"[Telegram 알림] 전송 실패: {e}")
+
+
 def main() -> None:
     start_time = datetime.now()
     logger.info("=" * 60)
@@ -64,9 +83,22 @@ def main() -> None:
     try:
         analysis_result = analyze_weekly_data(raw_data)
     except Exception as e:
-        logger.error(f"  ❌ [오류] LLM 분석 실패: {e}")
+        msg = f"❌ AI Issue Weekly {target_date}: LLM 분석 예외 발생 — {e}"
+        logger.error(msg)
+        _telegram_alert(msg)
         sys.exit(1)
-    
+
+    # top10 공란 = LLM이 분석을 완료하지 못한 것 → 즉시 알림 후 실패 종료
+    if not analysis_result.get("top10"):
+        msg = (
+            f"❌ AI Issue Weekly {target_date}: top10 공란\n"
+            "LLM이 이슈 순위를 반환하지 않았습니다. 보고서를 저장하지 않고 종료합니다.\n"
+            "수동 재실행: GitHub Actions → ai_issue.yml → Run workflow"
+        )
+        logger.error(msg)
+        _telegram_alert(msg)
+        sys.exit(1)
+
     # ── [3단계] 마크다운 보고서 렌더링 및 로컬 물리 파일 영구 저장 ──
     logger.info("[3/3] Jinja2 보고서 렌더링 및 reports/ai-issue/ 영구 저장...")
     from core.ai_issue.report import generate_weekly_report, save_weekly_report
@@ -76,7 +108,9 @@ def main() -> None:
         logger.info(f"  ✅ [성공] 마크다운 저장 완료: {md_path}")
         logger.info(f"  ✅ [성공] 구조화 JSON 저장 완료: {json_path}")
     except Exception as e:
-        logger.error(f"  ❌ [오류] 보고서 생성/저장 실패: {e}")
+        msg = f"❌ AI Issue Weekly {target_date}: 보고서 저장 실패 — {e}"
+        logger.error(msg)
+        _telegram_alert(msg)
         sys.exit(1)
         
     elapsed = (datetime.now() - start_time).seconds
