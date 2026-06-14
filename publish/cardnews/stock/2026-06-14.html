@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>주간 주식 시황 2026-06-14</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #34d399; --topbar: linear-gradient(90deg,#34d399,#059669,#0ea5e9); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">&#128197;</div>
+    <div>
+      <div class="logo-main">주간 시황 종합</div>
+      <div class="logo-sub">2026-06-09(월) ~ 2026-06-13(금)</div>
+    </div>
+  </div>
+  <div class="cover-date" style="font-size:32px">🟠 강세</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">주간 총평</div>
+  <div class="cover-issues">
+    <div class="cover-issue">
+      <span class="cover-issue-text">미-이란 종전 합의라는 지정학적 대전환으로 극단적 롤러코스터가 마무리됐다. 코스피는 주간 +0.33%의 겸손한 수익률 이면에 하루 8% 이상의 급등락을 반복했고, 전력인프라(HD현…</span>
+    </div>
+    <div class="cover-issue"><span class="cover-icon" style="color:#f59e0b">&#128293;</span><span class="cover-issue-text">미-이란 종전 & 지정학 대전환</span></div><div class="cover-issue"><span class="cover-icon" style="color:#818cf8">&#128226;</span><span class="cover-issue-text">전력인프라 구조적 강세</span></div><div class="cover-issue"><span class="cover-icon" style="color:#34d399">&#128161;</span><span class="cover-issue-text">코스닥 1,000선 돌파 & 소부장 독립 강세</span></div>
+  </div>
+  <div class="cover-tags">#주식 #시황 #코스피 #투자</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 14일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner"><div class="trends-header"><span class="trends-icon">&#128200;</span><span class="trends-title">주간 지수 성과</span></div><div style="padding:0 4px"><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #334155"><span style="font-size:21px;color:#94a3b8;width:110px;flex-shrink:0">코스피</span><span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">8,123.62</span><span style="font-size:21px;color:#34d399;font-weight:700;white-space:nowrap">+0.33% ▲</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #334155"><span style="font-size:21px;color:#94a3b8;width:110px;flex-shrink:0">코스닥</span><span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">1,029.05</span><span style="font-size:21px;color:#34d399;font-weight:700;white-space:nowrap">+6.33% ▲</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #334155"><span style="font-size:21px;color:#94a3b8;width:110px;flex-shrink:0">S&P 500</span><span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">7,431.46</span><span style="font-size:21px;color:#34d399;font-weight:700;white-space:nowrap">+0.35% ▲</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #334155"><span style="font-size:21px;color:#94a3b8;width:110px;flex-shrink:0">나스닥</span><span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">25,888.84</span><span style="font-size:21px;color:#f87171;font-weight:700;white-space:nowrap">-0.16% ▼</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #334155"><span style="font-size:21px;color:#94a3b8;width:110px;flex-shrink:0">원/달러</span><span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">1,517.89원</span><span style="font-size:21px;color:#f87171;font-weight:700;white-space:nowrap">-8.46원 (원화 강세)</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #334155"><span style="font-size:21px;color:#94a3b8;width:110px;flex-shrink:0">WTI 유가</span><span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">84.88달러</span><span style="font-size:21px;color:#f87171;font-weight:700;white-space:nowrap">-5.11% ▼</span></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 14일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner"><div class="trends-header"><span class="trends-icon">&#128293;</span><span class="trends-title">이번 주 핫 테마 TOP 3</span></div><div style="padding:0 4px"><div style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:#f59e0b;font-size:24px">&#128293;</span><span style="font-size:26px;font-weight:700;color:#f1f5f9">미-이란 종전 & 지정학 대전환</span></div><div style="font-size:21px;color:#94a3b8;line-height:1.4">이 주의 최대 이벤트. 수요일 이란의 호르무즈 해협 전면 차단 선언이 시장을 공포로 몰아넣었으나, 목요일 트럼프 대통령의 종전…</div></div><div style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:#818cf8;font-size:24px">&#128226;</span><span style="font-size:26px;font-weight:700;color:#f1f5f9">전력인프라 구조적 강세</span></div><div style="font-size:21px;color:#94a3b8;line-height:1.4">HD현대일렉트릭이 이 주에만 +19.7% 급등하며 단일 종목 주간 최고 수익률을 기록했다. AI 데이터센터 전력 수요라는 구조…</div></div><div style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:#34d399;font-size:24px">&#128161;</span><span style="font-size:26px;font-weight:700;color:#f1f5f9">코스닥 1,000선 돌파 & 소부장 독립 강…</span></div><div style="font-size:21px;color:#94a3b8;line-height:1.4">코스닥이 수요일 +4.76% 급등에 이어 목요일 1,029.05로 1,000선을 돌파했다. 반도체 소부장 중심의 독립적 수급 …</div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 14일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-topbar"></div>
+  <div class="card-inner"><div class="trends-header"><span class="trends-icon">&#128197;</span><span class="trends-title">차주 주요 일정</span></div><div style="padding:0 4px"><div style="display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid #334155;gap:8px"><span style="font-size:19px;color:#34d399;width:100px;flex-shrink:0;font-weight:600">06-16(월)</span><div style="flex:1"><div style="font-size:21px;color:#f1f5f9;font-weight:500">한국 5월 수출입물가지수</div><div style="font-size:18px;color:#94a3b8">수입 물가 동향 → 국내 인플레이션 압력 점검</div></div></div><div style="display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid #334155;gap:8px"><span style="font-size:19px;color:#34d399;width:100px;flex-shrink:0;font-weight:600">06-16(월)</span><div style="flex:1"><div style="font-size:21px;color:#f1f5f9;font-weight:500">미국 6월 뉴욕 엠파이어스테이트 제조업 지수</div><div style="font-size:18px;color:#94a3b8">미국 제조업 경기 선행 지표</div></div></div><div style="display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid #334155;gap:8px"><span style="font-size:19px;color:#34d399;width:100px;flex-shrink:0;font-weight:600">06-17(화)</span><div style="flex:1"><div style="font-size:21px;color:#f1f5f9;font-weight:500">미국 5월 소매판매</div><div style="font-size:18px;color:#94a3b8">소비 경기 확인 → 금리 향방 변수</div></div></div><div style="display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid #334155;gap:8px"><span style="font-size:19px;color:#34d399;width:100px;flex-shrink:0;font-weight:600">06-17(화)</span><div style="flex:1"><div style="font-size:21px;color:#f1f5f9;font-weight:500">VivaTech 2026 개막</div><div style="font-size:18px;color:#94a3b8">유럽 AI·테크 컨퍼런스 (AI 테마 모멘텀 자극 가능)</div></div></div><div style="display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid #334155;gap:8px"><span style="font-size:19px;color:#34d399;width:100px;flex-shrink:0;font-weight:600">06-17~18</span><div style="flex:1"><div style="font-size:21px;color:#f1f5f9;font-weight:500">미국 6월 FOMC (케빈 워시 의장 첫 주재)</div><div style="font-size:18px;color:#94a3b8">금리 동결 예상(99%). 매파 발언 시 성장주 타격</div></div></div><div style="display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid #334155;gap:8px"><span style="font-size:19px;color:#34d399;width:100px;flex-shrink:0;font-weight:600">06-18(수)</span><div style="flex:1"><div style="font-size:21px;color:#f1f5f9;font-weight:500">미국 6월 FOMC 기준금리 발표 (한국 목 새벽 …</div><div style="font-size:18px;color:#94a3b8">점도표·발언 내용이 차후 금리 기대 방향 결정</div></div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 6월 14일 (일)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
