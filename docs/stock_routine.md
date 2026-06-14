@@ -86,14 +86,20 @@
 ## Step 5: MD 리포트 생성
 
 아래 형식으로 마크다운 파일을 생성하라.
-파일 경로: `reports/stock/stock_YYYY-MM-DD.md`
+
+**⚠️ 날짜 규칙 (중요):**
+- 모든 `YYYY-MM-DD`(파일명·제목·데이터기준)는 **Step 1에서 수집한 거래일(trading_date)**를 사용한다.
+- 실행일(오늘 날짜)이 아니다. 예: 토요일(6/13) 실행 시 금요일(6/12) 데이터 → 파일명 `stock_2026-06-12.md`
+- 헤더의 `생성: YYYY-MM-DD HH:MM KST` 만 실행 시각(오늘)을 쓴다.
+
+파일 경로: `reports/stock/stock_{거래일}.md` (예: `stock_2026-06-12.md`)
 
 파일 내용 형식:
 
 ```
-# 📊 일일 주식 시황 브리핑 — YYYY-MM-DD
+# 📊 일일 주식 시황 브리핑 — {거래일}
 
-> 데이터 기준: YYYY-MM-DD 15:30 KST | 생성: YYYY-MM-DD HH:MM KST
+> 데이터 기준: {거래일} 15:30 KST | 생성: {실행일시} KST
 
 ---
 
@@ -179,14 +185,17 @@
 
 **⚠️ 웹 루틴은 세션 브랜치에서 실행되므로 `git push origin main`이 불가. 반드시 MCP 도구를 사용해 main에 직접 커밋한다.**
 
+**⚠️ 날짜는 반드시 Step 1 거래일(trading_date) 사용. 실행일(오늘) 아님.**
+
 ```
 도구: mcp__github__push_files
 파라미터:
   owner: chamgil71
   repo: dailynews
   branch: main
-  message: "📊 주식 시황 YYYY-MM-DD"
-  files: [{ path: "reports/stock/stock_YYYY-MM-DD.md", content: <MD 전체 내용> }]
+  message: "📊 주식 시황 {거래일}"        ← Step 1의 trading_date
+  files: [{ path: "reports/stock/stock_{거래일}.md", content: <MD 전체 내용> }]
+                                          ← 예: stock_2026-06-12.md (금요일이면 금요일 날짜)
 ```
 
 push 성공 시 GitHub Actions `stock_build.yml`이 자동으로:
