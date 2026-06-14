@@ -110,10 +110,12 @@ jobs:
           git add -f publish/app.html publish/index.html publish/archive.html 2>/dev/null || true
           git add -f publish/search-index.json 2>/dev/null || true
           git add -f publish/news/data.json 2>/dev/null || true
-          # stock 파일 — stock_build.yml과 동일 목록 (디렉토리 통째 아닌 명시적 파일)
-          git add -f publish/stock/20??-??-??.html 2>/dev/null || true
-          git add -f publish/stock/index.html publish/stock/archive.html \
-                     publish/stock/stock-data.json 2>/dev/null || true
+          # stock 파일 — 파일별 단독 라인으로 분리 (다중 파일 || true 패턴은 앞 파일 에러 시 뒤 파일 누락 위험)
+          git add -f publish/stock/20??-??-??.html  2>/dev/null || true
+          git add -f publish/stock/data.json         2>/dev/null || true
+          git add -f publish/stock/index.html        2>/dev/null || true
+          git add -f publish/stock/archive.html      2>/dev/null || true
+          git add -f publish/stock/stock-data.json   2>/dev/null || true
           if [ "${{ github.event.inputs.mode }}" = "reanalyze" ]; then
             DATE="${{ github.event.inputs.target_date }}"
             if [ -z "$DATE" ]; then DATE=$(date +'%Y-%m-%d'); fi

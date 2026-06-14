@@ -251,7 +251,24 @@ def post_twitter(channel: str, date_str: str) -> None:
 
 
 # ── Threads ──────────────────────────────────────────────────────────────────
+# 참고: Instagram은 텍스트 단독 포스트 불가 (이미지/동영상 필수).
+#       Threads는 텍스트 단독 포스트를 지원하므로 기본값을 "text" 모드로 설정.
+#       채널별 모드는 config/cardnews_themes.json의 channels[].threads_mode 에서 제어:
+#         "text"     → 이미지 없이 텍스트만 게시 (기본)
+#         "carousel" → 카드뉴스 PNG를 카루셀로 게시
+
 THREADS_API = "https://graph.threads.net/v1.0"
+
+_THEMES_CONFIG_PATH = Path(_ROOT, "config", "cardnews_themes.json")
+
+
+def _get_threads_mode(channel: str) -> str:
+    """채널별 Threads 발송 모드 반환. config에 없으면 'text'."""
+    try:
+        cfg = json.loads(_THEMES_CONFIG_PATH.read_text(encoding="utf-8"))
+        return cfg.get("channels", {}).get(channel, {}).get("threads_mode", "text")
+    except Exception:
+        return "text"
 
 
 def _threads_post(path: str, params: dict) -> dict:
@@ -268,17 +285,36 @@ def _threads_get(path: str, params: dict) -> dict:
     return r.json()
 
 
-def post_threads(channel: str, date_str: str) -> None:
-    token   = _env("THREADS_ACCESS_TOKEN")
-    user_id = _env("THREADS_USER_ID")
+def _threads_publish(user_id: str, token: str, creation_id: str) -> dict:
+    """컨테이너 FINISHED 상태 확인 후 게시."""
+    for _ in range(12):
+        status = _threads_get(f"/{creation_id}", {
+            "fields":       "status",
+            "access_token": token,
+        })
+        if status.get("status") == "FINISHED":
+            break
+        time.sleep(5)
+    return _threads_post(f"/{user_id}/threads_publish", {
+        "creation_id":  creation_id,
+        "access_token": token,
+    })
 
-    png_paths  = _png_paths(channel, date_str)
-    caption    = _build_caption(channel, date_str, include_link=True)
-    image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
 
-    _assert_urls_accessible(image_urls, "Threads")
+def _post_threads_text(user_id: str, token: str, caption: str) -> str:
+    """텍스트 단독 포스트 생성 후 게시. 생성된 post id 반환."""
+    container = _threads_post(f"/{user_id}/threads", {
+        "media_type":   "TEXT",
+        "text":         caption,
+        "access_token": token,
+    })
+    result = _threads_publish(user_id, token, container["id"])
+    return result.get("id", "")
 
-    # 1. 카루셀 아이템 컨테이너 생성
+
+def _post_threads_carousel(user_id: str, token: str,
+                           caption: str, image_urls: list[str]) -> str:
+    """이미지 카루셀 포스트 생성 후 게시. 생성된 post id 반환."""
     children = []
     for i, url in enumerate(image_urls):
         print(f"  [Threads] 아이템 컨테이너 생성 [{i+1}/{len(image_urls)}]")
@@ -291,7 +327,6 @@ def post_threads(channel: str, date_str: str) -> None:
         children.append(data["id"])
         time.sleep(1)
 
-    # 2. 카루셀 컨테이너 생성
     print("  [Threads] 카루셀 컨테이너 생성 중...")
     carousel = _threads_post(f"/{user_id}/threads", {
         "media_type":   "CAROUSEL",
@@ -299,23 +334,29 @@ def post_threads(channel: str, date_str: str) -> None:
         "text":         caption,
         "access_token": token,
     })
-    creation_id = carousel["id"]
+    result = _threads_publish(user_id, token, carousel["id"])
+    return result.get("id", "")
 
-    # 3. 상태 확인 후 게시
-    for _ in range(12):
-        status = _threads_get(f"/{creation_id}", {
-            "fields":       "status",
-            "access_token": token,
-        })
-        if status.get("status") == "FINISHED":
-            break
-        time.sleep(5)
 
-    result = _threads_post(f"/{user_id}/threads_publish", {
-        "creation_id":  creation_id,
-        "access_token": token,
-    })
-    print(f"  ✅ Threads 발송 완료 — id: {result.get('id')}")
+def post_threads(channel: str, date_str: str) -> None:
+    token   = _env("THREADS_ACCESS_TOKEN")
+    user_id = _env("THREADS_USER_ID")
+    caption = _build_caption(channel, date_str, include_link=True)
+
+    mode = _get_threads_mode(channel)
+    print(f"  [Threads] mode={mode}")
+
+    if mode == "carousel":
+        # 이미지 카루셀 모드 (config/cardnews_themes.json threads_mode: "carousel")
+        png_paths  = _png_paths(channel, date_str)
+        image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
+        _assert_urls_accessible(image_urls, "Threads")
+        post_id = _post_threads_carousel(user_id, token, caption, image_urls)
+    else:
+        # 텍스트 단독 모드 (기본값 — Threads는 텍스트 포스트를 지원)
+        post_id = _post_threads_text(user_id, token, caption)
+
+    print(f"  ✅ Threads 발송 완료 — id: {post_id}")
 
 
 # ── Facebook Page ─────────────────────────────────────────────────────────────
