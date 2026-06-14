@@ -77,6 +77,17 @@ def _trunc(text: str, max_len: int) -> str:
     return text[:max_len] + "…" if len(text) > max_len else text
 
 
+def _render_label(ch: dict) -> str:
+    """채널 레이블의 키워드(News/Issue/Stock)를 채널 accent 색으로 강조."""
+    label   = ch.get("label", "")
+    keyword = ch.get("keyword", "")
+    accent  = ch.get("accent", "")
+    if keyword and accent:
+        colored = f'<span style="color:{accent}">{keyword}</span>'
+        return label.replace(keyword, colored, 1)
+    return label
+
+
 # ── 공통 카드 HTML 래퍼 ───────────────────────────────────────────────────────
 def _card(idx: int, total: int, content: str, date_disp: str,
           layout: str = "", site_tag: str = "ms-dailynews.vercel.app") -> str:
@@ -129,7 +140,7 @@ def _news_cover(issues: list[dict], date_str: str, total: int,
   <div class="cover-logo">
     <div class="logo-badge">AI</div>
     <div>
-      <div class="logo-main">{ch['label']}</div>
+      <div class="logo-main">{_render_label(ch)}</div>
       <div class="logo-sub">{ch['sublabel']}</div>
     </div>
   </div>
@@ -224,7 +235,7 @@ def build_ai_issue_html(date_str: str, data: dict) -> str:
   <div class="cover-logo">
     <div class="logo-badge">AI</div>
     <div>
-      <div class="logo-main">{ch['label']}</div>
+      <div class="logo-main">{_render_label(ch)}</div>
       <div class="logo-sub">{period}</div>
     </div>
   </div>
@@ -344,7 +355,7 @@ def build_stock_html(date_str: str, data: dict) -> str:
   <div class="cover-logo">
     <div class="logo-badge">&#128200;</div>
     <div>
-      <div class="logo-main">{ch['label']}</div>
+      <div class="logo-main">{_render_label(ch)}</div>
       <div class="logo-sub">{ch['sublabel']}</div>
     </div>
   </div>
