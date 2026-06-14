@@ -79,7 +79,7 @@ _CSS = """
   /* ── Site Header (모든 페이지 공통 상단 바) ── */
   .site-header {
     background:#2b231a; color:#ece2cf;
-    padding:0 24px; display:flex; align-items:center; height:52px;
+    padding:0 24px; display:flex; align-items:center; height:58px;
     position:sticky; top:0; z-index:200;
     box-shadow:0 2px 6px rgba(0,0,0,.35);
     font-family:'IBM Plex Mono',monospace;
