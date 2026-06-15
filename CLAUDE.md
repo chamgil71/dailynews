@@ -428,6 +428,13 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
   ```
 - **규칙**: `2>/dev/null || true`를 사용할 경우 반드시 **파일 1개당 1줄** 원칙
 
+### 패턴 8: "에러/성공인데 모니터링 텔레그램 알림이 한 번도 안 온다"
+- **원인A (가장 흔함)**: `notify_pipeline.py`의 chat_id 폴백 = `TELEGRAM_CHAT_ID_MONITOR or TELEGRAM_CHAT_ID`. 그런데 워크플로우 env 블록이 `TELEGRAM_CHAT_ID_MONITOR`만 전달하고 폴백용 `TELEGRAM_CHAT_ID`는 전달 안 함 → MONITOR Secret 미등록 시 chat_id 빈 값 → `sys.exit(0)` 조용히 종료 (성공·실패 모두 알림 안 감)
+- **진단**: 4개 워크플로우(news/stock_build/ai_issue/weekly_build) notify 스텝 env에 `TELEGRAM_CHAT_ID`가 폴백으로 있는지 확인. `notify_pipeline.py`는 "미설정 — 알림 건너뜀"을 stderr로만 출력하고 exit 0 → Actions 로그에서도 눈에 안 띔
+- **원인B**: 클로드 루틴 자체 실패는 **GitHub Actions가 아님** (Claude Code 웹 세션). `notify_pipeline.py`는 워크플로우 안에서만 호출되므로 루틴의 조기 종료/오판은 어떤 알림도 못 보냄. 루틴은 에러를 던지지 않고 `return`으로 정상 종료하므로 알릴 "에러"조차 없음
+- **수정**: 4개 워크플로우 notify env에 `TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}` 추가 (PR — 세션 18차). MONITOR 등록 시 그게 우선, 미등록 시 기본 채널로 발송
+- **권장**: 전용 모니터링 채널 원하면 `TELEGRAM_CHAT_ID_MONITOR` Secret 등록 (현재 미등록 → 기본 뉴스/AI 채널로 알림 혼입)
+
 ---
 
 ## 환경변수 (GitHub Secrets)
