@@ -433,7 +433,7 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - **진단**: 4개 워크플로우(news/stock_build/ai_issue/weekly_build) notify 스텝 env에 `TELEGRAM_CHAT_ID`가 폴백으로 있는지 확인. `notify_pipeline.py`는 "미설정 — 알림 건너뜀"을 stderr로만 출력하고 exit 0 → Actions 로그에서도 눈에 안 띔
 - **원인B**: 클로드 루틴 자체 실패는 **GitHub Actions가 아님** (Claude Code 웹 세션). `notify_pipeline.py`는 워크플로우 안에서만 호출되므로 루틴의 조기 종료/오판은 어떤 알림도 못 보냄. 루틴은 에러를 던지지 않고 `return`으로 정상 종료하므로 알릴 "에러"조차 없음
 - **수정**: 4개 워크플로우 notify env에 `TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}` 추가 (PR — 세션 18차). MONITOR 등록 시 그게 우선, 미등록 시 기본 채널로 발송
-- **권장**: 전용 모니터링 채널 원하면 `TELEGRAM_CHAT_ID_MONITOR` Secret 등록 (현재 미등록 → 기본 뉴스/AI 채널로 알림 혼입)
+- **주의**: `TELEGRAM_CHAT_ID_MONITOR` Secret 등록됨 (사용자 확인). GitHub Actions 실패는 해당 채널로 정상 발송. 클로드 루틴 조기 종료는 GitHub Actions가 아니므로 어떤 채널로도 알림 불가.
 
 ---
 
