@@ -7,6 +7,27 @@
 
 ---
 
+## Step 0: 날짜·요일 확인 (필수 — Claude 내부 계산 금지)
+
+루틴 시작 전 반드시 Bash 도구로 실제 요일을 확인하라.  
+**⚠️ Claude 모델의 날짜→요일 내부 계산은 오류를 낼 수 있다. 절대 직접 계산하지 말 것.**
+
+```bash
+python3 -c "
+import datetime
+today = datetime.date.today()
+days_ko = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
+wd = today.weekday()
+print(f'오늘: {today.isoformat()} ({days_ko[wd]})')
+print('주말' if wd >= 5 else '거래일')
+"
+```
+
+- **출력이 '주말'이면**: 루틴 종료. `오늘은 {날짜} ({요일})입니다. 거래일이 아니므로 루틴을 종료합니다.`
+- **출력이 '거래일'이면**: Step 1부터 계속 진행한다.
+
+---
+
 ## Step 1: 시장 지수·환율·금리·유가 수집
 
 다음 티커 목록의 현재가와 등락률을 수집하라. MCP 도구: `UsStockInfo.get_stock_info`
