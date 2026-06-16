@@ -40,6 +40,7 @@ def _send(token: str, chat_id: str, text: str) -> bool:
         "chat_id":    chat_id,
         "text":       text,
         "parse_mode": "Markdown",
+        "disable_web_page_preview": "true",
     }).encode("utf-8")
     req = urllib.request.Request(url, data=data, method="POST")
     try:

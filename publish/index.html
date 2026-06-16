@@ -79,10 +79,16 @@
       z-index: 200;
       box-shadow: 0 2px 8px rgba(0,0,0,.25);
       gap: 0;
+      transition: background .25s ease;
       /* 컬러 이모지 강제 (Android 등에서 흑백 윤곽선 렌더 방지) */
       font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
                    -apple-system, "Segoe UI", "Apple SD Gothic Neo", sans-serif;
     }
+    /* 섹션별 헤더 전체 배경 틴트 (탭바뿐 아니라 헤더 전체가 섹션 색으로 변함) */
+    header[data-section="news"]     { background: linear-gradient(90deg, #0f2a52 0%, var(--navy) 55%); }
+    header[data-section="ai-issue"] { background: linear-gradient(90deg, #2e1f57 0%, var(--navy) 55%); }
+    header[data-section="stock"]    { background: linear-gradient(90deg, #103a26 0%, var(--navy) 55%); }
+    header[data-section="archive"]  { background: linear-gradient(90deg, #0f2a52 0%, var(--navy) 55%); }
     .logo {
       font-size: 1.1rem;
       font-weight: 700;
@@ -669,7 +675,7 @@
 <body data-theme="editorial">
 
 <!-- ── 헤더 (탭 포함) ── -->
-<header>
+<header data-section="news">
   <div class="logo" onclick="window.location.reload()" style="cursor:pointer;">AI <span>News</span> Brief</div>
 
   <nav class="header-nav">
@@ -681,7 +687,7 @@
   </nav>
 
   <div class="header-actions">
-    <a href="https://ms-dailynews.vercel.app/subscribe" class="btn-icon" title="뉴스레터 구독">
+    <a href="/subscribe" class="btn-icon" title="뉴스레터 구독">
       <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg>
     </a>
     <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-icon" title="GitHub">
@@ -1597,8 +1603,9 @@ function switchSection(section) {
   const theme = section === "stock" ? state.stockTheme : (section === "ai-issue" ? state.aiIssueTheme : state.newsTheme);
   _applyThemeDOM(theme);
   document.querySelectorAll(".hnav-tab").forEach(t=>t.classList.remove("active"));
-  const tab = document.querySelector(`[data-section="${section}"]`);
+  const tab = document.querySelector(`.hnav-tab[data-section="${section}"]`);
   if (tab) tab.classList.add("active");
+  document.querySelector("header").setAttribute("data-section", section);
   document.getElementById("newsSection").style.display    = section==="news"    ? "" : "none";
   document.getElementById("aiIssueSection").style.display = section==="ai-issue" ? "" : "none";
   document.getElementById("stockSection").style.display   = section==="stock"   ? "" : "none";
