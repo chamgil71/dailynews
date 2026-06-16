@@ -393,8 +393,7 @@ def build(theme_name: str | None = None,
         # ── 모든 테마 동적 컴파일 파이프라인 ──
         theme_fonts = []
         theme_css = []
-        theme_chips = []
-        
+
         themes_dir = Path(Path(__file__).parent.parent, "themes")
         import importlib
 
@@ -402,37 +401,38 @@ def build(theme_name: str | None = None,
         theme_order = ["classic", "minimal", "ink", "forest", "editorial", "terminal"]
         found_themes = []
 
-        # themes/skins/ 및 themes/layouts/ 서브디렉터리에서 테마 탐색
+        # themes/skins/ (색상 변형) 및 themes/layouts/ (레이아웃 변형) 서브디렉터리에서 테마 탐색
         theme_candidates = [
-            (p.stem, f"themes.skins.{p.stem}")
+            (p.stem, f"themes.skins.{p.stem}", "skin")
             for p in (themes_dir / "skins").glob("*.py")
             if p.stem != "__init__"
         ] + [
-            (p.stem, f"themes.layouts.{p.stem}")
+            (p.stem, f"themes.layouts.{p.stem}", "layout")
             for p in (themes_dir / "layouts").glob("*.py")
             if p.stem != "__init__"
         ]
         # 레거시: themes/*.py 루트 파일도 폴백으로 탐색 (skins/layouts에 없는 경우만)
-        found_names = {n for n, _ in theme_candidates}
+        found_names = {n for n, _, _ in theme_candidates}
         for p in themes_dir.glob("*.py"):
             name = p.stem
             if name in ["base", "__init__"] or name in found_names:
                 continue
-            theme_candidates.append((name, f"themes.{name}"))
+            theme_candidates.append((name, f"themes.{name}", "skin"))
 
-        for name, module_path in theme_candidates:
+        for name, module_path, kind in theme_candidates:
             try:
                 # 임포트 시 충돌 방지 및 정상 탑재
                 mod = importlib.import_module(module_path)
                 if hasattr(mod, "TOKENS"):
-                    found_themes.append((name, mod.TOKENS))
+                    found_themes.append((name, mod.TOKENS, kind))
             except Exception as e:
                 print(f"  ⚠ 테마 '{name}' 로드 에러: {e}")
-                
+
         # 순서 정렬
         found_themes.sort(key=lambda x: theme_order.index(x[0]) if x[0] in theme_order else 999)
-        
-        for name, tokens in found_themes:
+
+        chips_by_kind = {"skin": [], "layout": []}
+        for name, tokens, kind in found_themes:
             meta = tokens.get("meta", {})
             colors = tokens.get("colors", {})
             font_family = meta.get("font_family", "")
@@ -469,8 +469,8 @@ def build(theme_name: str | None = None,
       <div class="chip-name">{label}</div>
       <div class="chip-desc">{desc}</div>
     </div>"""
-            theme_chips.append(chip_html)
-            
+            chips_by_kind[kind].append(chip_html)
+
         # 플레이스홀더들 동적 교체
         if theme_fonts:
             pre_connect = """  <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -478,7 +478,20 @@ def build(theme_name: str | None = None,
             app_html = app_html.replace('<!-- DYNAMIC_THEME_FONTS -->', f"{pre_connect}\n" + "\n".join(theme_fonts))
 
         app_html = app_html.replace('/* DYNAMIC_THEME_CSS */', "\n\n".join(theme_css))
-        app_html = app_html.replace('<!-- DYNAMIC_THEME_CHIPS -->', "\n".join(theme_chips))
+
+        # 스킨(색상) / 레이아웃(구조) 그룹 헤더로 구분하여 칩 렌더링
+        # 참고: 각 칩은 색상+구조가 한 묶음인 완성된 테마 — 그룹 간 자유 조합 불가 (분류용 라벨)
+        group_labels = {"skin": "스킨 (색상 위주)", "layout": "레이아웃 (구조+색상 통째로 변경)"}
+        chip_groups_html = []
+        for kind in ("skin", "layout"):
+            chips = chips_by_kind.get(kind, [])
+            if not chips:
+                continue
+            chip_groups_html.append(
+                f'  <div class="chip-group-label">{group_labels[kind]}</div>\n'
+                f'  <div class="theme-chips">\n' + "\n".join(chips) + "\n  </div>"
+            )
+        app_html = app_html.replace('<!-- DYNAMIC_THEME_CHIPS -->', "\n".join(chip_groups_html))
 
         # 섹션별 기본 테마 주입 (config/theme_config.py → SECTION_DEFAULTS JS 상수)
         news_theme  = SECTION_THEMES.get("news",  "classic")

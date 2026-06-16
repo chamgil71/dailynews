@@ -489,6 +489,9 @@
     }
     .theme-chip .chip-name { font-size: .82rem; font-weight: 600; color: var(--text); }
     .theme-chip .chip-desc { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+    .chip-group-label { font-size: .68rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--muted); margin: 12px 0 6px; }
+    .chip-group-label:first-of-type { margin-top: 0; }
 
     /* 빌드 적용 섹션 */
     .build-section {
@@ -842,17 +845,16 @@
   </h2>
 
   <!-- ① 즉시 적용 (브라우저 개인 설정) -->
-  <h3>색상 테마 <span style="font-size:.72rem;font-weight:400;color:var(--muted)">— 내 브라우저에만 즉시 적용</span></h3>
+  <h3>디자인 테마 <span style="font-size:.72rem;font-weight:400;color:var(--muted)">— 내 브라우저에만 즉시 적용</span></h3>
+  <p style="font-size:.7rem;color:var(--muted);margin:0 0 8px;line-height:1.5">
+    각 항목은 색상·구조가 하나로 묶인 테마입니다. 그룹은 분류용 표시일 뿐, 서로 섞어 쓸 수는 없습니다.
+  </p>
+    <div class="chip-group-label">스킨 (색상 위주)</div>
   <div class="theme-chips">
-        <div class="theme-chip" onclick="applyTheme('classic')" id="chip-classic">
+    <div class="theme-chip" onclick="applyTheme('classic')" id="chip-classic">
       <div class="chip-swatch" style="background:linear-gradient(90deg,#1e3a5f,#2563eb)"></div>
       <div class="chip-name">Classic Navy</div>
       <div class="chip-desc">남색 헤더, 깔끔한 카드 레이아웃</div>
-    </div>
-    <div class="theme-chip" onclick="applyTheme('minimal')" id="chip-minimal">
-      <div class="chip-swatch" style="background:linear-gradient(90deg,#ffffff,#ff5a1f)"></div>
-      <div class="chip-name">Minimal</div>
-      <div class="chip-desc">넓은 여백, 깔끔한 오렌지 포인트</div>
     </div>
     <div class="theme-chip" onclick="applyTheme('ink')" id="chip-ink">
       <div class="chip-swatch" style="background:linear-gradient(90deg,#1a1a1a,#b91c1c)"></div>
@@ -863,6 +865,14 @@
       <div class="chip-swatch" style="background:linear-gradient(90deg,#064e3b,#047857)"></div>
       <div class="chip-name">Forest Green</div>
       <div class="chip-desc">에메랄드 그린, 편안한 녹색조</div>
+    </div>
+  </div>
+  <div class="chip-group-label">레이아웃 (구조+색상 통째로 변경)</div>
+  <div class="theme-chips">
+    <div class="theme-chip" onclick="applyTheme('minimal')" id="chip-minimal">
+      <div class="chip-swatch" style="background:linear-gradient(90deg,#ffffff,#ff5a1f)"></div>
+      <div class="chip-name">Minimal</div>
+      <div class="chip-desc">넓은 여백, 깔끔한 오렌지 포인트</div>
     </div>
     <div class="theme-chip active" onclick="applyTheme('editorial')" id="chip-editorial">
       <div class="chip-swatch" style="background:linear-gradient(90deg,#2b231a,#8b2a1f)"></div>
@@ -875,6 +885,7 @@
       <div class="chip-desc">Bloomberg 터미널 스타일, 다크 모노</div>
     </div>
   </div>
+  <!-- 위 블록은 build_site.py가 스킨(색상 위주)/레이아웃(구조+색상 통째로 변경) 그룹으로 나눠 생성 -->
   <div style="margin-top:8px;display:flex;justify-content:flex-end">
     <button onclick="resetTheme()" style="font-size:.75rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;cursor:pointer">
       ↺ 사이트 기본값으로 초기화
