@@ -11,7 +11,7 @@ import json
 import logging
 import re
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from pathlib import Path
 
 _ROOT = str(Path(__file__).parent.parent)
@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from core.shared.mailer import send_email
+from core.shared.report_date import kst_today
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,7 +31,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("send_email")
 
-KST_TODAY = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+KST_TODAY = kst_today()
 
 
 # ── news ──────────────────────────────────────────────────────────────────────
@@ -53,7 +54,7 @@ def _send_news(date_str: str, force: bool = False) -> None:
 
     if force:
         logger.info("[이메일/뉴스] 강제 발송 모드 — analysis_ok 플래그 무시")
-    ok = send_email(md_path.read_text(encoding="utf-8"), channel="news")
+    ok = send_email(md_path.read_text(encoding="utf-8"), report_date=date_str, channel="news")
     logger.info(f"[이메일/뉴스] {'완료' if ok else '실패 또는 건너뜀'}")
 
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from pathlib import Path
 
 _ROOT = str(Path(__file__).parent.parent)
@@ -19,31 +19,14 @@ if _ROOT not in sys.path:
 from dotenv import load_dotenv
 load_dotenv()
 
+from core.shared.report_date import kst_today
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger("run_ai_issue")
-
-
-def _telegram_alert(message: str) -> None:
-    """분석 실패 시 텔레그램 즉시 알림 (환경변수 미설정이면 무시)."""
-    import os, urllib.request, urllib.parse
-    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat_id   = os.getenv("TELEGRAM_CHAT_ID")
-    if not bot_token or not chat_id:
-        logger.warning("[Telegram 알림] 환경변수 미설정 — 건너뜀")
-        return
-    try:
-        params = urllib.parse.urlencode({"chat_id": chat_id, "text": message})
-        urllib.request.urlopen(
-            f"https://api.telegram.org/bot{bot_token}/sendMessage?{params}",
-            timeout=10,
-        )
-        logger.info("[Telegram 알림] 전송 완료")
-    except Exception as e:
-        logger.warning(f"[Telegram 알림] 전송 실패: {e}")
 
 
 def main() -> None:
@@ -55,7 +38,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="AI Issue Weekly Runner")
     parser.add_argument(
         "--date",
-        default=datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d"),
+        default=kst_today(),
         help="주간 발행 기준 일요일 날짜 (YYYY-MM-DD)"
     )
     args = parser.parse_args()
@@ -83,20 +66,17 @@ def main() -> None:
     try:
         analysis_result = analyze_weekly_data(raw_data)
     except Exception as e:
-        msg = f"❌ AI Issue Weekly {target_date}: LLM 분석 예외 발생 — {e}"
-        logger.error(msg)
-        _telegram_alert(msg)
+        from core.shared.alert import send_pipeline_alert
+        logger.error(f"❌ AI Issue Weekly {target_date}: LLM 분석 예외 발생 — {e}")
+        send_pipeline_alert("ai-issue", target_date, f"LLM 분석 예외 발생 — {e}")
         sys.exit(1)
 
     # top10 공란 = LLM이 분석을 완료하지 못한 것 → 즉시 알림 후 실패 종료
     if not analysis_result.get("top10"):
-        msg = (
-            f"❌ AI Issue Weekly {target_date}: top10 공란\n"
-            "LLM이 이슈 순위를 반환하지 않았습니다. 보고서를 저장하지 않고 종료합니다.\n"
-            "수동 재실행: GitHub Actions → ai_issue.yml → Run workflow"
-        )
-        logger.error(msg)
-        _telegram_alert(msg)
+        from core.shared.alert import send_pipeline_alert
+        logger.error(f"❌ AI Issue Weekly {target_date}: top10 공란")
+        send_pipeline_alert("ai-issue", target_date,
+            "top10 공란 — LLM이 이슈 순위를 반환하지 않았습니다. 보고서를 저장하지 않고 종료합니다.")
         sys.exit(1)
 
     # ── [3단계] 마크다운 보고서 렌더링 및 로컬 물리 파일 영구 저장 ──
@@ -108,9 +88,9 @@ def main() -> None:
         logger.info(f"  ✅ [성공] 마크다운 저장 완료: {md_path}")
         logger.info(f"  ✅ [성공] 구조화 JSON 저장 완료: {json_path}")
     except Exception as e:
-        msg = f"❌ AI Issue Weekly {target_date}: 보고서 저장 실패 — {e}"
-        logger.error(msg)
-        _telegram_alert(msg)
+        from core.shared.alert import send_pipeline_alert
+        logger.error(f"❌ AI Issue Weekly {target_date}: 보고서 저장 실패 — {e}")
+        send_pipeline_alert("ai-issue", target_date, f"보고서 저장 실패 — {e}")
         sys.exit(1)
         
     elapsed = (datetime.now() - start_time).seconds

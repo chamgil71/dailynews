@@ -80,8 +80,9 @@ jobs:
           git add publish/stock/data.json
           git add publish/stock/index.html
           git add publish/stock/archive.html
-          git add publish/app.html publish/index.html publish/archive.html 2>/dev/null || true
-          git add publish/reports.json publish/reports-data.json 2>/dev/null || true
+          git add -f publish/app.html     2>/dev/null || true
+          git add -f publish/index.html   2>/dev/null || true
+          git add -f publish/archive.html 2>/dev/null || true
           git diff --staged --quiet || \
             git commit -m "📅 Weekly stock build $(date +'%Y-%m-%d')"
           git pull --rebase --autostash -X theirs origin main

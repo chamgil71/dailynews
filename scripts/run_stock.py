@@ -15,11 +15,8 @@
 from __future__ import annotations
 
 import logging
-import os
-import smtplib
 import sys
 from datetime import datetime
-from email.mime.text import MIMEText
 from pathlib import Path
 
 _ROOT = str(Path(__file__).parent.parent)
@@ -48,60 +45,6 @@ def _is_analysis_complete(analysis: dict) -> bool:
     return bool(summary and reason)
 
 
-def _send_failure_alert(date_str: str, reason: str) -> None:
-    """분석 실패 시 관리자에게 이메일 + 텔레그램 알림 발송."""
-    message = (
-        f"⚠️ <b>[DailyNews] 주식 시황 분석 실패</b>\n\n"
-        f"📅 날짜: {date_str}\n"
-        f"💬 사유: {reason}\n\n"
-        f"AI 분석이 비어있어 MD 저장 및 발송을 건너뛰었습니다.\n"
-        f"stock_build.yml 23:00 스케줄에서 재시도합니다."
-    )
-
-    # ── 텔레그램 알림 ──────────────────────────────────────────────────────────
-    bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    chat_id   = os.getenv("TELEGRAM_CHAT_ID", "")
-    if bot_token and chat_id:
-        try:
-            import urllib.request, json as _json
-            payload = _json.dumps({
-                "chat_id": chat_id,
-                "text": message,
-                "parse_mode": "HTML",
-            }).encode()
-            req = urllib.request.Request(
-                f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                data=payload,
-                headers={"Content-Type": "application/json"},
-            )
-            urllib.request.urlopen(req, timeout=10)
-            logger.info("[품질게이트] 텔레그램 알림 발송 완료")
-        except Exception as e:
-            logger.error(f"[품질게이트] 텔레그램 알림 실패: {e}")
-    else:
-        logger.warning("[품질게이트] TELEGRAM 미설정 — 텔레그램 알림 발송 불가")
-
-    # ── 이메일 알림 ────────────────────────────────────────────────────────────
-    gmail_user = os.getenv("GMAIL_USER", "")
-    gmail_pw   = os.getenv("GMAIL_APP_PASSWORD", "")
-    if not gmail_user or not gmail_pw:
-        logger.warning("[품질게이트] GMAIL 미설정 — 이메일 알림 발송 불가")
-        return
-    try:
-        subject  = f"[DailyNews] ⚠ {date_str} 주식 시황 분석 실패"
-        body     = f"날짜: {date_str}\n사유: {reason}\n\nAI 분석이 비어있어 MD 저장 및 발송을 건너뛰었습니다."
-        msg = MIMEText(body, "plain", "utf-8")
-        msg["Subject"] = subject
-        msg["From"]    = gmail_user
-        msg["To"]      = gmail_user
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
-            s.login(gmail_user, gmail_pw)
-            s.sendmail(gmail_user, [gmail_user], msg.as_string())
-        logger.info(f"[품질게이트] 이메일 알림 발송: {gmail_user}")
-    except Exception as e:
-        logger.error(f"[품질게이트] 이메일 알림 실패: {e}")
-
-
 def main() -> None:
     logger.info("=" * 55)
     logger.info("Stock Briefing — 주식 시황 실행")
@@ -123,7 +66,8 @@ def main() -> None:
     stock_data = build_stock_data()
 
     # 파일명·이메일 등 모든 날짜는 실제 거래일 기준
-    date_str = stock_data.get("trading_date", datetime.now().strftime("%Y-%m-%d"))
+    from core.shared.report_date import kst_today
+    date_str = stock_data.get("trading_date", kst_today())
     weekday  = datetime.strptime(date_str, "%Y-%m-%d").weekday()
     logger.info(f"[거래일 기준] date_str={date_str}")
 
@@ -151,7 +95,8 @@ def main() -> None:
     analysis_ok = _is_analysis_complete(analysis)
     if not analysis_ok:
         logger.warning("[품질게이트] AI 분석 미완성 — MD 저장 및 이메일/발송 차단")
-        _send_failure_alert(date_str,
+        from core.shared.alert import send_pipeline_alert
+        send_pipeline_alert("stock", date_str,
             f"summary={'있음' if analysis.get('summary') else '없음'}, "
             f"temperature_reason={'있음' if analysis.get('temperature_reason') else '없음'}"
         )
@@ -184,7 +129,7 @@ def main() -> None:
         ok = send_email(email_md, template="stock", subject_override=STOCK_EMAIL_SUBJECT.format(
             date=date_str,
             weekday=_weekday_ko(weekday),
-        ))
+        ), report_date=date_str, channel="stock")
         logger.info(f"     이메일: {'성공' if ok else '실패(로그 확인)'}")
 
     logger.info("=" * 55)

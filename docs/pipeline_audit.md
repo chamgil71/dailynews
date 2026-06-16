@@ -187,3 +187,38 @@ if now_weekday >= 5:
 | `stock_send.yml` | 스케줄만 | 매일 KST 08:00 (일~토) |
 | `weekly_build.yml` | push(`weekly_*.md`) + 수동 | 수동 전용 |
 | `cardnews.yml` | `workflow_run` (위 3개 완료 후) | 자동 체인 |
+
+---
+
+## 7. 세션 19차 구조적 점검 및 수정 (2026-06-16)
+
+> **주의**: 이 섹션의 항목은 모두 **코드 수정 + 정적 검증(컴파일/임포트/actionlint/로직 시뮬레이션)까지만 완료**된 상태다.
+> 실제 GitHub Actions 자동 실행에서의 동작 확인은 아직 안 됨 — "검증 필요" 표로 따로 추적한다 (CLAUDE.md 참조).
+> 과거 이 문서·CLAUDE.md에 "수정 완료"로 적혀 있었지만 실제 코드엔 반영 안 된 사례가 발견된 바 있어(아래 7-1),
+> 앞으로는 "코드 수정 완료"와 "실행으로 확인됨"을 구분해서 표기한다.
+
+### 7-1. 발견: 문서(CLAUDE.md)와 실제 코드의 불일치
+
+`stock/data.json 미업데이트 버그` 항목이 "PR #27에서 단독 라인 분리로 수정"이라 기록돼 있었으나,
+실제로는 `ai_issue.yml`만 고쳐졌고 `news.yml` / `stock_build.yml` / `weekly_build.yml`의
+`git add -f publish/app.html publish/index.html publish/archive.html 2>/dev/null || true` (3파일 결합 라인)은
+그대로 남아있었다. 이번 세션에서 3개 파일 모두 단독 라인으로 분리해 실제로 마무리했다(7-2 참조).
+
+**교훈**: CLAUDE.md/문서의 "수정 완료" 기록을 그대로 믿지 말고, 코드를 직접 grep해서 확인할 것.
+
+### 7-2. 코드 수정 내역 (정적 검증 완료, 실행 미확인)
+
+| # | 수정 | 파일 | 검증 방법 |
+|---|------|------|----------|
+| 1 | git add 3파일 결합 라인 → 단독 라인 분리, 죽은 코드(`reports.json`/`reports-data.json`) 제거 | `news.yml`, `stock_build.yml`, `weekly_build.yml` | actionlint, PyYAML 파싱, git diff 재검토 |
+| 2 | 채널별 실패 알림(SMTP/텔레그램) 함수 3종 → `send_pipeline_alert()` 단일화 | `core/shared/alert.py`(신규), `run_news.py`/`run_stock.py`/`run_ai_issue.py` | `py_compile`, 모듈 import, `main` 함수 보존 확인 |
+| 3 | KST 날짜 계산 공통화(`kst_today()`), `mailer.py`/`telegram.py`의 `now()` 폴백 제거·경고화 | `core/shared/report_date.py`(신규), `mailer.py`, `telegram.py`, `run_*.py`, `send_email.py`, `send_telegram.py` | `py_compile`, import, `kst_today()` 실행 결과 수동 확인 |
+| 3-부수 | `run_stock.py`의 `send_email()` 호출에 `channel="stock"`/`report_date` 누락 — 주식 메일이 뉴스 구독자 채널로 갈 뻔한 버그 발견·수정 | `run_stock.py` | 코드 리뷰 (그렙으로 다른 호출부와 비교) |
+| 4 | 뉴스 파이프라인 품질 게이트 추가 — `analysis_ok=False`일 때 사이트 빌드·Notion 동기화 스킵 (이메일/텔레그램은 기존에 이미 게이트 있었음) | `news.yml` (`분석 결과 확인` 스텝 신설) | actionlint, 3가지 케이스(정상/실패/파일없음) 셸 로직 로컬 재현 |
+
+### 7-3. 실행으로 아직 확인 안 된 것 (CLAUDE.md "검증 필요" 표에도 추가됨)
+
+- [ ] `news.yml` 다음 자동 실행 — `분석 결과 확인` 스텝이 `ok=true/false`를 의도대로 출력하는지 Actions 로그 확인
+- [ ] `news.yml`/`stock_build.yml`/`weekly_build.yml` 다음 실행 — 단독 라인 git add가 실제 커밋에 3개 파일 모두 포함되는지 확인
+- [ ] 분석 실패가 실제로 발생했을 때 `send_pipeline_alert()`가 텔레그램+이메일 둘 다 정상 발송하는지 (현재는 로컬 import만 확인, 실제 발송 테스트 안 함)
+- [ ] `run_stock.py`의 `send_email()` 채널 수정분 — 다음 주식 백업 경로 실행 시 실제로 stock 구독자에게만 가는지 확인

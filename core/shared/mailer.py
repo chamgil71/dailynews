@@ -30,6 +30,7 @@ from config.settings import (
     SITE_BASE_URL,
     UNSUBSCRIBE_SECRET,
 )
+from core.shared.report_date import kst_now, kst_today
 
 _TEMPLATE_FILE       = Path(__file__).parent.parent.parent / "templates" / "email_news.html"
 _STOCK_TEMPLATE_FILE = Path(__file__).parent.parent.parent / "templates" / "email_stock.html"
@@ -234,7 +235,9 @@ def _render_email_template(md: str, recipient_email: str, theme_name: str = "cla
         )
 
         sections = _parse_md_for_email(md)
-        dt = datetime.strptime(report_date, "%Y-%m-%d") if report_date else datetime.now()
+        if not report_date:
+            logger.warning("[이메일 템플릿] report_date 미전달 — KST 실행일로 폴백 (호출부 확인 필요)")
+        dt = datetime.strptime(report_date, "%Y-%m-%d") if report_date else kst_now()
 
         env = Environment(loader=FileSystemLoader(str(_TEMPLATE_FILE.parent)),
                           autoescape=False)
@@ -325,7 +328,9 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
         )
 
         sections = _parse_md_for_stock_email(md)
-        dt = datetime.strptime(report_date, "%Y-%m-%d") if report_date else datetime.now()
+        if not report_date:
+            logger.warning("[이메일 템플릿] report_date 미전달 — KST 실행일로 폴백 (호출부 확인 필요)")
+        dt = datetime.strptime(report_date, "%Y-%m-%d") if report_date else kst_now()
 
         env = Environment(loader=FileSystemLoader(str(_STOCK_TEMPLATE_FILE.parent)),
                           autoescape=False)
@@ -356,7 +361,7 @@ def _md_to_html(md: str, recipient_email: str) -> str:
 {body}
 <br><hr>
 <small style="color:#888">
-  AI News Daily — {datetime.now().strftime('%Y-%m-%d')}
+  AI News Daily — {kst_today()}
   {f"&nbsp;|&nbsp;{unsub_link}" if unsub_link else ""}
 </small>
 </body></html>"""
@@ -385,7 +390,7 @@ def send_email(md_content: str = "", html_content: str | None = None,
         logger.warning(f"[이메일/{channel}] 발송 대상 없음")
         return False
 
-    date_str = datetime.now().strftime("%Y-%m-%d")
+    date_str = report_date or kst_today()
     subject = subject_override if subject_override else EMAIL_SUBJECT.format(date=date_str)
 
     success_count = 0

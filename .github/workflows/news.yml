@@ -82,15 +82,32 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SITE_BASE_URL:  ${{ secrets.SITE_BASE_URL }}
 
+      # ── 품질 게이트 ────────────────────────────────────────────────────────
+      # 이메일/텔레그램(send_email.py·send_telegram.py)은 이미 analysis_ok 플래그로
+      # 발송을 막고 있는데, 사이트 빌드·배포만 이 체크가 없어 분석 실패해도
+      # 깨진 콘텐츠가 그대로 배포되는 빈틈이 있었음 — 동일 기준으로 차단.
+      - name: 분석 결과 확인
+        if: ${{ github.event.inputs.mode != 'reanalyze' }}
+        id: check_analysis
+        run: |
+          DATE=$(date +'%Y-%m-%d')
+          JSON="reports/news_${DATE}.json"
+          if [ -f "$JSON" ] && python -c "import json,sys; d=json.load(open('$JSON')); sys.exit(0 if d.get('analysis_ok', True) else 1)"; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::analysis_ok=False — 사이트 빌드·Notion 동기화 건너뜀 (관리자 알림은 run_news.py에서 별도 발송)"
+          fi
+
       # ── 사이트 빌드 ────────────────────────────────────────────────────────
       - name: 사이트 빌드 (MD → HTML)
-        if: ${{ github.event.inputs.mode != 'reanalyze' }}
+        if: ${{ github.event.inputs.mode != 'reanalyze' && steps.check_analysis.outputs.ok != 'false' }}
         run: python scripts/build_site.py --from $(date +'%Y-%m-%d')
         # 테마/디자인 변경 시: 아래로 교체
         # run: python scripts/build_site.py --all
 
       - name: Notion 뉴스 동기화
-        if: ${{ github.event.inputs.mode != 'reanalyze' }}
+        if: ${{ github.event.inputs.mode != 'reanalyze' && steps.check_analysis.outputs.ok != 'false' }}
         run: python scripts/sync_notion.py --type news --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
         env:
           NOTION_API_KEY:          ${{ secrets.NOTION_API_KEY }}
@@ -107,7 +124,9 @@ jobs:
           # Vercel 필수 정적 파일 (항상 최신 상태 유지)
           # publish/reports.json, publish/reports-data.json은 레거시 — 존재하지 않으므로 제거
           # 파일별로 분리하여 누락 파일이 있어도 이후 파일이 스테이징되도록 보장
-          git add -f publish/app.html publish/index.html publish/archive.html 2>/dev/null || true
+          git add -f publish/app.html     2>/dev/null || true
+          git add -f publish/index.html   2>/dev/null || true
+          git add -f publish/archive.html 2>/dev/null || true
           git add -f publish/search-index.json 2>/dev/null || true
           git add -f publish/news/data.json 2>/dev/null || true
           # stock 파일 — 파일별 단독 라인으로 분리 (다중 파일 || true 패턴은 앞 파일 에러 시 뒤 파일 누락 위험)

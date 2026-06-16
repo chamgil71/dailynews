@@ -12,7 +12,7 @@ from config.settings import SITE_BASE_URL
 
 logger = logging.getLogger(__name__)
 
-def send_telegram_cardnews(structured_data: dict, date_str: str = None) -> bool:
+def send_telegram_cardnews(structured_data: dict, date_str: str) -> bool:
     """
     구조화된 AI 분석 데이터를 기반으로 텔레그램 알림을 발송합니다.
     """
@@ -22,9 +22,6 @@ def send_telegram_cardnews(structured_data: dict, date_str: str = None) -> bool:
     if not bot_token or not chat_id:
         logger.warning("[Telegram] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID 환경변수가 설정되지 않아 발송을 건너뜁니다.")
         return False
-
-    if not date_str:
-        date_str = datetime.now().strftime("%Y-%m-%d")
 
     # structured 데이터 내 ko(국내) 및 en(글로벌) 데이터 동시 추출
     ko_data = structured_data.get("ko") if isinstance(structured_data.get("ko"), dict) else None
@@ -130,8 +127,7 @@ def send_telegram_cardnews(structured_data: dict, date_str: str = None) -> bool:
         logger.error(f"[Telegram] 통신 오류 발생: {e}")
         return False
 
-
-def send_stock_telegram(stock_data: dict, date_str: str = None) -> bool:
+def send_stock_telegram(stock_data: dict, date_str: str) -> bool:
     """
     주식 시황 MD 파싱 데이터를 텔레그램 @msstockbrief 채널로 발송.
     stock_data: parse_stock_md() 반환값
@@ -142,9 +138,6 @@ def send_stock_telegram(stock_data: dict, date_str: str = None) -> bool:
     if not bot_token or not chat_id:
         logger.warning("[Telegram/주식] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID_STOCK 미설정 — 발송 건너뜀")
         return False
-
-    if not date_str:
-        date_str = datetime.now().strftime("%Y-%m-%d")
 
     try:
         _wd = ["월","화","수","목","금","토","일"][datetime.strptime(date_str, "%Y-%m-%d").weekday()]
@@ -208,8 +201,7 @@ def send_stock_telegram(stock_data: dict, date_str: str = None) -> bool:
         logger.error(f"[Telegram/주식] 통신 오류: {e}")
         return False
 
-
-def send_weekly_stock_telegram(data: dict, date_str: str = None) -> bool:
+def send_weekly_stock_telegram(data: dict, date_str: str) -> bool:
     """주간 주식 시황 종합을 @msstockbrief 채널로 발송."""
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id   = os.getenv("TELEGRAM_CHAT_ID_STOCK")
@@ -217,9 +209,6 @@ def send_weekly_stock_telegram(data: dict, date_str: str = None) -> bool:
     if not bot_token or not chat_id:
         logger.warning("[Telegram/주간주식] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID_STOCK 미설정 — 발송 건너뜀")
         return False
-
-    if not date_str:
-        date_str = datetime.now().strftime("%Y-%m-%d")
 
     week_range     = data.get("week_range", "")
     temp           = data.get("temperature", {})
@@ -283,8 +272,7 @@ def send_weekly_stock_telegram(data: dict, date_str: str = None) -> bool:
         logger.error(f"[Telegram/주간주식] 통신 오류: {e}")
         return False
 
-
-def send_ai_issue_telegram(report_data: dict, date_str: str = None) -> bool:
+def send_ai_issue_telegram(report_data: dict, date_str: str) -> bool:
     """
     주간 AI Issue 보고서 요약을 텔레그램으로 발송.
     report_data: reports/ai-issue/ai_issue_YYYY-MM-DD.json 내용
@@ -295,9 +283,6 @@ def send_ai_issue_telegram(report_data: dict, date_str: str = None) -> bool:
     if not bot_token or not chat_id:
         logger.warning("[Telegram/AI이슈] TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID 미설정 — 발송 건너뜀")
         return False
-
-    if not date_str:
-        date_str = datetime.now().strftime("%Y-%m-%d")
 
     period = report_data.get("period", date_str)
     top10 = report_data.get("top10", [])

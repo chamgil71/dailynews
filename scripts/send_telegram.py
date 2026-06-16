@@ -10,7 +10,6 @@ import argparse
 import json
 import logging
 import sys
-from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 _ROOT = str(Path(__file__).parent.parent)
@@ -20,6 +19,8 @@ if _ROOT not in sys.path:
 from dotenv import load_dotenv
 load_dotenv()
 
+from core.shared.report_date import kst_today
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -27,7 +28,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("send_telegram")
 
-KST_TODAY = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+KST_TODAY = kst_today()
 
 
 # ── news ──────────────────────────────────────────────────────────────────────
