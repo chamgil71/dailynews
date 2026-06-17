@@ -521,16 +521,31 @@ def build_weekly_stock_html(date_str: str, data: dict) -> str:
 
 
 # ── 인덱스 업데이트 ───────────────────────────────────────────────────────────
-def _update_index(type_dir: Path, channel: str) -> None:
+def _update_index(type_dir: Path, channel: str,
+                  extra_data: dict[str, dict] | None = None) -> None:
+    # 기존 index 로드 — 이전 빌드의 extra 필드(summary 등) 보존
+    index_path = type_dir / "data.json"
+    existing: dict[str, dict] = {}
+    if index_path.exists():
+        try:
+            for e in json.loads(index_path.read_text(encoding="utf-8")):
+                existing[e["date"]] = e
+        except Exception:
+            pass
+
     index = []
     for html in sorted(type_dir.glob("[0-9][0-9][0-9][0-9]-??-??.html"), reverse=True):
         date_str = html.stem
-        index.append({
+        entry = {**existing.get(date_str, {})}
+        entry.update({
             "date":    date_str,
             "display": _fmt_date(date_str),
             "type":    channel,
             "html":    f"cardnews/{channel}/{date_str}.html",
         })
+        if extra_data and date_str in extra_data:
+            entry.update(extra_data[date_str])
+        index.append(entry)
     (type_dir / "data.json").write_text(
         json.dumps(index, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -549,6 +564,16 @@ def build_news(date_str: str | None = None, rebuild_all: bool = False) -> None:
         entries = [e for e in entries
                    if e.get("structured", {}).get("ko", {}).get("issues")][:1]
 
+    # issue_titles를 data.json에 저장 → _build_caption() Threads 캡션에 활용
+    all_news = json.loads((PUBLISH / "news" / "data.json").read_text(encoding="utf-8"))
+    extra_data: dict[str, dict] = {}
+    for e in all_news:
+        d  = e.get("date", "")
+        ko = e.get("structured", {}).get("ko", {})
+        titles = [i.get("title", "") for i in ko.get("issues", [])[:3] if i.get("title")]
+        if d and titles:
+            extra_data[d] = {"issue_titles": titles}
+
     built = 0
     for e in entries:
         d = e.get("date", "")
@@ -563,7 +588,7 @@ def build_news(date_str: str | None = None, rebuild_all: bool = False) -> None:
         built += 1
 
     if built:
-        _update_index(out_dir, "news")
+        _update_index(out_dir, "news", extra_data=extra_data)
 
 
 def build_ai_issue(date_str: str | None = None, rebuild_all: bool = False) -> None:
@@ -578,6 +603,18 @@ def build_ai_issue(date_str: str | None = None, rebuild_all: bool = False) -> No
     elif not rebuild_all:
         files = files[:1]
 
+    # issue_titles를 data.json에 저장 → _build_caption() Threads 캡션에 활용
+    extra_data: dict[str, dict] = {}
+    for fp in _glob.glob(str(PUBLISH / "ai-issue" / "[0-9][0-9][0-9][0-9]-??-??.json")):
+        d = Path(fp).stem
+        try:
+            data_all = json.loads(Path(fp).read_text(encoding="utf-8"))
+            titles = [t.get("title", "") for t in data_all.get("top10", [])[:3] if t.get("title")]
+            if titles:
+                extra_data[d] = {"issue_titles": titles}
+        except Exception:
+            pass
+
     built = 0
     for fp in files:
         d    = Path(fp).stem
@@ -589,7 +626,7 @@ def build_ai_issue(date_str: str | None = None, rebuild_all: bool = False) -> No
         built += 1
 
     if built:
-        _update_index(out_dir, "ai-issue")
+        _update_index(out_dir, "ai-issue", extra_data=extra_data)
 
 
 def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
@@ -601,13 +638,30 @@ def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
         print("  stock data.json 없음")
         return
 
-    entries = json.loads(stock_path.read_text(encoding="utf-8"))
-    entries.sort(key=lambda x: x.get("date", ""), reverse=True)
+    all_entries = json.loads(stock_path.read_text(encoding="utf-8"))
+    all_entries.sort(key=lambda x: x.get("date", ""), reverse=True)
+
+    # 전체 엔트리의 summary/keywords/temperature를 cardnews data.json에 저장
+    # (Threads 텍스트 캡션에 활용)
+    extra_data: dict[str, dict] = {}
+    for e in all_entries:
+        d = e.get("date", "")
+        if not d:
+            continue
+        kws = [{"title": k.get("title", ""), "body": k.get("body", "")}
+               for k in e.get("keywords", []) if isinstance(k, dict)]
+        extra_data[d] = {
+            "summary":     e.get("summary", ""),
+            "keywords":    kws[:5],
+            "temperature": e.get("temperature", {}),
+        }
 
     if date_str:
-        entries = [e for e in entries if e.get("date") == date_str]
+        entries = [e for e in all_entries if e.get("date") == date_str]
     elif not rebuild_all:
-        entries = entries[:1]
+        entries = all_entries[:1]
+    else:
+        entries = all_entries
 
     built = 0
     for e in entries:
@@ -620,7 +674,7 @@ def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
         built += 1
 
     if built:
-        _update_index(out_dir, "stock")
+        _update_index(out_dir, "stock", extra_data=extra_data)
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

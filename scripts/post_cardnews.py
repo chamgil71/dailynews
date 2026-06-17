@@ -122,10 +122,16 @@ def _channel_site_url(channel: str) -> str:
 
 def _build_caption(channel: str, date_str: str, include_link: bool = True) -> str:
     try:
-        entry = _load_index(channel, date_str)
+        entry        = _load_index(channel, date_str)
         issue_titles = entry.get("issue_titles", [])
+        summary      = entry.get("summary", "")     if channel == "stock" else ""
+        keywords     = entry.get("keywords", [])    if channel == "stock" else []
+        temperature  = entry.get("temperature", {}) if channel == "stock" else {}
     except Exception:
         issue_titles = []
+        summary = ""
+        keywords = []
+        temperature = {}
 
     try:
         from datetime import datetime
@@ -136,10 +142,30 @@ def _build_caption(channel: str, date_str: str, include_link: bool = True) -> st
         display = date_str
 
     label = _channel_label(channel)
-    icons = ["🔥", "📢", "💡"]
-    lines = [f"📰 {display} {label} 브리핑\n"]
-    for i, title in enumerate(issue_titles[:3]):
-        lines.append(f"{icons[i]} {title}")
+
+    if channel == "stock":
+        lines = [f"📈 {display} {label} 브리핑\n"]
+        temp_disp = (temperature or {}).get("display", "")
+        if temp_disp:
+            lines.append(f"🌡 시장온도: {temp_disp}")
+            lines.append("")
+        if summary:
+            summary_lines = [l.strip().lstrip("- ").strip()
+                             for l in summary.splitlines() if l.strip()][:2]
+            if summary_lines:
+                lines.append("📌 " + "\n".join(summary_lines))
+                lines.append("")
+        if keywords:
+            kw_titles = [kw.get("title", "") if isinstance(kw, dict) else str(kw)
+                         for kw in keywords[:3]]
+            kw_titles = [t for t in kw_titles if t]
+            if kw_titles:
+                lines.append("🔑 " + " | ".join(kw_titles))
+    else:
+        icons = ["🔥", "📢", "💡"]
+        lines = [f"📰 {display} {label} 브리핑\n"]
+        for i, title in enumerate(issue_titles[:3]):
+            lines.append(f"{icons[i]} {title}")
 
     if include_link:
         lines.append(f"\n🔗 {_channel_site_url(channel)}")
