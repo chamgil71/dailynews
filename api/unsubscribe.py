@@ -38,25 +38,39 @@ class handler(BaseHTTPRequestHandler):
         try:
             email_to_unsub = None
 
-            # 1) Supabase 토큰 방식 (신규)
-            rows = sb_get("subscription_tokens",
-                          {"token": f"eq.{token}", "action": "eq.unsubscribe"})
-            if rows:
-                row = rows[0]
-                if datetime.fromisoformat(row["expires_at"]) < datetime.now(timezone.utc):
-                    sb_delete("subscription_tokens", "token", token)
-                    self._respond(400, _page("오류", "링크가 만료되었습니다.", "#ef4444",
-                                             f"{SITE_BASE_URL}/subscribe", "재구독"))
+            # 1) 레거시 HMAC 방식 우선 확인 (이메일 파라미터 및 16자리 토큰이 있는 경우)
+            # DB 조회를 회피하여 환경변수 누락 시에도 이메일 구독취소는 항상 동작하도록 보장합니다.
+            if email and len(token) == 16:
+                if hmac.compare_digest(_hmac_token(email), token):
+                    email_to_unsub = email
+                else:
+                    self._respond(400, _page("오류", "유효하지 않은 링크입니다.", "#ef4444"))
                     return
-                email_to_unsub = row["email"]
-                sb_delete("subscription_tokens", "token", token)
 
-            # 2) 레거시 HMAC 방식 (이메일 파라미터 필요)
-            elif email and hmac.compare_digest(_hmac_token(email), token):
-                email_to_unsub = email
-
+            # 2) Supabase 토큰 방식
             else:
-                self._respond(400, _page("오류", "유효하지 않은 링크입니다.", "#ef4444"))
+                rows = sb_get("subscription_tokens", {"token": f"eq.{token}"})
+                if rows:
+                    row = rows[0]
+                    # 구독취소 및 관리(manage) 토큰 둘 다 허용
+                    if row.get("action") in ("unsubscribe", "manage"):
+                        expires_at_str = row["expires_at"].replace("Z", "+00:00")
+                        if datetime.fromisoformat(expires_at_str) < datetime.now(timezone.utc):
+                            sb_delete("subscription_tokens", "token", token)
+                            self._respond(400, _page("오류", "링크가 만료되었습니다.", "#ef4444",
+                                                     f"{SITE_BASE_URL}/subscribe", "재구독"))
+                            return
+                        email_to_unsub = row["email"]
+                        sb_delete("subscription_tokens", "token", token)
+                    else:
+                        self._respond(400, _page("오류", "유효하지 않은 링크입니다.", "#ef4444"))
+                        return
+                else:
+                    self._respond(400, _page("오류", "유효하지 않거나 만료된 링크입니다.", "#ef4444"))
+                    return
+
+            if not email_to_unsub:
+                self._respond(400, _page("오류", "유효하지 않은 요청입니다.", "#ef4444"))
                 return
 
             result = sb_patch("subscribers", "email", email_to_unsub, {
