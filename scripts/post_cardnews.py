@@ -175,12 +175,77 @@ def _build_caption(channel: str, date_str: str, include_link: bool = True) -> st
 
 
 # ── Instagram ─────────────────────────────────────────────────────────────────
+GRAPH_IG = "https://graph.facebook.com/v21.0"
+
+
+def _ig_post(path: str, params: dict) -> dict:
+    r = requests.post(f"{GRAPH_IG}{path}", params=params, timeout=30)
+    data = r.json()
+    if "error" in data:
+        raise RuntimeError(f"Instagram Graph API 오류: {data['error']}")
+    return data
+
+
+def _ig_get(path: str, params: dict) -> dict:
+    r = requests.get(f"{GRAPH_IG}{path}", params=params, timeout=30)
+    r.raise_for_status()
+    return r.json()
+
+
+def _ig_wait_container(container_id: str, token: str, max_wait: int = 60) -> None:
+    for _ in range(max_wait // 5):
+        data = _ig_get(f"/{container_id}", {"fields": "status_code", "access_token": token})
+        status = data.get("status_code", "")
+        if status == "FINISHED":
+            return
+        if status == "ERROR":
+            raise RuntimeError(f"Instagram 컨테이너 처리 오류: {data}")
+        time.sleep(5)
+    raise TimeoutError(f"Instagram 컨테이너 {container_id} 처리 시간 초과")
+
+
 def post_instagram(channel: str, date_str: str) -> None:
-    from scripts.post_instagram import post_cardnews as _post
+    token      = _env("INSTAGRAM_ACCESS_TOKEN")
+    ig_user_id = _env("INSTAGRAM_BUSINESS_ACCOUNT_ID")
+
     png_paths  = _png_paths(channel, date_str)
     image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
     _assert_urls_accessible(image_urls, "Instagram")
-    _post(channel, date_str)
+
+    # 1. 카루셀 항목 컨테이너 생성
+    children: list[str] = []
+    for i, url in enumerate(image_urls):
+        print(f"  [Instagram] 미디어 컨테이너 생성 [{i+1}/{len(image_urls)}]")
+        cid = _ig_post(f"/{ig_user_id}/media", {
+            "image_url":        url,
+            "is_carousel_item": "true",
+            "access_token":     token,
+        }).get("id", "")
+        if not cid:
+            raise RuntimeError("Instagram 컨테이너 ID 없음")
+        children.append(cid)
+        time.sleep(1)
+
+    # 2. 컨테이너 FINISHED 대기
+    for cid in children:
+        _ig_wait_container(cid, token)
+
+    # 3. 카루셀 컨테이너 + 게시
+    caption = _build_caption(channel, date_str, include_link=True)
+    carousel_id = _ig_post(f"/{ig_user_id}/media", {
+        "media_type":   "CAROUSEL",
+        "children":     ",".join(children),
+        "caption":      caption,
+        "access_token": token,
+    }).get("id", "")
+    if not carousel_id:
+        raise RuntimeError("Instagram 카루셀 컨테이너 생성 실패")
+
+    result = _ig_post(f"/{ig_user_id}/media_publish", {
+        "creation_id":  carousel_id,
+        "access_token": token,
+    })
+    print(f"  ✅ Instagram 게시 완료 — media_id: {result.get('id')}")
 
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
