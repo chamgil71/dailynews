@@ -250,8 +250,19 @@ def _msg_weekly_stock_success(date_str: str) -> str:
 
 # ── 실패 메시지 ────────────────────────────────────────────────────────────────
 
+def _msg_cardnews_success(date_str: str) -> str:
+    return (
+        f"✅ *카드뉴스 SNS 발송 완료*\n"
+        f"📅 {date_str}  |  {_now_kst()}\n\n"
+        f"🌐 {SITE_URLS['news']}"
+    )
+
+
 def _msg_failure(channel: str, date_str: str) -> str:
-    labels = {"news": "뉴스 브리핑", "ai-issue": "AI 주간이슈", "stock": "주식시황"}
+    labels = {
+        "news": "뉴스 브리핑", "ai-issue": "AI 주간이슈",
+        "stock": "주식시황", "cardnews": "카드뉴스 SNS",
+    }
     label = labels.get(channel, channel)
     return (
         f"🔴 *{label} 파이프라인 실패*\n"
@@ -266,7 +277,7 @@ def _msg_failure(channel: str, date_str: str) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="파이프라인 결과 텔레그램 알림")
     parser.add_argument("--type", dest="channel",
-                        choices=["news", "stock", "ai-issue", "weekly-stock"], required=True)
+                        choices=["news", "stock", "ai-issue", "weekly-stock", "cardnews"], required=True)
     parser.add_argument("--status", choices=["success", "failure"], default="failure")
     parser.add_argument("--date",
                         default=datetime.now(_KST).strftime("%Y-%m-%d"),
@@ -289,6 +300,8 @@ def main() -> None:
             msg = _msg_ai_issue_success(args.date)
         elif args.channel == "weekly-stock":
             msg = _msg_weekly_stock_success(args.date)
+        elif args.channel == "cardnews":
+            msg = _msg_cardnews_success(args.date)
         else:
             msg = _msg_stock_success(args.date)
     else:

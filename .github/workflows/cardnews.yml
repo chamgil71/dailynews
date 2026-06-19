@@ -152,6 +152,7 @@ jobs:
 
       # ── SNS 발송 (멀티 플랫폼) ────────────────────────────────────────────
       - name: SNS 발송
+        id: sns
         if: ${{ github.event.inputs.build_only != 'true' }}
         run: |
           TYPE="${{ steps.channel.outputs.type }}"
@@ -185,3 +186,16 @@ jobs:
           # 공통
           SITE_BASE_URL:                 ${{ secrets.SITE_BASE_URL }}
         continue-on-error: true
+
+      # ── 발송 실패 시 텔레그램 알림 ───────────────────────────────────────────
+      - name: 카드뉴스 발송 결과 알림
+        if: always() && steps.sns.outcome == 'failure'
+        run: |
+          python scripts/notify_pipeline.py \
+            --type cardnews \
+            --status failure \
+            --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+        env:
+          TELEGRAM_BOT_TOKEN:       ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_MONITOR: ${{ secrets.TELEGRAM_CHAT_ID_MONITOR }}
+          TELEGRAM_CHAT_ID:         ${{ secrets.TELEGRAM_CHAT_ID }}
