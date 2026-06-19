@@ -229,15 +229,27 @@ def post_instagram(channel: str, date_str: str) -> None:
     # 2. 컨테이너 FINISHED 대기
     for cid in children:
         _ig_wait_container(cid, token)
+    # FINISHED 후에도 내부 처리 여유 시간 확보 (error_subcode 2207027 방지)
+    time.sleep(5)
 
-    # 3. 카루셀 컨테이너 + 게시
+    # 3. 카루셀 컨테이너 + 게시 (2207027 타이밍 에러 시 재시도)
     caption = _build_caption(channel, date_str, include_link=True)
-    carousel_id = _ig_post(f"/{ig_user_id}/media", {
-        "media_type":   "CAROUSEL",
-        "children":     ",".join(children),
-        "caption":      caption,
-        "access_token": token,
-    }).get("id", "")
+    carousel_id = ""
+    for attempt in range(1, 4):
+        try:
+            carousel_id = _ig_post(f"/{ig_user_id}/media", {
+                "media_type":   "CAROUSEL",
+                "children":     ",".join(children),
+                "caption":      caption,
+                "access_token": token,
+            }).get("id", "")
+            break
+        except RuntimeError as e:
+            if attempt < 3 and "2207027" in str(e):
+                print(f"  [Instagram] 카루셀 생성 재시도 ({attempt}/3) — 10초 대기")
+                time.sleep(10)
+            else:
+                raise
     if not carousel_id:
         raise RuntimeError("Instagram 카루셀 컨테이너 생성 실패")
 
