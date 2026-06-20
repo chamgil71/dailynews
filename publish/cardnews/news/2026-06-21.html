@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>AI 뉴스 카드뉴스 2026-06-21</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #38bdf8; --topbar: linear-gradient(90deg,#38bdf8,#6366f1,#a78bfa); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">AI</div>
+    <div>
+      <div class="logo-main">AI <span style="color:#38bdf8">News</span> Brief</div>
+      <div class="logo-sub">매일 아침 AI가 정리하는 핵심 뉴스</div>
+    </div>
+  </div>
+  <div class="cover-date">2026년 6월 21일 (일)</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">오늘의 핵심 이슈</div>
+  <div class="cover-issues"><div class="cover-issue"><span class="cover-icon" style="color:#f59e0b">&#128293;</span><span class="cover-issue-text">구글·MS 등 빅테크 기업, AI 에이전트 연결 표준 'ARD…</span></div><div class="cover-issue"><span class="cover-icon" style="color:#818cf8">&#128226;</span><span class="cover-issue-text">이란의 호르무즈 해협 폐쇄 선언과 미·이란 긴장 재고조</span></div><div class="cover-issue"><span class="cover-icon" style="color:#34d399">&#128161;</span><span class="cover-issue-text">서울 창업 생태계 가치 153조원 돌파, 글로벌 9위 기록</span></div></div>
+  <div class="cover-tags">#AI뉴스 #테크 #데일리브리핑 #인공지능</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 21일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#f59e0b">
+    <span class="rank-icon">&#128293;</span>
+    <span class="rank-label">핵심 이슈 1</span>
+    <span class="cat-badge">AI·ML</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">구글·MS 등 빅테크 기업, AI 에이전트 연결 표준 'ARD' 공동 추진</div>
+    <div class="issue-divider" style="background:#f59e0b"></div>
+    <div class="issue-summary">구글, 마이크로소프트, 세일즈포스 등 글로벌 소프트웨어 대기업들이 새로운 AI 표준인 '에이전틱 리소스 디스커버리(ARD)'를 공동 발표했습니다. 이는 오픈AI와 앤트로픽의 독점적 AI 에이전트 생태계를 견제하고, 기업용 AI 시장의 주도권을 확보하기 위한 전략적 연대로 분석됩니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 1개&nbsp;·&nbsp;<a href='https://www.aitimes.com/news/articleView.html?idxno=211930'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 21일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#818cf8">
+    <span class="rank-icon">&#128226;</span>
+    <span class="rank-label">핵심 이슈 2</span>
+    <span class="cat-badge">한국경제</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">이란의 호르무즈 해협 폐쇄 선언과 미·이란 긴장 재고조</div>
+    <div class="issue-divider" style="background:#818cf8"></div>
+    <div class="issue-summary">이란군이 미·이란 종전 양해각서(MOU) 불이행 및 이스라엘의 휴전 위반을 이유로 호르무즈 해협 폐쇄를 선언하며 글로벌 해운 및 금융 시장의 긴장감이 고조되고 있습니다. 미국과 이란은 중재국들과 함께 스위스에서 실무급 회담을 개최하여 갈등 해결을 모색할 예정입니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://news.einfomax.co.kr/news/articleView.html?idxno=4421026'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 21일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#34d399">
+    <span class="rank-icon">&#128161;</span>
+    <span class="rank-label">핵심 이슈 3</span>
+    <span class="cat-badge">스타트업</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">서울 창업 생태계 가치 153조원 돌파, 글로벌 9위 기록</div>
+    <div class="issue-divider" style="background:#34d399"></div>
+    <div class="issue-summary">서울의 창업 생태계 가치가 7년 만에 153조원 이상 성장하며 글로벌 창업 생태계 평가에서 세계 9위를 차지했습니다. 서울경제진흥원(SBA)은 지속적인 기술 스타트업 육성과 일자리 창출을 통해 서울이 글로벌 혁신도시로 자리매김했다고 밝혔습니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 1개&nbsp;·&nbsp;<a href='https://www.etnews.com/20260619000266'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 21일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-4">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-trends">
+  <div class="trends-header">
+    <span class="trends-icon">&#128200;</span>
+    <span class="trends-title">주목할 트렌드 키워드</span>
+  </div>
+  <div class="trends-list"><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#128202;</span><span class="trend-keyword">#AI 에이전트 (Agent)</span></div><div class="trend-desc">단순한 챗봇을 넘어 스스로 업무를 수행하고 학습하는 AI 에이전트 기술이 급부상하며 표준화 경쟁이 치열해지고 있습니다.</div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#127919;</span><span class="trend-keyword">#친환경 데이터센터</span></div><div class="trend-desc">전력 소비가 극심한 AI 데이터센터의 대안으로 바다 위에 띄워 파력 발전과 해수를 냉각에 활용하는 해상 데이터센터 기술이 주목받고 있습니다.</div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#9889;</span><span class="trend-keyword">#지정학적 리스크</span></div><div class="trend-desc">호르무즈 해협 폐쇄 우려 등 중동 지역의 긴장 재고조가 국내외 거시경제 및 물류망에 미치는 영향에 대해 금융당국이 모니터링을 강화하고 있습니다.</div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 6월 21일 (일)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
