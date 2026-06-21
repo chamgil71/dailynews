@@ -33,17 +33,43 @@ os.makedirs(PUBLISH_DIR, exist_ok=True)
 
 
 def _extract_md_field(val: str) -> str:
-    """Gemini가 {"summary":"..."} JSON으로 반환한 마크다운 필드를 정규화."""
+    """Gemini가 JSON 래퍼로 반환한 마크다운 필드를 정규화.
+
+    처리 패턴:
+      {"summary": "..."}            → summary 값 반환
+      {"report": "..."}             → report 값 반환
+      {"title": "...", "points": [{"point":"...","commentary":"..."},...]}
+                                    → 마크다운 목록으로 변환
+    """
     if not isinstance(val, str):
         return val
     trimmed = val.strip()
-    if trimmed.startswith('{'):
-        try:
-            parsed = json.loads(trimmed)
-            if isinstance(parsed, dict) and "summary" in parsed:
-                return parsed["summary"]
-        except Exception:
-            pass
+    if not trimmed.startswith('{'):
+        return val
+    try:
+        parsed = json.loads(trimmed)
+        if not isinstance(parsed, dict):
+            return val
+        # {"summary": "..."} 또는 {"report": "..."} 패턴
+        for key in ("summary", "report"):
+            if key in parsed and isinstance(parsed[key], str):
+                return parsed[key]
+        # {"title": "...", "points": [{"point":...,"commentary":...},...]} 패턴
+        if "points" in parsed and isinstance(parsed["points"], list):
+            title = parsed.get("title", "")
+            lines = []
+            if title:
+                lines.append(f"## {title}\n")
+            for item in parsed["points"]:
+                point = item.get("point", "") if isinstance(item, dict) else str(item)
+                commentary = item.get("commentary", "") if isinstance(item, dict) else ""
+                if point:
+                    lines.append(f"- **{point}**")
+                    if commentary:
+                        lines.append(f"  {commentary}")
+            return "\n".join(lines) if lines else val
+    except Exception:
+        pass
     return val
 
 

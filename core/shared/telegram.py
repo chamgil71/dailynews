@@ -293,7 +293,11 @@ def send_ai_issue_telegram(report_data: dict, date_str: str) -> bool:
             import json as _json
             _obj = _json.loads(_raw_outlook)
             _points = _obj.get("points", [])
-            outlook = " / ".join(p.get("point", "") for p in _points[:3] if p.get("point"))
+            if _points:
+                outlook = " / ".join(p.get("point", "") for p in _points[:3] if p.get("point"))
+            else:
+                # {"summary":...} / {"report":...} 래퍼 폴백
+                outlook = _obj.get("summary") or _obj.get("report") or _raw_outlook
         except Exception:
             outlook = _raw_outlook
     else:
