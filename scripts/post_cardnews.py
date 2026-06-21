@@ -405,14 +405,29 @@ def _threads_publish(user_id: str, token: str, creation_id: str) -> dict:
 
 
 def _post_threads_text(user_id: str, token: str, caption: str) -> str:
-    """텍스트 단독 포스트 생성 후 게시. 생성된 post id 반환."""
-    container = _threads_post(f"/{user_id}/threads", {
-        "media_type":   "TEXT",
-        "text":         caption,
-        "access_token": token,
-    })
-    result = _threads_publish(user_id, token, container["id"])
-    return result.get("id", "")
+    """텍스트 단독 포스트 생성 후 게시. 생성된 post id 반환.
+    is_transient 에러 시 최대 3회 재시도(10s, 20s 대기)."""
+    last_exc: Exception | None = None
+    for attempt in range(1, 4):
+        try:
+            container = _threads_post(f"/{user_id}/threads", {
+                "media_type":   "TEXT",
+                "text":         caption,
+                "access_token": token,
+            })
+            result = _threads_publish(user_id, token, container["id"])
+            return result.get("id", "")
+        except RuntimeError as e:
+            last_exc = e
+            err_str = str(e)
+            # is_transient 에러만 재시도 (영구 에러는 즉시 실패)
+            if attempt < 3 and ("is_transient" in err_str or "code': 2" in err_str or "unexpected error" in err_str.lower()):
+                wait = attempt * 10
+                print(f"  [Threads] 일시적 오류 재시도 ({attempt}/3) — {wait}초 대기: {e}")
+                time.sleep(wait)
+            else:
+                raise
+    raise last_exc  # type: ignore
 
 
 def _post_threads_carousel(user_id: str, token: str,
