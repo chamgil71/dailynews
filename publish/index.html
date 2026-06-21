@@ -1012,11 +1012,29 @@ function md2html(md) {
   return marked.parse(md);
 }
 function extractMdField(val) {
+  // Gemini가 마크다운 대신 JSON 래퍼로 반환한 경우 텍스트로 환원.
+  // 처리 패턴: {"summary":"..."}, {"report":"..."}, {"title":"...","points":[...]}
   if (!val || typeof val !== 'string') return val || '';
   const trimmed = val.trim();
-  if (trimmed.startsWith('{')) {
-    try { const p = JSON.parse(trimmed); return p.summary || val; } catch (e) {}
-  }
+  if (!trimmed.startsWith('{')) return val;
+  try {
+    const p = JSON.parse(trimmed);
+    if (typeof p.summary === 'string') return p.summary;
+    if (typeof p.report  === 'string') return p.report;
+    if (Array.isArray(p.points)) {
+      const lines = [];
+      if (p.title) lines.push('## ' + p.title + '\n');
+      for (const it of p.points) {
+        const point = (it && typeof it === 'object') ? (it.point || '') : String(it);
+        const comment = (it && typeof it === 'object') ? (it.commentary || it.comment || '') : '';
+        if (point) {
+          lines.push('- **' + point + '**');
+          if (comment) lines.push('  ' + comment);
+        }
+      }
+      if (lines.length) return lines.join('\n');
+    }
+  } catch (e) {}
   return val;
 }
 
