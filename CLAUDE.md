@@ -1,6 +1,7 @@
 # CLAUDE.md — AI News Brief 프로젝트 컨텍스트
 
 > 세션 시작 시 이 파일을 읽고 현재 상태에서 이어서 작업합니다.
+> **세션 시작 직후 반드시 `git pull origin main` 실행** — 자동 빌드 커밋(`stock_build.yml` 등)이 쌓여 있을 수 있음. 이를 건너뛰면 `publish/` 파일 충돌 발생.
 > 세션 종료 전 "CLAUDE.md 업데이트해줘" 로 항상 갱신하세요.
 
 ---
