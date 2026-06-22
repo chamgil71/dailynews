@@ -32,8 +32,10 @@ from config.settings import (
 )
 from core.shared.report_date import kst_now, kst_today
 
-_TEMPLATE_FILE       = Path(__file__).parent.parent.parent / "templates" / "email_news.html"
-_STOCK_TEMPLATE_FILE = Path(__file__).parent.parent.parent / "templates" / "email_stock.html"
+_TEMPLATE_FILE               = Path(__file__).parent.parent.parent / "templates" / "email_news.html"
+_STOCK_TEMPLATE_FILE         = Path(__file__).parent.parent.parent / "templates" / "email_stock.html"
+_WEEKLY_STOCK_TEMPLATE_FILE  = Path(__file__).parent.parent.parent / "templates" / "email_weekly_stock.html"
+_AI_ISSUE_TEMPLATE_FILE      = Path(__file__).parent.parent.parent / "templates" / "email_ai_issue.html"
 
 
 def _get_email_theme() -> str:
@@ -349,6 +351,152 @@ def _render_stock_email_template(md: str, recipient_email: str, theme_name: str 
         return None
 
 
+def _parse_md_for_weekly_stock_email(md: str) -> dict:
+    """주간 주식 MD에서 이메일 섹션 추출."""
+    _SEP = r'(?=\n---|\n## |\Z)'
+    _ext = ["tables", "cuddled-lists"]
+
+    summary_m  = re.search(r'## ■ 주간 한줄 총평[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    index_m    = re.search(r'## \d+\. 주간 지수 성과[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    themes_m   = re.search(r'## \d+\. 이번 주 핫 테마[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    strategy_m = re.search(r'## \d+\. 차주 전략 포인트[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    risk_m     = re.search(r'## \d+\. 리스크[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    schedule_m = re.search(r'## \d+\. 차주 주요 일정[^\n]*\n([\s\S]*?)' + _SEP, md, re.M)
+    temp_m     = re.search(r'## 주간 온도계[:\s]*(.*)', md)
+    reason_m   = re.search(r'## 주간 온도계.*\n+>\s*(.*)', md)
+
+    # 기간 파싱 (> 기간: ... 줄에서)
+    period_m = re.search(r'기간:\s*(.+?)(?:\s*\||\s*$)', md, re.M)
+    period   = period_m.group(1).strip() if period_m else ""
+
+    summary_html  = markdown2.markdown(summary_m.group(1).strip(),  extras=_ext) if summary_m  else ""
+    index_html    = markdown2.markdown(index_m.group(1).strip(),    extras=_ext) if index_m    else ""
+    themes_html   = markdown2.markdown(themes_m.group(1).strip(),   extras=_ext) if themes_m   else ""
+    strategy_html = markdown2.markdown(strategy_m.group(1).strip(), extras=_ext) if strategy_m else ""
+    risk_html     = markdown2.markdown(risk_m.group(1).strip(),     extras=_ext) if risk_m     else ""
+    schedule_html = markdown2.markdown(schedule_m.group(1).strip(), extras=_ext) if schedule_m else ""
+
+    temperature_display = temp_m.group(1).strip() if temp_m else "🟡 중립"
+    temperature_reason  = reason_m.group(1).strip() if reason_m else ""
+
+    if "🔴" in temperature_display or "리스크오프" in temperature_display:
+        temperature_color = "#dc2626"
+    elif "🔵" in temperature_display or "침체" in temperature_display:
+        temperature_color = "#2563eb"
+    elif "🟢" in temperature_display or "리스크온" in temperature_display:
+        temperature_color = "#16a34a"
+    elif "🟠" in temperature_display or "강세" in temperature_display or "상승" in temperature_display:
+        temperature_color = "#ea580c"
+    else:
+        temperature_color = "#ca8a04"
+
+    return {
+        "period":               period,
+        "summary_html":         summary_html,
+        "index_html":           index_html,
+        "themes_html":          themes_html,
+        "strategy_html":        strategy_html,
+        "risk_html":            risk_html,
+        "schedule_html":        schedule_html,
+        "temperature_display":  temperature_display,
+        "temperature_color":    temperature_color,
+        "temperature_reason":   temperature_reason,
+    }
+
+
+def _render_weekly_stock_email_template(md: str, recipient_email: str, theme_name: str = "classic",
+                                         report_date: str | None = None) -> str | None:
+    """주간 주식 전용 Jinja2 템플릿 렌더링. 실패 시 None 반환."""
+    if not _WEEKLY_STOCK_TEMPLATE_FILE.exists():
+        return None
+    try:
+        from jinja2 import Environment, FileSystemLoader
+
+        tokens = None
+        for candidate in (f"themes.skins.{theme_name}", f"themes.{theme_name}"):
+            try:
+                tokens = importlib.import_module(candidate).TOKENS
+                break
+            except (ModuleNotFoundError, AttributeError):
+                pass
+        if tokens is None:
+            tokens = importlib.import_module("themes.skins.classic").TOKENS
+
+        c = tokens["colors"]
+        t = tokens["typography"]
+
+        _token = _make_token(recipient_email)
+        unsubscribe_url = (
+            f"{SITE_BASE_URL}/api/unsubscribe?email={recipient_email}&token={_token}"
+            if SITE_BASE_URL else ""
+        )
+
+        sections = _parse_md_for_weekly_stock_email(md)
+        if not report_date:
+            logger.warning("[이메일 템플릿] report_date 미전달 — KST 실행일로 폴백")
+        dt = datetime.strptime(report_date, "%Y-%m-%d") if report_date else kst_now()
+
+        env = Environment(loader=FileSystemLoader(str(_WEEKLY_STOCK_TEMPLATE_FILE.parent)),
+                          autoescape=False)
+        tmpl = env.get_template(_WEEKLY_STOCK_TEMPLATE_FILE.name)
+
+        return tmpl.render(
+            c=c, t=t,
+            date=dt.strftime("%Y-%m-%d"),
+            display_date=dt.strftime("%Y년 %m월 %d일"),
+            site_url=SITE_BASE_URL,
+            unsubscribe_url=unsubscribe_url,
+            **sections,
+        )
+    except Exception as e:
+        logger.warning(f"[주간주식 이메일 템플릿 렌더링 실패] {e} → 기본 방식으로 폴백")
+        return None
+
+
+def _render_ai_issue_email_template(data: dict, recipient_email: str,
+                                     report_date: str | None = None) -> str | None:
+    """AI이슈 전용 Jinja2 템플릿 렌더링 (수신자별 HMAC 구독취소 URL 포함). 실패 시 None 반환."""
+    if not _AI_ISSUE_TEMPLATE_FILE.exists():
+        return None
+    try:
+        from jinja2 import Environment, FileSystemLoader
+
+        _token = _make_token(recipient_email)
+        unsubscribe_url = (
+            f"{SITE_BASE_URL}/api/unsubscribe?email={recipient_email}&token={_token}"
+            if SITE_BASE_URL else ""
+        )
+
+        dt = datetime.strptime(report_date, "%Y-%m-%d") if report_date else kst_now()
+        date_str = dt.strftime("%Y-%m-%d")
+
+        site_url = (SITE_BASE_URL or "").rstrip("/") + "/"
+
+        def _fmt_sign(val) -> str:
+            try:
+                return f"{float(val):+.2f}"
+            except (ValueError, TypeError):
+                return str(val)
+
+        env = Environment(loader=FileSystemLoader(str(_AI_ISSUE_TEMPLATE_FILE.parent)),
+                          autoescape=False)
+        env.filters["weekly_change_pct"] = _fmt_sign
+        tmpl = env.get_template(_AI_ISSUE_TEMPLATE_FILE.name)
+
+        return tmpl.render(
+            period=data.get("period", ""),
+            date_str=date_str,
+            top10=data.get("top10", []),
+            weekly_tips=data.get("weekly_tips", []),
+            stock_snapshots=data.get("stock_snapshots", []),
+            site_url=site_url,
+            unsubscribe_url=unsubscribe_url,
+        )
+    except Exception as e:
+        logger.warning(f"[AI이슈 이메일 템플릿 렌더링 실패] {e} → 기본 방식으로 폴백")
+        return None
+
+
 def _md_to_html(md: str, recipient_email: str) -> str:
     body = markdown2.markdown(md, extras=["tables", "fenced-code-blocks"])
 
@@ -372,11 +520,16 @@ def send_email(md_content: str = "", html_content: str | None = None,
                subject_override: str | None = None,
                template: str | None = None,
                report_date: str | None = None,
-               channel: str = "news") -> bool:
+               channel: str = "news",
+               json_data: dict | None = None) -> bool:
     """이메일 발송.
-    template:    "stock" → email_stock.html, "ai-issue" → email_ai_issue.html, None/"news" → email_news.html
+    template:    "stock" → email_stock.html
+                 "weekly-stock" → email_weekly_stock.html
+                 "ai-issue" → email_ai_issue.html (json_data 필요)
+                 None/"news" → email_news.html
     report_date: 이메일 본문 날짜 (YYYY-MM-DD). 미전달 시 실행일 사용.
     channel:     Supabase 구독자 필터 채널 ("news" | "stock" | "ai_issue")
+    json_data:   AI이슈 전용 — 파싱된 JSON dict
     우선순위: html_content > template 렌더러 > _md_to_html() 폴백
     """
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
@@ -409,6 +562,13 @@ def send_email(md_content: str = "", html_content: str | None = None,
                     elif template == "stock":
                         _theme = theme_name or _get_email_theme()
                         body = (_render_stock_email_template(md_content, email, _theme, report_date)
+                                or _md_to_html(md_content, email))
+                    elif template == "weekly-stock":
+                        _theme = theme_name or _get_email_theme()
+                        body = (_render_weekly_stock_email_template(md_content, email, _theme, report_date)
+                                or _md_to_html(md_content, email))
+                    elif template == "ai-issue":
+                        body = (_render_ai_issue_email_template(json_data or {}, email, report_date)
                                 or _md_to_html(md_content, email))
                     else:
                         _theme = theme_name or _get_email_theme()
