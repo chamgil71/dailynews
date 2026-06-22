@@ -97,12 +97,10 @@ def _chg_color(chg: str) -> str:
 def _stat_row(col1: str, col2: str, col3: str, *, col1_w: str = "130px") -> str:
     """3열 통계 행 (label | value | change) — 섹터·지수 공용."""
     return (
-        f'<div style="display:flex;align-items:center;justify-content:space-between;'
-        f'padding:9px 0;border-bottom:1px solid #334155">'
-        f'<span style="font-size:21px;color:#94a3b8;width:{col1_w};flex-shrink:0">{col1}</span>'
-        f'<span style="font-size:21px;color:#f1f5f9;font-weight:500;flex:1">{col2}</span>'
-        f'<span style="font-size:21px;color:{_chg_color(col3)};font-weight:700;'
-        f'white-space:nowrap">{col3}</span>'
+        f'<div class="stat-row">'
+        f'<span class="stat-col1" style="width:{col1_w}">{col1}</span>'
+        f'<span class="stat-col2">{col2}</span>'
+        f'<span class="stat-col3" style="color:{_chg_color(col3)}">{col3}</span>'
         f'</div>'
     )
 
@@ -114,7 +112,7 @@ def _stat_section(icon: str, title: str, rows_html: str) -> str:
         f'<span class="trends-icon">{icon}</span>'
         f'<span class="trends-title">{title}</span>'
         '</div>'
-        f'<div style="padding:0 4px">{rows_html}</div>'
+        f'<div class="stat-body">{rows_html}</div>'
     )
 
 
@@ -344,10 +342,8 @@ def build_stock_html(date_str: str, data: dict) -> str:
             sum_html += (
                 f'<div class="cover-issue">'
                 f'<div>'
-                f'<div style="font-size:28px;font-weight:700;color:#f1f5f9;margin-bottom:6px">'
-                f'{_trunc(bold, 30)}</div>'
-                f'<div style="font-size:25px;color:#94a3b8;line-height:1.5">'
-                f'{_trunc(rest, 60)}</div>'
+                f'<div class="sum-title">{_trunc(bold, 30)}</div>'
+                f'<div class="sum-body">{_trunc(rest, 60)}</div>'
                 f'</div></div>'
             )
         else:
@@ -365,7 +361,7 @@ def build_stock_html(date_str: str, data: dict) -> str:
       <div class="logo-sub">{ch['sublabel']}</div>
     </div>
   </div>
-  <div class="cover-date" style="font-size:36px">{temp_disp}&nbsp;&nbsp;{_fmt_date(date_str)}</div>
+  <div class="cover-date cover-date-lg">{temp_disp}&nbsp;&nbsp;{_fmt_date(date_str)}</div>
   <div class="cover-divider"></div>
   <div class="cover-headline">오늘의 시황 요약</div>
   <div class="cover-issues">{sum_html}</div>
@@ -380,11 +376,11 @@ def build_stock_html(date_str: str, data: dict) -> str:
         chg   = info.get("chg_str", "")
         return (
             f'<div class="trend-item" style="border-left-color:{accent}">'
-            f'<div class="trend-header" style="margin-bottom:8px">'
-            f'<span class="trend-keyword" style="font-size:28px">{label}</span>'
-            f'<span style="font-size:26px;color:#f8fafc;font-weight:700;margin-left:auto">{close}</span>'
+            f'<div class="trend-header mkt-header">'
+            f'<span class="trend-keyword mkt-keyword">{label}</span>'
+            f'<span class="mkt-close">{close}</span>'
             f'</div>'
-            f'<div class="trend-desc" style="font-size:24px">{chg}</div>'
+            f'<div class="trend-desc mkt-chg">{chg}</div>'
             f'</div>'
         )
 
@@ -462,7 +458,7 @@ def build_weekly_stock_html(date_str: str, data: dict) -> str:
       <div class="logo-sub">{week_range or _fmt_date(date_str)}</div>
     </div>
   </div>
-  <div class="cover-date" style="font-size:32px">{temp_disp}</div>
+  <div class="cover-date">{temp_disp}</div>
   <div class="cover-divider"></div>
   <div class="cover-headline">주간 총평</div>
   <div class="cover-issues">
@@ -483,38 +479,31 @@ def build_weekly_stock_html(date_str: str, data: dict) -> str:
                    _fmt_date(date_str))
 
     theme_items = "".join(
-        f'<div style="margin-bottom:14px">'
-        f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
-        f'<span style="color:{ISSUE_COLORS[i]};font-size:24px">{ISSUE_ICONS[i]}</span>'
-        f'<span style="font-size:26px;font-weight:700;color:#f1f5f9">'
-        f'{_trunc(t.get("title",""), 24)}</span>'
+        f'<div class="theme-item">'
+        f'<div class="theme-header">'
+        f'<span class="theme-icon" style="color:{ISSUE_COLORS[i]}">{ISSUE_ICONS[i]}</span>'
+        f'<span class="theme-title">{_trunc(t.get("title",""), 24)}</span>'
         f'</div>'
-        f'<div style="font-size:21px;color:#94a3b8;line-height:1.4">'
+        f'<div class="theme-desc">'
         f'{_trunc((t.get("description","") or "").split(chr(10))[0].strip(), 70)}'
         f'</div></div>'
         for i, t in enumerate(hot_themes)
     )
     cards += _card(2, total,
-                   _stat_section("&#128293;", "이번 주 핫 테마 TOP 3",
-                                 f'<div style="padding:0 4px">{theme_items}</div>'),
+                   _stat_section("&#128293;", "이번 주 핫 테마 TOP 3", theme_items),
                    _fmt_date(date_str))
 
     sched_rows = "".join(
-        f'<div style="display:flex;align-items:flex-start;'
-        f'padding:8px 0;border-bottom:1px solid #334155;gap:8px">'
-        f'<span style="font-size:19px;color:{accent};width:100px;flex-shrink:0;font-weight:600">'
-        f'{r.get("date","")}</span>'
-        f'<div style="flex:1">'
-        f'<div style="font-size:21px;color:#f1f5f9;font-weight:500">'
-        f'{_trunc(r.get("event",""), 28)}</div>'
-        f'<div style="font-size:18px;color:#94a3b8">'
-        f'{_trunc(r.get("impact",""), 36)}</div>'
+        f'<div class="sched-row">'
+        f'<span class="sched-date" style="color:{accent}">{r.get("date","")}</span>'
+        f'<div class="sched-body">'
+        f'<div class="sched-event">{_trunc(r.get("event",""), 28)}</div>'
+        f'<div class="sched-impact">{_trunc(r.get("impact",""), 36)}</div>'
         f'</div></div>'
         for r in data.get("next_week_schedule", [])[:6]
     )
     cards += _card(3, total,
-                   _stat_section("&#128197;", "차주 주요 일정",
-                                 f'<div style="padding:0 4px">{sched_rows}</div>'),
+                   _stat_section("&#128197;", "차주 주요 일정", sched_rows),
                    _fmt_date(date_str))
 
     return _html_wrapper(f"주간 주식 시황 {date_str}", css, cards)
