@@ -94,10 +94,10 @@ def _send_weekly_stock(date_str: str) -> None:
         logger.error(f"[이메일/주간주식] MD 파일 없음: {md_path}")
         sys.exit(1)
 
-    report_dt = datetime.strptime(date_str, "%Y-%m-%d")
     subject = f"📅 [주간 시황] {date_str} 주간 주식 종합 브리핑"
     ok = send_email(
         md_path.read_text(encoding="utf-8"),
+        template="weekly-stock",
         subject_override=subject,
         report_date=date_str,
         channel="stock",
@@ -106,37 +106,6 @@ def _send_weekly_stock(date_str: str) -> None:
 
 
 # ── ai-issue ──────────────────────────────────────────────────────────────────
-def _build_ai_issue_html(data: dict, date_str: str) -> str:
-    from jinja2 import Environment, BaseLoader
-    from config.settings import SITE_BASE_URL, GMAIL_USER
-
-    template_path = Path(_ROOT) / "templates" / "email_ai_issue.html"
-    if not template_path.exists():
-        raise FileNotFoundError(f"이메일 템플릿 없음: {template_path}")
-
-    env = Environment(loader=BaseLoader())
-
-    def _fmt_sign(val) -> str:
-        try:
-            return f"{float(val):+.2f}"
-        except (ValueError, TypeError):
-            return str(val)
-
-    env.filters["weekly_change_pct"] = _fmt_sign
-    tpl = env.from_string(template_path.read_text(encoding="utf-8"))
-
-    site_url = (SITE_BASE_URL or "https://chamgil71.github.io/dailynews/").rstrip("/") + "/"
-    return tpl.render(
-        period=data.get("period", ""),
-        date_str=date_str,
-        top10=data.get("top10", []),
-        weekly_tips=data.get("weekly_tips", []),
-        stock_snapshots=data.get("stock_snapshots", []),
-        site_url=site_url,
-        unsubscribe_url=f"{site_url}api/unsubscribe?email={GMAIL_USER}",
-    )
-
-
 def _send_ai_issue(date_str: str) -> None:
     json_path = Path(_ROOT) / "reports" / "ai-issue" / f"ai_issue_{date_str}.json"
     if not json_path.exists():
@@ -154,15 +123,14 @@ def _send_ai_issue(date_str: str) -> None:
         logger.error("[이메일/AI이슈] top10 데이터 공란 — 불완전 보고서로 판단, 발송 건너뜀")
         sys.exit(1)
 
-    try:
-        html = _build_ai_issue_html(data, date_str)
-        logger.info(f"[이메일/AI이슈] 템플릿 컴파일 완료 ({len(html.encode()) // 1024}KB)")
-    except Exception as e:
-        logger.error(f"[이메일/AI이슈] 템플릿 컴파일 실패: {e}")
-        sys.exit(1)
-
     subject = f"🤖 [AI Weekly] 이번 주 가장 주목할 AI 이슈 & 논문 픽 — {date_str}"
-    ok = send_email(html_content=html, subject_override=subject, channel="ai-issue")
+    ok = send_email(
+        template="ai-issue",
+        json_data=data,
+        subject_override=subject,
+        report_date=date_str,
+        channel="ai-issue",
+    )
     logger.info(f"[이메일/AI이슈] {'완료' if ok else '실패 또는 건너뜀'}")
 
 

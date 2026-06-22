@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>📅 주간 주식 시황 — {{ date }}</title>
+<style type="text/css">
+  strong, b { font-weight: bold !important; }
+  p { margin: 4px 0 8px 0 !important; line-height: 1.68 !important; }
+  ul, ol { padding-left: 1.4em !important; margin: 6px 0 10px 0 !important; }
+  li { margin-bottom: 6px !important; line-height: 1.6 !important; }
+  li > p { margin: 0 !important; }
+  a { color: {{ c.blue }} !important; text-decoration: none !important; }
+  table { border-collapse: collapse; }
+  td { vertical-align: top; }
+
+  @media screen and (max-width: 600px) {
+    .hd-cell { padding: 18px 20px 14px !important; }
+    .body-cell { padding: 14px 14px 0 !important; }
+    .footer-cell { padding: 14px 20px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:{{ c.bg }};font-family:{{ t.font_sans }};-webkit-font-smoothing:antialiased">
+
+<!--[if mso]><table width="700" align="center"><tr><td><![endif]-->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background:{{ c.bg }};min-width:320px">
+<tr><td align="center" style="padding:24px 12px">
+
+  <table width="700" cellpadding="0" cellspacing="0" border="0"
+         style="max-width:700px;width:100%;border-radius:12px;
+                box-shadow:0 4px 24px rgba(0,0,0,.13)">
+
+    <!-- HEADER -->
+    <tr>
+      <td class="hd-cell" style="background:{{ c.navy }};border-radius:12px 12px 0 0;padding:22px 28px 18px">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td>
+              <div style="color:#ffffff;font-size:1.25rem;font-weight:800;letter-spacing:-.4px;line-height:1.2">
+                📅 주간 주식 시황 종합
+              </div>
+              <div style="color:{{ c.blue_light }};font-size:.82rem;margin-top:5px;letter-spacing:.02em">
+                {{ period }}
+              </div>
+            </td>
+            <td align="right" style="vertical-align:top">
+              <div style="display:inline-block;background:{{ temperature_color }};
+                          border-radius:8px;padding:6px 14px;
+                          color:#ffffff;font-size:.85rem;font-weight:700;
+                          white-space:nowrap;letter-spacing:.02em">
+                {{ temperature_display }}
+              </div>
+              <div style="margin-top:6px;text-align:right">
+                <span style="background:rgba(255,255,255,.10);border-radius:4px;
+                             padding:3px 8px;color:rgba(255,255,255,.5);
+                             font-size:.72rem;white-space:nowrap">
+                  {{ date }}
+                </span>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- 온도계 근거 -->
+    {% if temperature_reason %}
+    <tr>
+      <td style="background:{{ c.navy }};padding:10px 28px;border-top:1px solid rgba(255,255,255,.08)">
+        <div style="color:{{ c.blue_light }};font-size:.78rem;line-height:1.55;font-style:italic">
+          {{ temperature_reason }}
+        </div>
+      </td>
+    </tr>
+    {% endif %}
+
+    <!-- 주간 총평 -->
+    {% if summary_html %}
+    <tr>
+      <td class="body-cell" style="background:{{ c.card }};padding:20px 20px 0">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="border-radius:10px;border:1px solid {{ c.border }};overflow:hidden">
+          <tr>
+            <td>
+              <div style="background:{{ c.navy }};padding:11px 18px">
+                <span style="font-weight:700;font-size:.86rem;color:#ffffff">■ 주간 한줄 총평</span>
+              </div>
+              <div style="padding:16px 18px;font-size:.83rem;color:{{ c.text }};line-height:1.75">
+                {{ summary_html | safe }}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+
+    <!-- 핫 테마 TOP 3 -->
+    {% if themes_html %}
+    <tr>
+      <td class="body-cell" style="background:{{ c.card }};padding:14px 20px 0">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="border-radius:10px;border:1px solid {{ c.border }};overflow:hidden">
+          <tr>
+            <td>
+              <div style="background:{{ c.navy }};padding:11px 18px">
+                <span style="font-weight:700;font-size:.86rem;color:#ffffff">🔥 이번 주 핫 테마 TOP 3</span>
+              </div>
+              <div style="padding:16px 18px;font-size:.82rem;color:{{ c.text }};line-height:1.72">
+                {{ themes_html | safe }}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+
+    <!-- 주간 지수 성과 -->
+    {% if index_html %}
+    <tr>
+      <td class="body-cell" style="background:{{ c.card }};padding:14px 20px 0">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="border-radius:10px;border:1px solid {{ c.border }};overflow:hidden">
+          <tr>
+            <td>
+              <div style="background:{{ c.navy }};padding:11px 18px">
+                <span style="font-weight:700;font-size:.86rem;color:#ffffff">📊 주간 지수 성과</span>
+              </div>
+              <div style="padding:16px 18px;font-size:.82rem;color:{{ c.text }};line-height:1.72">
+                {{ index_html | safe }}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+
+    <!-- 차주 전략 포인트 -->
+    {% if strategy_html %}
+    <tr>
+      <td class="body-cell" style="background:{{ c.card }};padding:14px 20px 0">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="border-radius:10px;border:1px solid {{ c.border }};overflow:hidden">
+          <tr>
+            <td>
+              <div style="background:{{ c.navy }};padding:11px 18px">
+                <span style="font-weight:700;font-size:.86rem;color:#ffffff">🎯 차주 전략 포인트</span>
+              </div>
+              <div style="padding:16px 18px;font-size:.82rem;color:{{ c.text }};line-height:1.72">
+                {{ strategy_html | safe }}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+
+    <!-- 리스크 요인 -->
+    {% if risk_html %}
+    <tr>
+      <td class="body-cell" style="background:{{ c.card }};padding:14px 20px 0">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="border-radius:10px;border:1px solid {{ c.border }};overflow:hidden">
+          <tr>
+            <td>
+              <div style="background:#dc2626;padding:11px 18px">
+                <span style="font-weight:700;font-size:.86rem;color:#ffffff">⚠️ 리스크 요인</span>
+              </div>
+              <div style="padding:16px 18px;font-size:.82rem;color:{{ c.text }};line-height:1.72">
+                {{ risk_html | safe }}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+
+    <!-- 차주 주요 일정 -->
+    {% if schedule_html %}
+    <tr>
+      <td class="body-cell" style="background:{{ c.card }};padding:14px 20px 20px">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="border-radius:10px;border:1px solid {{ c.border }};overflow:hidden">
+          <tr>
+            <td>
+              <div style="background:{{ c.navy }};padding:11px 18px">
+                <span style="font-weight:700;font-size:.86rem;color:#ffffff">📅 차주 주요 일정</span>
+              </div>
+              <div style="padding:16px 18px;font-size:.82rem;color:{{ c.text }};line-height:1.72">
+                {{ schedule_html | safe }}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+
+    <!-- FOOTER -->
+    <tr>
+      <td class="footer-cell" style="background:{{ c.navy }};border-radius:0 0 12px 12px;padding:16px 28px">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="color:rgba(255,255,255,.4);font-size:.73rem;line-height:1.6">
+              AI Stock Weekly · 자동 생성 주간 주식 시황<br>
+              <span style="font-size:.68rem;color:rgba(255,255,255,.25)">
+                ※ 투자 권유 아님. 참고 목적으로만 활용하세요.
+              </span>
+            </td>
+            <td align="right" style="white-space:nowrap;vertical-align:middle;line-height:1.8">
+              {% if site_url %}
+              <a href="{{ site_url }}"
+                 style="color:{{ c.blue_light }};font-size:.72rem;text-decoration:none;display:block">
+                대시보드 바로가기 ↗
+              </a>
+              {% endif %}
+              {% if unsubscribe_url %}
+              <a href="{{ unsubscribe_url }}"
+                 style="color:rgba(255,255,255,.3);font-size:.68rem;text-decoration:none;display:block">
+                구독 취소
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+  </table>
+
+</td></tr>
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+
+</body>
+</html>
