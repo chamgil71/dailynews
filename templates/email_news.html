@@ -41,7 +41,7 @@
 
     /* 헤더·섹션 패딩 축소 */
     .hd-cell  { padding: 16px 16px 12px !important; }
-    .stats-cell { padding: 0 16px 16px !important; }
+    .stats-cell { padding: 16px 16px 0 !important; }
     .body-pad { padding: 16px 10px 10px !important; }
     .body-pad-sm { padding: 0 10px 12px !important; }
 
@@ -103,52 +103,6 @@
       </td>
     </tr>
 
-    <!-- ══════════════════════════════════════════════
-         STATS BAR — 통계 + 바로가기
-    ══════════════════════════════════════════════ -->
-    <tr>
-      <td class="stats-cell"
-          style="background:{{ c.navy }};padding:0 28px 20px">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr>
-            <td align="center"
-                style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
-              <div style="color:#ffffff;font-size:1.1rem;font-weight:700">{{ stats.total }}</div>
-              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">총 기사</div>
-            </td>
-            <td width="8"></td>
-            <td align="center"
-                style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
-              <div style="color:{{ c.blue_light }};font-size:1.1rem;font-weight:700">{{ stats.en }}</div>
-              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">영어</div>
-            </td>
-            <td width="8"></td>
-            <td align="center"
-                style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
-              <div style="color:{{ c.green }};font-size:1.1rem;font-weight:700">{{ stats.ko }}</div>
-              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">한국어</div>
-            </td>
-            <td width="8"></td>
-            <td align="center"
-                style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
-              <div style="color:{{ c.orange }};font-size:1.1rem;font-weight:700">{{ stats.sent_to_ai }}</div>
-              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">AI 분석</div>
-            </td>
-            {% if site_url %}
-            <td width="8"></td>
-            <td align="center"
-                style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px 8px">
-              <a href="{{ site_url }}"
-                 style="color:#ffffff;text-decoration:none;font-size:.78rem;font-weight:700">
-                🔗 바로가기
-              </a>
-              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">웹 버전</div>
-            </td>
-            {% endif %}
-          </tr>
-        </table>
-      </td>
-    </tr>
 
     <!-- ══════════════════════════════════════════════
          2단 분석 — 해외 | 국내 이슈 & 트렌드
@@ -232,34 +186,54 @@
     </tr>
     {% endif %}
 
+
     <!-- ══════════════════════════════════════════════
-         사이트 바로가기 (기사 목록 대신 링크)
+         STATS BAR — 통계 + 바로가기
     ══════════════════════════════════════════════ -->
-    {% if site_url %}
     <tr>
-      <td class="body-pad-sm"
-          style="background:{{ c.bg }};padding:0 14px 20px">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0"
-               style="border-radius:10px;border:1px solid {{ c.border }};
-                      box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden">
+      <td class="stats-cell"
+          style="background:{{ c.navy }};padding:20px 28px 0">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td style="background:{{ c.card }};padding:20px 24px;text-align:center">
-              <div style="font-size:.85rem;color:{{ c.muted }};margin-bottom:14px;line-height:1.6">
-                오늘 수집된 <strong style="color:{{ c.text }}">{{ stats.total }}건</strong>의 전체 기사 목록과
-                상세 분석은 웹사이트에서 확인하세요.
-              </div>
-              <a href="{{ site_url }}"
-                 style="display:inline-block;background:{{ c.navy }};color:#ffffff;
-                        text-decoration:none;font-size:.85rem;font-weight:700;
-                        padding:10px 28px;border-radius:6px;letter-spacing:.02em">
-                📰 전체 기사 보기 →
-              </a>
+            <td align="center"
+                style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
+              <div style="color:#ffffff;font-size:1.1rem;font-weight:700">{{ stats.total }}</div>
+              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">총 기사</div>
             </td>
+            <td width="8"></td>
+            <td align="center"
+                style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
+              <div style="color:{{ c.blue_light }};font-size:1.1rem;font-weight:700">{{ stats.en }}</div>
+              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">영어</div>
+            </td>
+            <td width="8"></td>
+            <td align="center"
+                style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
+              <div style="color:{{ c.green }};font-size:1.1rem;font-weight:700">{{ stats.ko }}</div>
+              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">한국어</div>
+            </td>
+            <td width="8"></td>
+            <td align="center"
+                style="background:rgba(255,255,255,.10);border-radius:8px;padding:10px 4px">
+              <div style="color:{{ c.orange }};font-size:1.1rem;font-weight:700">{{ stats.sent_to_ai }}</div>
+              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">AI 분석</div>
+            </td>
+            {% if site_url %}
+            <td width="8"></td>
+            <td align="center"
+                style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px 8px">
+              <a href="{{ site_url }}"
+                 style="color:#ffffff;text-decoration:none;font-size:.78rem;font-weight:700">
+                🔗 바로가기
+              </a>
+              <div style="color:rgba(255,255,255,.55);font-size:.67rem;margin-top:3px">웹 버전</div>
+            </td>
+            {% endif %}
           </tr>
         </table>
       </td>
     </tr>
-    {% endif %}
+
 
     <!-- ══════════════════════════════════════════════
          FOOTER
@@ -274,12 +248,7 @@
               <span style="font-size:.68rem">Powered by GitHub Actions · RSS Feeds</span>
             </td>
             <td align="right" style="white-space:nowrap;vertical-align:middle;line-height:1.8">
-              {% if site_url %}
-              <a href="{{ site_url }}"
-                 style="color:{{ c.blue_light }};font-size:.72rem;text-decoration:none;display:block">
-                웹사이트 보기 ↗
-              </a>
-              {% endif %}
+
               {% if unsubscribe_url %}
               <a href="{{ unsubscribe_url }}"
                  style="color:rgba(255,255,255,.3);font-size:.68rem;text-decoration:none;display:block">
