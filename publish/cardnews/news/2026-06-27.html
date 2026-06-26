@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>AI 뉴스 카드뉴스 2026-06-27</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #38bdf8; --topbar: linear-gradient(90deg,#38bdf8,#6366f1,#a78bfa); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+
+/* ── Stat Row (공통 통계 테이블) ── */
+.stat-row  { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #334155; }
+.stat-col1 { font-size: 21px; color: #94a3b8; flex-shrink: 0; }
+.stat-col2 { font-size: 21px; color: #f1f5f9; font-weight: 500; flex: 1; }
+.stat-col3 { font-size: 21px; font-weight: 700; white-space: nowrap; }
+.stat-body { padding: 0 4px; }
+
+/* ── Market Row (주식 시장 지표) ── */
+.mkt-header  { margin-bottom: 8px; }
+.mkt-keyword { font-size: 28px; }
+.mkt-close   { font-size: 26px; color: #f8fafc; font-weight: 700; margin-left: auto; }
+.mkt-chg     { font-size: 24px; }
+
+/* ── Stock Summary (주식 커버 요약) ── */
+.sum-title { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+.sum-body  { font-size: 25px; color: #94a3b8; line-height: 1.5; }
+
+/* ── Cover Date variant ── */
+.cover-date-lg { font-size: 36px; }
+
+/* ── Theme Item (주간주식 핫 테마) ── */
+.theme-item   { margin-bottom: 14px; }
+.theme-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.theme-icon   { font-size: 24px; }
+.theme-title  { font-size: 26px; font-weight: 700; color: #f1f5f9; }
+.theme-desc   { font-size: 21px; color: #94a3b8; line-height: 1.4; }
+
+/* ── Schedule Row (주간주식 차주 일정) ── */
+.sched-row    { display: flex; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #334155; gap: 8px; }
+.sched-date   { font-size: 19px; width: 100px; flex-shrink: 0; font-weight: 600; }
+.sched-body   { flex: 1; }
+.sched-event  { font-size: 21px; color: #f1f5f9; font-weight: 500; }
+.sched-impact { font-size: 18px; color: #94a3b8; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">AI</div>
+    <div>
+      <div class="logo-main">AI <span style="color:#38bdf8">News</span> Brief</div>
+      <div class="logo-sub">매일 아침 AI가 정리하는 핵심 뉴스</div>
+    </div>
+  </div>
+  <div class="cover-date">2026년 6월 27일 (토)</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">오늘의 핵심 이슈</div>
+  <div class="cover-issues"><div class="cover-issue"><span class="cover-icon" style="color:#f59e0b">&#128293;</span><span class="cover-issue-text">정부, 반도체·AI·피지컬 AI 등 3대 메가프로젝트에 대규모…</span></div><div class="cover-issue"><span class="cover-icon" style="color:#818cf8">&#128226;</span><span class="cover-issue-text">네이버, 대화형 검색 'AI탭' 정식 출시 및 에이전트 서비스…</span></div><div class="cover-issue"><span class="cover-icon" style="color:#34d399">&#128161;</span><span class="cover-issue-text">글로벌 AI 업계, '에이전트 AI' 경쟁 심화 및 딥시크의 …</span></div></div>
+  <div class="cover-tags">#AI뉴스 #테크 #데일리브리핑 #인공지능</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#f59e0b">
+    <span class="rank-icon">&#128293;</span>
+    <span class="rank-label">핵심 이슈 1</span>
+    <span class="cat-badge">한국기술</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">정부, 반도체·AI·피지컬 AI 등 3대 메가프로젝트에 대규모 투자 예고</div>
+    <div class="issue-divider" style="background:#f59e0b"></div>
+    <div class="issue-summary">김용범 대통령실 정책실장이 반도체, 기가와트급 AI 데이터센터(AIDC), 피지컬 AI 등 3대 분야에 걸친 대규모 투자 계획을 공개할 예정이라고 밝혔다. '대한민국 대도약 3대 메가프로젝트 국민보고회'를 통해 매우 파격적인 투자 규모가 발표될 것으로 전망되어 업계의 관심이 집중되고 있다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://www.etnews.com/20260626000354'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#818cf8">
+    <span class="rank-icon">&#128226;</span>
+    <span class="rank-label">핵심 이슈 2</span>
+    <span class="cat-badge">AI·ML</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">네이버, 대화형 검색 'AI탭' 정식 출시 및 에이전트 서비스 본격화</div>
+    <div class="issue-divider" style="background:#818cf8"></div>
+    <div class="issue-summary">네이버가 생성형 AI 기반 대화형 검색 서비스인 'AI탭'을 전체 사용자를 대상으로 정식 출시했다. 단순한 정보 제공을 넘어 쇼핑, 예약, 장소 탐색 등 실제 행동으로 연결하는 '실행형 에이전트'로 서비스를 고도화할 방침이다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 1개&nbsp;·&nbsp;<a href='https://www.aitimes.com/news/articleView.html?idxno=212164'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#34d399">
+    <span class="rank-icon">&#128161;</span>
+    <span class="rank-label">핵심 이슈 3</span>
+    <span class="cat-badge">글로벌</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">글로벌 AI 업계, '에이전트 AI' 경쟁 심화 및 딥시크의 공격적 인력 충원</div>
+    <div class="issue-divider" style="background:#34d399"></div>
+    <div class="issue-summary">중국의 신흥 AI 강자 딥시크가 대규모 투자 유치를 앞두고 전 부서 인력을 최소 2배로 늘리는 공격적인 채용에 나섰다. 구글 역시 제미나이 3.5 플래시에 컴퓨터 조작 기능을 탑재하는 등 글로벌 빅테크 간의 에이전트 AI 시장 주도권 싸움이 치열해지고 있다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://www.etnews.com/20260626000257'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-4">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-trends">
+  <div class="trends-header">
+    <span class="trends-icon">&#128200;</span>
+    <span class="trends-title">주목할 트렌드 키워드</span>
+  </div>
+  <div class="trends-list"><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#128202;</span><span class="trend-keyword">#에이전트 AI</span></div><div class="trend-desc">단순 질의응답을 넘어 사용자의 컴퓨터를 직접 조작하거나 쇼핑, 예약 등 실제 비즈니스 워크플로우를 자율적으로 수행하는 인공지능 기술 트렌드입니다…</div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#127919;</span><span class="trend-keyword">#피지컬 AI</span></div><div class="trend-desc">로봇공학, 자율주행 등 물리적 하드웨어와 결합하여 현실 세계에서 직접 작동하고 상호작용하는 인공지능 기술 분야입니다.</div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#9889;</span><span class="trend-keyword">#커넥티드카 규제</span></div><div class="trend-desc">미국을 중심으로 국가 안보 및 데이터 유출 방지를 위해 중국산 소프트웨어와 부품이 탑재된 스마트 차량의 수입 및 판매를 제한하는 규제 움직임입니…</div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
