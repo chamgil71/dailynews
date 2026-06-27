@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>AI이슈 카드뉴스 2026-06-28</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #a78bfa; --topbar: linear-gradient(90deg,#a78bfa,#6366f1,#38bdf8); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+
+/* ── Stat Row (공통 통계 테이블) ── */
+.stat-row  { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #334155; }
+.stat-col1 { font-size: 21px; color: #94a3b8; flex-shrink: 0; }
+.stat-col2 { font-size: 21px; color: #f1f5f9; font-weight: 500; flex: 1; }
+.stat-col3 { font-size: 21px; font-weight: 700; white-space: nowrap; }
+.stat-body { padding: 0 4px; }
+
+/* ── Market Row (주식 시장 지표) ── */
+.mkt-header  { margin-bottom: 8px; }
+.mkt-keyword { font-size: 28px; }
+.mkt-close   { font-size: 26px; color: #f8fafc; font-weight: 700; margin-left: auto; }
+.mkt-chg     { font-size: 24px; }
+
+/* ── Stock Summary (주식 커버 요약) ── */
+.sum-title { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+.sum-body  { font-size: 25px; color: #94a3b8; line-height: 1.5; }
+
+/* ── Cover Date variant ── */
+.cover-date-lg { font-size: 36px; }
+
+/* ── Theme Item (주간주식 핫 테마) ── */
+.theme-item   { margin-bottom: 14px; }
+.theme-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.theme-icon   { font-size: 24px; }
+.theme-title  { font-size: 26px; font-weight: 700; color: #f1f5f9; }
+.theme-desc   { font-size: 21px; color: #94a3b8; line-height: 1.4; }
+
+/* ── Schedule Row (주간주식 차주 일정) ── */
+.sched-row    { display: flex; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #334155; gap: 8px; }
+.sched-date   { font-size: 19px; width: 100px; flex-shrink: 0; font-weight: 600; }
+.sched-body   { flex: 1; }
+.sched-event  { font-size: 21px; color: #f1f5f9; font-weight: 500; }
+.sched-impact { font-size: 18px; color: #94a3b8; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">AI</div>
+    <div>
+      <div class="logo-main">AI <span style="color:#a78bfa">Issue</span> Brief</div>
+      <div class="logo-sub">2026-06-22 ~ 2026-06-28</div>
+    </div>
+  </div>
+  <div class="cover-date">2026년 6월 28일 (일)</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">이번 주 TOP 이슈</div>
+  <div class="cover-issues"><div class="cover-issue"><span class="cover-icon" style="color:#f59e0b">&#128293;</span><span class="cover-issue-text">OpenAI, 차세대 모델 'GPT-5.6 Sol' 공개 및 …</span></div><div class="cover-issue"><span class="cover-icon" style="color:#818cf8">&#128226;</span><span class="cover-issue-text">OpenAI-Broadcom, LLM 전용 추론 칩 'Jala…</span></div><div class="cover-issue"><span class="cover-icon" style="color:#34d399">&#128161;</span><span class="cover-issue-text">Anthropic, Claude 모델 규제 완화 및 기업용 재…</span></div></div>
+  <div class="cover-tags">#AI이슈 #테크트렌드 #인공지능 #AINews</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 28일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#f59e0b">
+    <span class="rank-icon">&#128293;</span>
+    <span class="rank-label">TOP 1</span>
+    <span class="cat-badge">모델</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">OpenAI, 차세대 모델 'GPT-5.6 Sol' 공개 및 정부 주도 배포</div>
+    <div class="issue-divider" style="background:#f59e0b"></div>
+    <div class="issue-summary">OpenAI가 코딩, 과학, 사이버 보안 능력을 강화한 GPT-5.6 Sol을 공개했으나, 정부의 엄격한 통제하에 제한적으로 배포되는 상황에 직면했습니다. 특히 테스트 환경에서 모델이 스스로 취약점을 찾아 해결하는 …</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://openai.com/index/previewing-gpt-5-6-sol'>원문 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 28일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#818cf8">
+    <span class="rank-icon">&#128226;</span>
+    <span class="rank-label">TOP 2</span>
+    <span class="cat-badge">인프라</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">OpenAI-Broadcom, LLM 전용 추론 칩 'Jalapeño' 발표</div>
+    <div class="issue-divider" style="background:#818cf8"></div>
+    <div class="issue-summary">OpenAI가 Broadcom과 협력하여 LLM 추론에 최적화된 맞춤형 AI 칩 'Jalapeño'를 공개했습니다. 이는 AI 시스템의 성능과 효율성을 극대화하여 인프라 비용을 절감하려는 전략적 행보입니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 1개&nbsp;·&nbsp;<a href='https://openai.com/index/openai-broadcom-jalapeno-inference-chip'>원문 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 28일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#34d399">
+    <span class="rank-icon">&#128161;</span>
+    <span class="rank-label">TOP 3</span>
+    <span class="cat-badge">정책</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">Anthropic, Claude 모델 규제 완화 및 기업용 재배포 시작</div>
+    <div class="issue-divider" style="background:#34d399"></div>
+    <div class="issue-summary">미국 정부가 Anthropic의 Claude Mythos 5 모델에 대한 규제를 일부 완화하며 재배포를 승인했습니다. Fable 5 모델 또한 곧 복귀할 것으로 예상되며, AI 안전성 논란과 비즈니스 연속성 사이의 …</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 1개&nbsp;·&nbsp;<a href='https://the-decoder.com/anthropic-gets-us-approval-to-bring-back-claude-mythos-5/'>원문 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 28일 (일)</span>
+  </div>
+</div>
+<div class="card" id="card-4">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-trends">
+  <div class="trends-header">
+    <span class="trends-icon">&#128240;</span>
+    <span class="trends-title">주목할 AI 연구·논문</span>
+  </div>
+  <div class="trends-list"><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#128202;</span><span class="trend-keyword">SharQ: Bridging Activation Spa…</span></div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#127919;</span><span class="trend-keyword">Semantic Early-Stopping for LL…</span></div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#9889;</span><span class="trend-keyword">A Deterministic Control Plane …</span></div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 6월 28일 (일)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
