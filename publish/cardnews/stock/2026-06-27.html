@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>주간 주식 시황 2026-06-27</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #34d399; --topbar: linear-gradient(90deg,#34d399,#059669,#0ea5e9); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+
+/* ── Stat Row (공통 통계 테이블) ── */
+.stat-row  { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #334155; }
+.stat-col1 { font-size: 21px; color: #94a3b8; flex-shrink: 0; }
+.stat-col2 { font-size: 21px; color: #f1f5f9; font-weight: 500; flex: 1; }
+.stat-col3 { font-size: 21px; font-weight: 700; white-space: nowrap; }
+.stat-body { padding: 0 4px; }
+
+/* ── Market Row (주식 시장 지표) ── */
+.mkt-header  { margin-bottom: 8px; }
+.mkt-keyword { font-size: 28px; }
+.mkt-close   { font-size: 26px; color: #f8fafc; font-weight: 700; margin-left: auto; }
+.mkt-chg     { font-size: 24px; }
+
+/* ── Stock Summary (주식 커버 요약) ── */
+.sum-title { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+.sum-body  { font-size: 25px; color: #94a3b8; line-height: 1.5; }
+
+/* ── Cover Date variant ── */
+.cover-date-lg { font-size: 36px; }
+
+/* ── Theme Item (주간주식 핫 테마) ── */
+.theme-item   { margin-bottom: 14px; }
+.theme-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.theme-icon   { font-size: 24px; }
+.theme-title  { font-size: 26px; font-weight: 700; color: #f1f5f9; }
+.theme-desc   { font-size: 21px; color: #94a3b8; line-height: 1.4; }
+
+/* ── Schedule Row (주간주식 차주 일정) ── */
+.sched-row    { display: flex; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #334155; gap: 8px; }
+.sched-date   { font-size: 19px; width: 100px; flex-shrink: 0; font-weight: 600; }
+.sched-body   { flex: 1; }
+.sched-event  { font-size: 21px; color: #f1f5f9; font-weight: 500; }
+.sched-impact { font-size: 18px; color: #94a3b8; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">&#128197;</div>
+    <div>
+      <div class="logo-main">주간 시황 종합</div>
+      <div class="logo-sub">2026-06-22(월) ~ 2026-06-26(금)</div>
+    </div>
+  </div>
+  <div class="cover-date">🔵 침체</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">주간 총평</div>
+  <div class="cover-issues">
+    <div class="cover-issue">
+      <span class="cover-issue-text">사상 최고치(9,114) 달성 직후 이번 주에만 서킷 브레이커 2회 발동이라는 전대미문의 폭등락 한 주 — HBM 모멘텀과 AI 버블 우려가 격돌하며 코스피 주간 -7.71%, 코…</span>
+    </div>
+    <div class="cover-issue"><span class="cover-icon" style="color:#f59e0b">&#128293;</span><span class="cover-issue-text">HBM/AI 메모리 수요 사이클 (5일 내내 핵심 테마)</span></div><div class="cover-issue"><span class="cover-icon" style="color:#818cf8">&#128226;</span><span class="cover-issue-text">원화 약세 / 환율 고착 (3일 등장)</span></div><div class="cover-issue"><span class="cover-icon" style="color:#34d399">&#128161;</span><span class="cover-issue-text">AI·빅테크 밸류에이션 조정 (수·목·금 3일 연속)</span></div>
+  </div>
+  <div class="cover-tags">#주식 #시황 #코스피 #투자</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner"><div class="trends-header"><span class="trends-icon">&#128200;</span><span class="trends-title">주간 지수 성과</span></div><div class="stat-body"><div class="stat-row"><span class="stat-col1" style="width:110px">코스피</span><span class="stat-col2">8,411.21</span><span class="stat-col3" style="color:#f87171">-7.71% ▼</span></div><div class="stat-row"><span class="stat-col1" style="width:110px">코스닥</span><span class="stat-col2">851.37</span><span class="stat-col3" style="color:#f87171">-12.08% ▼</span></div><div class="stat-row"><span class="stat-col1" style="width:110px">S&P 500</span><span class="stat-col2">7,357.49</span><span class="stat-col3" style="color:#f87171">-1.91% ▼</span></div><div class="stat-row"><span class="stat-col1" style="width:110px">나스닥</span><span class="stat-col2">25,358.60</span><span class="stat-col3" style="color:#f87171">-4.37% ▼</span></div><div class="stat-row"><span class="stat-col1" style="width:110px">원/달러</span><span class="stat-col2">1,536.93원</span><span class="stat-col3" style="color:#f87171">-0.43원 (보합)</span></div><div class="stat-row"><span class="stat-col1" style="width:110px">WTI 유가</span><span class="stat-col2">69.75달러</span><span class="stat-col3" style="color:#f87171">-6.79% ▼</span></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner"><div class="trends-header"><span class="trends-icon">&#128293;</span><span class="trends-title">이번 주 핫 테마 TOP 3</span></div><div class="stat-body"><div class="theme-item"><div class="theme-header"><span class="theme-icon" style="color:#f59e0b">&#128293;</span><span class="theme-title">HBM/AI 메모리 수요 사이클 (5일 내내…</span></div><div class="theme-desc">마이크론 어닝 서프라이즈(목)로 AI 서버용 HBM 수요가 재확인됐다. SK하이닉스가 하루 +13% 급등(목)했다가 애플 가격…</div></div><div class="theme-item"><div class="theme-header"><span class="theme-icon" style="color:#818cf8">&#128226;</span><span class="theme-title">원화 약세 / 환율 고착 (3일 등장)</span></div><div class="theme-desc">원/달러 환율이 1,537~1,546원 밴드에서 오르내리며 연고점 수준을 유지했다. 원화 약세는 수출기업 실적에는 우호적이나 …</div></div><div class="theme-item"><div class="theme-header"><span class="theme-icon" style="color:#34d399">&#128161;</span><span class="theme-title">AI·빅테크 밸류에이션 조정 (수·목·금 3…</span></div><div class="theme-desc">나스닥이 주간 -4.37% 하락하며 글로벌 AI 고평가 논란이 이어졌다. 나스닥 -2.21%(수), 엔비디아 -4.13%(수)…</div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-topbar"></div>
+  <div class="card-inner"><div class="trends-header"><span class="trends-icon">&#128197;</span><span class="trends-title">차주 주요 일정</span></div><div class="stat-body"><div class="sched-row"><span class="sched-date" style="color:#34d399">06-29(월)</span><div class="sched-body"><div class="sched-event">코스피 개장 — 주간 방향성 확인</div><div class="sched-impact">저가 매수 유입 or 추가 매도 압력 가늠</div></div></div><div class="sched-row"><span class="sched-date" style="color:#34d399">06-30(화)</span><div class="sched-body"><div class="sched-event">미국 5월 PCE 물가지수 발표</div><div class="sched-impact">금리 경로 재점검 — 예상치 초과 시 반도체·성장주 추가 하방</div></div></div><div class="sched-row"><span class="sched-date" style="color:#34d399">07-01(수)</span><div class="sched-body"><div class="sched-event">미국 ISM 제조업 PMI (6월)</div><div class="sched-impact">경기 둔화 강도 확인 — 수축 구간 진입 여부</div></div></div><div class="sched-row"><span class="sched-date" style="color:#34d399">07-03(목)</span><div class="sched-body"><div class="sched-event">미국 6월 비농업 고용보고서</div><div class="sched-impact">연준 금리 경로 최대 변수 — 강한 고용 시 금리 인하 기대 약화</div></div></div><div class="sched-row"><span class="sched-date" style="color:#34d399">07-03(목)</span><div class="sched-body"><div class="sched-event">미국 시장 단축거래 (독립기념일 전날)</div><div class="sched-impact">거래량 감소 → 변동성 확대 주의</div></div></div><div class="sched-row"><span class="sched-date" style="color:#34d399">07-04(토)</span><div class="sched-body"><div class="sched-event">미국 독립기념일 (7/3 시장 영향)</div><div class="sched-impact">—</div></div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 6월 27일 (토)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
