@@ -14,7 +14,7 @@
 
 ## Facts (무엇을 만드는가)
 
-- 사양·채널 구조의 1차 출처는 [`CLAUDE.md`](./CLAUDE.md), [`README.md`](./README.md), [`docs/`](./docs/)입니다.
+- 사양·설계의 1차 앵커는 [`docs/spec.md`](./docs/spec.md)입니다. 채널 구조·운영 절차는 [`CLAUDE.md`](./CLAUDE.md)·[`docs/architecture.md`](./docs/architecture.md)를 우선 참조합니다.
 - 세션 진행 로그는 루트 [`worklog.md`](./worklog.md)에 누적합니다.
 
 ## Project Shape
