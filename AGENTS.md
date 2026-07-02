@@ -35,7 +35,8 @@
 ```bash
 git pull origin main
 python -m pytest tests/
-python main.py --dry-run     # 실발송 없이 파이프라인 검증 (플래그는 main.py 참조)
 ```
+
+> `main.py`는 `scripts/run_news.py`로 위임되는 뉴스 파이프라인 진입점이라 실행 시 발송까지 이어질 수 있으므로 검증용으로 직접 실행하지 않습니다. 발송 스크립트(`scripts/send_email.py`·`send_telegram.py`, `--type news|stock|ai-issue`) 변경 시에는 안전 사전검증 후 사용자 승인 하에만 실발송합니다.
 
 실행 불가 시 정확한 사유를 보고합니다.
