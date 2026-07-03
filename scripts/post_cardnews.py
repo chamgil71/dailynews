@@ -254,14 +254,24 @@ def post_instagram(channel: str, date_str: str) -> None:
     if not carousel_id:
         raise RuntimeError("Instagram 카루셀 컨테이너 생성 실패")
 
-    # 4. 카루셀 컨테이너 FINISHED 대기 후 게시
+    # 4. 카루셀 컨테이너 FINISHED 대기 후 게시 (2207027은 게시 단계에서도 발생하므로 재시도 포함)
     _ig_wait_container(carousel_id, token)
     time.sleep(5)
 
-    result = _ig_post(f"/{ig_user_id}/media_publish", {
-        "creation_id":  carousel_id,
-        "access_token": token,
-    })
+    result = None
+    for attempt in range(1, 4):
+        try:
+            result = _ig_post(f"/{ig_user_id}/media_publish", {
+                "creation_id":  carousel_id,
+                "access_token": token,
+            })
+            break
+        except RuntimeError as e:
+            if attempt < 3 and "2207027" in str(e):
+                print(f"  [Instagram] 게시 재시도 ({attempt}/3) — 10초 대기")
+                time.sleep(10)
+            else:
+                raise
     print(f"  ✅ Instagram 게시 완료 — media_id: {result.get('id')}")
 
 
@@ -461,10 +471,20 @@ def _post_threads_carousel(user_id: str, token: str,
     return result.get("id", "")
 
 
+THREADS_TEXT_LIMIT = 500
+
+
+def _truncate_caption(caption: str, limit: int) -> str:
+    if len(caption) <= limit:
+        return caption
+    return caption[:limit - 1].rstrip() + "…"
+
+
 def post_threads(channel: str, date_str: str) -> None:
     token   = _env("THREADS_ACCESS_TOKEN")
     user_id = _env("THREADS_USER_ID")
     caption = _build_caption(channel, date_str, include_link=True)
+    caption = _truncate_caption(caption, THREADS_TEXT_LIMIT)
 
     mode = _get_threads_mode(channel)
     print(f"  [Threads] mode={mode}")
