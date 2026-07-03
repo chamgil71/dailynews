@@ -254,7 +254,7 @@ def post_instagram(channel: str, date_str: str) -> None:
     if not carousel_id:
         raise RuntimeError("Instagram 카루셀 컨테이너 생성 실패")
 
-    # 4. 카루셀 컨테이너 FINISHED 대기 후 게시 (2207027은 게시 단계에서도 발생하므로 재시도 포함)
+    # 4. 카루셀 컨테이너도 FINISHED 대기 후 게시 (2207027은 게시 단계에서도 발생)
     _ig_wait_container(carousel_id, token)
     time.sleep(5)
 
