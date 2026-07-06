@@ -9,6 +9,7 @@ import html
 import requests
 from datetime import datetime
 from config.settings import SITE_BASE_URL
+from core.shared.text_utils import extract_wrapped_points
 
 logger = logging.getLogger(__name__)
 
@@ -288,13 +289,14 @@ def send_ai_issue_telegram(report_data: dict, date_str: str) -> bool:
     top10 = report_data.get("top10", [])
     _raw_outlook = report_data.get("next_week_outlook", "")
     # Gemini가 JSON 문자열로 반환하는 경우 파싱하여 포인트 목록으로 변환
+    # (리스트 키 이름은 points/monitoring_points 등 매번 다를 수 있어 구조로 감지)
     if isinstance(_raw_outlook, str) and _raw_outlook.strip().startswith("{"):
         try:
             import json as _json
             _obj = _json.loads(_raw_outlook)
-            _points = _obj.get("points", [])
+            _points = extract_wrapped_points(_obj, limit=3)
             if _points:
-                outlook = " / ".join(p.get("point", "") for p in _points[:3] if p.get("point"))
+                outlook = " / ".join(_points)
             else:
                 # {"summary":...} / {"report":...} 래퍼 폴백
                 outlook = _obj.get("summary") or _obj.get("report") or _raw_outlook

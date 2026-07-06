@@ -25,6 +25,7 @@ load_dotenv()
 
 from config.settings import SITE_BASE_URL
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL
+from core.shared.text_utils import unwrap_md_wrapper
 
 REPORTS_DIR = "reports/ai-issue"
 PUBLISH_DIR = "publish/ai-issue"
@@ -33,14 +34,7 @@ os.makedirs(PUBLISH_DIR, exist_ok=True)
 
 
 def _extract_md_field(val: str) -> str:
-    """Gemini가 JSON 래퍼로 반환한 마크다운 필드를 정규화.
-
-    처리 패턴:
-      {"summary": "..."}            → summary 값 반환
-      {"report": "..."}             → report 값 반환
-      {"title": "...", "points": [{"point":"...","commentary":"..."},...]}
-                                    → 마크다운 목록으로 변환
-    """
+    """Gemini가 JSON 래퍼로 반환한 마크다운 필드를 정규화 (core.shared.text_utils 위임)."""
     if not isinstance(val, str):
         return val
     trimmed = val.strip()
@@ -48,29 +42,10 @@ def _extract_md_field(val: str) -> str:
         return val
     try:
         parsed = json.loads(trimmed)
-        if not isinstance(parsed, dict):
-            return val
-        # {"summary": "..."} 또는 {"report": "..."} 패턴
-        for key in ("summary", "report"):
-            if key in parsed and isinstance(parsed[key], str):
-                return parsed[key]
-        # {"title": "...", "points": [{"point":...,"commentary":...},...]} 패턴
-        if "points" in parsed and isinstance(parsed["points"], list):
-            title = parsed.get("title", "")
-            lines = []
-            if title:
-                lines.append(f"## {title}\n")
-            for item in parsed["points"]:
-                point = item.get("point", "") if isinstance(item, dict) else str(item)
-                commentary = item.get("commentary", "") if isinstance(item, dict) else ""
-                if point:
-                    lines.append(f"- **{point}**")
-                    if commentary:
-                        lines.append(f"  {commentary}")
-            return "\n".join(lines) if lines else val
+        unwrapped = unwrap_md_wrapper(parsed)
+        return unwrapped if unwrapped else val
     except Exception:
-        pass
-    return val
+        return val
 
 
 def _normalize_json_sidecar(data: dict) -> dict:

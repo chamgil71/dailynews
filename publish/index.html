@@ -1013,7 +1013,8 @@ function md2html(md) {
 }
 function extractMdField(val) {
   // Gemini가 마크다운 대신 JSON 래퍼로 반환한 경우 텍스트로 환원.
-  // 처리 패턴: {"summary":"..."}, {"report":"..."}, {"title":"...","points":[...]}
+  // 처리 패턴: {"summary":"..."}, {"report":"..."}, {"title":"...", "<임의의 리스트 키>":[...]}
+  // 리스트 키 이름(points/monitoring_points 등)은 매번 달라질 수 있어 구조로 감지한다.
   if (!val || typeof val !== 'string') return val || '';
   const trimmed = val.trim();
   if (!trimmed.startsWith('{')) return val;
@@ -1021,15 +1022,19 @@ function extractMdField(val) {
     const p = JSON.parse(trimmed);
     if (typeof p.summary === 'string') return p.summary;
     if (typeof p.report  === 'string') return p.report;
-    if (Array.isArray(p.points)) {
+    const listKey = Object.keys(p).find(k => Array.isArray(p[k]) && p[k].length && typeof p[k][0] === 'object');
+    if (listKey) {
+      const pointKeys = ['point', 'title', 'name', 'keyword'];
+      const detailKeys = ['commentary', 'comment', 'description', 'analyst_comment', 'detail'];
       const lines = [];
       if (p.title) lines.push('## ' + p.title + '\n');
-      for (const it of p.points) {
-        const point = (it && typeof it === 'object') ? (it.point || '') : String(it);
-        const comment = (it && typeof it === 'object') ? (it.commentary || it.comment || '') : '';
+      for (const it of p[listKey]) {
+        if (!it || typeof it !== 'object') continue;
+        const point = pointKeys.map(k => it[k]).find(v => v) || '';
+        const details = detailKeys.map(k => it[k]).filter(v => v);
         if (point) {
           lines.push('- **' + point + '**');
-          if (comment) lines.push('  ' + comment);
+          for (const d of details) lines.push('  ' + d);
         }
       }
       if (lines.length) return lines.join('\n');
