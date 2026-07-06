@@ -28,34 +28,9 @@ from config.ai_issue_prompts import (
     OUTLOOK_PROMPT
 )
 from core.news.analyzer import get_analyzer
+from core.shared.text_utils import unwrap_md_wrapper
 
 logger = logging.getLogger(__name__)
-
-
-def _unwrap_md_response(raw: str, parsed: dict | list | None) -> str | None:
-    """Gemini가 JSON 래퍼로 반환한 마크다운 응답을 텍스트로 변환.
-    {"summary":...}, {"report":...}, {"title":..., "points":[...]} 패턴 처리."""
-    if not isinstance(parsed, dict):
-        return None
-    # 단순 텍스트 래퍼
-    for key in ("summary", "report"):
-        if key in parsed and isinstance(parsed[key], str):
-            return parsed[key]
-    # {"title": "...", "points": [{"point":"...","commentary":"..."}]} 패턴
-    if "points" in parsed and isinstance(parsed["points"], list):
-        title = parsed.get("title", "")
-        lines = []
-        if title:
-            lines.append(f"## {title}\n")
-        for item in parsed["points"]:
-            point = item.get("point", "") if isinstance(item, dict) else str(item)
-            commentary = item.get("commentary", "") if isinstance(item, dict) else ""
-            if point:
-                lines.append(f"- **{point}**")
-                if commentary:
-                    lines.append(f"  {commentary}")
-        return "\n".join(lines) if lines else None
-    return None
 
 
 def _parse_json_block(text: str) -> dict | list | None:
@@ -160,7 +135,7 @@ def analyze_weekly_data(raw_weekly_data: dict) -> dict:
         raw_res = analyzer._call(prompt_comp, len(articles[:40]))
         if raw_res and len(raw_res.strip()) > 50:
             parsed = _parse_json_block(raw_res)
-            unwrapped = _unwrap_md_response(raw_res, parsed)
+            unwrapped = unwrap_md_wrapper(parsed)
             if unwrapped:
                 company_trends_md = unwrapped
                 logger.info("  → 주요 기업 동향: JSON 래퍼에서 텍스트 추출")
@@ -210,7 +185,7 @@ def analyze_weekly_data(raw_weekly_data: dict) -> dict:
         raw_res = analyzer._call(prompt_out, len(articles[:40]))
         if raw_res and len(raw_res.strip()) > 50:
             parsed = _parse_json_block(raw_res)
-            unwrapped = _unwrap_md_response(raw_res, parsed)
+            unwrapped = unwrap_md_wrapper(parsed)
             if unwrapped:
                 outlook_md = unwrapped
                 logger.info("  → 차주 전망: JSON 래퍼에서 텍스트 추출")
