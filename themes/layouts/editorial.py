@@ -173,6 +173,10 @@ _CSS = """
   .prose hr { border:none; border-top:3px double var(--rule); margin:32px 0; }
   .prose code { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
     padding:2px 6px; border-radius:3px; font-size:.85em; }
+  .prose pre { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
+    padding:12px 14px; border-radius:4px; overflow-x:auto;
+    white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere; }
+  .prose pre code { background:none; padding:0; }
 
   /* 뉴스 목록 접기/펼치기 */
   .news-list-section { margin-top:32px; border-top:3px double var(--rule); padding-top:20px; }

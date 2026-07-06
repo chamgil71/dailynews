@@ -126,6 +126,10 @@ _CSS = """
   .prose hr { border:none; border-top:1px dashed var(--line); margin:20px 0; }
   .prose code { background:var(--bg); color:var(--amber); padding:2px 6px;
     border:1px solid var(--line); font-size:.88em; }
+  .prose pre { background:var(--bg); color:var(--amber); padding:10px 14px;
+    border:1px solid var(--line); overflow-x:auto;
+    white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere; }
+  .prose pre code { border:none; padding:0; background:none; }
 
   /* 뉴스 목록 접기/펼치기 */
   .news-list-section { margin-top:18px; }

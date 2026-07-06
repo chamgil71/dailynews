@@ -343,6 +343,12 @@ _COMMON_CSS = """
     border-radius: 4px; font-size: .87em;
     font-family: ui-monospace, monospace;
   }
+  pre {
+    background: var(--color-code-bg); padding: 12px 14px;
+    border-radius: 6px; overflow-x: auto;
+    white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+  }
+  pre code { background: none; padding: 0; }
   blockquote {
     border-left: 3px solid var(--color-blue);
     padding: 8px 16px;
