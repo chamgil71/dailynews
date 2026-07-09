@@ -1,0 +1,122 @@
+{
+  "version": "1.0",
+  "description": "dailynews LLM 분석 품질 평가셋 — orchestration.md §1 Phase3 / §4 롤백표 기준. format_compliance·hallucination_rate·accuracy(relevance) 측정용.",
+  "target_baseline": {
+    "accuracy": 0.85,
+    "hallucination_rate_max": 0.05,
+    "format_compliance": 1.0
+  },
+  "notes": [
+    "authored 케이스: 입력 뉴스 + 기대 속성(expect)을 직접 명세한 골든 케이스.",
+    "50건 도달 방법: authored 시드 + scripts/eval_news.py --scan-reports 로 과거 reports/*.json 실출력을 format/grounding 검증에 자동 편입.",
+    "input.link 집합에 없는 source.url 은 환각으로 카운트된다."
+  ],
+  "cases": [
+    {
+      "id": "news-001-basic-format",
+      "channel": "news",
+      "description": "정상 입력에서 구조(issues/trends)와 개수(3~5) 준수 여부",
+      "input": {
+        "en": [
+          {"label": "TechCrunch", "title": "OpenAI releases new agentic API", "link": "https://example.com/a1", "category": "AI"},
+          {"label": "Reuters", "title": "Nvidia unveils next-gen datacenter GPU", "link": "https://example.com/a2", "category": "HW"},
+          {"label": "TheVerge", "title": "Anthropic expands Claude enterprise features", "link": "https://example.com/a3", "category": "AI"}
+        ],
+        "ko": [
+          {"label": "연합뉴스", "title": "정부, AI 인프라 예산 확대 발표", "link": "https://example.com/k1", "category": "정책"},
+          {"label": "전자신문", "title": "국내 반도체 기업 HBM 증설 착수", "link": "https://example.com/k2", "category": "HW"}
+        ]
+      },
+      "expect": {
+        "min_issues": 3,
+        "max_issues": 5,
+        "must_be_grounded": true,
+        "expected_keywords": ["AI", "GPU", "반도체"]
+      }
+    },
+    {
+      "id": "news-002-grounding",
+      "channel": "news",
+      "description": "출력 source.url 이 입력 링크 집합에 존재해야 함(환각 URL 금지)",
+      "input": {
+        "en": [
+          {"label": "Bloomberg", "title": "Meta invests in custom AI silicon", "link": "https://example.com/b1", "category": "HW"}
+        ],
+        "ko": [
+          {"label": "매일경제", "title": "삼성전자, 온디바이스 AI 전략 공개", "link": "https://example.com/kb1", "category": "AI"}
+        ]
+      },
+      "expect": {
+        "min_issues": 3,
+        "max_issues": 5,
+        "must_be_grounded": true,
+        "allowed_urls": ["https://example.com/b1", "https://example.com/kb1"]
+      }
+    },
+    {
+      "id": "news-003-relevance",
+      "channel": "news",
+      "description": "핵심 이슈 제목이 입력 주제(로보틱스/자율주행)와 관련성을 가져야 함",
+      "input": {
+        "en": [
+          {"label": "IEEE", "title": "Humanoid robots reach commercial deployment", "link": "https://example.com/r1", "category": "로보틱스"},
+          {"label": "WSJ", "title": "Autonomous trucking scales on US highways", "link": "https://example.com/r2", "category": "자율주행"},
+          {"label": "Ars", "title": "Robotics startups raise record funding", "link": "https://example.com/r3", "category": "로보틱스"}
+        ],
+        "ko": []
+      },
+      "expect": {
+        "min_issues": 3,
+        "max_issues": 5,
+        "must_be_grounded": true,
+        "expected_keywords": ["로봇", "자율주행", "robot"]
+      }
+    },
+    {
+      "id": "ai-issue-001-weekly",
+      "channel": "ai-issue",
+      "description": "주간 AI이슈: TOP 이슈 구조 및 개수 준수",
+      "input": {
+        "en": [
+          {"label": "MIT", "title": "New reasoning benchmark released for LLMs", "link": "https://example.com/w1", "category": "AI"},
+          {"label": "Google", "title": "Gemini adds long-context tooling", "link": "https://example.com/w2", "category": "AI"},
+          {"label": "OpenAI", "title": "GPT model cuts inference cost", "link": "https://example.com/w3", "category": "AI"}
+        ],
+        "ko": [
+          {"label": "지디넷", "title": "국내 스타트업 sLLM 상용화", "link": "https://example.com/kw1", "category": "AI"}
+        ]
+      },
+      "expect": {
+        "min_issues": 3,
+        "max_issues": 5,
+        "must_be_grounded": true,
+        "expected_keywords": ["LLM", "AI", "추론"]
+      }
+    },
+    {
+      "id": "news-004-empty-guard",
+      "channel": "news",
+      "description": "빈/저품질 입력에서도 구조는 유지되어야 함(가드 폴백 허용, 환각 금지)",
+      "input": {"en": [], "ko": []},
+      "expect": {
+        "allow_fallback": true,
+        "must_be_grounded": true
+      }
+    },
+    {
+      "id": "news-005-no-hallucinated-source",
+      "channel": "news",
+      "description": "입력에 링크가 하나뿐일 때 다른 URL 을 source 로 지어내면 안 됨",
+      "input": {
+        "en": [
+          {"label": "FT", "title": "EU finalizes AI Act enforcement timeline", "link": "https://example.com/eu1", "category": "정책"}
+        ],
+        "ko": []
+      },
+      "expect": {
+        "must_be_grounded": true,
+        "allowed_urls": ["https://example.com/eu1"]
+      }
+    }
+  ]
+}

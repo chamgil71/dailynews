@@ -4,16 +4,32 @@
 
 ---
 
+## 0. 문서 명칭 규약 (Canonical Document Names) — SSOT
+
+> [!IMPORTANT]
+> 과거 지침의 `docs/prd.md`·`docs/tdd.md` 와 프로필의 `docs/spec.md` 가 혼용되던 문제를 해소하기 위해, **단일 정본(SSOT)을 `docs/spec.md` 로 확정한다.** 본 문서·프롬프트·프로필의 모든 참조는 아래 매핑을 따른다.
+
+| 정본(Canonical) | 역할 | 구(舊) 별칭 |
+| :--- | :--- | :--- |
+| **`docs/spec.md`** | 요구사항·설계·검증계획을 담는 **단일 진실 공급원(SSOT)** | `docs/prd.md`(요구사항) → spec §요구사항, `docs/tdd.md`(테스트전략) → spec §검증계획 |
+| `docs/architecture.md` | 아키텍처 상세(선택, 복잡 시 분리) | 변동 없음 |
+| `docs/worklog.md` | 세션 이행 로그 | 루트 `worklog.md`·`work_logs.md` 등 → `docs/worklog.md` 로 통일 |
+
+- 별도의 `docs/prd.md`·`docs/tdd.md` 를 물리 파일로 생성하는 것은 **대형 프로젝트에서만 선택적**이며, 기본은 `docs/spec.md` 한 파일에 요구사항·검증계획 섹션을 둔다.
+- 본 문서 이하에서 "`docs/spec.md`" 로 표기된 모든 지점은 이 정본을 가리킨다.
+
+---
+
 ## 1. 수명주기별 에이전트 오케스트레이션 시퀀스
 
 에이전트는 기획부터 운영까지 다음 흐름에 맞춰 작업을 수행하고 문서를 동기화한다.
 
 ```text
 [Phase 1. 설계/요구사항]
-  오케스트레이터 ──► 01_strategy (로드맵 작성) ──► 02_requirements (docs/prd.md 작성) ──► 03_architecture (docs/architecture.md 작성)
+  오케스트레이터 ──► 01_strategy (로드맵 작성) ──► 02_requirements (docs/spec.md 작성) ──► 03_architecture (docs/architecture.md 작성)
                                                                                                       │
 [Phase 2. 구현 및 통합]                                                                               ▼
-  오케스트레이터 ──┬─ 04_development [RAG 파트] (docs/prd.md 기반 문서 인덱싱 구현) ◄──────────────────┘
+  오케스트레이터 ──┬─ 04_development [RAG 파트] (docs/spec.md 기반 문서 인덱싱 구현) ◄──────────────────┘
                   └─ 04_development [프롬프트 파트] (YAML 기반 프롬프트 템플릿 설계)
                          │
                          ▼
@@ -84,7 +100,7 @@
 후기 검증/출시 단계에서 심각한 아키텍처 결함이나 기획 상충이 발견되면, 다음 룰셋에 따라 상위 기획 문서로 피드백을 역전파하고 시스템을 일관되게 롤백한다.
 
 1.  **결함 보고 및 역전파**:
-    *   보안(`09_ai_governance`) 또는 성능 평가(`05_quality`)에서 아키텍처 수준의 중대 위반이 탐지되면, 오케스트레이터는 탐지 지점의 예외 로그와 함께 상위 `docs/prd.md` 및 `docs/architecture.md`로 피드백 문서를 전송한다.
+    *   보안(`09_ai_governance`) 또는 성능 평가(`05_quality`)에서 아키텍처 수준의 중대 위반이 탐지되면, 오케스트레이터는 탐지 지점의 예외 로그와 함께 상위 `docs/spec.md` 및 `docs/architecture.md`로 피드백 문서를 전송한다.
 2.  **문서 일관성 업데이트**:
     *   에이전트는 상위 문서의 성능 사양서(비기능 요건 완화 등) 또는 데이터 흐름 모델을 수정 및 업데이트하고, 해당 커밋 해시를 갱신한다.
 3.  **순차 롤백 배포**:
@@ -92,7 +108,7 @@
 
 | 실패 탐지 지점 | 예상 원인 계층 | 롤백 대상 단계 및 문서 | 복구 액션 가이드라인 |
 | :--- | :--- | :--- | :--- |
-| **05_quality [Eval]**<br>정확도 미달 | **RAG 검색 실패** (청크가 검색 안 됨) | Phase 2로 롤백<br>`docs/prd.md`, RAG 코드 | 청킹 단위를 500자에서 200자로 쪼개거나 중복도를 조정하고, `docs/prd.md`의 명세를 갱신한 뒤 재색인한다. |
+| **05_quality [Eval]**<br>정확도 미달 | **RAG 검색 실패** (청크가 검색 안 됨) | Phase 2로 롤백<br>`docs/spec.md`, RAG 코드 | 청킹 단위를 500자에서 200자로 쪼개거나 중복도를 조정하고, `docs/spec.md`의 명세를 갱신한 뒤 재색인한다. |
 | **05_quality [Eval]**<br>환각 발생률 초과 | **프롬프트 지시 모호** (Few-shot 부족) | Phase 2로 롤백<br>Prompt YAML 파일 | 프롬프트 내에 도메인 특화 Few-shot 예시를 보강하고 부정 프롬프트(Negative Prompt) 지침을 강화한다. |
 | **05_quality [Eval]**<br>형식 파싱 에러 | **출력 가드 미작동** | Phase 2로 롤백<br>Output Guard 코드 | JSON 구조 검증 함수에 자동 재시도(최대 3회) 및 폴백(Fallback) 반환 분기를 수정 구현한다. |
 | **05_quality [Regression]**<br>회귀 테스트 실패 | **부작용(Side-effect)** | Phase 1/2로 롤백<br>`docs/architecture.md` | `pylint`로 순환 참조 여부를 검사하고, 결합도를 낮추기 위해 Service 레이어를 재설계한다. |
@@ -115,7 +131,7 @@
     "eval_set_path": "./tests/eval_set.json",
     "target_baseline": 0.85
   },
-  "instructions": "RAG 파이프라인의 변경이 발생했으므로, 50건의 평가셋을 구동하여 정확도를 측정하고, docs/tdd.md의 조건과 대조하십시오."
+  "instructions": "RAG 파이프라인의 변경이 발생했으므로, 50건의 평가셋을 구동하여 정확도를 측정하고, docs/spec.md의 조건과 대조하십시오."
 }
 ```
 

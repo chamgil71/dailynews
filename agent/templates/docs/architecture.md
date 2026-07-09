@@ -12,8 +12,8 @@ AI 코딩 환경에서 다음 목적을 가진다.
 
 이 문서는 다음 문서들과 함께 사용된다.
 
-* `docs/prd.md` → 제품 요구사항
-* `docs/tdd.md` → 테스트 전략
+* `docs/spec.md` §요구사항 → 제품 요구사항
+* `docs/spec.md` §검증계획 → 테스트 전략
 * `ai/base_guideline.md` → AI 코딩 원칙
 * `ai/rules/*.md` → 기술별 구현 규칙
 * `ai/skills/*.md` → AI 작업 단위 스킬
