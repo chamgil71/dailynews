@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>AI 뉴스 카드뉴스 2026-07-13</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #38bdf8; --topbar: linear-gradient(90deg,#38bdf8,#6366f1,#a78bfa); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+
+/* ── Stat Row (공통 통계 테이블) ── */
+.stat-row  { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #334155; }
+.stat-col1 { font-size: 21px; color: #94a3b8; flex-shrink: 0; }
+.stat-col2 { font-size: 21px; color: #f1f5f9; font-weight: 500; flex: 1; }
+.stat-col3 { font-size: 21px; font-weight: 700; white-space: nowrap; }
+.stat-body { padding: 0 4px; }
+
+/* ── Market Row (주식 시장 지표) ── */
+.mkt-header  { margin-bottom: 8px; }
+.mkt-keyword { font-size: 28px; }
+.mkt-close   { font-size: 26px; color: #f8fafc; font-weight: 700; margin-left: auto; }
+.mkt-chg     { font-size: 24px; }
+
+/* ── Stock Summary (주식 커버 요약) ── */
+.sum-title { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+.sum-body  { font-size: 25px; color: #94a3b8; line-height: 1.5; }
+
+/* ── Cover Date variant ── */
+.cover-date-lg { font-size: 36px; }
+
+/* ── Theme Item (주간주식 핫 테마) ── */
+.theme-item   { margin-bottom: 14px; }
+.theme-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.theme-icon   { font-size: 24px; }
+.theme-title  { font-size: 26px; font-weight: 700; color: #f1f5f9; }
+.theme-desc   { font-size: 21px; color: #94a3b8; line-height: 1.4; }
+
+/* ── Schedule Row (주간주식 차주 일정) ── */
+.sched-row    { display: flex; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #334155; gap: 8px; }
+.sched-date   { font-size: 19px; width: 100px; flex-shrink: 0; font-weight: 600; }
+.sched-body   { flex: 1; }
+.sched-event  { font-size: 21px; color: #f1f5f9; font-weight: 500; }
+.sched-impact { font-size: 18px; color: #94a3b8; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">AI</div>
+    <div>
+      <div class="logo-main">AI <span style="color:#38bdf8">News</span> Brief</div>
+      <div class="logo-sub">매일 아침 AI가 정리하는 핵심 뉴스</div>
+    </div>
+  </div>
+  <div class="cover-date">2026년 7월 13일 (월)</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">오늘의 핵심 이슈</div>
+  <div class="cover-issues"><div class="cover-issue"><span class="cover-icon" style="color:#f59e0b">&#128293;</span><span class="cover-issue-text">KAIST 등 공동 연구진, 뇌혈관질환 조기 감지 AI 기술 …</span></div><div class="cover-issue"><span class="cover-icon" style="color:#818cf8">&#128226;</span><span class="cover-issue-text">호르무즈 해협 긴장 고조에 따른 글로벌 경제 및 금융 시장 변…</span></div><div class="cover-issue"><span class="cover-icon" style="color:#34d399">&#128161;</span><span class="cover-issue-text">서울시, 실시간 공공데이터 연계 및 행정지원 AI 에이전트 구…</span></div></div>
+  <div class="cover-tags">#AI뉴스 #테크 #데일리브리핑 #인공지능</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 7월 13일 (월)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#f59e0b">
+    <span class="rank-icon">&#128293;</span>
+    <span class="rank-label">핵심 이슈 1</span>
+    <span class="cat-badge">AI·ML</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">KAIST 등 공동 연구진, 뇌혈관질환 조기 감지 AI 기술 개발</div>
+    <div class="issue-divider" style="background:#f59e0b"></div>
+    <div class="issue-summary">KAIST 임리사 교수 연구팀이 성균관대, 고려대 안암병원 연구팀과 공동으로 일상 속에서 뇌혈관질환 위험 신호를 96.5%의 정확도로 미리 감지하는 AI 프레임워크를 개발했습니다. 이 기술은 병원 방문 전 가정에서 조기 진단 및 예방을 가능하게 하여 의료 서비스의 패러다임을 바꿀 것으로 기대됩니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://news.google.com/rss/articles/CBMiYEFVX3lxTE1yTHdSMDVSaEYyMHdkM1h1VmZQdFZzQVZpanVtWnhpU0RGWERXMnBFbGFIYjlib0Z1aElDUFNrekRSWGxlNGlvb2ZzX1NFTEVUVEE2Y1RIQ1c5MkU1aVpNVNIBYEFVX3lxTE1yTHdSMDVSaEYyMHdkM1h1VmZQdFZzQVZpanVtWnhpU0RGWERXMnBFbGFIYjlib0Z1aElDUFNrekRSWGxlNGlvb2ZzX1NFTEVUVEE2Y1RIQ1c5MkU1aVpNVA?oc=5'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 7월 13일 (월)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#818cf8">
+    <span class="rank-icon">&#128226;</span>
+    <span class="rank-label">핵심 이슈 2</span>
+    <span class="cat-badge">한국경제</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">호르무즈 해협 긴장 고조에 따른 글로벌 경제 및 금융 시장 변동성 확대</div>
+    <div class="issue-divider" style="background:#818cf8"></div>
+    <div class="issue-summary">미국과 이란의 군사적 충돌로 호르무즈 해협의 통항 봉쇄 여부를 둘러싼 갈등이 최고조에 달하며 국제 유가와 뉴욕 외환·채권 시장이 크게 출렁이고 있습니다. 국내 원유 운송 선박의 안전 확보와 함께 유가 상승에 따른 국내 물가 및 금리 영향에 대한 긴밀한 모니터링이 요구됩니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://news.einfomax.co.kr/news/articleView.html?idxno=4424543'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 7월 13일 (월)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#34d399">
+    <span class="rank-icon">&#128161;</span>
+    <span class="rank-label">핵심 이슈 3</span>
+    <span class="cat-badge">한국기술</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">서울시, 실시간 공공데이터 연계 및 행정지원 AI 에이전트 구축 본격화</div>
+    <div class="issue-divider" style="background:#34d399"></div>
+    <div class="issue-summary">서울시가 생성형 AI의 환각 현상을 줄이기 위해 실시간 공공데이터를 연계하는 MCP 서비스를 개시하고, 반복 행정 업무를 자동화하는 '행정지원 AI 에이전트' 구축 사업에 착수했습니다. 이는 공공 부문에서의 실질적인 AI 행정 혁신 사례로 주목받고 있습니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 2개&nbsp;·&nbsp;<a href='https://www.etnews.com/20260710000114'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 7월 13일 (월)</span>
+  </div>
+</div>
+<div class="card" id="card-4">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-trends">
+  <div class="trends-header">
+    <span class="trends-icon">&#128200;</span>
+    <span class="trends-title">주목할 트렌드 키워드</span>
+  </div>
+  <div class="trends-list"><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#128202;</span><span class="trend-keyword">#AI 휴머노이드</span></div><div class="trend-desc">물류 현장에 최적화된 로봇핸드 및 VLA 기술 개발과 의료 원격 생체수술 성공 등 휴머노이드 로봇의 산업적 활용이 가속화되고 있습니다.</div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#127919;</span><span class="trend-keyword">#택소노미 (Taxonomy)</span></div><div class="trend-desc">기업들의 AI 전환(AX) 만족도를 높이기 위해 AI가 이해할 수 있는 형태로 데이터를 설계하는 데이터 분류 체계의 중요성이 부각되고 있습니다.</div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#9889;</span><span class="trend-keyword">#호르무즈 리스크</span></div><div class="trend-desc">미국과 이란의 갈등으로 인한 해협 통제 논란이 국제 유가 불안과 글로벌 금융 시장의 안전자산 선호 심리를 자극하고 있습니다.</div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 7월 13일 (월)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
