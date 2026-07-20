@@ -271,7 +271,7 @@ python scripts/validate_ai_issue_sources.py
 
 ## 로컬 실행 시 주의사항
 
-1. **가상환경 활성화** 후 실행: `& C:\ai\.venv311\Scripts\Activate.ps1`
+1. **가상환경 활성화** 후 실행: `& C:\ai\.venv\Scripts\Activate.ps1`
 2. **`.env` 로드**: 스크립트 내부에서 `dotenv.load_dotenv()` 자동 호출
 3. **작업 디렉터리**: 반드시 `C:\ai\dailynews` 루트에서 실행
 4. **Playwright**: `generate_cardnews_images.py` 실행 전 `playwright install chromium` 필요
