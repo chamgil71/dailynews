@@ -2,9 +2,9 @@
 
 서버리스 3채널(뉴스·주식·AI이슈) AI 브리핑 자동 수집·분석·발송 시스템 (Python + LLM + Vercel + GitHub Actions). 이 문서는 이 레포에서 AI 에이전트 작업의 **최상위 진입점(SSOT)**입니다.
 
-- **적용 프로필**: `standard` (＋아래 아웃바운드/시크릿/비용 강화) — [`agent/profiles/standard.md`](./agent/profiles/standard.md)
-- **오케스트레이션**: [`agent/orchestration.md`](./agent/orchestration.md)의 라우팅·의존성·롤백 규칙을 따릅니다.
-- **거버넌스 엔진**: 구현/검증 시 [`agent/knowledge/security_and_cost_governance.md`](./agent/knowledge/security_and_cost_governance.md)와 [`agent/knowledge/resilience_and_observability.md`](./agent/knowledge/resilience_and_observability.md)를 `view_file`로 읽어 적용합니다.
+- **적용 프로필**: `standard` (＋아래 아웃바운드/시크릿/비용 강화) — [`.claude/reference/profiles/standard.md`](./.claude/reference/profiles/standard.md)
+- **오케스트레이션**: [`.claude/reference/orchestration.md`](./.claude/reference/orchestration.md)의 라우팅·의존성·롤백 규칙을 따릅니다.
+- **거버넌스 엔진**: 구현/검증 시 [`.claude/skills/ai-governance/security-cost-patterns.md`](./.claude/skills/ai-governance/security-cost-patterns.md)와 [`.claude/skills/resilience-observability/SKILL.md`](./.claude/skills/resilience-observability/SKILL.md)를 `view_file`로 읽어 적용합니다.
 
 ## 문서 우선순위 (CLAUDE.md 공존)
 

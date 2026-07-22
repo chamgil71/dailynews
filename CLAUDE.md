@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # CLAUDE.md — AI News Brief 프로젝트 컨텍스트
 
 > 세션 시작 시 이 파일을 읽고 현재 상태에서 이어서 작업합니다.
@@ -441,7 +443,7 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - **Supabase 구독 시스템**: `api/_supabase.py` + service_role 키로 서버에서만 접근. RLS 활성화, anon 키 차단. 구독자 채널별 선택: `channels JSONB {"news","stock","ai_issue"}`. 관리자: `is_admin=true`
 - **관리자 vs 구독자**: is_admin=true → `send_admin_alert()` 시스템 알림 수신. 일반 구독자 → 채널별 브리핑만 수신. RECIPIENT_EMAILS는 Supabase 조회 실패 시 폴백
 - **헤더 CSS 통일**: `templates/web_*.html` 4개 모두 `.hnav-tab` + `flex:1` + `3px border` 구조로 통일. `index.html`(editorial SPA)이 기준
-- **`CLAUDE.md` 위치**: 프로젝트 루트가 표준 위치. Claude Code가 세션 시작 시 자동 로드하는 프로젝트 컨텍스트 파일. `.claude/`(디렉터리)와 다름 — `.gitignore`의 `.claude/`는 디렉터리만 차단
+- **`CLAUDE.md` 위치**: 프로젝트 루트가 표준 위치. Claude Code가 세션 시작 시 자동 로드하는 프로젝트 컨텍스트 파일. `.claude/`(디렉터리)와는 별개 — `.claude/`는 `agents/`·`rules/`·`skills/`·`reference/`(거버넌스 프레임워크, git 추적됨)와 `settings.local.json`(개인 권한 설정, `.gitignore`로 제외)이 공존한다
 - **SNS 카드뉴스 5개 플랫폼**: Instagram(카루셀), Threads(텍스트/카루셀 설정), Facebook(멀티사진), Telegram(미디어그룹+버튼), Twitter(이미지스레드) — `post_cardnews.py::PLATFORM_HANDLERS`
 - **Threads 발송 모드**: `config/cardnews_themes.json channels[].threads_mode` — `"text"`(기본, TEXT media_type) / `"carousel"`(이미지 카루셀). Instagram은 텍스트 단독 포스트 불가. `_get_threads_mode(channel)`로 로드
 - **SNS Telegram 채널 분기**: `post_cardnews.py::post_telegram()` — channel='stock'→`TELEGRAM_CHAT_ID_STOCK`, 그 외→`TELEGRAM_CHAT_ID`
