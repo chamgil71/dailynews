@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI가 매일 자동으로 수집·분석하는 글로벌 뉴스 브리핑">
+  <title>사이트 소개 — AI News Brief</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+  :root {
+    --ink:#1a1612; --ink-soft:#4a4036; --ink-mute:#8a7e6f;
+    --paper:#f4ede0; --paper-2:#ece2cf;
+    --rule:#2b231a; --rule-soft:#c8bda7; --accent:#8b2a1f;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); line-height:1.65;
+    font-family:'Noto Serif KR','Source Serif Pro',Georgia,serif; }
+
+  .wrap { max-width:980px; margin:0 auto; padding:32px 32px 56px; }
+
+  .masthead { border-top:6px solid var(--rule); border-bottom:1px solid var(--rule);
+    padding:14px 0 12px; margin-bottom:22px; }
+  .mh-top { display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em;
+    color:var(--ink-soft); text-transform:uppercase;
+    border-bottom:1px solid var(--rule-soft); padding-bottom:8px; margin-bottom:14px; }
+  .mh-title { font-weight:900; font-size:72px; letter-spacing:-.04em;
+    line-height:.92; text-align:center; margin:6px 0 2px; font-style:italic; }
+  .mh-title em { color:var(--accent); }
+  .mh-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.3em;
+    text-align:center; color:var(--ink-soft); text-transform:uppercase;
+    padding-top:6px; border-top:1px solid var(--rule-soft); margin-top:10px; }
+  /* ── Site Header (모든 페이지 공통 상단 바) ── */
+  .site-header {
+    background:#2b231a; color:#ece2cf;
+    padding:0 24px; display:flex; align-items:center; height:58px;
+    position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .site-header .logo {
+    font-size:.95rem; font-weight:700; color:#ece2cf;
+    text-decoration:none; margin-right:24px; white-space:nowrap; cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .site-header .logo span { color:var(--accent); }
+  .header-nav { display:flex; align-items:center; height:100%; flex:1; gap:2px; }
+  .hnav-tab {
+    display:flex; align-items:center; gap:7px; height:100%;
+    padding:0 14px; color:rgba(236,226,207,.6);
+    text-decoration:none; font-size:.8rem; font-weight:500;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.02em;
+    border-bottom:3px solid transparent;
+    transition:color .15s, border-color .15s, background .15s; white-space:nowrap;
+  }
+  .hnav-tab:hover { color:rgba(236,226,207,.9); }
+  .hnav-tab.active { color:#ece2cf; font-weight:700; }
+  .hnav-tab[data-section="news"].active     { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .hnav-tab[data-section="ai-issue"].active { border-bottom-color:#a78bfa; background:rgba(167,139,250,.1); }
+  .hnav-tab[data-section="stock"].active    { border-bottom-color:#4ade80; background:rgba(74,222,128,.1); }
+  .hnav-tab[data-section="archive"].active  { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .tab-label { pointer-events:none; }
+  .site-header .hdr-actions { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .btn-hdr {
+    background:none; border:none; color:rgba(236,226,207,.65);
+    cursor:pointer; padding:6px; border-radius:5px;
+    display:inline-flex; align-items:center; justify-content:center;
+    text-decoration:none; transition:color .15s, background .15s;
+  }
+  .btn-hdr:hover { color:#ece2cf; background:rgba(255,255,255,.1); }
+  @media (max-width:600px) {
+    .site-header { padding:0 12px; }
+    .site-header .logo { font-size:.85rem; margin-right:8px; }
+    .tab-label { display:none; }
+    .hnav-tab { padding:0 10px; gap:0; }
+  }
+
+  .brief { display:grid; grid-template-columns:200px 1fr 160px; gap:24px;
+    border-bottom:1px solid var(--rule); padding:18px 0 22px; margin-bottom:28px; }
+  .brief-stats { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
+  .brief-stats .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:8px; letter-spacing:.08em; }
+  .brief-stat { display:flex; gap:14px; align-items:baseline; margin-top:10px; }
+  .brief-stat .num { font-family:'Noto Serif KR',serif; font-size:24px;
+    font-weight:700; font-style:italic; }
+  .brief-stat .lab { font-size:10px; letter-spacing:.15em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  /* AI이슈 전용 통계 (작게) */
+  .brief-stats-sm { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .brief-stats-sm .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:6px; letter-spacing:.08em; font-size:10px; }
+  .brief-stat-sm { display:flex; gap:8px; align-items:baseline; margin-top:6px; }
+  .brief-stat-sm .num-sm { font-size:14px; font-weight:700;
+    font-family:'IBM Plex Mono',monospace; }
+  .brief-stat-sm .lab { font-size:9px; letter-spacing:.12em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  .kicker { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+    border-left:3px solid var(--accent); padding-left:12px; }
+  .lede { font-size:20px; line-height:1.4; font-weight:500; text-wrap:balance; }
+  .byline { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-mute);
+    text-align:right; line-height:1.7; border-left:1px solid var(--rule-soft); padding-left:14px; }
+
+  .prose { font-size:16px; line-height:1.8; }
+  .prose h1 { display:none; }
+  .prose h2 { font-family:'Noto Serif KR',serif; font-size:22px; font-weight:800;
+    letter-spacing:-.015em; margin:36px 0 14px; padding-bottom:6px;
+    border-bottom:2px solid var(--rule); }
+  .prose h3 { font-size:17px; font-weight:700; margin:24px 0 8px; }
+  .prose p { margin:0 0 14px; }
+  .prose a { color:var(--accent); text-decoration:none;
+    border-bottom:1px solid var(--rule-soft); }
+  .prose a:hover { border-bottom-color:var(--accent); }
+  .prose strong { color:var(--ink); font-weight:700; }
+  .prose ul { padding-left:0; list-style:none; columns:2; column-gap:32px;
+    column-rule:1px solid var(--rule-soft); margin:0 0 18px; }
+  .prose ul li { break-inside:avoid; padding:8px 0 8px 20px; position:relative;
+    border-bottom:1px dotted var(--rule-soft); font-size:14px; line-height:1.55; }
+  .prose ul li::before { content:'§'; position:absolute; left:0; top:8px;
+    color:var(--accent); font-weight:700; font-family:serif; }
+  .prose ol { padding-left:1.4em; margin:0 0 18px; }
+  .prose ol li { margin-bottom:6px; }
+  .prose blockquote { font-family:'IBM Plex Mono',monospace; font-size:12px;
+    border-left:3px solid var(--accent); padding:8px 16px; margin:14px 0;
+    background:rgba(139,42,31,.04); color:var(--ink-soft); }
+  .prose blockquote p { margin:0; }
+  .prose hr { border:none; border-top:3px double var(--rule); margin:32px 0; }
+  .prose code { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
+    padding:2px 6px; border-radius:3px; font-size:.85em; }
+  .prose pre { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
+    padding:12px 14px; border-radius:4px; overflow-x:auto;
+    white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere; }
+  .prose pre code { background:none; padding:0; }
+
+  /* 뉴스 목록 접기/펼치기 */
+  .news-list-section { margin-top:32px; border-top:3px double var(--rule); padding-top:20px; }
+  .news-list-section h2 { font-family:'IBM Plex Mono',monospace; font-size:13px;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--ink-soft);
+    margin:0 0 12px; }
+  .news-list-section details { border:1px solid var(--rule-soft); margin-bottom:10px; }
+  .news-list-section summary { padding:10px 14px; cursor:pointer; font-weight:600;
+    font-size:.9rem; color:var(--ink); background:var(--paper-2);
+    list-style:none; display:flex; justify-content:space-between; }
+  .news-list-section summary::-webkit-details-marker { display:none; }
+  .news-list-section summary::after { content:"▼"; font-size:.7rem; color:var(--ink-mute); }
+  .news-list-section details[open] summary::after { content:"▲"; }
+  .news-items { list-style:none; padding:6px 0; margin:0; }
+  .news-items li { padding:6px 14px; border-bottom:1px solid var(--rule-soft);
+    font-size:.84rem; line-height:1.5; margin:0; }
+  .news-items li:last-child { border-bottom:none; }
+  .news-label { display:inline-block; font-family:'IBM Plex Mono',monospace;
+    font-size:.7rem; background:var(--paper-2); color:var(--ink-mute);
+    padding:1px 6px; border-radius:3px; margin-right:6px; }
+
+  /* 아카이브 */
+  .arch h1 { font-size:32px; font-weight:900; margin:18px 0 6px; }
+  .arch p.count { font-family:'IBM Plex Mono',monospace; font-size:12px;
+    color:var(--ink-mute); letter-spacing:.1em; text-transform:uppercase; margin:0 0 24px; }
+  .arch ul { list-style:none; padding:0; margin:0;
+    columns:2; column-gap:32px; column-rule:1px solid var(--rule-soft); }
+  .arch li { break-inside:avoid; padding:14px 0; border-bottom:1px solid var(--rule-soft); }
+  .arch a { color:var(--ink); text-decoration:none; font-weight:600; font-size:16px; }
+  .arch a:hover { color:var(--accent); }
+  .arch .d { font-family:'IBM Plex Mono',monospace; font-size:11px;
+    color:var(--ink-mute); margin-top:3px; letter-spacing:.04em; }
+
+  .foot { border-top:6px solid var(--rule); margin-top:32px; padding-top:14px;
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-mute);
+    letter-spacing:.12em; text-transform:uppercase; flex-wrap:wrap; gap:8px; }
+
+  @media (max-width:720px) {
+    .mh-title { font-size:48px; }
+    .brief { grid-template-columns:1fr; gap:18px; }
+    .brief-stats, .byline { border-left:none; padding-left:0; }
+    .prose ul, .arch ul { columns:1; }
+  }
+</style>
+  
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="index.html">AI <span>News</span> Brief</a>
+    <nav class="header-nav">
+      <a class="hnav-tab" href="index.html" data-section="news"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v2h3a1 1 0 0 0 1-1v-1zm-5 2v-2H6v2h4zm-5 0v-2H1v1a1 1 0 0 0 1 1h3zm-4-4h4V8H1v4zm0-5h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg><span class="tab-label"> 뉴스 브리핑</span></a><a class="hnav-tab" href="ai-issue/" data-section="ai-issue"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14A2.5 2.5 0 0 1 11.5 12V14H11v1.5a.5.5 0 0 1-1 0V14H9v1.5a.5.5 0 0 1-1 0V14H7v1.5a.5.5 0 0 1-1 0V14H5.5A2.5 2.5 0 0 1 3 11.5H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3A2.5 2.5 0 0 1 5.5 4V2H5V.5A.5.5 0 0 1 5 0zm-.5 4.5v7A1.5 1.5 0 0 0 6 13h4a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 10 3H6A1.5 1.5 0 0 0 4.5 4.5zM6 5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/></svg><span class="tab-label"> AI이슈</span></a><a class="hnav-tab" href="stock/" data-section="stock"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/></svg><span class="tab-label"> 주식 시황</span></a><a class="hnav-tab" href="archive.html" data-section="archive"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg><span class="tab-label"> 아카이브</span></a>
+    </nav>
+    <div class="hdr-actions">
+      <a href="about.html" class="btn-hdr" title="사이트 소개"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg></a>
+      <a href="/subscribe" class="btn-hdr" title="뉴스레터 구독"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg></a>
+      <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-hdr" title="GitHub"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="masthead">
+      <div class="mh-top">
+        <span>AI NEWS</span>
+        <span>사이트 소개</span>
+        <span>KST 08:00</span>
+      </div>
+      <a href="index.html" style="text-decoration:none;color:inherit">
+        <h1 class="mh-title">AI News <em>Brief</em></h1>
+      </a>
+      <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
+    </div>
+
+    
+    <div class="kicker">About</div>
+    <h1 style="font-size:34px;margin:0 0 24px">AI News Brief 소개</h1>
+    <div class="prose" style="columns:1">
+      <h2>이 사이트는 무엇인가요</h2>
+      <p>AI News Brief는 국내외 RSS 뉴스를 매일 자동으로 수집하고, AI(Gemini)가
+      핵심 이슈를 선별·분석해 뉴스 브리핑·AI 업계 이슈·주식 시황 3개 채널로 매일 아침
+      발행하는 개인 프로젝트입니다. 모든 리포트는 GitHub Actions 스케줄러로 자동 생성되며,
+      결과물은 이 웹사이트와 이메일·텔레그램으로 함께 제공됩니다.</p>
+
+      <h2>제작 방식</h2>
+      <p>주요 언론사·기관의 RSS 피드에서 원문을 수집한 뒤, 각 기사의 출처와 원문 링크를
+      그대로 보존하면서 AI가 한국어 요약·핵심 키워드·맥락 분석을 덧붙입니다. AI가 생성한
+      해설과 원문 출처를 함께 제공해 독자가 직접 원문을 확인할 수 있도록 하는 것을
+      운영 원칙으로 삼고 있습니다.</p>
+
+      <h2>정확성 및 면책 안내</h2>
+      <p>AI 분석 특성상 요약·해석에 오류가 포함될 수 있습니다. 정확한 사실 확인이
+      필요한 경우 반드시 원문 기사를 확인해 주세요. 주식 시황 리포트는 투자 판단을
+      돕기 위한 정보 제공 목적일 뿐, 투자 자문이나 매매 추천이 아니며 투자 결정의
+      책임은 이용자 본인에게 있습니다.</p>
+
+      <h2>운영자 정보</h2>
+      <p>본 서비스는 개인 개발자가 기획·개발·운영합니다.<br>
+      문의: <a href="mailto:chamgil@gmail.com">chamgil@gmail.com</a><br>
+      GitHub: <a href="https://github.com/chamgil71/dailynews" target="_blank">chamgil71/dailynews</a></p>
+
+      <h2>관련 링크</h2>
+      <p><a href="subscribe.html">뉴스레터 구독</a> ·
+      <a href="privacy.html">개인정보처리방침</a> ·
+      <a href="archive.html">전체 아카이브</a></p>
+    </div>
+    
+
+    <div class="foot">
+      <span>AI News Brief</span>
+      <span>Generated by Gemini 2.0 Flash</span>
+      <span>chamgil71/dailynews</span>
+      <span>생성 2026-07-23 14:47 KST</span>
+    </div>
+  </div>
+</body>
+</html>

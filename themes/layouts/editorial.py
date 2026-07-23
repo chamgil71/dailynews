@@ -238,6 +238,7 @@ _SVG_STOCK   = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentCol
 _SVG_ARCHIVE = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>'
 _SVG_MAIL    = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg>'
 _SVG_GITHUB  = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>'
+_SVG_INFO    = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>'
 
 _NAV_TABS = [
     ("news",     "index.html",   "뉴스 브리핑", _SVG_NEWS),
@@ -260,6 +261,7 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
     subscribe_btn = (
         f'<a href="{SUBSCRIBE_URL}" class="btn-hdr" title="뉴스레터 구독">{_SVG_MAIL}</a>'
     ) if SUBSCRIBE_URL else ""
+    about_btn = f'<a href="{nav_prefix}about.html" class="btn-hdr" title="사이트 소개">{_SVG_INFO}</a>'
 
     # 탭별 메인색 반영 (뉴스=파랑, AI이슈=보라, 주식=초록)
     accent_override = ""
@@ -285,6 +287,7 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
       {nav_links}
     </nav>
     <div class="hdr-actions">
+      {about_btn}
       {subscribe_btn}
       <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-hdr" title="GitHub">{_SVG_GITHUB}</a>
     </div>
@@ -649,3 +652,45 @@ def render_stock_report(ctx: dict) -> str:
 def render_stock_archive(ctx: dict) -> str:
     from themes.base import render_stock_archive as _base
     return _base(ctx, "editorial")
+
+
+def render_about(ctx: dict) -> str:
+    """사이트 소개·운영자 정보 페이지. 별도 하드코딩 스타일 없이 _layout()/_CSS(.prose)를 그대로 재사용."""
+    body = f"""
+    <div class="kicker">About</div>
+    <h1 style="font-size:34px;margin:0 0 24px">{ctx['site_title']} 소개</h1>
+    <div class="prose" style="columns:1">
+      <h2>이 사이트는 무엇인가요</h2>
+      <p>{ctx['site_title']}는 국내외 RSS 뉴스를 매일 자동으로 수집하고, AI(Gemini)가
+      핵심 이슈를 선별·분석해 뉴스 브리핑·AI 업계 이슈·주식 시황 3개 채널로 매일 아침
+      발행하는 개인 프로젝트입니다. 모든 리포트는 GitHub Actions 스케줄러로 자동 생성되며,
+      결과물은 이 웹사이트와 이메일·텔레그램으로 함께 제공됩니다.</p>
+
+      <h2>제작 방식</h2>
+      <p>주요 언론사·기관의 RSS 피드에서 원문을 수집한 뒤, 각 기사의 출처와 원문 링크를
+      그대로 보존하면서 AI가 한국어 요약·핵심 키워드·맥락 분석을 덧붙입니다. AI가 생성한
+      해설과 원문 출처를 함께 제공해 독자가 직접 원문을 확인할 수 있도록 하는 것을
+      운영 원칙으로 삼고 있습니다.</p>
+
+      <h2>정확성 및 면책 안내</h2>
+      <p>AI 분석 특성상 요약·해석에 오류가 포함될 수 있습니다. 정확한 사실 확인이
+      필요한 경우 반드시 원문 기사를 확인해 주세요. 주식 시황 리포트는 투자 판단을
+      돕기 위한 정보 제공 목적일 뿐, 투자 자문이나 매매 추천이 아니며 투자 결정의
+      책임은 이용자 본인에게 있습니다.</p>
+
+      <h2>운영자 정보</h2>
+      <p>본 서비스는 개인 개발자가 기획·개발·운영합니다.<br>
+      문의: <a href="mailto:chamgil@gmail.com">chamgil@gmail.com</a><br>
+      GitHub: <a href="https://github.com/chamgil71/dailynews" target="_blank">chamgil71/dailynews</a></p>
+
+      <h2>관련 링크</h2>
+      <p><a href="{ctx.get('nav_prefix','')}subscribe.html">뉴스레터 구독</a> ·
+      <a href="{ctx.get('nav_prefix','')}privacy.html">개인정보처리방침</a> ·
+      <a href="{ctx.get('nav_prefix','')}archive.html">전체 아카이브</a></p>
+    </div>
+    """
+    return _layout(
+        "사이트 소개", body, "about",
+        ctx["site_title"], ctx["now"], ctx.get("site_url", ""),
+        nav_prefix=ctx.get("nav_prefix", ""),
+    )
