@@ -172,11 +172,12 @@ jobs:
         if: ${{ github.event.inputs.mode != 'reanalyze' }}
         run: python scripts/send_email.py --type news --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
         env:
-          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS:   ${{ secrets.RECIPIENT_EMAILS }}
-          UNSUBSCRIBE_SECRET: ${{ secrets.UNSUBSCRIBE_SECRET }}
-          SITE_BASE_URL:      ${{ secrets.SITE_BASE_URL }}
+          GMAIL_USER:           ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:   ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:     ${{ secrets.RECIPIENT_EMAILS }}
+          UNSUBSCRIBE_SECRET:   ${{ secrets.UNSUBSCRIBE_SECRET }}
+          SITE_BASE_URL:        ${{ secrets.SITE_BASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         continue-on-error: true
 
       # ── 텔레그램 발송 (배포 완료 후) ──────────────────────────────────────────

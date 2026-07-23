@@ -105,10 +105,11 @@ jobs:
         if: steps.find_report.outputs.exists == 'true' && steps.find_report.outputs.report_type == 'daily'
         run: python scripts/send_email.py --type stock --date ${{ steps.find_report.outputs.report_date }}
         env:
-          GMAIL_USER:          ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
-          SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
+          GMAIL_USER:           ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:   ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:     ${{ secrets.RECIPIENT_EMAILS }}
+          SITE_BASE_URL:        ${{ secrets.SITE_BASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         continue-on-error: true
 
       # ── 이메일 발송 (주간) ──────────────────────────────────────────────────
@@ -116,10 +117,11 @@ jobs:
         if: steps.find_report.outputs.exists == 'true' && steps.find_report.outputs.report_type == 'weekly'
         run: python scripts/send_email.py --type weekly-stock --date ${{ steps.find_report.outputs.report_date }}
         env:
-          GMAIL_USER:          ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS:    ${{ secrets.RECIPIENT_EMAILS }}
-          SITE_BASE_URL:       ${{ secrets.SITE_BASE_URL }}
+          GMAIL_USER:           ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:   ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS:     ${{ secrets.RECIPIENT_EMAILS }}
+          SITE_BASE_URL:        ${{ secrets.SITE_BASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         continue-on-error: true
 
       # ── Notion 동기화 (일일만) ────────────────────────────────────────────
