@@ -51,6 +51,35 @@ publish/cardnews/
   stock/     YYYY-MM-DD.html + YYYY-MM-DD-{N}.png + data.json
 ```
 
+### `publish/` 폴더 — "소스 코드"가 아니라 "커밋된 빌드 산출물"
+
+이 저장소는 별도 gh-pages 브랜치나 Vercel 빌드 스텝을 쓰지 않고, **`publish/` 폴더 자체를 git에 커밋**해서 배포한다
+(`vercel.json`이 `publish/**`를 그대로 정적 서빙). 그래서 이 폴더 안에는 성격이 다른 두 종류의 파일이 섞여 있다 — 헷갈리기 쉬우므로 명확히 구분:
+
+| 구분 | 예시 | 누가 갱신하나 |
+|---|---|---|
+| **소스 코드** (`themes/*.py`, `templates/*.html`, `scripts/*.py`, `vercel.json`) | `themes/layouts/editorial.py` | 사람이 직접 수정 → 커밋하면 그 즉시 반영. **워크플로우가 매일 이 코드를 실행**해서 새 HTML을 생성 |
+| **날짜별 정적 페이지** (`publish/news\|ai-issue\|stock/YYYY-MM-DD.html`, `data.json` 등) | `publish/news/2026-07-22.html` | `news.yml`/`ai_issue.yml`/`stock_build.yml`이 **그날 하루치만** 생성해서 커밋. **과거 날짜 파일은 워크플로우가 다시 만들거나 고치지 않는다** — 한 번 생성되면 사람이 직접 고치지 않는 한 영구히 그 상태로 고정 |
+| **루트 허브 페이지** (`index.html`=`app.html` 컴파일 산출물, `archive.html`) | `publish/index.html` | `news.yml` 실행 시마다 `build_site.py`가 `app.html`(소스)로부터 매번 새로 컴파일해서 덮어씀 |
+
+**실무 함의**: 헤더 버튼 하나를 소스 코드(`themes/layouts/editorial.py`, `templates/header.html`, `publish/app.html`)에 추가하면 **내일부터 생성되는 새 페이지에는 자동 반영**되지만, **이미 만들어진 과거 날짜 페이지(수십~수백 개)는 자동으로 바뀌지 않는다** — 소급 반영하려면 그 정적 HTML 파일들을 직접 고쳐서 커밋해야 한다 (2026-07-23 About 페이지 작업이 이 케이스: 소스 3곳 수정 + 과거 196개 파일 스크립트 일괄 패치를 별도로 진행).
+
+이 파일들은 로컬 git 워킹 디렉터리에서 수정한 시점에는 **로컬에만 존재** — `git push origin main`을 실행해야 GitHub 원격 저장소에 반영되고, 그 순간 Vercel Git Integration이 감지해서 프로덕션에 자동 배포된다 (별도 승인 절차 없음).
+
+### 헤더 "우측 아이콘 링크"(구독/GitHub/소개 등) 커버리지 맵 — 테마별로 몇 개 파일을 고쳐야 하나
+
+사이트는 서버 렌더링 경로가 테마마다 다르므로, 헤더에 아이콘 하나를 추가하려면 **"몇 개 파일을 고쳐야 전체 반영되는지"가 테마마다 다르다**:
+
+| 렌더링 경로 | 실제 사용 파일 | 커버 범위 |
+|---|---|---|
+| **SPA** (`/` 홈, 클라이언트 테마 전환기) | `publish/app.html`(소스) → `build_site.py`가 `publish/index.html`로 컴파일 | 헤더 HTML 마크업은 **1벌만 존재**하고, 6개 테마(classic/minimal/ink/forest/editorial/terminal)는 `[data-theme="..."]` CSS 변수 치환으로만 색이 바뀜. **`app.html` 1곳만 고치면 SPA의 6개 테마 전부에 자동 적용** |
+| **뉴스/AI이슈/아카이브 서브페이지** (editorial 테마, 현재 `SITE_THEME_DEFAULT`) | `themes/layouts/editorial.py::_layout()` | editorial 전용 커스텀 레이아웃(HTML을 Python f-string으로 직접 생성, `base.py`/`templates/*.html` 미사용). **이 파일 1곳만 고치면 news/ai-issue/archive 전체 반영** — 단, editorial 테마가 활성일 때만 (지금은 기본값이라 실질적으로 늘 적용됨) |
+| **주식 서브페이지** (모든 skin 공통) | `templates/header.html` (Jinja `{% include %}`, `web_news.html`/`web_stock.html`이 공유) | `base.py`를 거치는 **classic/ink/forest/minimal 4개 스킨이 이 파일 1개를 공유**하므로 1곳만 고치면 4개 스킨 동시 반영. `editorial.py::render_stock_report()`도 내부적으로 `base.py`+`header.html` 경로를 재사용하므로 주식 페이지는 활성 테마와 무관하게 **항상 이 파일을 거침** |
+| **`terminal` 테마** (현재 비활성 — `SITE_THEME`을 "terminal"로 바꿔야 서버 렌더링에 등장) | `themes/layouts/terminal.py::_layout()` | editorial과 마찬가지로 완전 독립 커스텀 레이아웃. **단, 애초에 구독·GitHub 아이콘 버튼 자체가 없는 미니멀한 상단바(topbar)라 "About 아이콘 하나만 추가"가 부자연스러움** — 2026-07-23 About 작업에서 의도적으로 손대지 않음. `SITE_THEME=terminal`로 전환할 계획이 생기면 이때 아이콘 버튼 영역을 새로 설계해야 함 |
+| **이메일 템플릿** (`templates/email_*.html`) | 헤더 구조 자체가 다름(구독취소 링크만 존재) | "상단 우측 탭 링크" 개념이 적용되지 않는 별도 시스템 — 대상 아님 |
+
+**결론**: "파일 하나만 고치면 전체 반영되냐"는 렌더링 경로에 따라 다르다 — `templates/header.html`은 **의도적으로 공유 partial**이라 여러 스킨을 한 번에 커버하도록 설계돼 있고, `editorial.py`/`terminal.py`는 **의도적으로 완전 독립**된 커스텀 레이아웃이라 서로 다른 파일을 각자 고쳐야 한다 (패턴 12 참고 — editorial/terminal은 통일 대상이 아님).
+
 ---
 
 ## 작업 브랜치 규칙
