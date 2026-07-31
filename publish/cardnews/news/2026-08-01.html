@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1080">
+<title>AI 뉴스 카드뉴스 2026-08-01</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>:root { --accent: #38bdf8; --topbar: linear-gradient(90deg,#38bdf8,#6366f1,#a78bfa); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; background: #000;
+  font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;
+}
+.card {
+  width: 1080px; height: 1080px;
+  display: none; flex-direction: column;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 45%, #111f3a 100%);
+  position: relative; overflow: hidden;
+}
+.card.active { display: flex; }
+.card::before {
+  content: ''; position: absolute;
+  top: -280px; right: -180px; width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card::after {
+  content: ''; position: absolute;
+  bottom: -200px; left: -120px; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.card-topbar {
+  height: 5px; flex-shrink: 0;
+  background: var(--topbar);
+}
+.card-inner {
+  flex: 1; padding: 60px 80px 28px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  position: relative; z-index: 1;
+}
+.card-inner.layout-issue { justify-content: space-between; }
+.card-inner.layout-trends { justify-content: flex-start; }
+.card-footer {
+  padding: 18px 80px 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 1;
+}
+.site-tag { font-size: 24px; color: var(--accent); font-weight: 600; }
+.date-tag { font-size: 24px; color: #475569; }
+.dots { display: flex; gap: 10px; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dot.active { background: var(--accent); width: 32px; border-radius: 6px; }
+
+/* ── Cover ── */
+.cover-logo { display: flex; align-items: center; gap: 22px; margin-bottom: 32px; }
+.logo-badge {
+  width: 78px; height: 78px; border-radius: 20px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff;
+}
+.logo-main { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.logo-sub  { font-size: 24px; color: #94a3b8; margin-top: 5px; }
+.cover-date { font-size: 32px; color: var(--accent); font-weight: 600; margin-bottom: 22px; letter-spacing: -.3px; }
+.cover-divider {
+  height: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+}
+.cover-headline { font-size: 26px; color: #64748b; font-weight: 500; margin-bottom: 20px; letter-spacing: 3px; }
+.cover-issues { display: flex; flex-direction: column; gap: 16px; }
+.cover-issue {
+  display: flex; align-items: flex-start; gap: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px; padding: 18px 24px;
+}
+.cover-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.cover-issue-text { font-size: 30px; color: #f1f5f9; font-weight: 600; line-height: 1.45; letter-spacing: -.3px; }
+.cover-tags { margin-top: 24px; font-size: 24px; color: #334155; }
+
+/* ── Issue Card ── */
+.issue-top { display: flex; align-items: center; gap: 14px; }
+.rank-icon { font-size: 48px; line-height: 1; }
+.rank-label { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.cat-badge {
+  font-size: 24px; padding: 8px 22px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px; color: #cbd5e1; margin-left: auto; font-weight: 500;
+}
+.issue-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 0; }
+.issue-title {
+  font-size: 50px; font-weight: 800; color: #f8fafc;
+  line-height: 1.42; margin-bottom: 26px; letter-spacing: -1px; word-break: keep-all;
+}
+.issue-divider { height: 4px; width: 80px; border-radius: 2px; margin-bottom: 26px; flex-shrink: 0; }
+.issue-summary { font-size: 31px; color: #94a3b8; line-height: 1.9; letter-spacing: -.2px; word-break: keep-all; }
+.issue-bottom { font-size: 25px; color: #475569; font-weight: 500; }
+.issue-bottom a { color: var(--accent); text-decoration: none; }
+
+/* ── Trends / Keywords Card ── */
+.trends-header { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; flex-shrink: 0; }
+.trends-icon { font-size: 46px; line-height: 1; }
+.trends-title { font-size: 40px; font-weight: 800; color: #f8fafc; letter-spacing: -.5px; }
+.trends-list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trend-item {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-left: 5px solid var(--accent); border-radius: 14px;
+  padding: 22px 26px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
+.trend-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.trend-icon { font-size: 30px; line-height: 1; }
+.trend-keyword { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: -.3px; }
+.trend-desc { font-size: 27px; color: #94a3b8; line-height: 1.8; letter-spacing: -.2px; word-break: keep-all; }
+
+/* ── Stat Row (공통 통계 테이블) ── */
+.stat-row  { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #334155; }
+.stat-col1 { font-size: 21px; color: #94a3b8; flex-shrink: 0; }
+.stat-col2 { font-size: 21px; color: #f1f5f9; font-weight: 500; flex: 1; }
+.stat-col3 { font-size: 21px; font-weight: 700; white-space: nowrap; }
+.stat-body { padding: 0 4px; }
+
+/* ── Market Row (주식 시장 지표) ── */
+.mkt-header  { margin-bottom: 8px; }
+.mkt-keyword { font-size: 28px; }
+.mkt-close   { font-size: 26px; color: #f8fafc; font-weight: 700; margin-left: auto; }
+.mkt-chg     { font-size: 24px; }
+
+/* ── Stock Summary (주식 커버 요약) ── */
+.sum-title { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+.sum-body  { font-size: 25px; color: #94a3b8; line-height: 1.5; }
+
+/* ── Cover Date variant ── */
+.cover-date-lg { font-size: 36px; }
+
+/* ── Theme Item (주간주식 핫 테마) ── */
+.theme-item   { margin-bottom: 14px; }
+.theme-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.theme-icon   { font-size: 24px; }
+.theme-title  { font-size: 26px; font-weight: 700; color: #f1f5f9; }
+.theme-desc   { font-size: 21px; color: #94a3b8; line-height: 1.4; }
+
+/* ── Schedule Row (주간주식 차주 일정) ── */
+.sched-row    { display: flex; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #334155; gap: 8px; }
+.sched-date   { font-size: 19px; width: 100px; flex-shrink: 0; font-weight: 600; }
+.sched-body   { flex: 1; }
+.sched-event  { font-size: 21px; color: #f1f5f9; font-weight: 500; }
+.sched-impact { font-size: 18px; color: #94a3b8; }
+</style>
+</head><body>
+
+<div class="card" id="card-0">
+  <div class="card-topbar"></div>
+  <div class="card-inner">
+  <div class="cover-logo">
+    <div class="logo-badge">AI</div>
+    <div>
+      <div class="logo-main">AI <span style="color:#38bdf8">News</span> Brief</div>
+      <div class="logo-sub">매일 아침 AI가 정리하는 핵심 뉴스</div>
+    </div>
+  </div>
+  <div class="cover-date">2026년 8월 1일 (토)</div>
+  <div class="cover-divider"></div>
+  <div class="cover-headline">오늘의 핵심 이슈</div>
+  <div class="cover-issues"><div class="cover-issue"><span class="cover-icon" style="color:#f59e0b">&#128293;</span><span class="cover-issue-text">국내 AI 기술 및 산업 활성화</span></div><div class="cover-issue"><span class="cover-icon" style="color:#818cf8">&#128226;</span><span class="cover-issue-text">핵심 광물 공급망 및 경제 협력 강화</span></div><div class="cover-issue"><span class="cover-icon" style="color:#34d399">&#128161;</span><span class="cover-issue-text">국내 기업들의 신기술 및 신사업 투자 확대</span></div></div>
+  <div class="cover-tags">#AI뉴스 #테크 #데일리브리핑 #인공지능</div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 8월 1일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-1">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#f59e0b">
+    <span class="rank-icon">&#128293;</span>
+    <span class="rank-label">핵심 이슈 1</span>
+    <span class="cat-badge">AI·ML</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">국내 AI 기술 및 산업 활성화</div>
+    <div class="issue-divider" style="background:#f59e0b"></div>
+    <div class="issue-summary">국내에서는 AI 기술 개발 및 상용화가 활발히 진행되고 있습니다. 달구의 온디바이스 AI 상용화, 인천도시공사의 AI 기반 안전기술 도입, 구리시의 AI 융합 메이커 교육 등 다양한 분야에서 AI 기술이 적용되고 있으며, 서울시는 민선 9기 AI 예측 행정을 본격화하여 시민 생활과 도시 운영에 AI를 활용할 계획입니다. 이는 국내 AI 산업의 성장과 기술 혁신을 가속화할 것으로 보입니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 5개&nbsp;·&nbsp;<a href='https://news.google.com/rss/articles/CBMiZ0FVX3lxTE53TW1Xa1VWNC1WRVZ3WldUeDJ3ZnliNmR3cDV6aENBUkVPS1kzb0JnOEtxTG50QndiR2xiUmVqQlpqOTBjbGQxT2Uxd3dYSTBjTFI1dURuZElaelRYN1YtdE5Vbk40dzA?oc=5'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 8월 1일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-2">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#818cf8">
+    <span class="rank-icon">&#128226;</span>
+    <span class="rank-label">핵심 이슈 2</span>
+    <span class="cat-badge">한국경제</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">핵심 광물 공급망 및 경제 협력 강화</div>
+    <div class="issue-divider" style="background:#818cf8"></div>
+    <div class="issue-summary">이재명 대통령의 남미 순방을 계기로 한국은 칠레, 아르헨티나 등 남미 국가들과 핵심 광물 공급망 협력을 강화하고 있습니다. 특히 아르헨티나와는 이중과세방지협정을 타결하고 내년부터 원유 수입을 시작하는 등 경제 안보 분야에서 실질적인 성과를 거두었습니다. 이는 국내 산업의 안정적인 원자재 확보와 투자 환경 개선에 긍정적인 영향을 미칠 것으로 예상됩니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 5개&nbsp;·&nbsp;<a href='https://www.mk.co.kr/news/business/12114029'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 8월 1일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-3">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-issue">
+  <div class="issue-top" style="color:#34d399">
+    <span class="rank-icon">&#128161;</span>
+    <span class="rank-label">핵심 이슈 3</span>
+    <span class="cat-badge">한국기술</span>
+  </div>
+  <div class="issue-body">
+    <div class="issue-title">국내 기업들의 신기술 및 신사업 투자 확대</div>
+    <div class="issue-divider" style="background:#34d399"></div>
+    <div class="issue-summary">SK건설의 친환경 회사 전환, 삼성중공업의 대규모 컨테이너선 수주, 현대차의 신차 사전계약 흥행 등 국내 주요 기업들이 미래 성장 동력 확보를 위한 투자를 확대하고 있습니다. 웨이브는 오리지널 콘텐츠 투자를 늘려 2025년까지 1조원 목표를 세웠으며, 삼성전자는 로봇 사업에 직접 나서 레인보우로보틱스, 에스피지 등 관련 기업의 수혜가 기대됩니다. 이러한 움직임은 국내 산업 전반의 경쟁력 강화에 기여할 것으로 보입니다.</div>
+  </div>
+  <div class="issue-bottom">&#128206; 출처 5개&nbsp;·&nbsp;<a href='http://www.bloter.net/archives/537737'>원문 보기 →</a></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span><span class="dot "></span></div>
+    <span class="date-tag">2026년 8월 1일 (토)</span>
+  </div>
+</div>
+<div class="card" id="card-4">
+  <div class="card-topbar"></div>
+  <div class="card-inner layout-trends">
+  <div class="trends-header">
+    <span class="trends-icon">&#128200;</span>
+    <span class="trends-title">주목할 트렌드 키워드</span>
+  </div>
+  <div class="trends-list"><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#128202;</span><span class="trend-keyword">#AI 기술 상용화 및 확산</span></div><div class="trend-desc">다양한 분야에서 인공지능 기술의 상용화 및 실증 사업이 활발하게 추진되고 있으며, 특히 온디바이스 AI, AI 기반 안전 기술, AI 예측 행정…</div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#127919;</span><span class="trend-keyword">#핵심 광물 공급망 다변화</span></div><div class="trend-desc">국내 기업 및 정부가 남미 국가들과의 협력을 통해 리튬, 구리, 원유 등 핵심 광물의 안정적인 공급망을 구축하고 다변화하려는 노력이 강화되고 있…</div></div><div class="trend-item"><div class="trend-header"><span class="trend-icon">&#9889;</span><span class="trend-keyword">#기업의 ESG 경영 및 신사업 투자</span></div><div class="trend-desc">SK건설의 친환경 전환, 삼성중공업의 대규모 수주, 현대차의 신차 흥행 등 국내 기업들이 ESG 경영을 강화하고 미래 성장 동력을 위한 신기술 …</div></div></div></div>
+  <div class="card-footer">
+    <span class="site-tag">ms-dailynews.vercel.app</span>
+    <div class="dots"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot active"></span></div>
+    <span class="date-tag">2026년 8월 1일 (토)</span>
+  </div>
+</div>
+<script>
+(function(){
+  const i=parseInt(new URLSearchParams(location.search).get('card')||'0');
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',j===i));
+})();
+</script>
+</body></html>
