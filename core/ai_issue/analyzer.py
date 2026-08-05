@@ -109,9 +109,9 @@ def analyze_weekly_data(raw_weekly_data: dict) -> dict:
     logger.info("[LLM 1/5] TOP 10 및 TOP 3 심층 분석 연산 중...")
     top10_detail_data = {"top10": [], "top3_detail": []}
     prompt_main = MAIN_ANALYSIS_PROMPT.format(articles_text=articles_text)
-    for attempt in range(1, 4):  # 최대 3회 재시도
+    for attempt in range(1, 4):  # 최대 3회 재시도. 1회차는 mini로 시도, 실패 시 2~3회차는 full로 에스컬레이션
         try:
-            raw_res = analyzer._call(prompt_main, len(articles[:40]))
+            raw_res = analyzer._call(prompt_main, len(articles[:40]), force_full=(attempt >= 2))
             parsed = _parse_json_block(raw_res)
             if parsed and isinstance(parsed, dict) and parsed.get("top10"):
                 top10_detail_data = parsed

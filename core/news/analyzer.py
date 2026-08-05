@@ -85,10 +85,10 @@ def _parse_json_response(text: str) -> dict | None:
 
 class BaseAnalyzer(ABC):
     def _pick_model(self, news_count: int, model_full: str,
-                    model_mini: str, threshold: int) -> str:
-        """뉴스 건수에 따라 full/mini 모델 자동 선택."""
-        model = model_mini if news_count <= threshold else model_full
-        logger.info(f"[모델 선택] {model} (뉴스 {news_count}건, 기준 {threshold}건)")
+                    model_mini: str, threshold: int, force_full: bool = False) -> str:
+        """뉴스 건수에 따라 full/mini 모델 자동 선택. force_full=True면 건수 무관 full 모델 강제(mini 재시도 실패 후 에스컬레이션용)."""
+        model = model_full if force_full else (model_mini if news_count <= threshold else model_full)
+        logger.info(f"[모델 선택] {model} (뉴스 {news_count}건, 기준 {threshold}건{' · full 강제' if force_full else ''})")
         return model
 
     @abstractmethod
@@ -102,9 +102,9 @@ class GPTAnalyzer(BaseAnalyzer):
         from openai import OpenAI
         self.client = OpenAI(api_key=OPENAI_API_KEY)
 
-    def _call(self, prompt: str, news_count: int) -> str:
+    def _call(self, prompt: str, news_count: int, force_full: bool = False) -> str:
         model = self._pick_model(
-            news_count, GPT_MODEL_FULL, GPT_MODEL_MINI, GPT_MINI_THRESHOLD
+            news_count, GPT_MODEL_FULL, GPT_MODEL_MINI, GPT_MINI_THRESHOLD, force_full=force_full
         )
         response = self.client.chat.completions.create(
             model=model,
@@ -172,9 +172,9 @@ class ClaudeAnalyzer(BaseAnalyzer):
         import anthropic
         self.client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
 
-    def _call(self, prompt: str, news_count: int) -> str:
+    def _call(self, prompt: str, news_count: int, force_full: bool = False) -> str:
         model = self._pick_model(
-            news_count, CLAUDE_MODEL_FULL, CLAUDE_MODEL_MINI, CLAUDE_MINI_THRESHOLD
+            news_count, CLAUDE_MODEL_FULL, CLAUDE_MODEL_MINI, CLAUDE_MINI_THRESHOLD, force_full=force_full
         )
         msg = self.client.messages.create(
             model=model,
@@ -253,11 +253,11 @@ class GeminiAnalyzer(BaseAnalyzer):
                 pass  # SDK 버전이 ThinkingConfig 미지원 시 무시
         return types.GenerateContentConfig(**kwargs)
 
-    def _call(self, prompt: str, news_count: int) -> str:
+    def _call(self, prompt: str, news_count: int, force_full: bool = False) -> str:
         import time
         from core.shared.alerts import send_llm_failure_alert, is_model_error, gha_warning
         model_name = self._pick_model(
-            news_count, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD
+            news_count, GEMINI_MODEL_FULL, GEMINI_MODEL_MINI, GEMINI_MINI_THRESHOLD, force_full=force_full
         )
         config = self._make_config(json_mode=True)
         # 503/429 과부하 대응: 최대 3회 재시도 (2s / 4s / 8s 백오프)
