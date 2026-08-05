@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI가 매일 자동으로 수집·분석하는 글로벌 뉴스 브리핑">
+  <title>AI Weekly — 2026년 08월 02일 — AI News Brief</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+  :root {
+    --ink:#1a1612; --ink-soft:#4a4036; --ink-mute:#8a7e6f;
+    --paper:#f4ede0; --paper-2:#ece2cf;
+    --rule:#2b231a; --rule-soft:#c8bda7; --accent:#8b2a1f;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); line-height:1.65;
+    font-family:'Noto Serif KR','Source Serif Pro',Georgia,serif; }
+
+  .wrap { max-width:980px; margin:0 auto; padding:32px 32px 56px; }
+
+  .masthead { border-top:6px solid var(--rule); border-bottom:1px solid var(--rule);
+    padding:14px 0 12px; margin-bottom:22px; }
+  .mh-top { display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em;
+    color:var(--ink-soft); text-transform:uppercase;
+    border-bottom:1px solid var(--rule-soft); padding-bottom:8px; margin-bottom:14px; }
+  .mh-title { font-weight:900; font-size:72px; letter-spacing:-.04em;
+    line-height:.92; text-align:center; margin:6px 0 2px; font-style:italic; }
+  .mh-title em { color:var(--accent); }
+  .mh-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.3em;
+    text-align:center; color:var(--ink-soft); text-transform:uppercase;
+    padding-top:6px; border-top:1px solid var(--rule-soft); margin-top:10px; }
+  /* ── Site Header (모든 페이지 공통 상단 바) ── */
+  .site-header {
+    background:#2b231a; color:#ece2cf;
+    padding:0 24px; display:flex; align-items:center; height:58px;
+    position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .site-header .logo {
+    font-size:.95rem; font-weight:700; color:#ece2cf;
+    text-decoration:none; margin-right:24px; white-space:nowrap; cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .site-header .logo span { color:var(--accent); }
+  .header-nav { display:flex; align-items:center; height:100%; flex:1; gap:2px; }
+  .hnav-tab {
+    display:flex; align-items:center; gap:7px; height:100%;
+    padding:0 14px; color:rgba(236,226,207,.6);
+    text-decoration:none; font-size:.8rem; font-weight:500;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.02em;
+    border-bottom:3px solid transparent;
+    transition:color .15s, border-color .15s, background .15s; white-space:nowrap;
+  }
+  .hnav-tab:hover { color:rgba(236,226,207,.9); }
+  .hnav-tab.active { color:#ece2cf; font-weight:700; }
+  .hnav-tab[data-section="news"].active     { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .hnav-tab[data-section="ai-issue"].active { border-bottom-color:#a78bfa; background:rgba(167,139,250,.1); }
+  .hnav-tab[data-section="stock"].active    { border-bottom-color:#4ade80; background:rgba(74,222,128,.1); }
+  .hnav-tab[data-section="archive"].active  { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .tab-label { pointer-events:none; }
+  .site-header .hdr-actions { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .btn-hdr {
+    background:none; border:none; color:rgba(236,226,207,.65);
+    cursor:pointer; padding:6px; border-radius:5px;
+    display:inline-flex; align-items:center; justify-content:center;
+    text-decoration:none; transition:color .15s, background .15s;
+  }
+  .btn-hdr:hover { color:#ece2cf; background:rgba(255,255,255,.1); }
+  @media (max-width:600px) {
+    .site-header { padding:0 12px; }
+    .site-header .logo { font-size:.85rem; margin-right:8px; }
+    .tab-label { display:none; }
+    .hnav-tab { padding:0 10px; gap:0; }
+  }
+
+  .brief { display:grid; grid-template-columns:200px 1fr 160px; gap:24px;
+    border-bottom:1px solid var(--rule); padding:18px 0 22px; margin-bottom:28px; }
+  .brief-stats { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
+  .brief-stats .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:8px; letter-spacing:.08em; }
+  .brief-stat { display:flex; gap:14px; align-items:baseline; margin-top:10px; }
+  .brief-stat .num { font-family:'Noto Serif KR',serif; font-size:24px;
+    font-weight:700; font-style:italic; }
+  .brief-stat .lab { font-size:10px; letter-spacing:.15em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  /* AI이슈 전용 통계 (작게) */
+  .brief-stats-sm { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .brief-stats-sm .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:6px; letter-spacing:.08em; font-size:10px; }
+  .brief-stat-sm { display:flex; gap:8px; align-items:baseline; margin-top:6px; }
+  .brief-stat-sm .num-sm { font-size:14px; font-weight:700;
+    font-family:'IBM Plex Mono',monospace; }
+  .brief-stat-sm .lab { font-size:9px; letter-spacing:.12em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  .kicker { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+    border-left:3px solid var(--accent); padding-left:12px; }
+  .lede { font-size:20px; line-height:1.4; font-weight:500; text-wrap:balance; }
+  .byline { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-mute);
+    text-align:right; line-height:1.7; border-left:1px solid var(--rule-soft); padding-left:14px; }
+
+  .prose { font-size:16px; line-height:1.8; }
+  .prose h1 { display:none; }
+  .prose h2 { font-family:'Noto Serif KR',serif; font-size:22px; font-weight:800;
+    letter-spacing:-.015em; margin:36px 0 14px; padding-bottom:6px;
+    border-bottom:2px solid var(--rule); }
+  .prose h3 { font-size:17px; font-weight:700; margin:24px 0 8px; }
+  .prose p { margin:0 0 14px; }
+  .prose a { color:var(--accent); text-decoration:none;
+    border-bottom:1px solid var(--rule-soft); }
+  .prose a:hover { border-bottom-color:var(--accent); }
+  .prose strong { color:var(--ink); font-weight:700; }
+  .prose ul { padding-left:0; list-style:none; columns:2; column-gap:32px;
+    column-rule:1px solid var(--rule-soft); margin:0 0 18px; }
+  .prose ul li { break-inside:avoid; padding:8px 0 8px 20px; position:relative;
+    border-bottom:1px dotted var(--rule-soft); font-size:14px; line-height:1.55; }
+  .prose ul li::before { content:'§'; position:absolute; left:0; top:8px;
+    color:var(--accent); font-weight:700; font-family:serif; }
+  .prose ol { padding-left:1.4em; margin:0 0 18px; }
+  .prose ol li { margin-bottom:6px; }
+  .prose blockquote { font-family:'IBM Plex Mono',monospace; font-size:12px;
+    border-left:3px solid var(--accent); padding:8px 16px; margin:14px 0;
+    background:rgba(139,42,31,.04); color:var(--ink-soft); }
+  .prose blockquote p { margin:0; }
+  .prose hr { border:none; border-top:3px double var(--rule); margin:32px 0; }
+  .prose code { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
+    padding:2px 6px; border-radius:3px; font-size:.85em; }
+  .prose pre { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
+    padding:12px 14px; border-radius:4px; overflow-x:auto;
+    white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere; }
+  .prose pre code { background:none; padding:0; }
+
+  /* 뉴스 목록 접기/펼치기 */
+  .news-list-section { margin-top:32px; border-top:3px double var(--rule); padding-top:20px; }
+  .news-list-section h2 { font-family:'IBM Plex Mono',monospace; font-size:13px;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--ink-soft);
+    margin:0 0 12px; }
+  .news-list-section details { border:1px solid var(--rule-soft); margin-bottom:10px; }
+  .news-list-section summary { padding:10px 14px; cursor:pointer; font-weight:600;
+    font-size:.9rem; color:var(--ink); background:var(--paper-2);
+    list-style:none; display:flex; justify-content:space-between; }
+  .news-list-section summary::-webkit-details-marker { display:none; }
+  .news-list-section summary::after { content:"▼"; font-size:.7rem; color:var(--ink-mute); }
+  .news-list-section details[open] summary::after { content:"▲"; }
+  .news-items { list-style:none; padding:6px 0; margin:0; }
+  .news-items li { padding:6px 14px; border-bottom:1px solid var(--rule-soft);
+    font-size:.84rem; line-height:1.5; margin:0; }
+  .news-items li:last-child { border-bottom:none; }
+  .news-label { display:inline-block; font-family:'IBM Plex Mono',monospace;
+    font-size:.7rem; background:var(--paper-2); color:var(--ink-mute);
+    padding:1px 6px; border-radius:3px; margin-right:6px; }
+
+  /* 아카이브 */
+  .arch h1 { font-size:32px; font-weight:900; margin:18px 0 6px; }
+  .arch p.count { font-family:'IBM Plex Mono',monospace; font-size:12px;
+    color:var(--ink-mute); letter-spacing:.1em; text-transform:uppercase; margin:0 0 24px; }
+  .arch ul { list-style:none; padding:0; margin:0;
+    columns:2; column-gap:32px; column-rule:1px solid var(--rule-soft); }
+  .arch li { break-inside:avoid; padding:14px 0; border-bottom:1px solid var(--rule-soft); }
+  .arch a { color:var(--ink); text-decoration:none; font-weight:600; font-size:16px; }
+  .arch a:hover { color:var(--accent); }
+  .arch .d { font-family:'IBM Plex Mono',monospace; font-size:11px;
+    color:var(--ink-mute); margin-top:3px; letter-spacing:.04em; }
+
+  .foot { border-top:6px solid var(--rule); margin-top:32px; padding-top:14px;
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-mute);
+    letter-spacing:.12em; text-transform:uppercase; flex-wrap:wrap; gap:8px; }
+
+  @media (max-width:720px) {
+    .mh-title { font-size:48px; }
+    .brief { grid-template-columns:1fr; gap:18px; }
+    .brief-stats, .byline { border-left:none; padding-left:0; }
+    .prose ul, .arch ul { columns:1; }
+  }
+</style>
+  <style>:root{--accent:#7c3aed;}</style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="../index.html">AI <span>News</span> Brief</a>
+    <nav class="header-nav">
+      <a class="hnav-tab" href="../index.html" data-section="news"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v2h3a1 1 0 0 0 1-1v-1zm-5 2v-2H6v2h4zm-5 0v-2H1v1a1 1 0 0 0 1 1h3zm-4-4h4V8H1v4zm0-5h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg><span class="tab-label"> 뉴스 브리핑</span></a><a class="hnav-tab active" href="../ai-issue/" data-section="ai-issue"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14A2.5 2.5 0 0 1 11.5 12V14H11v1.5a.5.5 0 0 1-1 0V14H9v1.5a.5.5 0 0 1-1 0V14H7v1.5a.5.5 0 0 1-1 0V14H5.5A2.5 2.5 0 0 1 3 11.5H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3A2.5 2.5 0 0 1 5.5 4V2H5V.5A.5.5 0 0 1 5 0zm-.5 4.5v7A1.5 1.5 0 0 0 6 13h4a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 10 3H6A1.5 1.5 0 0 0 4.5 4.5zM6 5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/></svg><span class="tab-label"> AI이슈</span></a><a class="hnav-tab" href="../stock/" data-section="stock"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/></svg><span class="tab-label"> 주식 시황</span></a><a class="hnav-tab" href="../archive.html" data-section="archive"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg><span class="tab-label"> 아카이브</span></a>
+    </nav>
+    <div class="hdr-actions">
+      <a href="../about.html" class="btn-hdr" title="사이트 소개"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg></a>
+      <a href="https://ms-dailynews.vercel.app/subscribe" class="btn-hdr" title="뉴스레터 구독"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg></a>
+      <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-hdr" title="GitHub"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="masthead">
+      <div class="mh-top">
+        <span>AI NEWS</span>
+        <span>AI Weekly — 2026년 08월 02일</span>
+        <span>KST 08:00</span>
+      </div>
+      <a href="../index.html" style="text-decoration:none;color:inherit">
+        <h1 class="mh-title">AI News <em>Brief</em></h1>
+      </a>
+      <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
+    </div>
+
+    
+    <div class="brief">
+      <div class="brief-stats-sm">
+        <span class="lbl">주간 통계</span>
+        <div class="brief-stat-sm"><span class="num-sm">10</span><span class="lab">이슈</span></div>
+        <div class="brief-stat-sm"><span class="num-sm">10</span><span class="lab">글로벌</span></div>
+        <div class="brief-stat-sm"><span class="num-sm">0</span><span class="lab">국내</span></div>
+      </div>
+      <div>
+        <div class="kicker">AI 이슈 브리핑 · 2026-07-27 ~ 2026-08-02</div>
+        <ul style="margin:10px 0 0;padding-left:1.2em;font-size:17px;line-height:1.6"><li style="margin-bottom:7px"><b>1.</b> OpenAI, 차세대 고효율 플래그십 모델 'GPT-5.6' 전격 공개</li><li style="margin-bottom:7px"><b>2.</b> 엔터프라이즈 AI 에이전트 환경 구축 및 과학적 컴퓨팅의 자율화 가속</li><li style="margin-bottom:7px"><b>3.</b> LLM의 근본적 보안 취약점 경고 및 허깅페이스·프론티어 랩 해킹 분석</li></ul>
+      </div>
+      <div class="byline">
+        AI Editor<br>Gemini 2.0 Flash<br>─<br>2026-08-02
+      </div>
+    </div>
+    <div class="prose"><h1 id="ai-issue-weekly-2026-07-27-2026-08-02">🤖 AI Issue Weekly — 2026-07-27 ~ 2026-08-02</h1>
+
+<p>생성일시: 2026-08-05 18:04 KST | 기준: 주간 AI 동향 분석 리포트</p>
+
+<p>인공지능 생태계의 주요 블로그, 공식 미디어, cs.AI arXiv 논문 및 주요 빅테크 종목의 변동을 종합 분석한 주간 기술/산업 보고서입니다.</p>
+
+<hr />
+
+<h2 id="이번-주-ai-이슈-top-10">■ 이번 주 AI 이슈 TOP 10</h2>
+
+<p>이번 주 전 세계 AI 산업에서 가장 중요하게 대두된 10대 핵심 사건 및 동향 분석 목록입니다.</p>
+
+<h3 id="1위-model-openai-차세대-고효율-플래그십-모델-gpt-56-전격-공개">1위. [MODEL] OpenAI, 차세대 고효율 플래그십 모델 'GPT-5.6' 전격 공개</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★★★</li>
+<li><strong>요약</strong>: OpenAI가 추론 효율성과 가격 경쟁력을 극대화한 GPT-5.6 모델을 발표했습니다. Luna 및 Terra 요금제 인하와 함께 API 설정을 통해 ARC-AGI-3 벤치마크 점수를 3배 향상시키는 등 가성비와 고성능을 동시에 달성했습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6">Advancing the price-performance frontier with GPT-5.6</a>, <a href="https://openai.com/index/gpt-5-6-frontier-intelligence-efficiency">How GPT-5.6 fuses frontier intelligence with frontier efficiency</a>, <a href="https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores">How enabling two settings tripled our scores on the ARC-AGI-3 benchmark</a></li>
+</ul>
+
+<h3 id="2위-service-엔터프라이즈-ai-에이전트-환경-구축-및-과학적-컴퓨팅의-자율화-가속">2위. [SERVICE] 엔터프라이즈 AI 에이전트 환경 구축 및 과학적 컴퓨팅의 자율화 가속</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★★★</li>
+<li><strong>요약</strong>: 구글의 Gemini API Managed Agents 업데이트와 OpenAI의 과학 컴퓨팅 에이전트 보고서 등, 단순 챗봇을 넘어 스스로 워크플로우를 실행하는 '에이전트 AI'가 기업 및 연구 현장의 핵심 인프라로 급부상하고 있습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://www.technologyreview.com/2026/07/27/1140668/building-the-enterprise-environment-for-agentic-ai/">Building the enterprise environment for agentic AI</a>, <a href="https://blog.google/innovation-and-ai/technology/developers-tools/expanding-managed-agents-gemini-api-3-6-flash-hooks/">Gemini API Managed Agents: 3.6 Flash, hooks, and more</a>, <a href="https://openai.com/index/scientific-computing-agentic-ai">Scientific computing in the age of agentic AI</a></li>
+</ul>
+
+<h3 id="3위-research-llm의-근본적-보안-취약점-경고-및-허깅페이스프론티어-랩-해킹-분석">3위. [RESEARCH] LLM의 근본적 보안 취약점 경고 및 허깅페이스·프론티어 랩 해킹 분석</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★★★</li>
+<li><strong>요약</strong>: 국제 학술대회에서 대형언어모델(LLM)의 구조적 결함으로 인한 보안 취약성이 제기된 가운데, 최근 발생한 허깅페이스 및 프론티어 랩 에이전트 침입 사건의 타임라인이 공개되며 AI 보안이 업계 최우선 과제로 대두되었습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://www.technologyreview.com/2026/07/30/1140927/a-fundamental-flaw-leaves-llms-vulnerable-to-attack/">A fundamental flaw leaves LLMs strikingly vulnerable to attack</a>, <a href="https://huggingface.co/blog/agent-intrusion-technical-timeline">Anatomy of a Frontier Lab Agent Intrusion: A Technical Timeline of the July 2026 Incident</a>, <a href="https://www.technologyreview.com/2026/07/27/1140836/openai-hugging-face-attack-precedent/">OpenAI called the Hugging Face attack unprecedented. But we’ve been here before.</a></li>
+</ul>
+
+<h3 id="4위-model-앤트로픽-가성비-극대화한-클로드-오푸스-5-전격-출시">4위. [MODEL] 앤트로픽, 가성비 극대화한 '클로드 오푸스 5' 전격 출시</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★★☆</li>
+<li><strong>요약</strong>: 앤트로픽이 최상위 모델급 성능을 유지하면서 가격은 절반으로 낮춘 'Claude Opus 5'를 출시하여 개발자와 기업 고객 유치를 위한 빅테크 간 가격 경쟁이 한층 더 치열해졌습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://www.zdnet.com/article/claude-opus-5-near-fable-performance-at-half-the-price/">Claude Opus 5 arrives with near Fable performance at half the price</a></li>
+</ul>
+
+<h3 id="5위-research-openai-수학-및-이론-컴퓨터-과학-분야-10대-난제-해결-성과-발표">5위. [RESEARCH] OpenAI, 수학 및 이론 컴퓨터 과학 분야 10대 난제 해결 성과 발표</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★★☆</li>
+<li><strong>요약</strong>: OpenAI가 기하학, 암호학, 복잡성 이론 등 수학 및 이론 컴퓨터 과학 분야의 장기 미해결 난제들에 대한 10가지 새로운 연구 성과를 공개하며 AI의 학술적 기여도를 증명했습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://openai.com/index/ten-advances-in-mathematics">Ten advances in mathematics and theoretical computer science</a></li>
+</ul>
+
+<h3 id="6위-infra-글로벌-반도체-인재-전쟁-격화-삼성전자-엔지니어들의-sk하이닉스-이직-러시">6위. [INFRA] 글로벌 반도체 인재 전쟁 격화: 삼성전자 엔지니어들의 SK하이닉스 이직 러시</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★★☆</li>
+<li><strong>요약</strong>: HBM(고대역폭 메모리) 등 AI 반도체 주도권 경쟁 속에서 삼성전자 반도체 부문 엔지니어들이 경쟁사인 SK하이닉스로 대거 이직하는 현상이 발생하며 업계 인력 지형도가 재편되고 있습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://www.technologyreview.com/2026/07/28/1140853/samsung-chip-workers-exodus-sk-hynix/">Samsung’s chip workers are jumping ship to rival SK Hynix</a></li>
+</ul>
+
+<h3 id="7위-policy-레딧-ceo-구글-ai-오버뷰의-무단-데이터-학습-및-가치-환원에-의문-제기">7위. [POLICY] 레딧 CEO, 구글 AI 오버뷰의 무단 데이터 학습 및 가치 환원에 의문 제기</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★★☆</li>
+<li><strong>요약</strong>: 레딧의 주가 하락세 속에 CEO 스티브 허프먼이 구글의 'AI 오버뷰'가 제공하는 가치에 의문을 제기하며, 구글과의 데이터 라이선스 계약 중단 가능성을 시사했습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://arstechnica.com/ai/2026/08/reddit-ceo-on-ai-overviews-were-still-looking-for-that-win-win/">As Reddit stock falls, CEO questions value of Google's AI Overviews</a></li>
+</ul>
+
+<h3 id="8위-research-ai-기반-신약-개발-및-데이터-루프-완성을-통한-제약-혁신">8위. [RESEARCH] AI 기반 신약 개발 및 데이터 루프 완성을 통한 제약 혁신</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★★☆</li>
+<li><strong>요약</strong>: 고비용·고위험의 신약 개발 분야에서 AI를 활용해 후보 물질 도출 기간을 단축하고, 실험 데이터와 AI 모델 간의 피드백 루프를 완성하여 신약 성공률을 극대화하는 연구가 주목받고 있습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://www.technologyreview.com/2026/07/27/1139667/closing-the-data-loop-in-ai-driven-drug-discovery/">Closing the data loop in AI-driven drug discovery</a>, <a href="https://www.technologyreview.com/2026/07/23/1140346/how-ai-helps-scientists-design-the-next-generation-of-medicines/">How AI helps scientists design the next generation of medicines</a></li>
+</ul>
+
+<h3 id="9위-policy-법원-xai의-미네소타주-딥페이크-누드화-앱-금지법-집행-정지-가처분-기각">9위. [POLICY] 법원, xAI의 미네소타주 '딥페이크 누드화 앱 금지법' 집행 정지 가처분 기각</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★☆☆</li>
+<li><strong>요약</strong>: 미국 법원이 미네소타주의 딥페이크 이미지 생성 앱 금지법에 반발해 일론 머스크의 xAI가 제기한 집행 정지 요청을 기각함으로써, AI 오용 규제 법안이 예정대로 시행될 전망입니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://techcrunch.com/2026/08/01/judge-denies-xais-request-to-block-minnesota-ban-on-nudify-apps/">Judge denies xAI’s request to block Minnesota ban on ‘nudify’ apps</a></li>
+</ul>
+
+<h3 id="10위-industry-테크-기업들의-ai-도입에-따른-인력-구조조정-및-고용-시장-변화">10위. [INDUSTRY] 테크 기업들의 AI 도입에 따른 인력 구조조정 및 고용 시장 변화</h3>
+
+<ul>
+<li><strong>중요도</strong>: ★★★☆☆</li>
+<li><strong>요약</strong>: Monday.com을 비롯한 다수의 글로벌 IT 기업들이 AI 기술 도입을 이유로 대규모 감원을 단행하면서, AI가 고용 시장의 직무 경계를 재정의하고 인력 재배치를 가속화하고 있습니다.</li>
+<li><strong>주요 출처</strong>: <a href="https://techcrunch.com/2026/07/25/the-running-list-major-tech-layoffs-in-2026-where-employers-cited-ai/">Monday.com is the latest tech company to blame AI for layoffs — here are 20 others</a>, <a href="https://openai.com/index/how-ai-is-expanding-what-people-do-at-work">How AI is expanding what people do at work</a></li>
+</ul>
+
+<hr />
+
+<h2 id="주요-이슈-심층-분석-top-3">■ 주요 이슈 심층 분석 (TOP 3)</h2>
+
+<p>이번 주 가장 높은 임팩트를 지닌 3대 핵심 이슈의 배경, 핵심 내용, 산업적 파급 효과 분석 리포트입니다.</p>
+
+<h3 id="이슈-1위-openai-차세대-고효율-플래그십-모델-gpt-56-전격-공개">🌟 [이슈 1위] OpenAI, 차세대 고효율 플래그십 모델 'GPT-5.6' 전격 공개</h3>
+
+<h4 id="1-이슈-배경">1) 이슈 배경</h4>
+
+<p>그동안 AI 업계는 초거대 모델의 성능 고도화에 집중해 왔으나, 천문학적인 연산 비용과 인프라 한계로 인해 실질적인 비즈니스 도입에 어려움을 겪었습니다. 이에 따라 성능을 유지하면서도 추론 비용을 획기적으로 낮추는 '고효율 지능(Frontier Efficiency)'이 시장의 핵심 화두로 부각되었습니다.</p>
+
+<h4 id="2-핵심-발표-및-세부-내용">2) 핵심 발표 및 세부 내용</h4>
+
+<p>OpenAI가 공개한 GPT-5.6은 고성능 프론티어 모델이면서도 Luna 및 Terra API 요금제를 대폭 인하하여 비용 효율성을 극대화했습니다. 특히 API 수준에서 추론 보존(Reasoning Retention) 및 압축(Compaction) 설정을 활성화하는 것만으로 고난도 인공일반지능 벤치마크인 ARC-AGI-3 점수를 기존 대비 3배 이상 끌어올리는 기술적 돌파구를 증명했습니다.</p>
+
+<h4 id="3-인공지능-생태계-및-산업적-의의">3) 인공지능 생태계 및 산업적 의의</h4>
+
+<p>이번 발표는 빅테크 간의 단순한 매개변수(Parameter) 규모 경쟁을 종식시키고, '달러당 제공 가능한 지능의 양(Intelligence per Dollar)'을 겨루는 가성비 경쟁으로 패러다임을 전환시켰습니다. 엔터프라이즈 시장에서 AI 워크플로우를 대규모로 배포할 수 있는 경제적 타당성을 확보해 주었습니다.</p>
+
+<h4 id="4-향후-12년-내-미래-파급-효과-및-예측">4) 향후 1~2년 내 미래 파급 효과 및 예측</h4>
+
+<p>향후 1~2년 내에 기업들은 비용 부담 없이 실시간 다국어 지원 에이전트(예: avatarin의 24/7 쇼핑 에이전트)를 대규모로 도입할 것입니다. 또한 모바일 및 엣지 디바이스 환경에서도 고성능 AI 추론이 가능해져 일상적인 서비스 전반에 AI가 깊숙이 융합될 것입니다.</p>
+
+<hr />
+
+<h3 id="이슈-2위-엔터프라이즈-ai-에이전트-환경-구축-및-과학적-컴퓨팅의-자율화-가속">🌟 [이슈 2위] 엔터프라이즈 AI 에이전트 환경 구축 및 과학적 컴퓨팅의 자율화 가속</h3>
+
+<h4 id="1-이슈-배경-2">1) 이슈 배경</h4>
+
+<p>단순히 사용자의 질문에 답하는 챗봇 형태의 AI는 업무 생산성 향상에 한계가 있었습니다. 이에 따라 스스로 목표를 설정하고, 다양한 도구(Tools)와 API를 연동하여 복잡한 비즈니스 프로세스를 엔드투엔드로 자율 실행하는 '에이전트 AI(Agentic AI)'로의 기술적 진화가 요구되어 왔습니다.</p>
+
+<h4 id="2-핵심-발표-및-세부-내용-2">2) 핵심 발표 및 세부 내용</h4>
+
+<p>구글은 Gemini 3.6 Flash 모델 기반의 Managed Agents와 트리거/훅 기능을 발표하며 개발자가 자율 에이전트를 쉽게 구축할 수 있는 환경을 제시했습니다. 동시에 OpenAI는 과학자들이 AI 코딩 에이전트를 활용해 유전학 및 생물학 분야의 소프트웨어 개발과 연산을 자동화하고 있는 실태 보고서를 공개하며 에이전트의 실용성을 입증했습니다.</p>
+
+<h4 id="3-인공지능-생태계-및-산업적-의의-2">3) 인공지능 생태계 및 산업적 의의</h4>
+
+<p>AI 에이전트 생태계의 활성화는 기존 SaaS(Software-as-a-Service) 시장의 판도를 뒤흔들 것입니다. 정형화된 UI 기반 소프트웨어 대신, 백그라운드에서 자율적으로 협업하는 멀티 에이전트 시스템이 기업의 핵심 인프라로 자리 잡으며 소프트웨어 산업의 가치 사슬을 재편할 것입니다.</p>
+
+<h4 id="4-향후-12년-내-미래-파급-효과-및-예측-2">4) 향후 1~2년 내 미래 파급 효과 및 예측</h4>
+
+<p>기업들은 인사, 재무, 물류 등 부서별 업무를 전담하는 맞춤형 AI 에이전트를 도입하여 업무 자동화를 극대화할 것입니다. 연구 현장에서는 과학 연구 에이전트가 데이터 분석과 가설 검증을 자율적으로 수행하여 신약 및 신소재 개발 주기를 수년에서 수개월 단위로 단축시킬 것으로 기대됩니다.</p>
+
+<hr />
+
+<h3 id="이슈-3위-llm의-근본적-보안-취약점-경고-및-허깅페이스프론티어-랩-해킹-분석">🌟 [이슈 3위] LLM의 근본적 보안 취약점 경고 및 허깅페이스·프론티어 랩 해킹 분석</h3>
+
+<h4 id="1-이슈-배경-3">1) 이슈 배경</h4>
+
+<p>AI 에이전트와 LLM이 기업 시스템 및 외부 인터넷과 직접 연동되면서 보안 위협이 급증하고 있습니다. 특히 모델 자체의 취약점을 악용한 프롬프트 인젝션이나 데이터 탈취 공격은 기업의 핵심 자산과 개인정보를 직접적으로 위협하는 심각한 보안 리스크로 부상했습니다.</p>
+
+<h4 id="2-핵심-발표-및-세부-내용-3">2) 핵심 발표 및 세부 내용</h4>
+
+<p>국제 학술대회 연구진은 LLM의 근본적인 아키텍처 결함으로 인해 완벽한 보안 방어가 불가능하다는 논문을 발표했습니다. 실제로 2026년 7월 발생한 허깅페이스 및 프론티어 랩 에이전트 침입 사건의 기술적 타임라인이 공개되며 우려가 현실화되었고, OpenAI는 이에 대응하기 위해 자체 해킹 전문 모델인 'GPT-Red'를 구축해 방어력을 테스트하고 있습니다.</p>
+
+<h4 id="3-인공지능-생태계-및-산업적-의의-3">3) 인공지능 생태계 및 산업적 의의</h4>
+
+<p>AI 보안이 단순한 부가 기능이 아닌, 비즈니스 연속성을 결정짓는 핵심 요소로 격상되었습니다. 보안이 담보되지 않은 AI 모델은 엔터프라이즈 시장에서 퇴출당할 수 있으며, 이에 따라 AI 보안 솔루션 및 레드팀(Red Teaming) 비즈니스가 급성장하는 계기가 될 것입니다.</p>
+
+<h4 id="4-향후-12년-내-미래-파급-효과-및-예측-3">4) 향후 1~2년 내 미래 파급 효과 및 예측</h4>
+
+<p>기업들은 AI 도입 시 보안성 검토 단계를 대폭 강화할 것이며, 정부 차원에서도 EU AI Act 등 규제 프레임워크를 통해 AI 에이전트의 권한과 보안 표준을 엄격히 규제할 것입니다. 안전한 샌드박스 환경과 실시간 위협 탐지 시스템이 AI 배포의 필수 조건이 될 전망입니다.</p>
+
+<hr />
+
+<h2 id="주요-ai-기업-및-서비스-동향">🏢 주요 AI 기업 및 서비스 동향</h2>
+
+<ul>
+<li><p><strong>OpenAI</strong>: 모델 효율성과 에이전트 생태계 확장에 집중하며 GPT-5.6을 통해 가격 경쟁력을 확보하고, 학계 지원 및 범죄 악용 차단 등 책임 있는 AI 거버넌스를 강조하고 있습니다. 특히 수학·이론 컴퓨터 과학 분야의 성과를 발표하며 기술적 리더십을 공고히 하는 동시에, 기업용 에이전트 시장을 선점하려는 전략을 보입니다.</p></li>
+<li><p><strong>Google</strong>: Gemini API에 매니지드 에이전트와 3.6 Flash 모델을 도입하며 개발자 생태계 강화에 주력하고 있습니다. 검색 서비스에 AI 모드를 결합하여 일상 편의성을 높이는 등 실생활 밀착형 AI 서비스로 사용자 접점을 확대하고 있습니다.</p></li>
+<li><p><strong>Anthropic</strong>: Claude Opus 5를 출시하며 이전 세대 대비 성능은 유지하면서 가격을 절반으로 낮추는 공격적인 전략을 취했습니다. 이는 개발자와 기업 고객을 겨냥한 것으로, OpenAI의 GPT-5.6 가격 정책과 직접적인 경쟁 구도를 형성하고 있습니다.</p></li>
+<li><p><strong>Meta</strong>: 이번 주 직접적인 비즈니스 발표는 없었으나, AI 모델의 보안 취약점과 에이전트 침해 사고 등 업계 전반의 보안 이슈가 부각되면서 안전한 AI 구축을 위한 기술적 논의의 중심에 서 있습니다.</p></li>
+<li><p><strong>Microsoft</strong>: OpenAI와의 긴밀한 협력을 통해 기업용 AI 워크플로우를 고도화하고 있으며, 에이전트 기반의 비즈니스 자동화 환경 구축을 리드하고 있습니다.</p></li>
+<li><p><strong>국내 및 기타 스타트업</strong>: Hugging Face는 GPU 관리 효율화와 지리공간 추론 플랫폼 등 인프라 기술에 집중하고 있으며, 국내에서는 삼성전자의 반도체 인력 유출 이슈가 언급되는 등 AI 하드웨어 경쟁력을 둘러싼 인적 자원 이동이 주목받고 있습니다.</p></li>
+</ul>
+
+<hr />
+
+<h2 id="이번-주-ai-실용-팁-weekly-tip">💡 이번 주 AI 실용 팁 (Weekly Tip)</h2>
+
+<p>독자가 현업 또는 비즈니스에 즉각 도입해 볼 수 있는 구체적인 AI 도구 및 프롬프트 가이드입니다.</p>
+
+<h3 id="중급-gpt-56의-추론-최적화-설정을-활용한-복잡한-문제-해결법">🛠️ [중급] GPT-5.6의 추론 최적화 설정을 활용한 복잡한 문제 해결법</h3>
+
+<ul>
+<li><strong>대상 도구</strong>: <code>GPT-5.6 (API/Playground)</code></li>
+<li><strong>실행 가이드</strong>:
+1단계: API 설정에서 'Reasoning Retention' 기능을 활성화하여 모델이 중간 추론 과정을 유지하도록 합니다.
+2단계: 'Compaction' 설정을 켜서 긴 문맥 내 핵심 논리만 압축하여 효율성을 극대화합니다.
+3단계: 복잡한 논리적 과제를 수행할 때, 아래 프롬프트를 사용하여 모델이 단계별로 사고하도록 유도합니다.</li>
+<li><strong>실용 프롬프트 / 설정 템플릿</strong>:</li>
+</ul>
+
+<div class="codehilite">
+<pre><span></span><code>당신은 고도의 추론 능력을 갖춘 전문가입니다. 다음 문제를 해결하기 위해 [Reasoning Retention] 모드로 사고하십시오. 1. 문제의 핵심 제약 조건을 나열하고, 2. 각 제약 조건을 만족하는 가설을 3개 세우며, 3. 각 가설의 논리적 허점을 분석한 뒤, 4. 최종적으로 가장 효율적인 해결책을 제시하십시오. 문제: [여기에 해결하고자 하는 복잡한 비즈니스 또는 기술적 과제를 입력하세요]
+</code></pre>
+</div>
+
+<h3 id="초급-ai-에이전트를-활용한-247-고객-응대-자동화-설계">🛠️ [초급] AI 에이전트를 활용한 24/7 고객 응대 자동화 설계</h3>
+
+<ul>
+<li><strong>대상 도구</strong>: <code>GPT-Realtime / Gemini 3.6 Flash</code></li>
+<li><strong>실행 가이드</strong>:
+1단계: 비즈니스 FAQ 데이터를 구조화된 JSON 또는 텍스트 파일로 준비합니다.
+2단계: AI 에이전트의 페르소나와 응대 가이드라인을 설정합니다.
+3단계: 실시간 응대 모델(Realtime API)을 연결하여 다국어 지원 및 24시간 자동 응대 워크플로우를 구축합니다.</li>
+<li><strong>실용 프롬프트 / 설정 템플릿</strong>:</li>
+</ul>
+
+<div class="codehilite">
+<pre><span></span><code>당신은 [회사명]의 24시간 전문 고객 지원 에이전트입니다. 아래 제공된 FAQ 데이터를 기반으로 고객의 질문에 답변하십시오. 답변 시 다음 규칙을 준수하세요: 1. 항상 친절하고 전문적인 톤을 유지할 것, 2. 답변이 불확실할 경우 &#39;상담원 연결&#39;을 제안할 것, 3. 고객의 질문 의도를 파악하여 간결하게 핵심만 전달할 것. [FAQ 데이터: 여기에 회사 서비스 관련 질문과 답변 리스트를 붙여넣으세요]
+</code></pre>
+</div>
+
+<hr />
+
+<h2 id="ai-투자-및-빅테크-펀딩-동향">📈 AI 투자 및 빅테크 펀딩 동향</h2>
+
+<p>주요 AI 빅테크 테마주의 주간(7일간) 누적 주가 등락 스냅샷입니다.</p>
+
+<table>
+<thead>
+<tr>
+  <th style="text-align:center;">티커</th>
+  <th style="text-align:left;">종목명</th>
+  <th style="text-align:center;">주간 등락률</th>
+  <th style="text-align:left;">상세 가격 정보 및 특이사항</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:center;"><strong>NVDA</strong></td>
+  <td style="text-align:left;">엔비디아</td>
+  <td style="text-align:center;"><strong>+7.85%</strong></td>
+  <td style="text-align:left;">종가: $211.94 (주간 시작 $196.51)</td>
+</tr>
+<tr>
+  <td style="text-align:center;"><strong>MSFT</strong></td>
+  <td style="text-align:left;">마이크로소프트</td>
+  <td style="text-align:center;"><strong>+26.65%</strong></td>
+  <td style="text-align:left;">종가: $492.81 (주간 시작 $389.10)</td>
+</tr>
+<tr>
+  <td style="text-align:center;"><strong>GOOGL</strong></td>
+  <td style="text-align:left;">알파벳(구글)</td>
+  <td style="text-align:center;"><strong>+15.64%</strong></td>
+  <td style="text-align:left;">종가: $377.65 (주간 시작 $326.56)</td>
+</tr>
+<tr>
+  <td style="text-align:center;"><strong>META</strong></td>
+  <td style="text-align:left;">메타</td>
+  <td style="text-align:center;"><strong>-1.00%</strong></td>
+  <td style="text-align:left;">종가: $587.94 (주간 시작 $593.87)</td>
+</tr>
+<tr>
+  <td style="text-align:center;"><strong>AMD</strong></td>
+  <td style="text-align:left;">AMD</td>
+  <td style="text-align:center;"><strong>+4.77%</strong></td>
+  <td style="text-align:left;">종가: $518.58 (주간 시작 $494.95)</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<h2 id="주목-논문-pick-research-radar">🔬 주목 논문 Pick (Research Radar)</h2>
+
+<p>이번 주 cs.AI cs.LG cs.CL 분야에 게재된 수백 편의 아카이브 논문 중 실무 임팩트와 아키텍처적 유용성을 고려하여 엄선한 주목 논문입니다.</p>
+
+<h3 id="llm-blender-ensembling-large-language-models-with-pairwise-ranking-and-fusion">📄 LLM-Blender: Ensembling Large Language Models with Pairwise Ranking and Fusion</h3>
+
+<ul>
+<li><strong>저자진</strong>: Dongfu Jiang, Xiang Ren, Bill Yuchen Lin, et al.</li>
+<li><strong>한줄 요약</strong>: <em>여러 LLM의 출력을 비교하고 결합하여 단일 모델보다 더 정확하고 신뢰할 수 있는 답변을 생성하는 앙상블 프레임워크입니다.</em></li>
+<li><strong>CTO 실무 적용 가이드</strong>: 
+단일 모델의 환각(Hallucination) 문제를 해결하기 위해 여러 모델의 후보군을 생성하고 랭킹 모델을 통해 최적의 답변을 선택하는 아키텍처를 구축할 수 있습니다. 특히 RAG 파이프라인의 최종 응답 생성 단계에서 모델별 강점을 결합하여 서비스 품질을 극대화하는 데 매우 효과적입니다.</li>
+<li><strong>원문 링크</strong>: <a href="https://arxiv.org/abs/2306.02561">arXiv: LLM-Blender: Ensembling Large ...</a></li>
+</ul>
+
+<h3 id="lora-low-rank-adaptation-of-large-language-models">📄 LoRA: Low-Rank Adaptation of Large Language Models</h3>
+
+<ul>
+<li><strong>저자진</strong>: Edward Hu, Yelong Shen, Phillip Wallis, et al.</li>
+<li><strong>한줄 요약</strong>: <em>거대 모델의 전체 파라미터를 수정하지 않고 일부 가중치만 학습시켜 적은 비용으로 고성능 파인튜닝을 가능하게 하는 기술입니다.</em></li>
+<li><strong>CTO 실무 적용 가이드</strong>: 
+기업 내부의 도메인 특화 데이터를 활용해 모델을 최적화할 때, 전체 파라미터를 업데이트하는 대신 LoRA 어댑터만 배포함으로써 인프라 비용을 획기적으로 절감할 수 있습니다. 멀티 테넌트 서비스 환경에서 베이스 모델 하나에 여러 LoRA 모듈을 동적으로 스위칭하는 아키텍처 구현에 필수적입니다.</li>
+<li><strong>원문 링크</strong>: <a href="https://arxiv.org/abs/2106.09685">arXiv: LoRA: Low-Rank Adaptation of L...</a></li>
+</ul>
+
+<h3 id="self-rag-learning-to-retrieve-generate-and-critique-through-self-reflection">📄 Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection</h3>
+
+<ul>
+<li><strong>저자진</strong>: Akari Asai, Zeqiu Wu, Yizhong Wang, et al.</li>
+<li><strong>한줄 요약</strong>: <em>모델이 스스로 정보를 검색하고 생성하며, 생성된 내용이 정확한지 비판적으로 검토하는 과정을 통해 RAG의 신뢰도를 높이는 방법론입니다.</em></li>
+<li><strong>CTO 실무 적용 가이드</strong>: 
+기존 RAG 시스템의 고질적인 문제인 '관련 없는 정보 검색'과 '부정확한 답변 생성'을 해결하기 위해, 모델이 스스로 검색 필요성을 판단하고 답변을 검증하는 'Self-Reflection' 토큰을 도입하십시오. 이는 고객 응대 챗봇의 정확도를 비약적으로 높여줄 핵심 아키텍처 설계 지침이 될 것입니다.</li>
+<li><strong>원문 링크</strong>: <a href="https://arxiv.org/abs/2310.11511">arXiv: Self-RAG: Learning to Retrieve...</a></li>
+</ul>
+
+<hr />
+
+<ul>
+<li><strong>엔터프라이즈 AI 에이전트 도입 가속화 및 비용 효율성 경쟁</strong>
+OpenAI의 GPT-5.6과 Google의 Gemini 3.6 Flash 등 고성능·저비용 모델이 연이어 출시되며 기업용 에이전트 시장의 가격 경쟁이 본격화되고 있습니다. 기업들은 이제 단순 챗봇을 넘어 업무 워크플로우를 자동화하는 '에이전트 환경' 구축에 집중할 것으로 보입니다.</li>
+<li><strong>LLM 보안 취약성 및 사이버 공격 대응 체계 강화</strong>
+최근 LLM의 근본적인 설계 결함이 보안 취약점으로 지적됨에 따라, OpenAI의 'GPT-Red'와 같은 방어용 AI 모델의 역할이 더욱 중요해지고 있습니다. 기업들은 AI 인프라의 보안성을 확보하기 위해 공격적 테스트와 방어 체계를 동시에 고도화해야 합니다.</li>
+<li><strong>AI 규제 환경 변화 및 글로벌 거버넌스 대응</strong>
+EU AI Act의 진전과 미국 내 'nudify' 앱 금지 등 AI의 오남용을 막기 위한 법적 규제가 구체화되고 있습니다. 기술적 혁신만큼이나 책임 있는 AI 거버넌스 준수가 기업의 생존과 직결되는 시점입니다.</li>
+</ul>
+
+<hr />
+
+<p>※ 본 보고서는 인공지능에 의해 정기 자동 취합 및 분석된 보고서입니다.</p>
+</div>
+
+    <div class="foot">
+      <span>AI News Brief</span>
+      <span>Generated by Gemini 2.0 Flash</span>
+      <span>chamgil71/dailynews</span>
+      <span>생성 2026-08-05 18:05 KST</span>
+    </div>
+  </div>
+</body>
+</html>
