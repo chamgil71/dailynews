@@ -109,12 +109,20 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 
 ---
 
-## 현재 상태 (2026-07-06)
+## 현재 상태 (2026-08-05)
 
 ### 진행 중
-- 없음 (세션 23차 TODO 2건 모두 세션 23차 후속 작업에서 수정 완료 — 아래 참고)
+- 없음
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **AI이슈 8/2 주간 리포트 미생성 원인 규명 + mini→full 모델 에스컬레이션 구조 수정 + 수동 백필** (2026-08-05) — 세션 26차 — **커밋 `76ff82a4`(코드 수정) + `fa9cca93`(리포트 백필) main push 완료**
+  - 증상: `reports/ai-issue/`에 8/2(일)자 파일이 통째로 없음. `ai_issue.yml` cron(KST 일 07:00)은 정상 발동했고 RSS/arXiv/주식 수집도 전부 성공했으나, "TOP10 및 TOP3 심층 분석" LLM 호출이 3회 연속 JSON 파싱 실패해 `RuntimeError`로 파이프라인이 중단됨(잘린 리포트 저장 방지용 안전장치 — `core/ai_issue/analyzer.py:124-128`). 사용자가 GitHub Actions 로그를 직접 확인해줘서 원인 특정 (Claude는 `gh` CLI·API 토큰이 없어 로그에 직접 접근 불가했음 — WebFetch로 Actions 페이지를 시도했으나 JS SPA라 날짜/상태 정보를 신뢰성 있게 못 읽음)
+  - **근본 원인**: `core/ai_issue/analyzer.py`가 기사를 항상 `articles[:40]`로 상한 처리하는데, `config/settings.py`의 `GEMINI_MINI_THRESHOLD=40`과 맞물려 "뉴스 건수 ≤ 40이면 mini 모델" 조건이 사실상 항상 참이 됨 — 즉 이 주만의 일회성 문제가 아니라 **주간 AI이슈의 핵심 분석(TOP10+TOP3 심층분석)은 매주 예외 없이 저비용 `gemini-3.1-flash-lite` 모델로만 실행되고 있었음**. TOP10(10개 항목)+TOP3 심층분석(항목당 4개 필드) 요구 출력량이 커서 lite 모델이 가끔 JSON을 불완전하게 반환하는 것으로 추정. 게다가 `core/news/analyzer.py`의 기존 모델 폴백 로직은 `model_name == "gemini-3.5-flash"`(=full)일 때만 동작 — mini 모델 실패 시엔 폴백 없이 동일 모델로만 3회 재시도했음
+  - `core/news/analyzer.py::BaseAnalyzer._pick_model()` / `GPTAnalyzer._call()` / `ClaudeAnalyzer._call()` / `GeminiAnalyzer._call()`에 `force_full: bool = False` 파라미터 추가 — 지정 시 건수 무관 full 모델 강제
+  - `core/ai_issue/analyzer.py`의 TOP10 재시도 루프: 1회차는 기존대로 mini, **2~3회차는 `force_full=True`로 full 모델 에스컬레이션**. 정상 시나리오(1회차 성공)는 비용 변화 없음, 실패 시에만 주 1회 정도 추가 full 모델 호출 발생(미미한 비용)
+  - 8/2 리포트를 로컬(`python scripts/run_ai_issue.py --date 2026-08-02`)에서 재생성 — 실제로 mini 2회 실패 후(이번엔 로컬 SSL 문제) full 모델 3회차에서 성공해 에스컬레이션 동작을 실전 확인함. `reports/ai-issue/ai_issue_2026-08-02.md/json` + `publish/ai-issue/2026-08-02.html/json` + `data.json`/`archive.html`/`index.html`(ai-issue) + 루트 `archive.html`/`index.html`/`search-index.json` 커밋
+  - **로컬 실행 시 주의**: `C:\ai\.venv`(워크스페이스 공용 venv)에 `feedparser` 등이 없어서 `pip install -r requirements.txt` 필요했음 — 그 과정에서 `requests`/`protobuf`/`markdown2`가 소폭 다운그레이드됨(다른 프로젝트 영향 가능성, 확인 필요). 로컬 PC의 SSL 인증서 해지 확인(OCSP/CRL)이 막혀 있어(`CRYPT_E_NO_REVOCATION_CHECK`) `google.com`조차 SSL 핸드셰이크가 실패하는 네트워크 문제도 발견 — Gmail SMTP·텔레그램 API·Supabase 전부 타임아웃/SSL 실패. GitHub Actions 클린 러너에서는 재현 안 될 로컬 환경 문제로 판단, **이메일/텔레그램 발송은 사용자 결정으로 생략** (사이트에는 정상 게시됨: `/ai-issue/2026-08-02.html`)
+  - `build_site.py --from`을 실제 발행일보다 훨씬 과거 날짜로 넓게 돌리면 `publish/news/*.html`이 불필요하게 재빌드되고, 로컬 `.env`의 `SITE_BASE_URL`이 프로덕션과 달라 구독 링크가 절대경로로 바뀌는 부작용 발견 — 커밋 전 `git diff`로 걸러내고 `publish/news/*`/`reports.json`(죽은 코드) 되돌림, 구독 링크는 원래 상대경로로 수동 복원. **교훈**: 로컬에서 백필 시 `--from`은 실제 대상 날짜로 좁게, 커밋 전 반드시 diff로 의도치 않은 파일 변경 여부 확인할 것
 - [x] **사이트 소개(About) 페이지 신설 — AdSense 콘텐츠 품질 심사 대응** (2026-07-23) — 세션 25차 — **커밋/푸시 전, main 반영 대기**
   - AdSense가 `ms-dailynews.vercel.app`에 "가치가 별로 없는 콘텐츠" 정책 위반 + ads.txt "찾을 수 없음"으로 사이트를 반려. ads.txt 자체는 조사 결과 파일·라우팅·도메인 모두 정상(라이브 200 확인) — Google 측 캐시된 과거 크롤링 결과로 추정. 콘텐츠 품질 쪽은 Google 품질 가이드라인이 요구하는 "About/저자 정보" 페이지 부재가 원인 중 하나로 판단해 신설
   - `themes/layouts/editorial.py::render_about()` 신규 — 새 CSS를 하드코딩하지 않고 기존 `_layout()`/`.prose`/`.kicker` 등 editorial 테마 토큰을 그대로 재사용해 렌더링 (`publish/privacy.html`처럼 별도 하드코딩 스타일 아님)
@@ -462,6 +470,7 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - [ ] **오래된 세션 브랜치 정리** — `claude/cardnews-css-refactor`, `claude/optimistic-carson-*`, `claude/magical-cerf-2g7aos`/`f7v7s3`/`wnzard`, `claude/clever-meitner-*`, `fix/stock-send-fixes-0608`, `claude/stock-briefing-v6-weekly-idan6z` 등 다수 — 전부 06-05~06-24 사이 세션 잔여물로 작업 내용은 이미 다른 경로로 main에 반영됨(브랜치 삭제만 누락). GitHub UI(`/branches`)에서 일괄 삭제 권장
 
 ### 주요 아키텍처 메모
+- **LLM mini→full 에스컬레이션**: `core/news/analyzer.py::BaseAnalyzer._pick_model(..., force_full=False)` — 전 provider(GPT/Claude/Gemini) `_call()`에 `force_full` 파라미터 존재. `ai_issue/analyzer.py`의 TOP10 재시도 루프처럼, mini 모델 실패가 반복되는 재시도 루프에서 2회차 이후 `force_full=True`로 승격 가능(패턴 14). `news_count ≤ threshold`로 mini가 선택되는 프롬프트가 항상 같은 건수(예: 상한 slice)로 호출되면 사실상 threshold 분기가 무의미해지므로, 새 LLM 호출부를 추가할 때 이 함정을 염두에 둘 것
 - `publish/archive.html`은 **`themes/editorial.py::render_archive()`** 에서 직접 생성 (Jinja2 미사용)
 - **archive → SPA 탭 이동**: `archive.html`의 ai-issue/stock 탭은 `index.html#ai-issue`, `index.html#stock`으로 링크. SPA 초기화 시 `location.hash` 감지 → 해당 탭 활성화 → `history.replaceState`로 hash 제거. `editorial.py::_layout(nav_hrefs=...)` 파라미터로 탭별 href 재정의
 - **SPA ↔ editorial 서브페이지 독립 설계 주의**: archive에서 탭 이동 시 SPA로 돌아오도록 설계. editorial sub-page에서는 SPA JS가 없으므로 탭 href가 직접 이동경로가 됨
@@ -630,6 +639,13 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - **진단**: PR 상세 조회 시 `mergeable_state` 확인 — `clean`이면 문제 없음, `dirty`면 실제 충돌, `unstable`이면 충돌은 없고 체크(Vercel 등)만 진행 중. `dirty`면 상대 PR이 같은 파일의 같은 부분을 건드렸는지 `git show <머지커밋> --stat`으로 확인
 - **수정**: `git fetch origin main && git rebase origin/main` 후 충돌 블록에서 **어느 한쪽만 선택하지 말고 두 수정의 의도를 각각 파악해서 합칠 것** (이번 사례: 상대 PR은 카루셀 생성 단계 대기시간 강화, 본 PR은 게시 단계 재시도 추가 — 서로 다른 단계를 고치고 있었으므로 둘 다 필요했음). `git push --force-with-lease`로 재푸시
 - **예방**: 반복 실패 이슈(카드뉴스 SNS 등)를 고칠 때는 병합 직전에 `mergeable_state`를 한 번 더 확인. 오래된 미병합 세션 브랜치는 방치하지 말고 병합 또는 삭제로 정리(패턴 9와 연결 — "완료"라고 기록된 것도 어느 브랜치/PR 기준인지 항상 재확인)
+
+### 패턴 14: "주간 리포트(AI이슈 등)가 그 날짜 파일 자체가 통째로 없다 — 로컬에도 원격에도"
+- **원인**: 워크플로우는 정상 발동했고 데이터 수집도 성공했는데, LLM 분석 단계에서 재시도(보통 3회)가 전부 실패해 `RuntimeError`로 조기 종료된 경우. `run_ai_issue.py`/`analyzer.py`는 "잘린/불완전 보고서 저장 방지"를 위해 분석 실패 시 git commit 자체를 안 하므로 로컬 `reports/` 파일도 원격 커밋도 둘 다 존재하지 않게 됨(패턴 6·11과 달리 커밋 이전 단계에서 끊기는 케이스)
+- **진단**: GitHub Actions 로그(Actions 탭 → 해당 워크플로우 → 날짜 근처 run)에서 "TOP 10 JSON 파싱 실패" 등 LLM 분석 오류 메시지 확인. Claude는 `gh` CLI·API 토큰이 기본적으로 없어 로그를 직접 못 읽으므로(WebFetch로 GitHub Actions 페이지를 시도해도 JS SPA라 날짜/상태를 신뢰성 있게 못 읽어옴), **사용자에게 Actions 로그를 직접 보고 붙여넣어 달라고 요청하는 게 가장 빠름**
+- **세션 26차 사례**: `core/ai_issue/analyzer.py`가 기사를 `articles[:40]`로 상한 처리 + `GEMINI_MINI_THRESHOLD=40` 조합 때문에, 이 핵심 분석 프롬프트가 **매주 예외 없이 mini(`gemini-3.1-flash-lite`) 모델로만** 실행되고 있었음(제한 개수와 임계값이 우연히 같은 게 함정). 게다가 기존 모델 폴백 로직(`core/news/analyzer.py`)은 `model_name == "gemini-3.5-flash"`(=full)일 때만 동작해 mini 모델 실패 시엔 폴백 없이 동일 모델로 3회 재시도만 반복 — 하나가 실패하면 셋 다 같은 이유로 실패할 확률이 높은 구조였음
+- **수정**: `BaseAnalyzer._pick_model()`/각 `*Analyzer._call()`에 `force_full: bool = False` 추가, `ai_issue/analyzer.py`의 재시도 루프에서 2회차부터 `force_full=True`로 승격. 정상 시(1회차 성공) 비용 변화 없음
+- **백필 시 주의**: 로컬에서 `python scripts/run_ai_issue.py --date YYYY-MM-DD`로 재생성 가능하나, (1) `build_site.py --from`은 실제 대상 날짜로 좁게 지정할 것 — 과거로 넓게 잡으면 무관한 `publish/news/*.html`까지 재빌드됨, (2) 로컬 `.env`의 `SITE_BASE_URL`이 프로덕션과 다르면 구독 링크가 절대/상대경로로 어긋날 수 있으니 커밋 전 `git diff`로 의도치 않은 파일 확인, (3) `reports.json`은 죽은 코드(패턴 9 관련 세션 19차 기록)이므로 재빌드돼도 커밋 대상에서 제외
 
 ---
 
