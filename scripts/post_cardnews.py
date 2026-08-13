@@ -7,7 +7,7 @@
   python scripts/post_cardnews.py --type stock --platform telegram
 
 지원 플랫폼:
-  instagram  - 카루셀 포스트 (Graph API v21.0)
+  instagram  - 카루셀 포스트 (Graph API v22.0 / graph.instagram.com)
   telegram   - 미디어 그룹 + 인라인 버튼 (기존 봇 재활용)
   twitter    - 이미지 트윗 스레드 (API v2 + tweepy)
 
@@ -175,11 +175,14 @@ def _build_caption(channel: str, date_str: str, include_link: bool = True) -> st
 
 
 # ── Instagram ─────────────────────────────────────────────────────────────────
-GRAPH_IG = "https://graph.facebook.com/v21.0"
+# graph.facebook.com/v21.0 에서 graph.instagram.com/v22.0 으로 이전
+# (Meta 2025~2026 Instagram Content Publishing API 마이그레이션)
+GRAPH_IG = "https://graph.instagram.com/v22.0"
 
 
 def _ig_post(path: str, params: dict) -> dict:
-    r = requests.post(f"{GRAPH_IG}{path}", params=params, timeout=30)
+    # params를 URL 쿼리스트링이 아닌 요청 본문(form data)으로 전송
+    r = requests.post(f"{GRAPH_IG}{path}", data=params, timeout=30)
     data = r.json()
     if "error" in data:
         raise RuntimeError(f"Instagram Graph API 오류: {data['error']}")
