@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI가 매일 자동으로 수집·분석하는 글로벌 뉴스 브리핑">
+  <title>2026년 09월 05일 — AI News Brief</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+  :root {
+    --ink:#1a1612; --ink-soft:#4a4036; --ink-mute:#8a7e6f;
+    --paper:#f4ede0; --paper-2:#ece2cf;
+    --rule:#2b231a; --rule-soft:#c8bda7; --accent:#8b2a1f;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); line-height:1.65;
+    font-family:'Noto Serif KR','Source Serif Pro',Georgia,serif; }
+
+  .wrap { max-width:980px; margin:0 auto; padding:32px 32px 56px; }
+
+  .masthead { border-top:6px solid var(--rule); border-bottom:1px solid var(--rule);
+    padding:14px 0 12px; margin-bottom:22px; }
+  .mh-top { display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em;
+    color:var(--ink-soft); text-transform:uppercase;
+    border-bottom:1px solid var(--rule-soft); padding-bottom:8px; margin-bottom:14px; }
+  .mh-title { font-weight:900; font-size:72px; letter-spacing:-.04em;
+    line-height:.92; text-align:center; margin:6px 0 2px; font-style:italic; }
+  .mh-title em { color:var(--accent); }
+  .mh-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.3em;
+    text-align:center; color:var(--ink-soft); text-transform:uppercase;
+    padding-top:6px; border-top:1px solid var(--rule-soft); margin-top:10px; }
+  /* ── Site Header (모든 페이지 공통 상단 바) ── */
+  .site-header {
+    background:#2b231a; color:#ece2cf;
+    padding:0 24px; display:flex; align-items:center; height:58px;
+    position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .site-header .logo {
+    font-size:.95rem; font-weight:700; color:#ece2cf;
+    text-decoration:none; margin-right:24px; white-space:nowrap; cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .site-header .logo span { color:var(--accent); }
+  .header-nav { display:flex; align-items:center; height:100%; flex:1; gap:2px; }
+  .hnav-tab {
+    display:flex; align-items:center; gap:7px; height:100%;
+    padding:0 14px; color:rgba(236,226,207,.6);
+    text-decoration:none; font-size:.8rem; font-weight:500;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.02em;
+    border-bottom:3px solid transparent;
+    transition:color .15s, border-color .15s, background .15s; white-space:nowrap;
+  }
+  .hnav-tab:hover { color:rgba(236,226,207,.9); }
+  .hnav-tab.active { color:#ece2cf; font-weight:700; }
+  .hnav-tab[data-section="news"].active     { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .hnav-tab[data-section="ai-issue"].active { border-bottom-color:#a78bfa; background:rgba(167,139,250,.1); }
+  .hnav-tab[data-section="stock"].active    { border-bottom-color:#4ade80; background:rgba(74,222,128,.1); }
+  .hnav-tab[data-section="archive"].active  { border-bottom-color:#60a5fa; background:rgba(96,165,250,.1); }
+  .tab-label { pointer-events:none; }
+  .site-header .hdr-actions { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .btn-hdr {
+    background:none; border:none; color:rgba(236,226,207,.65);
+    cursor:pointer; padding:6px; border-radius:5px;
+    display:inline-flex; align-items:center; justify-content:center;
+    text-decoration:none; transition:color .15s, background .15s;
+  }
+  .btn-hdr:hover { color:#ece2cf; background:rgba(255,255,255,.1); }
+  @media (max-width:600px) {
+    .site-header { padding:0 12px; }
+    .site-header .logo { font-size:.85rem; margin-right:8px; }
+    .tab-label { display:none; }
+    .hnav-tab { padding:0 10px; gap:0; }
+  }
+
+  .brief { display:grid; grid-template-columns:200px 1fr 160px; gap:24px;
+    border-bottom:1px solid var(--rule); padding:18px 0 22px; margin-bottom:28px; }
+  .brief-stats { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
+  .brief-stats .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:8px; letter-spacing:.08em; }
+  .brief-stat { display:flex; gap:14px; align-items:baseline; margin-top:10px; }
+  .brief-stat .num { font-family:'Noto Serif KR',serif; font-size:24px;
+    font-weight:700; font-style:italic; }
+  .brief-stat .lab { font-size:10px; letter-spacing:.15em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  /* AI이슈 전용 통계 (작게) */
+  .brief-stats-sm { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .brief-stats-sm .lbl { color:var(--ink); font-weight:700; display:block;
+    margin-bottom:6px; letter-spacing:.08em; font-size:10px; }
+  .brief-stat-sm { display:flex; gap:8px; align-items:baseline; margin-top:6px; }
+  .brief-stat-sm .num-sm { font-size:14px; font-weight:700;
+    font-family:'IBM Plex Mono',monospace; }
+  .brief-stat-sm .lab { font-size:9px; letter-spacing:.12em;
+    color:var(--ink-mute); text-transform:uppercase; }
+  .kicker { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+    border-left:3px solid var(--accent); padding-left:12px; }
+  .lede { font-size:20px; line-height:1.4; font-weight:500; text-wrap:balance; }
+  .byline { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-mute);
+    text-align:right; line-height:1.7; border-left:1px solid var(--rule-soft); padding-left:14px; }
+
+  .prose { font-size:16px; line-height:1.8; }
+  .prose h1 { display:none; }
+  .prose h2 { font-family:'Noto Serif KR',serif; font-size:22px; font-weight:800;
+    letter-spacing:-.015em; margin:36px 0 14px; padding-bottom:6px;
+    border-bottom:2px solid var(--rule); }
+  .prose h3 { font-size:17px; font-weight:700; margin:24px 0 8px; }
+  .prose p { margin:0 0 14px; }
+  .prose a { color:var(--accent); text-decoration:none;
+    border-bottom:1px solid var(--rule-soft); }
+  .prose a:hover { border-bottom-color:var(--accent); }
+  .prose strong { color:var(--ink); font-weight:700; }
+  .prose ul { padding-left:0; list-style:none; columns:2; column-gap:32px;
+    column-rule:1px solid var(--rule-soft); margin:0 0 18px; }
+  .prose ul li { break-inside:avoid; padding:8px 0 8px 20px; position:relative;
+    border-bottom:1px dotted var(--rule-soft); font-size:14px; line-height:1.55; }
+  .prose ul li::before { content:'§'; position:absolute; left:0; top:8px;
+    color:var(--accent); font-weight:700; font-family:serif; }
+  .prose ol { padding-left:1.4em; margin:0 0 18px; }
+  .prose ol li { margin-bottom:6px; }
+  .prose blockquote { font-family:'IBM Plex Mono',monospace; font-size:12px;
+    border-left:3px solid var(--accent); padding:8px 16px; margin:14px 0;
+    background:rgba(139,42,31,.04); color:var(--ink-soft); }
+  .prose blockquote p { margin:0; }
+  .prose hr { border:none; border-top:3px double var(--rule); margin:32px 0; }
+  .prose code { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
+    padding:2px 6px; border-radius:3px; font-size:.85em; }
+  .prose pre { font-family:'IBM Plex Mono',monospace; background:var(--paper-2);
+    padding:12px 14px; border-radius:4px; overflow-x:auto;
+    white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere; }
+  .prose pre code { background:none; padding:0; }
+
+  /* 뉴스 목록 접기/펼치기 */
+  .news-list-section { margin-top:32px; border-top:3px double var(--rule); padding-top:20px; }
+  .news-list-section h2 { font-family:'IBM Plex Mono',monospace; font-size:13px;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--ink-soft);
+    margin:0 0 12px; }
+  .news-list-section details { border:1px solid var(--rule-soft); margin-bottom:10px; }
+  .news-list-section summary { padding:10px 14px; cursor:pointer; font-weight:600;
+    font-size:.9rem; color:var(--ink); background:var(--paper-2);
+    list-style:none; display:flex; justify-content:space-between; }
+  .news-list-section summary::-webkit-details-marker { display:none; }
+  .news-list-section summary::after { content:"▼"; font-size:.7rem; color:var(--ink-mute); }
+  .news-list-section details[open] summary::after { content:"▲"; }
+  .news-items { list-style:none; padding:6px 0; margin:0; }
+  .news-items li { padding:6px 14px; border-bottom:1px solid var(--rule-soft);
+    font-size:.84rem; line-height:1.5; margin:0; }
+  .news-items li:last-child { border-bottom:none; }
+  .news-label { display:inline-block; font-family:'IBM Plex Mono',monospace;
+    font-size:.7rem; background:var(--paper-2); color:var(--ink-mute);
+    padding:1px 6px; border-radius:3px; margin-right:6px; }
+
+  /* 아카이브 */
+  .arch h1 { font-size:32px; font-weight:900; margin:18px 0 6px; }
+  .arch p.count { font-family:'IBM Plex Mono',monospace; font-size:12px;
+    color:var(--ink-mute); letter-spacing:.1em; text-transform:uppercase; margin:0 0 24px; }
+  .arch ul { list-style:none; padding:0; margin:0;
+    columns:2; column-gap:32px; column-rule:1px solid var(--rule-soft); }
+  .arch li { break-inside:avoid; padding:14px 0; border-bottom:1px solid var(--rule-soft); }
+  .arch a { color:var(--ink); text-decoration:none; font-weight:600; font-size:16px; }
+  .arch a:hover { color:var(--accent); }
+  .arch .d { font-family:'IBM Plex Mono',monospace; font-size:11px;
+    color:var(--ink-mute); margin-top:3px; letter-spacing:.04em; }
+
+  .foot { border-top:6px solid var(--rule); margin-top:32px; padding-top:14px;
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-mute);
+    letter-spacing:.12em; text-transform:uppercase; flex-wrap:wrap; gap:8px; }
+
+  @media (max-width:720px) {
+    .mh-title { font-size:48px; }
+    .brief { grid-template-columns:1fr; gap:18px; }
+    .brief-stats, .byline { border-left:none; padding-left:0; }
+    .prose ul, .arch ul { columns:1; }
+  }
+</style>
+  <style>:root{--accent:#2563eb;}</style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="../index.html">AI <span>News</span> Brief</a>
+    <nav class="header-nav">
+      <a class="hnav-tab active" href="../index.html" data-section="news"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v2h3a1 1 0 0 0 1-1v-1zm-5 2v-2H6v2h4zm-5 0v-2H1v1a1 1 0 0 0 1 1h3zm-4-4h4V8H1v4zm0-5h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg><span class="tab-label"> 뉴스 브리핑</span></a><a class="hnav-tab" href="../ai-issue/" data-section="ai-issue"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14A2.5 2.5 0 0 1 11.5 12V14H11v1.5a.5.5 0 0 1-1 0V14H9v1.5a.5.5 0 0 1-1 0V14H7v1.5a.5.5 0 0 1-1 0V14H5.5A2.5 2.5 0 0 1 3 11.5H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3A2.5 2.5 0 0 1 5.5 4V2H5V.5A.5.5 0 0 1 5 0zm-.5 4.5v7A1.5 1.5 0 0 0 6 13h4a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 10 3H6A1.5 1.5 0 0 0 4.5 4.5zM6 5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/></svg><span class="tab-label"> AI이슈</span></a><a class="hnav-tab" href="../stock/" data-section="stock"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/></svg><span class="tab-label"> 주식 시황</span></a><a class="hnav-tab" href="../archive.html" data-section="archive"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg><span class="tab-label"> 아카이브</span></a>
+    </nav>
+    <div class="hdr-actions">
+      <a href="../about.html" class="btn-hdr" title="사이트 소개"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg></a>
+      <a href="/subscribe" class="btn-hdr" title="뉴스레터 구독"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg></a>
+      <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-hdr" title="GitHub"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="masthead">
+      <div class="mh-top">
+        <span>AI NEWS</span>
+        <span>2026년 09월 05일</span>
+        <span>KST 08:00</span>
+      </div>
+      <a href="../index.html" style="text-decoration:none;color:inherit">
+        <h1 class="mh-title">AI News <em>Brief</em></h1>
+      </a>
+      <div class="mh-tag">RSS · AI 분석 · 매일 아침 한 부</div>
+    </div>
+
+    
+    <div class="brief">
+      <div class="brief-stats">
+        <span class="lbl">오늘의 통계</span>
+        <div class="brief-stat"><span class="num">151</span><span class="lab">건 수집</span></div>
+        <div class="brief-stat"><span class="num">40</span><span class="lab">AI 분석</span></div>
+        <div class="brief-stat"><span class="num">71</span><span class="lab">국내</span></div>
+        <div style="margin-top:12px"><div style="font-size:10px;font-weight:700;color:var(--ink);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px">카테고리 분포</div><div style="margin-bottom:6px"><span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;display:inline-block;width:80px">AI·ML</span><span style="display:inline-block;background:var(--accent);height:8px;width:47%;max-width:120px;vertical-align:middle;border-radius:1px"></span><span style="font-size:10px;color:var(--ink-mute);margin-left:6px">53건</span></div><div style="margin-bottom:6px"><span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;display:inline-block;width:80px">기술</span><span style="display:inline-block;background:var(--accent);height:8px;width:26%;max-width:120px;vertical-align:middle;border-radius:1px"></span><span style="font-size:10px;color:var(--ink-mute);margin-left:6px">29건</span></div><div style="margin-bottom:6px"><span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;display:inline-block;width:80px">경제</span><span style="display:inline-block;background:var(--accent);height:8px;width:16%;max-width:120px;vertical-align:middle;border-radius:1px"></span><span style="font-size:10px;color:var(--ink-mute);margin-left:6px">18건</span></div><div style="margin-bottom:6px"><span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;display:inline-block;width:80px">국내기술</span><span style="display:inline-block;background:var(--accent);height:8px;width:7%;max-width:120px;vertical-align:middle;border-radius:1px"></span><span style="font-size:10px;color:var(--ink-mute);margin-left:6px">8건</span></div><div style="margin-bottom:6px"><span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;display:inline-block;width:80px">보안</span><span style="display:inline-block;background:var(--accent);height:8px;width:2%;max-width:120px;vertical-align:middle;border-radius:1px"></span><span style="font-size:10px;color:var(--ink-mute);margin-left:6px">2건</span></div><div style="margin-bottom:6px"><span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;display:inline-block;width:80px">스타트업</span><span style="display:inline-block;background:var(--accent);height:8px;width:2%;max-width:120px;vertical-align:middle;border-radius:1px"></span><span style="font-size:10px;color:var(--ink-mute);margin-left:6px">2건</span></div></div>
+      </div>
+      <div>
+        <div class="kicker">에디터 노트 · TODAY'S LEDE</div>
+        <p class="lede">AI가 매일 아침 수십 개 언론사의 헤드라인을 한 면에 정리합니다.
+        오늘 분석된 40건의 기사 핵심을 아래에서 읽어보세요.</p>
+      </div>
+      <div class="byline">
+        AI Editor<br>Gemini 2.0 Flash<br>─<br>2026-09-05
+      </div>
+    </div>
+    
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px">
+          <div>
+            <div class="kicker">🌐 글로벌 핵심이슈</div>
+            
+        <div style="border-top:1px solid var(--rule-soft);padding:14px 0">
+          <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">■ 주요 이슈 1</div>
+          <h3 style="font-size:16px;font-weight:800;margin:0 0 8px;line-height:1.35">OpenAI, GPT-6 Astra 출시 및 AGI 시대 선언</h3>
+          <p style="font-size:13px;line-height:1.7;margin:0;color:var(--ink-soft)">OpenAI가 컴퓨터 제어 및 코딩 능력이 획기적으로 향상된 차세대 모델 'GPT-6 Astra'를 발표하며 본격적인 AGI(인공일반지능) 시대의 도래를 선언했습니다. 이 모델은 인간보다 뛰어난 컴퓨터 사용 능력을 보여주며 AI 에이전트 기술의 새로운 이정표를 세웠습니다.</p>
+          <a href="https://www.theverge.com/podcast/990323/agi-is-whatever-you-want-it-to-be" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ AGI is whatever you want it to be</a><a href="https://www.wired.com/story/openai-says-gpt-6-can-use-a-computer-better-than-a-human/" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ GPT-6 Astra Is Here—and OpenAI Thinks It May Kick …</a>
+        </div>
+        <div style="border-top:1px solid var(--rule-soft);padding:14px 0">
+          <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">■ 주요 이슈 2</div>
+          <h3 style="font-size:16px;font-weight:800;margin:0 0 8px;line-height:1.35">엔비디아, 허깅페이스 129억 3천만 달러에 인수 합병</h3>
+          <p style="font-size:13px;line-height:1.7;margin:0;color:var(--ink-soft)">엔비디아가 오픈소스 AI 플랫폼인 허깅페이스(Hugging Face)를 129억 3,000만 달러(약 17조 원)에 인수하기로 합의했습니다. 이번 인수를 통해 엔비디아는 오픈소스 AI 모델 생태계에 대한 영향력을 극대화하고 자사 칩 기반의 인프라 확장을 가속화할 전망입니다.</p>
+          <a href="https://www.wired.com/story/nvidias-hugging-face-acquisition-is-a-dollar129-billion-bet-on-open-source-ai/" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ Nvidia’s Hugging Face Acquisition Is a $12.9 Billi…</a><a href="https://www.artificialintelligence-news.com/news/nvidia-to-acquire-hugging-face-for-12-93b/" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ NVIDIA to acquire Hugging Face for $12.93B</a>
+        </div>
+        <div style="border-top:1px solid var(--rule-soft);padding:14px 0">
+          <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">■ 주요 이슈 3</div>
+          <h3 style="font-size:16px;font-weight:800;margin:0 0 8px;line-height:1.35">앤트로픽, 2조 달러 가치 IPO 추진 및 지배구조 주목</h3>
+          <p style="font-size:13px;line-height:1.7;margin:0;color:var(--ink-soft)">클로드(Claude) 개발사 앤트로픽이 2조 달러 규모의 초대형 기업공개(IPO)를 추진하면서, 기업의 이윤 추구와 공익적 목적의 균형을 맞추기 위해 도입한 독특한 외부 신탁 관리자(Trustee) 시스템이 시장의 뜨거운 관심을 받고 있습니다.</p>
+          <a href="https://arstechnica.com/ai/2026/09/anthropics-2-trillion-ipo-puts-powerful-external-trustees-in-spotlight/" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ Anthropic’s $2 trillion IPO puts powerful external…</a>
+        </div>
+          </div>
+          <div>
+            <div class="kicker">🇰🇷 국내 핵심이슈</div>
+            
+        <div style="border-top:1px solid var(--rule-soft);padding:14px 0">
+          <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">■ 주요 이슈 1</div>
+          <h3 style="font-size:16px;font-weight:800;margin:0 0 8px;line-height:1.35">과기정통부 '모두의 AI' 프로젝트 본격 시동, 국내 빅테크 3사 출격</h3>
+          <p style="font-size:13px;line-height:1.7;margin:0;color:var(--ink-soft)">과학기술정보통신부가 2500억 원 규모의 예산을 투입해 국민 체감형 AI 서비스를 구축하는 '모두의 AI' 프로젝트를 시작했다. SK텔레콤, KT, 카카오 등 국내 대표 빅테크 기업들이 컨소시엄 주관사로 참여하여 외산 AI 서비스와의 차별화 및 민관 협력을 추진한다.</p>
+          <a href="https://www.etnews.com/20260904000334" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ 모두의 AI 성공방정식 '외산과 차별화'…SKT·KT·카카오 출격</a><a href="https://www.aitimes.com/news/articleView.html?idxno=214869" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ 과기부, '모두의 AI' 간담회 개최…2500억 예산으로 국민 체감 AI 서비스 추진</a>
+        </div>
+        <div style="border-top:1px solid var(--rule-soft);padding:14px 0">
+          <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">■ 주요 이슈 2</div>
+          <h3 style="font-size:16px;font-weight:800;margin:0 0 8px;line-height:1.35">미국 8월 고용지표 '깜짝 증가'에 글로벌 금융시장 요동</h3>
+          <p style="font-size:13px;line-height:1.7;margin:0;color:var(--ink-soft)">미국의 8월 비농업 부문 고용이 시장 예상치를 크게 웃도는 16만 2000명 증가를 기록하며 고용 서프라이즈를 나타냈다. 이에 따라 연준의 금리 인상 및 긴축 우려가 다시 부각되면서 미국 증시와 국채, 가상자산 시장이 일제히 약세를 보였다.</p>
+          <a href="https://www.etnews.com/20260904000363" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ 美 고용 서프라이즈…금리 인상 공포에 증시·코인 된서리</a><a href="https://www.mk.co.kr/news/world/12144901" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ [속보] 미 8월 고용증가 16만2천명…예상치 크게 웃돌아</a>
+        </div>
+        <div style="border-top:1px solid var(--rule-soft);padding:14px 0">
+          <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">■ 주요 이슈 3</div>
+          <h3 style="font-size:16px;font-weight:800;margin:0 0 8px;line-height:1.35">네이버 이해진 의장, 글로벌 자산운용사 브룩필드와 '1GW급 AI 팩토리' 논의</h3>
+          <p style="font-size:13px;line-height:1.7;margin:0;color:var(--ink-soft)">네이버 이해진 글로벌투자책임자(GIO)가 브루스 플랫 브룩필드자산운용 회장과 만나 초대형 AI 인프라 구축을 위한 '1GW급 AI 팩토리 사업'의 후속 협력 방안을 논의했다. 글로벌 대체자산 운용사와의 협력을 통해 소버린 AI 및 인프라 경쟁력을 강화할 방침이다.</p>
+          <a href="https://www.aitimes.com/news/articleView.html?idxno=214871" style="color:var(--accent);font-size:10px;font-family:IBM Plex Mono,monospace;text-decoration:none;display:block;margin-top:4px">↗ 이해진 네이버 의장, 브룩필드 회장과 회동… ‘1GW급 AI 팩토리 사업’ 후속 논의</a>
+        </div>
+          </div>
+        </div>
+    
+  <div class="card news-list-section">
+    <h2>📋 수집 기사 전체 목록</h2>
+    <details>
+  <summary>🌐 영어 뉴스 (79건)</summary>
+  <ul class="news-items"><li><span class="news-label">글로벌 기술</span><a href="https://arstechnica.com/science/2026/09/medieval-manuscripts-are-biological-time-capsules-for-deadly-sheeppox-virus/" target="_blank" rel="noopener">Medieval manuscripts are "biological time capsules" for deadly sheeppox virus</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://arstechnica.com/information-technology/2026/09/trust-not-features-is-the-real-deficit-vmware-tries-to-appease-smbs/" target="_blank" rel="noopener">“Trust, not features, is the real deficit”: VMware tries to appease SMBs</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://arstechnica.com/security/2026/09/once-popular-for-attacking-ai-ascii-smuggling-is-embraced-by-spammers/" target="_blank" rel="noopener">Once popular for attacking AI, ASCII smuggling is embraced by spammers</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://arstechnica.com/health/2026/09/pentagon-releases-then-quickly-removes-testosterone-screening-policy/" target="_blank" rel="noopener">Pentagon rescinds new testosterone screening policy without explanation</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://arstechnica.com/gaming/2026/09/valve-secretly-leaked-a-left-4-dead-2-trailer-to-dodge-the-esrb/" target="_blank" rel="noopener">A ratings board wouldn't let Valve release a trailer. It "leaked" it instead.</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://arstechnica.com/science/2026/09/brain-of-a-male-fly-completely-mapped-joins-earlier-map-of-a-female-brain/" target="_blank" rel="noopener">Second complete map of a fruit fly brain completed</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://arstechnica.com/ai/2026/09/anthropics-2-trillion-ipo-puts-powerful-external-trustees-in-spotlight/" target="_blank" rel="noopener">Anthropic’s $2 trillion IPO puts powerful external trustees in spotlight</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://arstechnica.com/tech-policy/2026/09/musk-wins-court-order-to-block-use-of-twitter-but-not-tweet-and-bird-logo/" target="_blank" rel="noopener">Musk wins court order to block use of “Twitter,” but not “tweet” and bird logo</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.theverge.com/policy/990520/trump-arcade-games-maga-copyright" target="_blank" rel="noopener">The White House is making arcade games racist</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.theverge.com/gadgets/990425/gopro-nick-woodman-starman-letter" target="_blank" rel="noopener">GoPro says it&#8217;s still committed &#8216;to your collective stoke&#8217;</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.theverge.com/ai-artificial-intelligence/990197/roland-ai-music-melody-flip" target="_blank" rel="noopener">Roland is getting into generative AI music with Melody Flip</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.theverge.com/podcast/990323/agi-is-whatever-you-want-it-to-be" target="_blank" rel="noopener">AGI is whatever you want it to be</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.theverge.com/policy/990267/microsoft-openai-new-york-times-authors-lawsuit" target="_blank" rel="noopener">Microsoft says virtually nobody was grabbing NYT articles through its chatbot</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.theverge.com/tech/986867/ifa-2026-smart-home-lights-laptop-robot-vacuum-ai-headphones" target="_blank" rel="noopener">The best tech and gadgets announced at IFA so far</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.theverge.com/gadgets/989407/alienware-gaming-laptop-capsule-dishwasher-samsung-oled-deal-sale" target="_blank" rel="noopener">Alienware’s refurbished 16 Aurora is almost $200 off at Woot</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.theverge.com/tech/989692/apple-iphone-launch-event-september-2026-how-to-watch" target="_blank" rel="noopener">What to expect at Apple’s September 9th launch event</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://techcrunch.com/2026/09/04/judge-blocks-x-rival-from-using-twitter-name-but-allows-tweet-for-now/" target="_blank" rel="noopener">Judge blocks X rival from using Twitter name, but allows ‘Tweet’ for now</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://techcrunch.com/video/what-will-apples-john-ternus-era-look-like/" target="_blank" rel="noopener">What will Apple’s John Ternus era look like?</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://techcrunch.com/2026/09/04/no-little-kids-allowed-and-other-new-info-about-teslas-cybercab/" target="_blank" rel="noopener">No little kids allowed, and other new info about Tesla’s Cybercab</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://techcrunch.com/2026/09/04/another-swarm-of-openai-agents-reached-the-open-internet-without-the-frontier-labs-knowledge/" target="_blank" rel="noopener">Another swarm of OpenAI agents reached the open internet without the frontier lab’s knowledge</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://techcrunch.com/2026/09/04/cd-sales-are-making-an-unexpected-comeback-amid-a-retro-tech-boom/" target="_blank" rel="noopener">CD sales are making an unexpected comeback amid a retro tech boom</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://techcrunch.com/2026/09/04/krafton-doubles-down-on-india-with-another-250m-bet-beyond-gaming/" target="_blank" rel="noopener">Krafton doubles down on India with another $250M bet beyond gaming</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://techcrunch.com/2026/09/04/googles-gemini-spark-can-now-manage-your-google-photos-library/" target="_blank" rel="noopener">Google’s Gemini Spark can now manage your Google Photos library</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://techcrunch.com/2026/09/04/less-than-24-hours-to-apply-for-your-techcrunch-disrupt-2026-side-event/" target="_blank" rel="noopener">Less than 24 hours to apply for your TechCrunch Disrupt 2026 Side Event</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.technologyreview.com/2026/09/04/1140872/architecting-memory-and-storage-in-the-ai-era/" target="_blank" rel="noopener">Architecting memory and storage in the AI era</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.technologyreview.com/2026/09/04/1143457/the-download-ukraine-selling-drone-data-ai-reshaping-language/" target="_blank" rel="noopener">The Download: selling battlefield drone data and AI reshaping language</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.technologyreview.com/2026/09/04/1143452/drone-data-wild-west/" target="_blank" rel="noopener">Data from drones in Ukraine is fueling a new Wild West marketplace</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.technologyreview.com/2026/09/03/1143385/the-download-rethinking-child-safety-online-fossil-fuels-farming/" target="_blank" rel="noopener">The Download: rethinking child safety and fossil-fueled farming</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.technologyreview.com/2026/09/03/1143320/fertilizer-prices-fossil-fuels/" target="_blank" rel="noopener">Agriculture relies on fossil fuels. It’s costing us.</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.technologyreview.com/2026/09/03/1142868/scaling-agentic-ai-pilots-across-the-enterprise/" target="_blank" rel="noopener">Scaling agentic AI pilots across the enterprise</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.technologyreview.com/2026/09/02/1142879/facilitating-ai-integration-with-simplicity-at-scale/" target="_blank" rel="noopener">Facilitating AI integration with simplicity at scale</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://www.technologyreview.com/2026/09/02/1143283/the-download-ai-puzzles-alpha-centauri-mission/" target="_blank" rel="noopener">The Download: AI puzzles and a path to our nearest star system</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.technologyreview.com/2026/08/31/1143180/hugging-face-hack-could-indicate-cultural-issues-at-openai/" target="_blank" rel="noopener">The Hugging Face hack could indicate cultural issues at OpenAI</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.technologyreview.com/2026/08/26/1143013/the-inside-story-on-why-openai-agents-hacked-hugging-face/" target="_blank" rel="noopener">The inside story on why OpenAI agents hacked Hugging Face</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.technologyreview.com/2026/08/26/1141949/editors-letter-september-2026/" target="_blank" rel="noopener">Raised on AI</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.technologyreview.com/2026/08/26/1141952/puzzles-ai-models-flub-these-tests/" target="_blank" rel="noopener">AI models flub these intelligence tests. Can you fare any better?</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.technologyreview.com/2026/08/26/1142946/bill-gates-ai-danger-threshold/" target="_blank" rel="noopener">Bill Gates says we’ve passed AI’s danger thresholds. Now what?</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.technologyreview.com/2026/08/25/1141907/dispatch-shanghai-humanoid-robot-carnival/" target="_blank" rel="noopener">I spent a day at a robot “carnival” in Shanghai. Here’s what I saw.</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.technologyreview.com/2026/08/24/1142630/ai-school-classroom-policies/" target="_blank" rel="noopener">How to encourage smarter AI use in the classroom</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://aiweekly.co/issues/applied-ai-deep-dive-what-are-companies-actually-building" target="_blank" rel="noopener">AI Weekly Issue #528: What are companies building with AI? An Applied AI Deep Dive</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://aiweekly.co/issues/schools-are-choosing-opposite-futures-for-ai" target="_blank" rel="noopener">AI Weekly Issue #527: Schools are choosing opposite futures for AI</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://aiweekly.co/issues/nvidia-may-buy-into-perplexity-above-30b-before-wednesdays" target="_blank" rel="noopener">AI Weekly Issue #525: Nvidia may buy into Perplexity above $30B before Wednesday's earnings</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://aiweekly.co/issues/what-ai-models-are-actually-coming-in-the-next-six-months" target="_blank" rel="noopener">AI Weekly Issue #524: What AI models are actually coming in the next six months?</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://aiweekly.co/issues/ai-ethics-is-nobodys-job-now-the-labs-prefer-it-that-way" target="_blank" rel="noopener">AI Weekly Issue #523: AI ethics is nobody's job now. The labs prefer it that way.</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://aiweekly.co/issues/zuckerberg-promises-superintelligence-for-all-experts-arent" target="_blank" rel="noopener">AI Weekly Issue #522: Zuckerberg promises superintelligence for all. Experts aren't sold.</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://aiweekly.co/issues/the-frontier-just-split-into-three-markets" target="_blank" rel="noopener">AI Weekly Issue #521: The frontier just split into three markets</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://aiweekly.co/issues/what-a-week-ai-became-everybodys-decision" target="_blank" rel="noopener">AI Weekly Issue #520: What a week: AI became everybody's decision</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://news.google.com/rss/articles/CBMipgFBVV95cUxNc0xhTjdTS2tlbXh3OXlXZWxBS2J0bkNyb1RUUVgzUHZfMmtFSzF2WDl3eHBOR2N5a3N0NzFBUzlVRHFNSlJqRjRDMXhPR1MxR2hKMHU2MGY3eFladTBEdGQyZTBKVDNmYUdBcTRJLWNBQjJyYjdxeXRQR211eElnTDVIWTRxVllPZGxRcDFRQV9jWlNrUHdIcXk2djdZZTE4ZFRfRm9R?oc=5" target="_blank" rel="noopener">IFA Berlin 2026 Live: The Biggest Announcements From Samsung, Dyson, LG and More - CNET</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://news.google.com/rss/articles/CBMilAFBVV95cUxPbGxjSEtIckhKaFBEYWE1aDZlUGRiMGU0YUFmWkVwYnFHTElJbk9hX2NibUsxNG1kWFVsRENkeFFNa2F5TEw1V3ItY0cxaUFwWU9rVkkyZkZmQ2sxcWxUb1Y4NkZtOXZSSFFjdUZBZDkxUHczaXNlcUl5T1Y5Y3lvbzdoYUFQamRNQkZmWElyQVl2UTF5?oc=5" target="_blank" rel="noopener">What to expect at Apple’s September 9th launch event - The Verge</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://news.google.com/rss/articles/CBMihgFBVV95cUxNbWY5UTFSbWwxcVk2eWtrbHc4M2ZlOUlMLU11NWlqLXQya2tGbTRDd2xmWDVSSGwzckRTNklnMGxXcXlSM0dRUE9QMGhIckdjUzJLYi1VTjNUN3FHYU1JUTFYT3BUM1VSY3U3QlVMc0VydnA3MWFLZndKb2JGaXhnc3V6OENiQQ?oc=5" target="_blank" rel="noopener">iPhone Ultra Production Hitting Just 'a Few Hundred' a Day, Says Nikkei - MacRumors</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://news.google.com/rss/articles/CBMihgFBVV95cUxNR0dlN2REZ2JGbGJmcldEbmotTm9BaGhPMEUtRXR6dTV1bTZ0VWJXMlpyMnE2cU9RWGkxMGk5RFlkTk9yNlpPc1hLcVZvSzlHbnlyZGEzT25EcUppV2NTVlJmellQUkdLTWhQRDN4dF81YlNzUFR6d2QtSk9vTlkxay1PQUw4QQ?oc=5" target="_blank" rel="noopener">Xbox Game Pass imposes strict monthly hour limits on cloud gaming - mashable.com</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://news.google.com/rss/articles/CBMikwFBVV95cUxPU2FtX3liMVZ5RUppdDBTVTFYOFRUb0pGUVIxSGJ3NkNfbjFLRXF0eU42cnFOeXV0V1BfRmlzVF9WR2p2T1d1UnFzclBhX1VhZG9JUWFtY1RfSDBkenU0RVJzTGhiUk1XajlnOU5PZzhKNklNS3lnOHc2TlBEZkU4RFJlTkRjN0I4Nkd4ZnlKaGt0bTg?oc=5" target="_blank" rel="noopener">This New iRobot Concept Is the Matryoshka of Robot Vacuums - Gizmodo</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://news.google.com/rss/articles/CBMi4wFBVV95cUxPRzJTVE0tY2ZmYnBVaXdfekRuMWJkRGdNeUowR1NIb1EwU01wTm5BYmlNVHlScWxyMzFkWGNtRktKbEJGc3BvZmp4TnFGNFJVSTlVWnItMlBlYkYwbnZwdWdjWWpjXzlIQmdhRmc2elNrN2NrZ3lCSGJ5b1o2bkgwUzBKdFpFbHFkanNya3Q2YnVFTFJIQURlQllCNGFYSFdfRndwLWtwVERwZXNRckdFUWJYUy1sWE81TUxxTlptaEF0LURXdXJUMVVVbEJiNVJ5VEVoVkZFWTlGSi1ua2RGb1hQbw?oc=5" target="_blank" rel="noopener">Windows 11's Project Zenith cuts clutter for developers and promises a "distraction-free" experience - Windows Central</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://news.google.com/rss/articles/CBMiuAFBVV95cUxNb3QzQXhKLThEV3RqS2dkWTBmRnV6UExSQ0xYNnJ6TDJTNng5NWRnZDdjX2Rlc0hTbWhfbGhCbE5IOW5rNUl1ZTNUMkxNMVdtZWtDN09YaXAxSmRCWnphMjJUX2lCaGxYNG91dm5vZVlxVWt6c0owUDJ0cl9IdFFZdEpKMHFBeFZ3cjhDbDNyc014TFc2QjBFZG5xRElveTd5OEoxVVJKS1hEakNXVnhoOERfRVhDMVcx?oc=5" target="_blank" rel="noopener">Nearly impossible? How Fairphone built the ethical, repairable Fairphone Gen 6+ - Ars Technica</a></li>
+<li><span class="news-label">글로벌 기술</span><a href="https://news.google.com/rss/articles/CBMiugFBVV95cUxQZjFLT1paMEFzVXloTjBpb21kdE4tbzdPQS01aEwxVHRjS2tua2lGdktxM3lUNmd1bDNBOWU1LUpxY0hQRHRHNVIwSUtTUGUyaDF3NG0wekZ1T2NzaDVGQmtyRGFGaGgzM2VxMENOTl9fUmtMeENtdHUzZzBFcnJhOENsT2NIUkpubWJScFZ5VGptOU9tME9FMUEwRnhndklwcHV0V3I4Z1pOQy1KZzBwNFp1V2JpZm83cFE?oc=5" target="_blank" rel="noopener">Apple 'Surprise and shine' event: How to watch the iPhone 18 Pro launch and what to expect - PhoneArena</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.wired.com/story/who-cares-if-ai-is-conscious-its-basically-alive/" target="_blank" rel="noopener">Who Cares if AI Is Conscious—It’s Basically Alive</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.wired.com/story/ai-job-market-infinite-doom-loop/" target="_blank" rel="noopener">AI Use in the Job Market Is Creating an Infinite Doom Loop</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.wired.com/story/nobody-is-saying-why-openai-and-anthropic-had-outages-today/" target="_blank" rel="noopener">Nobody Is Saying Why OpenAI and Anthropic Had Outages Today</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.wired.com/story/prediction-market-betting-is-getting-people-banned-and-arrested/" target="_blank" rel="noopener">Prediction Market Betting Is Getting People Banned and Arrested</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.wired.com/story/openai-says-gpt-6-can-use-a-computer-better-than-a-human/" target="_blank" rel="noopener">GPT-6 Astra Is Here—and OpenAI Thinks It May Kick Off the AGI Era</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.wired.com/story/openai-elon-musk-cursor-billion-revenue/" target="_blank" rel="noopener">OpenAI Cut Off a Billion-Dollar Customer to Avoid Elon Musk</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.wired.com/story/nvidia-rtx-spark-laptops-first-look/" target="_blank" rel="noopener">Nvidia RTX Spark ‘Superchip’: The First AI PCs Are Here</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.wired.com/story/nvidias-hugging-face-acquisition-is-a-dollar129-billion-bet-on-open-source-ai/" target="_blank" rel="noopener">Nvidia’s Hugging Face Acquisition Is a $12.9 Billion Bet on Open-Source AI</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://news.google.com/rss/articles/CBMiaEFVX3lxTE9mQWFjYmw4NHEyTFlGWjE4UTBmdFhISmIwMlk5N0d3bGNzRmdnUUFRQzFpQ2hScWdPbUljZDZPV2xrdWhBRTRxU0JxU09qRFJSZVZtNG14OG5qZVA1X2FwWUZiUTdQa19W0gFuQVVfeXFMUEpuTzRMcmZkYXhWTVp0X1V1ZUQ5RWN2UXZjVVdqaWxDZFVLMndNRXUyUWpCNFVtQWhZYXU4ZEJMRjRpS1JCTjVHQ3hqOUpCMm1kUjFYN2RTTVo4NkJHQlMtaHREdkNTU0JweFJHNEE?oc=5" target="_blank" rel="noopener">AI token prices are hitting new record lows - CNBC</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://news.google.com/rss/articles/CBMiYkFVX3lxTE5vdUVONnM2Y1JQelE5S3E3MGRCOUxPQ25iRnJ6ZjNJdk1JV2gwdXRYV243UmVxSE8yeXlQdVFyTVhTcW94T3JLM241SEthckwxNVQ3S3RnWmZ1dUtmNFVMc0Jn?oc=5" target="_blank" rel="noopener">Saudi firm launches LLM based on Chinese AI model - Global Times</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://news.google.com/rss/articles/CBMiiAFBVV95cUxPQVpXQXFxVkJWeWo1SFJ6WmdnYUVrczRMUHc0bnQ0cG53amxNR3A5TUNkWHNuS1JOU3JjNlllQ0piQU5HV2NiTEExc3BzMnN1cUpFWE0yWjRTcS1XckRIU3VranRBQTlJaHc1MURERDRya0tWRzFoTXF1YTdjMV9BdmtlTnNQS1Fj?oc=5" target="_blank" rel="noopener">Phonely debuts Alma, a voice AI-centric LLM - No Jitter</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://news.google.com/rss/articles/CBMirgFBVV95cUxQdWhJOHU4V1ZRU3JHM25VYlBLUmRyYlRxalBaenBOTEpOSW05YmlpYzJ5MGxCa0MyczBzajlYWmJ3aGFkb2hWMzhWZGVsSWFleFhLM0gyUVcwMVNlSGJQMUdwRlY3c0lDMXZyQm03TEk0TndVVFVrQk14ZTU4eTM5Ui1Gc2JPaWdhOWQyekZTYXJHRGNDSHZOSlFfNXVXQTNjcnpvZklKYnYzeEhuZ3c?oc=5" target="_blank" rel="noopener">Co-Designing AI Models Using Speculative Decoding for Faster LLM Inference - NVIDIA Developer</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://news.google.com/rss/articles/CBMiekFVX3lxTE9tTnZpb2RLWEZ1VjBkc1RycEVwUC1neW5GeWkwa1VYWVJNU0ZzLXZPcTh3d3k4Vm1ONkpQTHE1R0VYOWhwdHhuU3ZDdmpERXVPWDU0VUdPM1B5T1kxVXhETE52eGVMbHRHYkRxVW1rS1lOczN2dm5nam9R?oc=5" target="_blank" rel="noopener">5 Free LLM API Providers You Can Use in 2026 - KDnuggets</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://news.google.com/rss/articles/CBMiuAFBVV95cUxQMkVEUVlOR1A1VlQ0bm5KUXR3ZmFyOWU3RnlDbkc2X0tra05TWDhQeUxJclB4OHl1SXZtZjdfVGFTQW1zVUV2QkxVTWdpUENNUjFIVGhIemlsRGV6YTlFUGxzcDY5MEtiSjR5NjZPdjRoS3FIOGtubFNvWHZVN091UFRfUnJsaEZoejhrYkxBRzBvWnp5MGNQSVpSSlJYUjlPcDJYcW1NYWoyQUN1NHF5TTlwRl9zajZF?oc=5" target="_blank" rel="noopener">US government sides with OpenAI on issue of training LLMs on copyrighted material - TechCrunch</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://news.google.com/rss/articles/CBMigwFBVV95cUxORGgxS1JDVnJOcEpSTVVkOTFldlhOVlFBbGpCeVc3SUFsM0E1cGk0bWREN2g4dnNvR3hjdDF0LWJTM3NjWXpqSkJNRWNNRDYwZnBnWVRCM19ld0s0VFNqV1FsSVR4TXRCeFdjX0g2WlBCZEpEeWo0ZC1hX0RXRGwyYk1mSQ?oc=5" target="_blank" rel="noopener">Brain activity patterns could help sharpen LLM deductive reasoning - Tech Xplore</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://news.google.com/rss/articles/CBMiggFBVV95cUxQOTBHUm5oUFpBTFZpOWFVNXNhODhQUDBUM1NLYldKaUdaaWpEOENqLVk4bGlFQV81dFVub1BwbVR0NVRSdGUtZ19nR0ZYbzU2R2FhR0NvWG9qZi0tckJPQmdfSVJFZXF3aVdJa3JDUGZJN19TMG9RYlpHNS1CVDNEZ1hB?oc=5" target="_blank" rel="noopener">Hackers Hijack AWS Account to Run Paid AI Models in LLMjacking Attack - Hackread</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.artificialintelligence-news.com/news/mt-bank-enterprise-ai-15000-employees/" target="_blank" rel="noopener">M&T Bank expands enterprise AI after years of technology overhaul</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.artificialintelligence-news.com/news/50-5-of-americans-say-ai-romance-can-count-as-cheating/" target="_blank" rel="noopener">50.5% of Americans Say AI Romance Can Count as Cheating</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.artificialintelligence-news.com/news/ai-last-mile-delivery-optimisation/" target="_blank" rel="noopener">OneRail uses Nvidia AI for real-time last-mile delivery optimisation</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.artificialintelligence-news.com/news/nvidia-to-acquire-hugging-face-for-12-93b/" target="_blank" rel="noopener">NVIDIA to acquire Hugging Face for $12.93B</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.artificialintelligence-news.com/news/motional-and-mit-ai-explains-self-driving-car-decisions/" target="_blank" rel="noopener">Motional and MIT AI explains self-driving car decisions</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.artificialintelligence-news.com/news/chatgpt-ads-passes-1b-run-rate-in-200-days/" target="_blank" rel="noopener">ChatGPT Ads passes $1B run rate in 200 days</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.artificialintelligence-news.com/news/why-mcp-servers-are-becoming-ais-newest-attack-surface/" target="_blank" rel="noopener">Why MCP servers are becoming AI’s newest attack surface</a></li>
+<li><span class="news-label">AI·ML</span><a href="https://www.artificialintelligence-news.com/news/nvidia-circular-financing-ai-labs/" target="_blank" rel="noopener">A quarter of Nvidia’s business next year comes from labs it is financing</a></li></ul>
+</details>
+    <details>
+  <summary>🇰🇷 한국어 뉴스 (71건)</summary>
+  <ul class="news-items"><li><span class="news-label">국내 IT·기술</span><a href="http://www.bloter.net/archives/537737" target="_blank" rel="noopener">SK건설, ‘친환경 회사’로 불러주세요</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="http://www.bloter.net/archives/537723" target="_blank" rel="noopener">‘조선史’ 새로 쓴 삼성중공업, 2조8000억 규모 컨테이너선 수주</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="http://www.bloter.net/archives/537639" target="_blank" rel="noopener">[넘버스]현대엘리베이터 창사 후 유동성 ‘최대’…현대그룹 재건에 쓰일까</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="http://www.bloter.net/archives/537698" target="_blank" rel="noopener">LG 인적분할 통과…’화이트박스’가 반대한 3가지 이유는</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="http://www.bloter.net/archives/537676" target="_blank" rel="noopener">웨이브, 오리지널 콘텐츠 투자 늘린다…”2025년까지 1조원 목표”</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="http://www.bloter.net/archives/537683" target="_blank" rel="noopener">‘시작이 좋다!’ 현대차, 스타리아·아이오닉5 사전계약 흥행 또 흥행</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="http://www.bloter.net/archives/537673" target="_blank" rel="noopener">스냅챗, 틱톡 ‘듀엣’ 유사기능 ‘리믹스’ 테스트</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="http://www.bloter.net/archives/537664" target="_blank" rel="noopener">뉴욕타임스 최초 ‘NFT 칼럼’, 56만달러 낙찰</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.google.com/rss/articles/CBMickFVX3lxTE1PYmZnUkFoSmNWbEFMZjZ4NkFYWUtfWGhiTnNIcFRPZGxBRDFjNTRudkl2VzBYTzhPR05uTEwyMmtoM1EwWVZ2OGdzaHBEZ2VyenRtenRLUVVYMHJSbmhvV0F3MW1mZ3FtaS1PUWF0S3VLUQ?oc=5" target="_blank" rel="noopener">수협중앙회, ‘여수사랑 예·적금’ 기부금 첫 지역 환원 - 인더스트리뉴스</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.google.com/rss/articles/CBMibkFVX3lxTE1LMGxqcWc5N2ZnZWhQa0dfcEdDQVhvNllCNTFZVlRIRGV2Z2UwaEtoMm1RRnk4VS0wWXV3UnVuTmJvWnFFc1JhSWVWR2RDeGhYcFhkZmFheV83RlRZel94Wjg0ZGJxczczSEJQaVdR?oc=5" target="_blank" rel="noopener">서천 봉선리 유적 출토 백제 목조저장시설 가치 재조명 - 안동데일리</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.google.com/rss/articles/CBMiaEFVX3lxTE1CVUduSmRMV25XRTRqT1JJUko4VmU1TWl6c3FCa3JZa3kycTdYZ0UzZTRncWlrVWI0OHRveHlYUVlBTGU3UG1Pc1NtSFFXdW5UTnJDbUNzS1BBV0lLWjJCRDZQUlFqalJ2?oc=5" target="_blank" rel="noopener">성남시, 초등학생 대상 찾아가는 경제·금융교육 운영 - 경인매일</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.google.com/rss/articles/CBMiYkFVX3lxTFBocVBCMHNwb0ZlMW5aVUJWTHBaRUNHbjVLczlTV29uR0E5T2t2Zld4ckNfemdtMzdmc2xYb0QwQTRucEVtRHZuUjYybkFTdWxkYk5mLVh6LUZLNFlJN2c5MGxR?oc=5" target="_blank" rel="noopener">성남시, 초등학생 대상 찾아가는 경제·금융교육 운영 - 경인미래신문</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.google.com/rss/articles/CBMiYEFVX3lxTE9VT3dUY2ZvZW9BVDVsQkw1S0pCRFZwZHNxdkl6bEpESldjVnpDQ3B3Sm1sRjc3NXZ0cXFObUhlaUxycjlUSWFSRHdlWjdNOHJablQxT09sMVF3eWkyaFg0VA?oc=5" target="_blank" rel="noopener">성남시, 초등학생 대상 찾아가는 경제·금융교육 운영 - 메트로신문</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.google.com/rss/articles/CBMibEFVX3lxTE50bXpjNG1uckI1bW9oemJJSGdtN0JITXI1VGxJdDVYTl9MT0ZhWTJPdDBoSG5STjhWMzJVeUxrOVJ5OHo0bDlUejJmN21PbFFhUXdhdXNDbUtXYmVvTjVwSEVYZ2ktN05NOW4ydQ?oc=5" target="_blank" rel="noopener">[금융·경제 트렌드] 청소년이 직접 만드는 경제·금융·격차 해소 정책 外 - ibabynews.com</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.google.com/rss/articles/CBMiZEFVX3lxTE5BLWRMWTJfZHA4R1BCYXg0TDVJS3pKTzNYdWZoZUp6dEo4LTdmYkxQTnZMTkZDTjlXa0VYOXZ6bWc5VEpzbXZXWWZYTGlQQUhfcUJRWkhhdUI2cFdtMEh4Zk1tNXXSAWhBVV95cUxPNnBUYVVaS0dwU3FZT2d6cFBPSlJqQ0duQzk0aFk4dzVYSWRzdERZT0FWbUZ3U2tpZ0tUdjF6VW83MXhJbTA4dm93bHlSbGd0NU5rcU00NmZ4bTJzd3JDYkNoa0R4U1VrZQ?oc=5" target="_blank" rel="noopener">[금융街] KB금융·삼성증권·두나무·빗썸 - 경인방송 뉴스</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.google.com/rss/articles/CBMiTEFVX3lxTE9ZZmZ3azU5MFVLYzBoMnhkUnFrRGozM28xVkNadkd3T1RaNWI3cmNqbG9DUGh1cGtab2pQRFkzbjZrRUsydFBXS3BEcl8?oc=5" target="_blank" rel="noopener">성남시, 어린이 경제·금융교육 ‘키우자! 경제리더’ 성황리 마무리 - 모닝투데이</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000363" target="_blank" rel="noopener">美 고용 서프라이즈…금리 인상 공포에 증시·코인 된서리</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000197" target="_blank" rel="noopener">휠체어타고 살인에 시신 유기까지 한 英 남성…“딸이 적극 도왔다”</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000361" target="_blank" rel="noopener">“너무 파격? 불륜이 문제가 아니었다”…사상 첫 1000만 쿠팡 이끌어</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000285" target="_blank" rel="noopener">돼지 신장 받고 투석 없이 9개월간 최장 생존…“사람 신장 이식까지 성공”</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000300" target="_blank" rel="noopener">[IFA2026] 삼성·LG, IFA 2026 혁신상 싹쓸이...'가전+AI' 문법 만들었다</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000357" target="_blank" rel="noopener">발전5사 통합 '한국발전' 내년 10월 출범…“글로벌 톱10 도약한다”</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000275" target="_blank" rel="noopener">“학생들 성적이 왜이래”…시험 점수 낮다고 교사들 무대에 세워 망신준 중국</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000352" target="_blank" rel="noopener">14억짜리가 100억 됐다…빅뱅 대성, 대박난 '한강뷰 아파트' 어디?</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiT0FVX3lxTE5IalJ1b0JYNk1WSU50R2I4RDlrRjAzRjNwR05GX1hYRkN2aTlzNXFZZ0o1WlNOWFpiUkhLWjJSM2pZb3pnT3didTNMUXR0RzA?oc=5" target="_blank" rel="noopener">"여친 사진 한 번에 통과?"⋯삼성, '폴드8 울트라' 3배 줌 써보니[르포] - v.daum.net</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiVEFVX3lxTE5NX2FfTThwR3ZtcUtXbW1ic1VOVDlIVDZSa0s3UFhEQWlOSEhLRlcyMUhRVkthWDZLVmhpU24xc0xicm1CbHVZS3N6cTRmcXhOVElmWQ?oc=5" target="_blank" rel="noopener">“AI가 싸놓은 똥, 치워주면 69만원 드립니다”…요즘 뜬다는 이 직업 - 매일경제</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiVEFVX3lxTFBBZGwxRm5qcnJpd0dNZVN1bTY2NG5iYURPMGNUS0g4X2NlcU9hMGdEQ253QmVtTnMxNl9EandaS25qV2dtV2VHT1ZCWGdsVldNc2VNag?oc=5" target="_blank" rel="noopener">“영끌대출 막히니 코인 1300억 팔았다”…집 사려 가상자산도 손 댄 3040 - 매일경제</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiT0FVX3lxTE1ORlEtcVZYcHk1VDlQcUZ0cS1lRXdidWhTbVd1YlNwcHgyelJncUpHMWttbXdSMlRXRmZVV0p1dWpOVjJwY1EtNzNQV1doSmM?oc=5" target="_blank" rel="noopener">“700~900달러에 사서 2030년까지 안 판다” 기욤…비트코인 8만달러 탈환[크립토360] - v.daum.net</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMigwFBVV95cUxQUkVCMGYyQlVGU2tIdFI0ZHc0QVVNSlVWTWdQc0wtNGQ1MTUxM3RWSWJWcUNiSlc5dGp4b1JwQ0dTeDRoSTBwWDdseTFzYmRyek4zbVpVU1FhU21nQ1dRSlZGdjQzV0FUU1cydVEyR2g2ZHh0eGRnSkZTUGhITE9QQXFWRQ?oc=5" target="_blank" rel="noopener">"아내가 유료 AI 써요" 한마디에 공무원들이 멘붕 온 이유 - 조선일보</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiVkFVX3lxTE11Yzgya1F4S0RPUGVqSnZGVHZONkJKNGpLeGEwVDU5MFZmNUdlVjZmcVZzSFM1aEF0YWRkQUdDWU1lWXlqWkFWR0dJYXk0UU1MNWpRUEp3?oc=5" target="_blank" rel="noopener">티빙 "침해사고에 따른 피해 시 1인당 300만원 보상" - 지디넷코리아</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiW0FVX3lxTE1IYUFxbXl2dFhQZE5ucWZzRUg5MkhpS180WVhva0RLTVdjZW0tdlk1MzF2MzdkV0RjUF96cFZSeGFJUmRZdUk1SGRnY0hFMmNFZnZfVE5GaUR2Tk3SAWBBVV95cUxPYmRqdXBrdk5TYTZha0VsaDVVbTNiNFJYaFZKVW1NeE9YUlNjVnFEX3h1U2YxczF6VmRZc3N1M0tXUjdDRGRXbUFjWWV4UWR0U1VfdVY2WERtZENpREdJVUY?oc=5" target="_blank" rel="noopener">핸들·페달 없는 금빛 테슬라 무인택시…머스크 "사이버캡 폭풍" - 연합뉴스</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiWkFVX3lxTFBncU5qejlKaTZPUlZKbXhyLUdYOVN2dTZ3Q2NNakprVThZdExadnMyX3RyWmU4TExxTEktN1hMMzh4RWRIeUJ4VWVrSmM1eVZxNHJRZFdibGtJZw?oc=5" target="_blank" rel="noopener">"정부가 로봇 200대 사준다"…증권가가 찍은 수혜주는? [분석+] - 한국경제</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000362" target="_blank" rel="noopener">[도산아카데미] 정제영 KERIS 원장 “AI 시대 '가짜학습' 경계해야”</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000356" target="_blank" rel="noopener">“AI로 R&D·IP·기술사업화 연결” 애니파이브, 국제특허정보박람회 참가</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000344" target="_blank" rel="noopener">티앤디소프트, 지역사회 나눔 공로로 성남시장 표창</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000340" target="_blank" rel="noopener">세이프티랩, 국토부 'AX-스프린트' 선정 제품으로 공정회의 개최</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000334" target="_blank" rel="noopener">모두의 AI 성공방정식 '외산과 차별화'…SKT·KT·카카오 출격</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000333" target="_blank" rel="noopener">인터엑스, 중기부 장관상 '기업가정신 대상' 수상…제조 AI 산업 확산 성과 인정</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.etnews.com/20260904000301" target="_blank" rel="noopener">워크데이, 2분기 매출 3.6조원…“AI가 신규 계약 견인”</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/society/12144489" target="_blank" rel="noopener">생산의 한계를 극복한 선택 … “자급자족을 넘어선 기적”</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/business/12144460" target="_blank" rel="noopener">한국은 아직 제로음료? … 미국은 ‘0+1’ 마십니다</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/world/12144931" target="_blank" rel="noopener">美고용 깜짝증가 … 금리전망은 엇갈려</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/politics/12144928" target="_blank" rel="noopener">“베니스에서도 좋은 소식 있길”…이 대통령, 이창동 감독 ‘어터상’ 축하</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/business/12144924" target="_blank" rel="noopener">“135억원 쾌척”…네팔 대홍수에 ‘큰손 기부’한 CEO, 누구?</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/world/12144912" target="_blank" rel="noopener">“푸틴 만나고 젤렌스키에게”…트럼프의 ‘두 남자’ 주말 종전 협상 물꼬 트나</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/world/12144901" target="_blank" rel="noopener">[속보] 미 8월 고용증가 16만2천명…예상치 크게 웃돌아</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://www.mk.co.kr/news/stock/12144894" target="_blank" rel="noopener">실적 좋아도 주가 떨어지면 상폐 …“좀비기업 정의 바꿔야”</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiVkFVX3lxTE41S29NVUxTbW5zMnB4X3JRMFgxM2ZfSldQT3BGa2xCb1VVdWpxMDRpXzc2aUt4SHBtNDBXTE9tTVpNQWg1ZGJVaXZlOGlYNmRsWEoyWml3?oc=5" target="_blank" rel="noopener">"국방 AI, 이제 장병 손으로"…현장 운용이 성패 가른다 - 지디넷코리아</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiT0FVX3lxTE1MRUZpOWJtU1JWV3pIME5DSENXc2xkS1VEZ2c5Z2t6bDRJdm04STU3WkY1ZFRiamRlTnB4Z0xWRmkwdnVUQTNxNEdOQWVnNzg?oc=5" target="_blank" rel="noopener">인천 기업, AI 도입 난항…비용·인력 부족에 실제 활용 1.7% - v.daum.net</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiW0FVX3lxTE1HVWFpdnRYUVRGc3NtZXA3QXlYSG91VlNhcEVPUWVLQVJDU1V2WWg1VDJnYm9NX2dFZG1EM1JqU3EtVGNBajZLd3ZZT0VXR3ZMSTdBcEdWOEF1TTjSAWBBVV95cUxPRmpHQnduNHgycEhyZE01WjFLcU1VMk9RS3h6dzNpUlk0blo1RDZGNy1UbWVtMGdqTWlUdlViTWlSZGNwdkFMdlFhNzBRNTV0WlJZX3BLVFNYb1YwT3JXOFI?oc=5" target="_blank" rel="noopener">산재발생시 대응 알려주는 AI기술 개발팀, 국무총리상 수상 - 연합뉴스</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiZ0FVX3lxTFBPUXMxNXVpLU1RTmZ4b0FteFRpYjNHRlN3aHR2cGFJakpIR0lJM09BRXYwUk5jS0lqZEdtWHZEMTZkYkFRT1h0ZExWSWNfQ3p4cHdrUUlQcC1SYlBGdXU0SGZKNHVqN2s?oc=5" target="_blank" rel="noopener">"설계부터 제조까지, AI가 스스로 협업한다"...중앙대, 자율화 이끄는 ‘에이전틱 AI’ 개발 - aitimes.kr</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiUEFVX3lxTE5kcXpoMFhFaXBEbnNic09fbkM3REo2QWFFZWtkSlpULTlTT0NDRXhObm1iSmRudGpQeXlrOURvVlRoNW9LenlqSDRwVzc0dHpv?oc=5" target="_blank" rel="noopener">국방부 ‘국방 AI 전략 포럼’…“국방인공지능법 제정으로 AI기술 軍 적용 위한 신뢰성·안전성 보장” - 문화일보</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiZEFVX3lxTFB1dGFJU0NTWnI1aVFvdUZSODdsRTE1bTFTbFVpbzdFdnFEUUhOcGRvcjBVQnhKQmY5T0xvZkYtcUxzWl9tNHp6UUYyNEQ4LXY5ZTRIajhSeUxhOXFodENUQlBqSlTSAWhBVV95cUxQOUVtb192a2xXSXJLNlMtazNuV0lOWE1MY081STFSTWh3enlOVUVjWmctcjluT0NUbmdkdTN3YzJSOVRiSEFOUUxfRjVBanlsd0czWkJkWDRxTFN1ekEwNl8tTk9uMGgxNQ?oc=5" target="_blank" rel="noopener">KAI, 출자사 AI 기술 한데 묶는다…미래 전장·스마트 제조 협력 확대 - 매일일보</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMilAFBVV95cUxQR2EwYktiYjU2Y0FIcVJGcG1QR2tiUmRrdEQyUHk3TG9Vc3JIMS16eGRpZWV1djBFSHBFVlk3aFh1bGl5clRobS1EUEtVZ3hja0VnRGpmcWJiai1tRW5sNnFRWTZsUGNNdnNrMGl2dVN1RW11Ml9NWUJWeEJXSW1Id05FaGxraEtLa0JmcER6ZTB5LXIz?oc=5" target="_blank" rel="noopener">새로운 업무 환경에서 근로자들이 필요로 하는 7가지 AI 기술. - Vietnam.vn</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://news.google.com/rss/articles/CBMiSEFVX3lxTFBlLXVmWmQxOE5sbDFXMlBhMjltTjVpWm9oVXlJbXMtcFJISzFyQXl2eG5idUVDN2ktNlhYSmtzbGNlaXVXZ1F4aw?oc=5" target="_blank" rel="noopener">“특허만 알아도, AI만 잘해도 부족하다”... IP·AI 융합인재 키워 산업현장 투입한다 - 특허뉴스</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=214861" target="_blank" rel="noopener">UAE, 세계 최대 규모 완전 오픈소스 AI 'K2 호라이즌' 공개</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=214851" target="_blank" rel="noopener">앤트로픽, 전자상거래로 확장... 연말 대목 겨냥 '클로드 상거래 에이전트' 공개</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=214866" target="_blank" rel="noopener">구글, 워크스페이스에 ‘제미나이 오디오’ 탑재...음성으로 문서·메일·메모 처리</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=214858" target="_blank" rel="noopener">MS, 'MAI-트랜스크라이브-2' 공개...속도·정확도·가격 다 잡은 음성 인식 모델</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=214873" target="_blank" rel="noopener">[게시판] 워크데이, 2분기 AI 신규 연간계약 급증 등 단신</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=214871" target="_blank" rel="noopener">이해진 네이버 의장, 브룩필드 회장과 회동… ‘1GW급 AI 팩토리 사업’ 후속 논의</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=214869" target="_blank" rel="noopener">과기부, '모두의 AI' 간담회 개최…2500억 예산으로 국민 체감 AI 서비스 추진</a></li>
+<li><span class="news-label">국내 IT·기술</span><a href="https://www.aitimes.com/news/articleView.html?idxno=214868" target="_blank" rel="noopener">사우디 휴메인, 미니맥스 협력으로 아랍어 모델 ‘휴메인-m3’ 공개</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4433557" target="_blank" rel="noopener">[뉴욕증시-1보] '너무 좋은 고용'에 실망한 투심…하락 마감</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4433556" target="_blank" rel="noopener">클리블랜드 연은 총재 &quot;현장 목소리는 이제 행동할 때라는 것&quot;</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4433555" target="_blank" rel="noopener">[뉴욕 금가격] 美 고용 예상 대폭 상회에 1.5% 하락</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4433554" target="_blank" rel="noopener">백악관 &quot;고용, 예상보다 좋지만 연준 내 동결 주장은 상당히 강해질 것&quot;</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4433553" target="_blank" rel="noopener">트럼프 &quot;연준, 금리 낮춰라…아니면 무역적자국과 교역 중단&quot;(상보)</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4433552" target="_blank" rel="noopener">뉴욕증시, 비농업 고용 소화하며 혼조 출발</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4433551" target="_blank" rel="noopener">캐나다 8월 고용 '예상 밖' 4만2천명 감소…美 관세 압박에 노동시장 흔들</a></li>
+<li><span class="news-label">국내 경제</span><a href="https://news.einfomax.co.kr/news/articleView.html?idxno=4433550" target="_blank" rel="noopener">美 국채, 고용 서프라이즈에 '베어 플랫'…2년물 금리 5.90bp↑</a></li></ul>
+</details>
+  </div>
+
+    <div class="foot">
+      <span>AI News Brief</span>
+      <span>Generated by Gemini 2.0 Flash</span>
+      <span>chamgil71/dailynews</span>
+      <span>생성 2026-09-05 05:47 KST</span>
+    </div>
+  </div>
+</body>
+</html>
