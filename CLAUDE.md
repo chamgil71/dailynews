@@ -109,12 +109,22 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 
 ---
 
-## 현재 상태 (2026-08-05)
+## 현재 상태 (2026-09-29)
 
 ### 진행 중
 - 없음
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **카드뉴스 이미지 생성 중단 + SNS 텍스트 전용 발송 전환 + 플랫폼별 실패 알림** (2026-09-29) — 세션 27차 — **main push 완료**
+  - **배경(로그로 확인)**: 9/26~9/28 `cardnews.yml` 4회 실행 모두 Instagram·Facebook·Telegram은 ✅ 성공, **Threads만 ❌ 토큰 만료**(`OAuthException code 190`, 2026-08-10 만료). 플랫폼은 원래 서로 독립 실행이라 전체가 막힌 게 아니었는데, 한 곳 실패로 스텝 전체가 failure → 알림 내용이 "카드뉴스 SNS 파이프라인 실패"뿐이라 원인을 알 수 없었음. 이번 세션부터 로컬에 `gh` CLI가 있어 Actions 로그 직접 조회 가능(`gh run view <id> --log`)
+  - **발송 모드 스위치**: `.github/workflows/cardnews.yml` job env `CARDNEWS_MODE: text` 한 줄. `text`면 폰트/Playwright 설치·카드 HTML 빌드·PNG 생성·카드 커밋·CDN 대기 스텝 전부 skip. **이미지 카드 재개 = 이 값을 `image`로 변경하는 것만으로 끝** (이미지 코드 경로는 삭제하지 않고 보존)
+  - `scripts/post_cardnews.py`: `--mode text|image`(기본값 env `CARDNEWS_MODE` → 없으면 image), 모든 핸들러에 `mode` 인자. text 모드 동작 — Threads: 텍스트 강제 / Facebook: `/feed` message+link(이미지 없음) / Telegram: 캡션+버튼 1건 / Twitter: 미디어 없이 트윗 / **Instagram: API가 텍스트 단독 게시 미지원 → `PlatformSkipped`(실패로 집계 안 함)**. `--platform` 미지정 시 `config/cardnews_themes.json` `sns.default_platforms[mode]` 사용 — text: `threads,facebook`(telegram은 `send_telegram.py` 텍스트 브리핑과 완전 중복이라 제외), image: 기존 4개. 발송 로직은 `run()`으로 분리
+  - `core/shared/sns_source.py` 신설: SNS 캡션을 **카드 빌드 산출물(`publish/cardnews/*/data.json`)이 아닌 원본 발행 데이터**(`publish/news/data.json`, `publish/ai-issue/YYYY-MM-DD.json`, `publish/stock/data.json`)에서 읽음 → 카드 빌드를 멈춰도 캡션·최신 날짜가 갱신됨. `build_cardnews.py`의 extra_data 추출 중복 로직 3곳도 이 모듈로 위임(기존 카드 data.json과 112/16/81건 비교 불일치 0건 확인)
+  - `core/shared/sns_report.py` 신설: 플랫폼별 성공/건너뜀/실패 집계 + 사유 분류(토큰 만료 190 / 환경변수 누락 / 기타 요약) → `$GITHUB_OUTPUT`에 `failed`·`detail` 기록
+  - `scripts/notify_pipeline.py`: `--detail` 인자 추가, 실패 알림 본문에 플랫폼별 결과 표시(텔레그램 Markdown 특수문자 이스케이프). `cardnews.yml` 알림 스텝은 detail을 `${{ }}` 직접 삽입이 아닌 env(`SNS_FAIL_DETAIL`)로 전달(외부 API 오류문의 셸 인젝션 방지)
+  - 테스트: `tests/test_sns_text_mode.py` 15건 신규(네트워크 호출 없음, 핸들러 monkeypatch) 전부 통과 + 기존 `tests/test_stock_v6.py` 83건 통과. 실데이터로 3채널 텍스트 캡션 dry-run 확인(실발송 없음)
+  - **현재 예상 동작**: text 모드 기본 발송은 threads+facebook → Threads는 토큰 재발급 전까지 계속 실패하므로 **매 실행마다 "❌ threads: 토큰 만료" 알림이 옴**(Facebook은 성공). 알림을 멈추려면 Threads 토큰 재발급 또는 `sns.default_platforms.text`에서 threads 제거
+  - **알려진 부채**: `post_cardnews.py` 658줄로 200라인 규칙 초과(이번 작업 전부터 608줄). 플랫폼별 모듈 분리(`scripts/sns/{instagram,threads,facebook,telegram,twitter}.py`) 필요 — 다음 개발 TODO로 등록
 - [x] **AI이슈 8/2 주간 리포트 미생성 원인 규명 + mini→full 모델 에스컬레이션 구조 수정 + 수동 백필** (2026-08-05) — 세션 26차 — **커밋 `76ff82a4`(코드 수정) + `fa9cca93`(리포트 백필) main push 완료**
   - 증상: `reports/ai-issue/`에 8/2(일)자 파일이 통째로 없음. `ai_issue.yml` cron(KST 일 07:00)은 정상 발동했고 RSS/arXiv/주식 수집도 전부 성공했으나, "TOP10 및 TOP3 심층 분석" LLM 호출이 3회 연속 JSON 파싱 실패해 `RuntimeError`로 파이프라인이 중단됨(잘린 리포트 저장 방지용 안전장치 — `core/ai_issue/analyzer.py:124-128`). 사용자가 GitHub Actions 로그를 직접 확인해줘서 원인 특정 (Claude는 `gh` CLI·API 토큰이 없어 로그에 직접 접근 불가했음 — WebFetch로 Actions 페이지를 시도했으나 JS SPA라 날짜/상태 정보를 신뢰성 있게 못 읽음)
   - **근본 원인**: `core/ai_issue/analyzer.py`가 기사를 항상 `articles[:40]`로 상한 처리하는데, `config/settings.py`의 `GEMINI_MINI_THRESHOLD=40`과 맞물려 "뉴스 건수 ≤ 40이면 mini 모델" 조건이 사실상 항상 참이 됨 — 즉 이 주만의 일회성 문제가 아니라 **주간 AI이슈의 핵심 분석(TOP10+TOP3 심층분석)은 매주 예외 없이 저비용 `gemini-3.1-flash-lite` 모델로만 실행되고 있었음**. TOP10(10개 항목)+TOP3 심층분석(항목당 4개 필드) 요구 출력량이 커서 lite 모델이 가끔 JSON을 불완전하게 반환하는 것으로 추정. 게다가 `core/news/analyzer.py`의 기존 모델 폴백 로직은 `model_name == "gemini-3.5-flash"`(=full)일 때만 동작 — mini 모델 실패 시엔 폴백 없이 동일 모델로만 3회 재시도했음
@@ -459,8 +469,13 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - [ ] AI이슈 다음 자동 빌드 시 코드블록 줄바꿈 CSS가 정상 반영되는지, classic/ink/forest/minimal 테마 전환 시에도 코드블록이 있는 경우 동일하게 줄바꿈되는지 확인 (세션 24차, PR #49)
 - [ ] `cardnews.yml` 다음 stock 실행 — Instagram `media_publish` 2207027 재시도 적용 후 정상 게시되는지 확인 (PR #46)
 - [ ] Threads stock 캡션이 500자를 넘는 날 자동 축약되어 정상 발송되는지 확인 (PR #46)
+- [ ] `cardnews.yml` 다음 자동 실행(text 모드) — 이미지 스텝 5개 skip, Facebook 텍스트 게시 성공, 텔레그램 실패 알림에 "❌ threads: 토큰 만료 … / ✅ 성공: facebook" 형태로 표시되는지 확인 (세션 27차)
+- [ ] Facebook text 모드 게시물에 링크 미리보기 카드가 붙는지 페이지에서 육안 확인 (세션 27차)
 
 ### 다음 개발 (우선순위 순)
+- [ ] **Threads 토큰 재발급** — `THREADS_ACCESS_TOKEN` 2026-08-10 만료(code 190). 재발급 전까지 cardnews 실행마다 실패 알림 발생
+- [ ] **`post_cardnews.py` 플랫폼별 모듈 분리** — 658줄(200라인 규칙 초과). 핸들러 5개를 `scripts/sns/` 하위로 분리, `run()`/`main()`만 남기기
+- [ ] **카드뉴스 이미지 재개 시** — `cardnews.yml` `CARDNEWS_MODE: image`로 변경. Instagram·Facebook Meta 토큰 유효기간(60일) 먼저 확인
 - [ ] **테마 chip 그룹 분리** — `build_site.py` 테마 패널에서 `skins/` (색상 변형: classic/ink/forest)와 `layouts/` (레이아웃 변형: editorial/minimal/terminal)를 헤더로 구분
 - [ ] **editorial 페이지 테마 버튼 추가** — `editorial.py::_layout()`에 `id="themeBtn"` 추가 (현재 editorial 서브페이지에서 테마 버튼이 사라짐)
 - [ ] **구독 알림 이메일 템플릿 개선** — 인라인 HTML → `templates/email_confirm.html` 분리
@@ -470,6 +485,8 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - [ ] **오래된 세션 브랜치 정리** — `claude/cardnews-css-refactor`, `claude/optimistic-carson-*`, `claude/magical-cerf-2g7aos`/`f7v7s3`/`wnzard`, `claude/clever-meitner-*`, `fix/stock-send-fixes-0608`, `claude/stock-briefing-v6-weekly-idan6z` 등 다수 — 전부 06-05~06-24 사이 세션 잔여물로 작업 내용은 이미 다른 경로로 main에 반영됨(브랜치 삭제만 누락). GitHub UI(`/branches`)에서 일괄 삭제 권장
 
 ### 주요 아키텍처 메모
+- **카드뉴스 SNS 발송 모드**: `cardnews.yml` job env `CARDNEWS_MODE`(text|image)가 단일 스위치 — 워크플로우 스텝 skip 조건과 `post_cardnews.py --mode`가 모두 이 값을 따름. 모드별 기본 플랫폼은 `config/cardnews_themes.json` `sns.default_platforms`. 캡션 원본은 `core/shared/sns_source.py`(원본 발행 데이터), 발송 결과·알림 상세는 `core/shared/sns_report.py` → `$GITHUB_OUTPUT` `detail` → `notify_pipeline.py --detail`. 플랫폼은 서로 독립(한 곳 실패가 다른 곳을 막지 않음), `PlatformSkipped`는 실패 아님
+- **Actions 로그 조회**: 로컬에 `gh` CLI 설치됨 — `gh run list --workflow <file>` / `gh run view <id> --log | grep ...`로 직접 원인 확인 가능 (패턴 14의 "Claude는 로그 접근 불가" 전제는 이제 해당 없음). 단 `gh workflow disable` 등 CI 설정 변경 명령은 권한 정책상 차단됨 → 파일 수정·커밋으로 처리
 - **LLM mini→full 에스컬레이션**: `core/news/analyzer.py::BaseAnalyzer._pick_model(..., force_full=False)` — 전 provider(GPT/Claude/Gemini) `_call()`에 `force_full` 파라미터 존재. `ai_issue/analyzer.py`의 TOP10 재시도 루프처럼, mini 모델 실패가 반복되는 재시도 루프에서 2회차 이후 `force_full=True`로 승격 가능(패턴 14). `news_count ≤ threshold`로 mini가 선택되는 프롬프트가 항상 같은 건수(예: 상한 slice)로 호출되면 사실상 threshold 분기가 무의미해지므로, 새 LLM 호출부를 추가할 때 이 함정을 염두에 둘 것
 - `publish/archive.html`은 **`themes/editorial.py::render_archive()`** 에서 직접 생성 (Jinja2 미사용)
 - **archive → SPA 탭 이동**: `archive.html`의 ai-issue/stock 탭은 `index.html#ai-issue`, `index.html#stock`으로 링크. SPA 초기화 시 `location.hash` 감지 → 해당 탭 활성화 → `history.replaceState`로 hash 제거. `editorial.py::_layout(nav_hrefs=...)` 파라미터로 탭별 href 재정의

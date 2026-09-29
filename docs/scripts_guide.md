@@ -149,10 +149,14 @@ python scripts/generate_cardnews_images.py --type news --date 2026-06-10
 **역할**: 카드뉴스 PNG를 멀티 플랫폼 SNS에 발송. 플랫폼별 분기 처리.  
 **지원 플랫폼**: `instagram` (카루셀), `threads` (카루셀), `facebook` (멀티 사진), `telegram` (미디어 그룹), `twitter` (이미지 스레드)  
 **텔레그램 채널 분기**: `stock` → `TELEGRAM_CHAT_ID_STOCK`, 그 외 → `TELEGRAM_CHAT_ID`  
+**발송 모드** (`--mode`, 기본값 env `CARDNEWS_MODE`): `image`(카드 PNG 포함) / `text`(텍스트만, 캡션은 `core/shared/sns_source.py`가 원본 발행 데이터에서 생성, Instagram은 건너뜀). 2026-09-29부터 `cardnews.yml`은 `text` 모드 — 카드 이미지 생성 중단  
+**기본 플랫폼**: `--platform` 생략 시 `config/cardnews_themes.json` `sns.default_platforms[mode]`  
+**실패 리포트**: 플랫폼별 결과를 `$GITHUB_OUTPUT`(`failed`, `detail`)에 기록 → `notify_pipeline.py --detail`로 텔레그램 알림  
 **사용처**: `cardnews.yml`  
 ```bash
 python scripts/post_cardnews.py --type news --platform instagram,threads,telegram
 python scripts/post_cardnews.py --type stock --platform telegram --date 2026-06-09
+python scripts/post_cardnews.py --type news --mode text          # threads,facebook 텍스트 발송
 ```
 
 ### `post_instagram.py`

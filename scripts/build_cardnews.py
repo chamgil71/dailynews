@@ -27,6 +27,8 @@ _ROOT = str(Path(__file__).parent.parent)
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
+from core.shared import sns_source  # noqa: E402
+
 PUBLISH   = Path(_ROOT, "publish")
 CARDNEWS  = PUBLISH / "cardnews"
 _THEMES_FILE = Path(_ROOT, "config", "cardnews_themes.json")
@@ -553,15 +555,8 @@ def build_news(date_str: str | None = None, rebuild_all: bool = False) -> None:
         entries = [e for e in entries
                    if e.get("structured", {}).get("ko", {}).get("issues")][:1]
 
-    # issue_titles를 data.json에 저장 → _build_caption() Threads 캡션에 활용
-    all_news = json.loads((PUBLISH / "news" / "data.json").read_text(encoding="utf-8"))
-    extra_data: dict[str, dict] = {}
-    for e in all_news:
-        d  = e.get("date", "")
-        ko = e.get("structured", {}).get("ko", {})
-        titles = [i.get("title", "") for i in ko.get("issues", [])[:3] if i.get("title")]
-        if d and titles:
-            extra_data[d] = {"issue_titles": titles}
+    # issue_titles를 data.json에 저장 (추출 로직은 core/shared/sns_source.py 공유)
+    extra_data = sns_source.load_all("news", PUBLISH)
 
     built = 0
     for e in entries:
@@ -592,17 +587,8 @@ def build_ai_issue(date_str: str | None = None, rebuild_all: bool = False) -> No
     elif not rebuild_all:
         files = files[:1]
 
-    # issue_titles를 data.json에 저장 → _build_caption() Threads 캡션에 활용
-    extra_data: dict[str, dict] = {}
-    for fp in _glob.glob(str(PUBLISH / "ai-issue" / "[0-9][0-9][0-9][0-9]-??-??.json")):
-        d = Path(fp).stem
-        try:
-            data_all = json.loads(Path(fp).read_text(encoding="utf-8"))
-            titles = [t.get("title", "") for t in data_all.get("top10", [])[:3] if t.get("title")]
-            if titles:
-                extra_data[d] = {"issue_titles": titles}
-        except Exception:
-            pass
+    # issue_titles를 data.json에 저장 (추출 로직은 core/shared/sns_source.py 공유)
+    extra_data = sns_source.load_all("ai-issue", PUBLISH)
 
     built = 0
     for fp in files:
@@ -631,19 +617,8 @@ def build_stock(date_str: str | None = None, rebuild_all: bool = False) -> None:
     all_entries.sort(key=lambda x: x.get("date", ""), reverse=True)
 
     # 전체 엔트리의 summary/keywords/temperature를 cardnews data.json에 저장
-    # (Threads 텍스트 캡션에 활용)
-    extra_data: dict[str, dict] = {}
-    for e in all_entries:
-        d = e.get("date", "")
-        if not d:
-            continue
-        kws = [{"title": k.get("title", ""), "body": k.get("body", "")}
-               for k in e.get("keywords", []) if isinstance(k, dict)]
-        extra_data[d] = {
-            "summary":     e.get("summary", ""),
-            "keywords":    kws[:5],
-            "temperature": e.get("temperature", {}),
-        }
+    # (추출 로직은 core/shared/sns_source.py 공유)
+    extra_data = sns_source.load_all("stock", PUBLISH)
 
     if date_str:
         entries = [e for e in all_entries if e.get("date") == date_str]

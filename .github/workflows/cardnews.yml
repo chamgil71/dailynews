@@ -21,9 +21,9 @@ on:
         description: '날짜 (YYYY-MM-DD). 미입력 시 최신'
         required: false
       platforms:
-        description: '발송 플랫폼 (쉼표 구분): instagram,threads,facebook,telegram,twitter'
+        description: '발송 플랫폼 (쉼표 구분). 비우면 모드별 기본값(config/cardnews_themes.json sns.default_platforms)'
         required: false
-        default: 'instagram,threads,facebook,telegram'
+        default: ''
       build_only:
         description: 'true: PNG만 생성, SNS 발송 건너뜀'
         required: false
@@ -44,6 +44,11 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     env:
       TZ: Asia/Seoul
+      # ── 발송 모드 스위치 ────────────────────────────────────────────────
+      # text  : 카드 이미지 생성 중단 — HTML/PNG 빌드·커밋·CDN 대기 스텝 전부 건너뛰고
+      #         SNS 에는 텍스트만 발송 (2026-09-29~ 현재 설정)
+      # image : 카드뉴스 PNG 생성 + 이미지 포함 발송 (재개 시 이 값만 변경)
+      CARDNEWS_MODE: text
 
     steps:
       - name: Checkout
@@ -63,11 +68,13 @@ jobs:
 
       # ── 한국어 폰트 + Playwright ───────────────────────────────────────────
       - name: 한국어 폰트 설치
+        if: env.CARDNEWS_MODE == 'image'
         run: |
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk fonts-noto-cjk-extra
           fc-cache -f
 
       - name: Playwright 설치
+        if: env.CARDNEWS_MODE == 'image'
         run: |
           pip install playwright
           playwright install chromium --with-deps
@@ -94,6 +101,7 @@ jobs:
 
       # ── 카드뉴스 HTML 빌드 ─────────────────────────────────────────────────
       - name: 카드뉴스 HTML 빌드
+        if: env.CARDNEWS_MODE == 'image'
         run: |
           TYPE="${{ steps.channel.outputs.type }}"
           DATE="${{ github.event.inputs.date }}"
@@ -105,6 +113,7 @@ jobs:
 
       # ── PNG 이미지 생성 (Playwright → Noto Sans KR 렌더링) ─────────────────
       - name: PNG 이미지 생성
+        if: env.CARDNEWS_MODE == 'image'
         run: |
           TYPE="${{ steps.channel.outputs.type }}"
           DATE="${{ github.event.inputs.date }}"
@@ -114,6 +123,7 @@ jobs:
 
       # ── PNG + HTML 커밋 & 푸시 ──────────────────────────────────────────────
       - name: 카드뉴스 파일 커밋
+        if: env.CARDNEWS_MODE == 'image'
         run: |
           TYPE="${{ steps.channel.outputs.type }}"
           git config user.name  "github-actions[bot]"
@@ -128,7 +138,7 @@ jobs:
       # git push 직후 CDN 에 파일이 없으면 404 → API 업로드 실패
       # 최대 5분(20 × 15s) 대기 후 접근 가능 확인 시 발송 진행
       - name: GitHub CDN 전파 대기
-        if: ${{ github.event.inputs.build_only != 'true' }}
+        if: ${{ env.CARDNEWS_MODE == 'image' && github.event.inputs.build_only != 'true' }}
         run: |
           TYPE="${{ steps.channel.outputs.type }}"
           FIRST_PNG=$(ls publish/cardnews/$TYPE/*.png 2>/dev/null | sort | tail -1)
@@ -158,9 +168,10 @@ jobs:
           TYPE="${{ steps.channel.outputs.type }}"
           DATE="${{ github.event.inputs.date }}"
           PLATFORMS="${{ github.event.inputs.platforms }}"
-          if [ -z "$PLATFORMS" ]; then PLATFORMS="instagram,threads,facebook,telegram"; fi
 
-          ARGS="--type $TYPE --platform $PLATFORMS"
+          # 플랫폼 미지정 시 post_cardnews.py 가 모드별 기본값(config) 사용
+          ARGS="--type $TYPE --mode $CARDNEWS_MODE"
+          if [ -n "$PLATFORMS" ]; then ARGS="$ARGS --platform $PLATFORMS"; fi
           if [ -n "$DATE" ]; then ARGS="$ARGS --date $DATE"; fi
 
           python scripts/post_cardnews.py $ARGS
@@ -188,14 +199,18 @@ jobs:
         continue-on-error: true
 
       # ── 발송 실패 시 텔레그램 알림 ───────────────────────────────────────────
+      # 플랫폼별 실패 사유(post_cardnews.py → $GITHUB_OUTPUT detail)를 알림 본문에 포함.
+      # detail 에는 외부 API 오류문이 들어가므로 ${{ }} 로 스크립트에 직접 넣지 않고 env 로 전달
       - name: 카드뉴스 발송 결과 알림
         if: always() && steps.sns.outcome == 'failure'
         run: |
           python scripts/notify_pipeline.py \
             --type cardnews \
             --status failure \
-            --date $(TZ=Asia/Seoul date +'%Y-%m-%d')
+            --date $(TZ=Asia/Seoul date +'%Y-%m-%d') \
+            --detail "$SNS_FAIL_DETAIL"
         env:
+          SNS_FAIL_DETAIL:          ${{ steps.sns.outputs.detail }}
           TELEGRAM_BOT_TOKEN:       ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID_MONITOR: ${{ secrets.TELEGRAM_CHAT_ID_MONITOR }}
           TELEGRAM_CHAT_ID:         ${{ secrets.TELEGRAM_CHAT_ID }}

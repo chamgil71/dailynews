@@ -258,16 +258,23 @@ def _msg_cardnews_success(date_str: str) -> str:
     )
 
 
-def _msg_failure(channel: str, date_str: str) -> str:
+def _escape_md(text: str) -> str:
+    """Telegram 레거시 Markdown 특수문자(_ * ` [) 이스케이프 — API 오류문이 파싱을 깨지 않도록."""
+    return re.sub(r"([_*`\[])", r"\\\1", text)
+
+
+def _msg_failure(channel: str, date_str: str, detail: str = "") -> str:
     labels = {
         "news": "뉴스 브리핑", "ai-issue": "AI 주간이슈",
         "stock": "주식시황", "cardnews": "카드뉴스 SNS",
     }
     label = labels.get(channel, channel)
+    body = (f"{_escape_md(detail.strip())}\n\n" if detail.strip()
+            else "GitHub Actions 워크플로우에서 오류가 발생했습니다.\n\n")
     return (
         f"🔴 *{label} 파이프라인 실패*\n"
         f"📅 {date_str}  |  {_now_kst()}\n\n"
-        f"GitHub Actions 워크플로우에서 오류가 발생했습니다.\n\n"
+        f"{body}"
         f"🔗 {ACTIONS_URL}"
     )
 
@@ -282,6 +289,8 @@ def main() -> None:
     parser.add_argument("--date",
                         default=datetime.now(_KST).strftime("%Y-%m-%d"),
                         help="YYYY-MM-DD (기본: KST 오늘)")
+    parser.add_argument("--detail", default="",
+                        help="실패 상세 (예: 카드뉴스 플랫폼별 실패 사유, 다중 행 가능)")
     args = parser.parse_args()
 
     token   = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
@@ -305,7 +314,7 @@ def main() -> None:
         else:
             msg = _msg_stock_success(args.date)
     else:
-        msg = _msg_failure(args.channel, args.date)
+        msg = _msg_failure(args.channel, args.date, args.detail)
 
     ok = _send(token, chat_id, msg)
     sys.exit(0 if ok else 1)

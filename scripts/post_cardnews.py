@@ -5,6 +5,13 @@
   python scripts/post_cardnews.py --platform instagram,telegram,twitter
   python scripts/post_cardnews.py --type ai-issue --platform telegram --date 2026-06-04
   python scripts/post_cardnews.py --type stock --platform telegram
+  python scripts/post_cardnews.py --type news --mode text        # 카드 이미지 없이 텍스트만
+
+발송 모드 (--mode, 기본값: 환경변수 CARDNEWS_MODE → 없으면 image):
+  image  - 카드뉴스 PNG 포함 발송 (카드 빌드 선행 필요)
+  text   - 텍스트만 발송. 캡션은 원본 발행 데이터(core/shared/sns_source.py)에서 생성.
+           Instagram 은 텍스트 단독 게시 불가 → 건너뜀(실패 아님)
+  --platform 미지정 시 config/cardnews_themes.json sns.default_platforms[mode] 사용
 
 지원 플랫폼:
   instagram  - 카루셀 포스트 (Graph API v22.0 / graph.instagram.com)
@@ -39,6 +46,10 @@ _ROOT = str(Path(__file__).parent.parent)
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
+from core.shared import sns_source  # noqa: E402
+from core.shared.sns_report import PlatformSkipped, SnsReport  # noqa: E402
+
+MODES = ("image", "text")
 CARDNEWS_DIR = Path(_ROOT, "publish", "cardnews")
 GITHUB_RAW   = "https://raw.githubusercontent.com/chamgil71/dailynews/main"
 MAX_CAROUSEL = 5
@@ -54,17 +65,6 @@ def _env(key: str, required: bool = True) -> str:
 
 def _channel_dir(channel: str) -> Path:
     return CARDNEWS_DIR / channel
-
-
-def _load_index(channel: str, date_str: str) -> dict:
-    index_path = _channel_dir(channel) / "data.json"
-    if not index_path.exists():
-        raise FileNotFoundError(f"data.json 없음: {index_path}")
-    index = json.loads(index_path.read_text(encoding="utf-8"))
-    entry = next((e for e in index if e["date"] == date_str), None)
-    if not entry:
-        raise ValueError(f"{date_str} 카드뉴스 인덱스 없음 ({channel})")
-    return entry
 
 
 def _png_paths(channel: str, date_str: str) -> list[Path]:
@@ -121,17 +121,12 @@ def _channel_site_url(channel: str) -> str:
 
 
 def _build_caption(channel: str, date_str: str, include_link: bool = True) -> str:
-    try:
-        entry        = _load_index(channel, date_str)
-        issue_titles = entry.get("issue_titles", [])
-        summary      = entry.get("summary", "")     if channel == "stock" else ""
-        keywords     = entry.get("keywords", [])    if channel == "stock" else []
-        temperature  = entry.get("temperature", {}) if channel == "stock" else {}
-    except Exception:
-        issue_titles = []
-        summary = ""
-        keywords = []
-        temperature = {}
+    # 캡션 필드는 카드 빌드 산출물이 아닌 원본 발행 데이터에서 읽는다 (text/image 공통)
+    entry        = sns_source.caption_fields(channel, date_str)
+    issue_titles = entry.get("issue_titles", [])
+    summary      = entry.get("summary", "")     if channel == "stock" else ""
+    keywords     = entry.get("keywords", [])    if channel == "stock" else []
+    temperature  = entry.get("temperature", {}) if channel == "stock" else {}
 
     try:
         from datetime import datetime
@@ -207,7 +202,10 @@ def _ig_wait_container(container_id: str, token: str, max_wait: int = 60) -> Non
     raise TimeoutError(f"Instagram 컨테이너 {container_id} 처리 시간 초과")
 
 
-def post_instagram(channel: str, date_str: str) -> None:
+def post_instagram(channel: str, date_str: str, mode: str = "image") -> None:
+    if mode == "text":
+        # Instagram Content Publishing API 는 이미지/동영상 없는 게시물을 지원하지 않음
+        raise PlatformSkipped("텍스트 단독 게시 미지원 (이미지 필수)")
     token      = _env("INSTAGRAM_ACCESS_TOKEN")
     ig_user_id = _env("INSTAGRAM_BUSINESS_ACCOUNT_ID")
 
@@ -291,7 +289,14 @@ def _tg(token: str, method: str, **kwargs) -> dict:
     return data["result"]
 
 
-def post_telegram(channel: str, date_str: str) -> None:
+def _telegram_buttons(channel: str) -> dict:
+    return {"inline_keyboard": [[
+        {"text": "🌐 웹에서 보기", "url": _channel_site_url(channel)},
+        {"text": "📂 전체 아카이브", "url": f"{SITE_BASE}/archive.html"},
+    ]]}
+
+
+def post_telegram(channel: str, date_str: str, mode: str = "image") -> None:
     token = _env("TELEGRAM_BOT_TOKEN")
     # 채널별 분기: stock → TELEGRAM_CHAT_ID_STOCK, 그 외 → TELEGRAM_CHAT_ID
     if channel == "stock":
@@ -299,8 +304,18 @@ def post_telegram(channel: str, date_str: str) -> None:
     else:
         chat_id = _env("TELEGRAM_CHAT_ID")
 
+    caption = _build_caption(channel, date_str, include_link=True)
+    if mode == "text":
+        # 텍스트 모드: 캡션 + 버튼 1건 (기본 플랫폼 목록에서는 send_telegram.py 와 중복이라 제외됨)
+        _tg(token, "sendMessage", json={
+            "chat_id": chat_id, "text": caption,
+            "disable_web_page_preview": True,
+            "reply_markup": _telegram_buttons(channel),
+        })
+        print("  ✅ Telegram 텍스트 발송 완료")
+        return
+
     png_paths = _png_paths(channel, date_str)
-    caption   = _build_caption(channel, date_str, include_link=True)
 
     media = []
     files = {}
@@ -319,25 +334,19 @@ def post_telegram(channel: str, date_str: str) -> None:
                  data={"chat_id": chat_id, "media": json.dumps(media)},
                  files=files)
 
-    site_url = _channel_site_url(channel)
     _tg(token, "sendMessage",
         json={
-            "chat_id":    chat_id,
-            "text":       f"📖 {label} 브리핑 전체 보기",
-            "parse_mode": "HTML",
-            "reply_markup": {
-                "inline_keyboard": [[
-                    {"text": "🌐 웹에서 보기", "url": site_url},
-                    {"text": "📂 전체 아카이브", "url": f"{SITE_BASE}/archive.html"},
-                ]]
-            },
+            "chat_id":      chat_id,
+            "text":         f"📖 {label} 브리핑 전체 보기",
+            "parse_mode":   "HTML",
+            "reply_markup": _telegram_buttons(channel),
         })
 
     print(f"  ✅ Telegram 발송 완료")
 
 
 # ── Twitter/X ────────────────────────────────────────────────────────────────
-def post_twitter(channel: str, date_str: str) -> None:
+def post_twitter(channel: str, date_str: str, mode: str = "image") -> None:
     try:
         import tweepy
     except ImportError:
@@ -356,7 +365,7 @@ def post_twitter(channel: str, date_str: str) -> None:
         access_token=acc_token, access_token_secret=acc_secret,
     )
 
-    png_paths = _png_paths(channel, date_str)
+    png_paths = [] if mode == "text" else _png_paths(channel, date_str)
     caption   = _build_caption(channel, date_str, include_link=True)
 
     media_ids = []
@@ -483,16 +492,17 @@ def _truncate_caption(caption: str, limit: int) -> str:
     return caption[:limit - 1].rstrip() + "…"
 
 
-def post_threads(channel: str, date_str: str) -> None:
+def post_threads(channel: str, date_str: str, mode: str = "image") -> None:
     token   = _env("THREADS_ACCESS_TOKEN")
     user_id = _env("THREADS_USER_ID")
     caption = _build_caption(channel, date_str, include_link=True)
     caption = _truncate_caption(caption, THREADS_TEXT_LIMIT)
 
-    mode = _get_threads_mode(channel)
-    print(f"  [Threads] mode={mode}")
+    # 전체 발송 모드가 text 이면 채널 설정(threads_mode)과 무관하게 텍스트로 게시
+    threads_mode = "text" if mode == "text" else _get_threads_mode(channel)
+    print(f"  [Threads] mode={threads_mode}")
 
-    if mode == "carousel":
+    if threads_mode == "carousel":
         # 이미지 카루셀 모드 (config/cardnews_themes.json threads_mode: "carousel")
         png_paths  = _png_paths(channel, date_str)
         image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
@@ -509,12 +519,30 @@ def post_threads(channel: str, date_str: str) -> None:
 GRAPH_API = "https://graph.facebook.com/v21.0"
 
 
-def post_facebook(channel: str, date_str: str) -> None:
+def _post_facebook_text(page_id: str, token: str, caption: str, link: str) -> str:
+    """이미지 없이 텍스트 + 링크 미리보기로 페이지 게시. post id 반환."""
+    r = requests.post(f"{GRAPH_API}/{page_id}/feed", params={
+        "message":      caption,
+        "link":         link,
+        "access_token": token,
+    }, timeout=30)
+    data = r.json()
+    if "error" in data:
+        raise RuntimeError(f"Facebook 포스트 오류: {data['error']}")
+    return data.get("id", "")
+
+
+def post_facebook(channel: str, date_str: str, mode: str = "image") -> None:
     token   = _env("META_PAGE_ACCESS_TOKEN")
     page_id = _env("FACEBOOK_PAGE_ID")
 
+    caption = _build_caption(channel, date_str, include_link=True)
+    if mode == "text":
+        post_id = _post_facebook_text(page_id, token, caption, _channel_site_url(channel))
+        print(f"  ✅ Facebook 텍스트 발송 완료 — post_id: {post_id}")
+        return
+
     png_paths  = _png_paths(channel, date_str)
-    caption    = _build_caption(channel, date_str, include_link=True)
     image_urls = [f"{GITHUB_RAW}/publish/cardnews/{channel}/{p.name}" for p in png_paths]
 
     _assert_urls_accessible(image_urls, "Facebook")
@@ -557,34 +585,26 @@ PLATFORM_HANDLERS = {
 }
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="카드뉴스 SNS 발송")
-    parser.add_argument("--type", dest="channel",
-                        choices=["news", "ai-issue", "stock"],
-                        default="news", help="카드뉴스 채널")
-    parser.add_argument("--platform",
-                        default="instagram,telegram",
-                        help="발송 플랫폼 (쉼표 구분): instagram,telegram,twitter")
-    parser.add_argument("--date", help="YYYY-MM-DD (미입력 시 최신)")
-    args = parser.parse_args()
+def _default_platforms(mode: str) -> list[str]:
+    """config/cardnews_themes.json sns.default_platforms[mode]."""
+    cfg = json.loads(_THEMES_CONFIG_PATH.read_text(encoding="utf-8"))
+    return list(cfg["sns"]["default_platforms"][mode])
 
-    if args.date:
-        date_str = args.date
-    else:
-        data_path = _channel_dir(args.channel) / "data.json"
-        if not data_path.exists():
-            print(f"data.json 없음 ({args.channel}). build_cardnews.py 먼저 실행하세요.")
-            sys.exit(1)
-        index = json.loads(data_path.read_text(encoding="utf-8"))
-        if not index:
-            print("카드뉴스 인덱스가 비어 있습니다.")
-            sys.exit(1)
-        date_str = index[0]["date"]
 
-    platforms = [p.strip() for p in args.platform.split(",") if p.strip()]
-    print(f"[post-cardnews] {args.channel} / {date_str}  플랫폼: {', '.join(platforms)}")
+def _resolve_date(channel: str, mode: str) -> str:
+    """최신 날짜. text 모드는 원본 발행 데이터, image 모드는 카드 인덱스 기준."""
+    if mode == "text":
+        return sns_source.latest_date(channel)
+    data_path = _channel_dir(channel) / "data.json"
+    index = json.loads(data_path.read_text(encoding="utf-8")) if data_path.exists() else []
+    if not index:
+        raise FileNotFoundError(f"카드 인덱스 없음 ({data_path}) — build_cardnews.py 먼저 실행")
+    return index[0]["date"]
 
-    errors = []
+
+def run(channel: str, date_str: str, mode: str, platforms: list[str]) -> SnsReport:
+    """플랫폼별 발송 후 결과 리포트 반환 (한 플랫폼 실패가 다른 플랫폼을 막지 않음)."""
+    report = SnsReport(channel=channel, date_str=date_str, mode=mode)
     for platform in platforms:
         handler = PLATFORM_HANDLERS.get(platform)
         if not handler:
@@ -592,19 +612,46 @@ def main() -> None:
             continue
         print(f"\n── {platform.upper()} ──────────────────")
         try:
-            handler(args.channel, date_str)
-        except EnvironmentError as e:
-            print(f"  ⚠ 환경변수 누락 — {e}")
-            errors.append(platform)
+            handler(channel, date_str, mode)
+            report.record_success(platform)
+        except PlatformSkipped as e:
+            print(f"  ⏭ {platform} 건너뜀 — {e}")
+            report.record_skip(platform, str(e))
         except Exception as e:
             print(f"  ✗ {platform} 발송 실패: {e}")
-            errors.append(platform)
+            report.record_failure(platform, e)
+    return report
 
-    if errors:
-        print(f"\n실패 플랫폼: {errors}")
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="카드뉴스 SNS 발송")
+    parser.add_argument("--type", dest="channel",
+                        choices=["news", "ai-issue", "stock"],
+                        default="news", help="카드뉴스 채널")
+    parser.add_argument("--platform", default="",
+                        help="발송 플랫폼 (쉼표 구분). 미지정 시 모드별 기본값(config)")
+    parser.add_argument("--mode", choices=MODES,
+                        default=os.environ.get("CARDNEWS_MODE", "").strip() or "image",
+                        help="image(카드 PNG 포함) | text(텍스트만)")
+    parser.add_argument("--date", help="YYYY-MM-DD (미입력 시 최신)")
+    args = parser.parse_args()
+
+    try:
+        date_str = args.date or _resolve_date(args.channel, args.mode)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"발송 날짜 결정 실패: {e}")
         sys.exit(1)
-    else:
-        print(f"\n모든 플랫폼 발송 완료")
+
+    platforms = ([p.strip() for p in args.platform.split(",") if p.strip()]
+                 or _default_platforms(args.mode))
+    print(f"[post-cardnews] {args.channel} / {date_str}  mode={args.mode}  "
+          f"플랫폼: {', '.join(platforms)}")
+
+    report = run(args.channel, date_str, args.mode, platforms)
+    report.write_github_output()
+    print("\n" + report.detail_text())
+    if report.has_failure:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
