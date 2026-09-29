@@ -113,7 +113,10 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 ## 현재 상태 (2026-09-29)
 
 ### 진행 중
-- 없음
+- **AI이슈 주간 → 옵시디언(obsi) → mywiki 자동 등록** (2026-09-29 검토 완료, 사용자 결정 대기) — 상세는 아래 "주요 아키텍처 메모 > 옵시디언/mywiki 게시 파이프라인"
+  - 결정 대기 ①: 주간 자동 등록 + 누락 9주(08-02~09-27) 백필 진행 여부
+  - 결정 대기 ②: 월간 방식 — (a) 지금처럼 수동 Claude 작성 (b) 주간 4~5개를 Gemini로 자동 종합 (c) 자동 초안 `publish: false` 후 검토 게시
+  - 사용자 할 일: fine-grained PAT(obsi, Contents R/W) 발급 → dailynews Secret `OBSI_PUSH_TOKEN` 등록 (GITHUB_TOKEN은 타 저장소 push 불가, 또 GITHUB_TOKEN push는 obsi publish.yml을 트리거하지 않음)
 
 ### 완료된 작업 (main 반영 완료)
 - [x] **정적 페이지 "생성 시각"을 빌드 시각 → 리포트 실제 생성 시각으로 (결정적 빌드 출력)** (2026-09-29) — 세션 27차(3) — **main push 완료**
@@ -514,6 +517,10 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [ ] **오래된 세션 브랜치 정리** — `claude/cardnews-css-refactor`, `claude/optimistic-carson-*`, `claude/magical-cerf-2g7aos`/`f7v7s3`/`wnzard`, `claude/clever-meitner-*`, `fix/stock-send-fixes-0608`, `claude/stock-briefing-v6-weekly-idan6z` 등 다수 — 전부 06-05~06-24 사이 세션 잔여물로 작업 내용은 이미 다른 경로로 main에 반영됨(브랜치 삭제만 누락). GitHub UI(`/branches`)에서 일괄 삭제 권장
 
 ### 주요 아키텍처 메모
+- **옵시디언/mywiki 게시 파이프라인 (2026-09-29 확인)**: 로컬 볼트 `C:\obsidian\msshin` = 저장소 `chamgil71/obsi`(private, git 루트 `C:\obsidian`, 저장소 내 경로 `msshin/…`). obsi main push → obsi `.github/workflows/publish.yml`(`scripts/vault_publish_build.py`+`sync_to_mywiki.py`, `MY_GITHUB_TOKEN`)이 `publish: true` 노트를 `chamgil71/mywiki`(public, Quartz) `content/`에 동기화·push → mywiki `deploy.yaml`이 GitHub Pages 배포. **즉 obsi `msshin/10-Projects/AI이슈/`에 노트를 넣으면 위키(`report/AI이슈/`)까지 자동**. 선례: obsi `gmail-clip.yml`이 `msshin/30-Resources/gmail-clips/`에 자동 커밋 중. (mywiki 로컬 `deploy.ps1`/`export_publish_notes.py`는 구 방식)
+  - 주간 노트 형식: `ai_issue_주간_YYYY-MM-DD.md` = 프론트매터(`title`=파일명, `publish: true`, `type: [report]`, `tags: [AI이슈]`, `source:`, `created`/`modified`=리포트 날짜) + `reports/ai-issue/ai_issue_YYYY-MM-DD.md` 본문 그대로(07-26 본문 diff 0줄). 수동 등록은 07-26까지
+  - 월간 `ai_issue_월간_YYYYMM.md`(05·06·07)는 주간 합본이 아니라 Claude가 주제 재구성+추가 출처 조사한 보고서(`source: claude`, ~58KB)
+  - 자동화 설계안: `ai_issue.yml` 리포트 커밋 후 obsi 해당 폴더만 체크아웃 → 노트 생성 → **동일 파일 존재 시 덮어쓰지 않음(사용자 수기 편집 보호)** → PAT로 push, `continue-on-error` + 실패 시 모니터 알림
 - **카드뉴스 SNS 발송 모드**: `cardnews.yml` job env `CARDNEWS_MODE`(text|image)가 단일 스위치 — 워크플로우 스텝 skip 조건과 `post_cardnews.py --mode`가 모두 이 값을 따름. 모드별 기본 플랫폼은 `config/cardnews_themes.json` `sns.default_platforms`. 캡션 원본은 `core/shared/sns_source.py`(원본 발행 데이터), 발송 결과·알림 상세는 `core/shared/sns_report.py` → `$GITHUB_OUTPUT` `detail` → `notify_pipeline.py --detail`. 플랫폼은 서로 독립(한 곳 실패가 다른 곳을 막지 않음), `PlatformSkipped`는 실패 아님
 - **Actions 로그 조회**: 로컬에 `gh` CLI 설치됨 — `gh run list --workflow <file>` / `gh run view <id> --log | grep ...`로 직접 원인 확인 가능 (패턴 14의 "Claude는 로그 접근 불가" 전제는 이제 해당 없음). 단 `gh workflow disable` 등 CI 설정 변경 명령은 권한 정책상 차단됨 → 파일 수정·커밋으로 처리
 - **LLM mini→full 에스컬레이션**: `core/news/analyzer.py::BaseAnalyzer._pick_model(..., force_full=False)` — 전 provider(GPT/Claude/Gemini) `_call()`에 `force_full` 파라미터 존재. `ai_issue/analyzer.py`의 TOP10 재시도 루프처럼, mini 모델 실패가 반복되는 재시도 루프에서 2회차 이후 `force_full=True`로 승격 가능(패턴 14). `news_count ≤ threshold`로 mini가 선택되는 프롬프트가 항상 같은 건수(예: 상한 slice)로 호출되면 사실상 threshold 분기가 무의미해지므로, 새 LLM 호출부를 추가할 때 이 함정을 염두에 둘 것
