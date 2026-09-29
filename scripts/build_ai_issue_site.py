@@ -26,6 +26,7 @@ load_dotenv()
 from config.settings import SITE_BASE_URL
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL
 from core.shared.text_utils import unwrap_md_wrapper
+from core.shared.report_date import report_generated_at
 
 REPORTS_DIR = "reports/ai-issue"
 PUBLISH_DIR = "publish/ai-issue"
@@ -123,7 +124,7 @@ def build_weekly_report_ctx(md_path: Path, date_str: str, summary_data: dict) ->
         "md_html": md_html,
         "email_html": "",
         "site_title": SITE_TITLE,
-        "now": datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d %H:%M"),
+        "now": report_generated_at(raw_md, fallback=date_str),  # 리포트 생성 시각 (결정적 출력)
         "data": summary_data,
         "items": [],
         "site_url": SITE_BASE_URL or "https://chamgil71.github.io/dailynews/",
@@ -202,7 +203,8 @@ def main():
         
     # 3. 요약 인덱스 파일 publish/ai-issue/data.json 저장 (git 추적 대상)
     index_payload = {
-        "updated": datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d"),
+        # 빌드일이 아닌 최신 리포트 날짜 — 재빌드해도 내용이 같으면 파일이 바뀌지 않도록
+        "updated": max((i["date"] for i in weekly_indexes), default=""),
         "issues": weekly_indexes
     }
     
@@ -227,7 +229,7 @@ def main():
         "md_html": "",
         "email_html": "",
         "site_title": SITE_TITLE,
-        "now": datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d %H:%M"),
+        "now": max((i["date"] for i in archive_items), default=""),  # 최신 리포트 날짜
         "data": {"stats": {}},
         "items": archive_items,
         "site_url": SITE_BASE_URL or "",

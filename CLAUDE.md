@@ -116,6 +116,14 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 - 없음
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **정적 페이지 "생성 시각"을 빌드 시각 → 리포트 실제 생성 시각으로 (결정적 빌드 출력)** (2026-09-29) — 세션 27차(3) — **main push 완료**
+  - **문제**: 주식(`build_stock_site.py`)·AI이슈(`build_ai_issue_site.py`)는 빌드마다 과거 페이지까지 전체 재생성하는데, 하단 "생성 … KST"에 `datetime.now()`(빌드 시각)를 넣어 **내용이 같아도 매번 모든 파일이 바뀜** — 주식 빌드 커밋마다 약 100개 파일(각 1줄) 변경, AI이슈 매주 약 20개. 저장소 비대·커밋 이력 잡음 + 과거 페이지에 실제 생성 시각이 아닌 마지막 빌드 시각이 표시되는 오표기
+  - `core/shared/report_date.py::report_generated_at(md_text, fallback)` 신설 — MD 머리말(앞 15줄)의 `생성일시: …`(뉴스·AI이슈) / `생성: …`(주식 일일·주간) 추출, 없으면 리포트 날짜(초기 포맷 3개: news 05-23·05-24, stock 05-18)
+  - 적용: 주식·AI이슈·뉴스 페이지 ctx `now`, 아카이브 3종(`now` = 목록 중 최신 리포트 날짜), AI이슈 `data.json` `updated`(= 최신 리포트 날짜, 소비처 없음)
+  - 검증: 주식 99개·AI이슈 18개 페이지 2회 렌더 비결정 0건, 주식 커밋본 대비 차이는 생성줄(84개) + 기존 (주간) 표기 변경(15개)뿐. `pytest tests/` 40 passed(신규 `tests/test_report_date.py`)
+  - **다음 빌드 1회는** 생성줄이 새 값으로 바뀌며 전체 파일이 한 번 더 커밋됨(정상) → 그 이후부터 실제 바뀐 파일만 커밋
+  - **원칙(주식·AI이슈)**: `publish/stock|ai-issue/*.html`은 매 빌드 재생성되는 산출물 — **내용 수정은 `reports/**/*.md`(원본)에서**. HTML 직접 수정은 다음 빌드에 덮어써짐. (뉴스는 그날 것만 생성하므로 과거 HTML이 고정되는 반대 구조)
+  - 별건 발견: 로컬에서 AI이슈 페이지를 렌더하면 커밋본과 코드블록 내용 일부(144줄)가 다름 — 이번 변경 전 코드로도 동일하게 발생(무관). 로컬/CI 렌더 환경 차이로 추정, 미조사
 - [x] **주식 발송 중복 제거(주간 일요일 1회·일일 화~토) + 카드뉴스는 실제 발송한 날만 + 주간 "(주간)" 표기** (2026-09-29) — 세션 27차(2) — **main push 완료**
   - **증상(실행 로그로 확인)**: 주간 시황이 **일요일+월요일 두 번** 발송(9/13·14, 9/20·21, 9/27·28), 추석 연휴에 9/23 일일 리포트가 **9/24·25·26 세 번** 발송. AI이슈는 일요일 1회로 정상(중복으로 보인 건 주간 주식)
   - **원인**: `stock_send.yml` cron이 `0 23 * * 0-6`(매일, 주석은 "월~토"로 불일치) + "3일 이내 최신 리포트"를 **보냈는지 확인 없이** 매번 선택 → 새 리포트 없는 날(월·휴장) 직전 리포트 재발송. `cardnews.yml`은 `stock_send` **성공이면 무조건** 실행돼 SNS도 매일 중복, 주간 SNS는 토(주간 빌드)·일·월 3회
@@ -574,7 +582,7 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - **`cardnews.yml` SNS 실패 알림**: SNS발송 스텝에 `id: sns`, 후속 스텝 `if: always() && steps.sns.outcome == 'failure'`로 텔레그램 알림. `continue-on-error: true`와 `steps.*.outcome` vs `steps.*.conclusion` 차이 주의 — `outcome`이 실제 결과, `conclusion`은 continue-on-error 반영 후 값
 - **`notify_pipeline.py` cardnews 타입**: `--type cardnews` 지원. `_msg_failure()` 레이블 `"카드뉴스 SNS"`, `_msg_cardnews_success()` 추가
 - **`core/shared/alert.py`**: 3채널 공통 실패 알림 모듈. `send_pipeline_alert(channel, date_str, reason)` — 텔레그램+관리자 이메일(`mailer.send_admin_alert()` 재사용) best-effort 발송
-- **`core/shared/report_date.py`**: KST 날짜 계산 공통 모듈. `kst_today()`/`kst_now()` — 타임존을 코드에 명시. `weekly_label(date)` → `'YYYY-MM-DD (주간)'` 주간 주식 표기(사이트 목록·주간 페이지 제목·이메일 제목·SNS 캡션). SPA JS(`app.html`·`index.html`의 `weeklyLabel()`)는 같은 형식을 별도 구현 — 형식 변경 시 3곳(Python 1 + JS 2) 수정. `mailer.py`/`telegram.py`/`run_*.py`/`send_*.py` 전체 사용
+- **`core/shared/report_date.py`**: KST 날짜 계산 공통 모듈. `report_generated_at()` — 정적 페이지 '생성' 표기는 반드시 이것(리포트 생성 시각)을 쓰고 `datetime.now()` 금지(전체 재생성 페이지가 매 빌드 바뀜). `kst_today()`/`kst_now()` — 타임존을 코드에 명시. `weekly_label(date)` → `'YYYY-MM-DD (주간)'` 주간 주식 표기(사이트 목록·주간 페이지 제목·이메일 제목·SNS 캡션). SPA JS(`app.html`·`index.html`의 `weeklyLabel()`)는 같은 형식을 별도 구현 — 형식 변경 시 3곳(Python 1 + JS 2) 수정. `mailer.py`/`telegram.py`/`run_*.py`/`send_*.py` 전체 사용
 - **카드뉴스 `data.json` extra 필드**: `_update_index(extra_data=)` 파라미터로 채널별 추가 데이터 저장. news/ai-issue: `issue_titles`(top3), stock: `summary`/`keywords`/`temperature`. `post_cardnews.py::_build_caption()`에서 채널 분기로 활용
 - **카드뉴스 발송 순서 (stock)**: `stock_send.yml`이 **실제로 발송한 경우에만** 마지막 스텝에서 `gh workflow run cardnews.yml -f type=stock -f date=…`로 호출 (2026-09-29~). `cardnews.yml`의 workflow_run 트리거에서 `Stock Briefing Send`·`Weekly Stock Build`는 제거됨 — 발송 없는 날(월·휴장·중복) SNS 미발송, 주간 시황 SNS는 일요일 1회
 - **Instagram 카루셀 타이밍 에러(2207027)**: FINISHED 후에도 카루셀 생성 즉시 시도 시 "Media ID not available" 에러 발생. `_ig_wait_container()` 완료 후 5초 추가 대기 + 10초 간격 3회 재시도로 대응 (`post_cardnews.py`)

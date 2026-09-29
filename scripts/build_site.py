@@ -35,6 +35,7 @@ if _ROOT not in sys.path:
 load_dotenv()
 
 from config.settings import SITE_BASE_URL
+from core.shared.report_date import report_generated_at
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL
 
 REPORTS_DIR  = "reports"
@@ -146,7 +147,7 @@ def build_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
         "md_html":         md_html,
         "email_html":      email_html,
         "site_title":      SITE_TITLE,
-        "now":             datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "now":             report_generated_at(raw, fallback=date_str),  # 리포트 생성 시각
         "data":            data,
         "items":           [],
         "site_url":        SITE_BASE_URL or "https://chamgil71.github.io/dailynews/",
@@ -189,7 +190,8 @@ def build_archive_ctx(pages: list[tuple[str, str]] = None) -> dict:
         "md_html":      "",
         "email_html":   "",
         "site_title":   SITE_TITLE,
-        "now":          datetime.now().strftime("%Y-%m-%d %H:%M"),
+        # 목록 중 최신 리포트 날짜 (빌드 시각 대신 — 결정적 출력)
+        "now":          max((i["date"] for i in items + stock_items + ai_items), default=""),
         "data":         {"stats": {}},
         "items":        items,
         "stock_items":  stock_items,

@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from config.settings import SITE_BASE_URL
-from core.shared.report_date import weekly_label
+from core.shared.report_date import report_generated_at, weekly_label
 from config.theme_config import SECTION_THEMES, SITE_THEME, SITE_TITLE, SUBSCRIBE_URL
 from themes import load_theme
 
@@ -330,6 +330,7 @@ def _display_date(date_str: str) -> str:
 
 def build_stock_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
     raw      = Path(md_path).read_text(encoding="utf-8")
+    generated_at = report_generated_at(raw, fallback=date_str)
     raw      = _preprocess_raw_md(raw)
     raw      = _preprocess_display(raw)
     md_html  = markdown2.markdown(
@@ -352,7 +353,7 @@ def build_stock_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
         "md_html":          md_html,
         "email_html":       email_html,
         "site_title":       SITE_TITLE,
-        "now":              datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "now":              generated_at,   # 빌드 시각이 아닌 리포트 생성 시각 (결정적 출력)
         "data":             data,
         "items":            [],
         "site_url":         SITE_BASE_URL or "https://chamgil71.github.io/dailynews/",
@@ -372,7 +373,8 @@ def build_stock_archive_ctx(pages: list[tuple[str, str, str]]) -> dict:
         "md_html":          "",
         "email_html":       "",
         "site_title":       SITE_TITLE,
-        "now":              datetime.now().strftime("%Y-%m-%d %H:%M"),
+        # 목록의 최신 리포트 날짜 — 새 리포트가 없으면 아카이브도 바뀌지 않도록
+        "now":              max((d for d, _, _ in pages), default=""),
         "data":             {"temperature": {}, "market": {}, "keywords": []},
         "items":            items,
         "site_url":         SITE_BASE_URL or "",
