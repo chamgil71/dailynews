@@ -1399,7 +1399,7 @@ function renderAIIssue(data) {
 // ── 주식 렌더 ────────────────────────────────────────────────────────────────
 function renderStock(data) {
   if (!data) return `<div class="report-card"><div class="empty">📈 주식 데이터 없음</div></div>`;
-  const {date, temperature={}, market={}, summary="", keywords=[]} = data;
+  const {date, type, temperature={}, market={}, summary="", keywords=[]} = data;
   const [y,m,d] = date.split("-");
   const level = temperature.level || "neutral";
   const tempStyle = {
@@ -1436,7 +1436,7 @@ function renderStock(data) {
   return `
   <div class="report-card">
     <div class="report-header">
-      <div class="report-date">📊 ${y}년 ${m}월 ${d}일 주식 시황</div>
+      <div class="report-date">${type === "weekly" ? `📅 ${weeklyLabel(date)} 주식 시황` : `📊 ${y}년 ${m}월 ${d}일 주식 시황`}</div>
       <span class="badge-temp" style="${tempStyle}">${tempText}</span>
     </div>
     ${marketGrid ? `<div class="stock-market-grid">${marketGrid}</div>` : ""}
@@ -1449,6 +1449,8 @@ function renderStock(data) {
 }
 
 // ── 사이드바 ─────────────────────────────────────────────────────────────────
+function weeklyLabel(date) { return `${date} (주간)`; }
+
 function renderDateList() {
   const sec = state.activeSection;
   const isStock   = sec === "stock";
@@ -1457,13 +1459,15 @@ function renderDateList() {
   const activeDate = isStock ? state.activeStockDate : (isAIIssue ? state.activeAIIssueDate : state.activeDate);
   document.getElementById("sidebarListLabel").textContent =
     isStock ? "시황 목록" : (isAIIssue ? "AI이슈 목록" : "리포트 목록");
-  document.getElementById("dateList").innerHTML = list.map(({date}) => {
+  document.getElementById("dateList").innerHTML = list.map(({date, type}) => {
     const [y,m,d] = date.split("-");
     const active = date === activeDate;
     const handler = isStock ? `selectStock('${date}')` : isAIIssue ? `selectAIIssue('${date}')` : `selectDate('${date}')`;
+    // 주간 주식 리포트는 'YYYY-MM-DD (주간)' 표기 (core/shared/report_date.py::weekly_label 과 동일 형식)
+    const label = type === "weekly" ? weeklyLabel(date) : `${y}.${m}.${d}`;
     return `<li><a href="#" class="${active?"active":""}"
        onclick="${handler};return false;">
-       <span class="date-dot"></span>${y}.${m}.${d}</a></li>`;
+       <span class="date-dot"></span>${label}</a></li>`;
   }).join("");
 }
 
@@ -1543,11 +1547,12 @@ function renderArchive() {
       </li>`;
     });
   } else {
-    items = state.stockReports.map(({date, temperature={}}) => {
+    items = state.stockReports.map(({date, type, temperature={}}) => {
       const [y,m,d] = date.split("-");
       const temp = temperature?.display || "";
+      const title = type === "weekly" ? `📅 ${weeklyLabel(date)}` : `📈 ${y}년 ${m}월 ${d}일`;
       return `<li>
-        <a class="arc-link" onclick="navToReport('stock','${date}')" href="#">📈 ${y}년 ${m}월 ${d}일</a>
+        <a class="arc-link" onclick="navToReport('stock','${date}')" href="#">${title}</a>
         <span class="arc-sub">${temp || "시황 리포트"}</span>
       </li>`;
     });

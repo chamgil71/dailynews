@@ -28,6 +28,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from config.settings import SITE_BASE_URL
+from core.shared.report_date import weekly_label
 from config.theme_config import SECTION_THEMES, SITE_THEME, SITE_TITLE, SUBSCRIBE_URL
 from themes import load_theme
 
@@ -344,7 +345,9 @@ def build_stock_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
     email_html = markdown2.markdown(email_md, extras=["tables", "fenced-code-blocks"])
 
     return {
-        "display_date":     _display_date(date_str),
+        # 주간 리포트는 일일과 구분되도록 'YYYY-MM-DD (주간)' 표기
+        "display_date":     (weekly_label(date_str) if data.get("type") == "weekly"
+                             else _display_date(date_str)),
         "date_str":         date_str,
         "md_html":          md_html,
         "email_html":       email_html,
@@ -360,7 +363,9 @@ def build_stock_report_ctx(md_path: str, date_str: str, data: dict) -> dict:
 
 def build_stock_archive_ctx(pages: list[tuple[str, str, str]]) -> dict:
     """pages: [(date_str, html_path, "daily"|"weekly"), ...]"""
-    items = [{"date": d, "display": _display_date(d), "type": t} for d, _, t in pages]
+    items = [{"date": d, "type": t,
+              "display": weekly_label(d) if t == "weekly" else _display_date(d)}
+             for d, _, t in pages]
     return {
         "display_date":     "주식 시황 전체 목록",
         "date_str":         "",

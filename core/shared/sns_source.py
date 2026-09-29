@@ -41,14 +41,23 @@ def ai_issue_fields(data: dict) -> dict:
 
 
 def stock_fields(entry: dict) -> dict:
-    """주식 data.json 엔트리 → summary/keywords(최대 5)/temperature."""
-    kws = [{"title": k.get("title", ""), "body": k.get("body", "")}
-           for k in entry.get("keywords", []) if isinstance(k, dict)]
-    return {
+    """주식 data.json 엔트리 → summary/keywords(최대 5)/temperature.
+
+    주간 엔트리(type=weekly)는 키워드가 없으므로 핫 테마 제목을 keywords 로 대신 쓰고
+    is_weekly 플래그를 붙인다 (캡션을 '(주간)' 형식으로 분기하는 데 사용).
+    """
+    is_weekly = entry.get("type") == "weekly"
+    source = entry.get("hot_themes", []) if is_weekly else entry.get("keywords", [])
+    kws = [{"title": k.get("title", ""), "body": k.get("body", k.get("description", ""))}
+           for k in source if isinstance(k, dict)]
+    fields = {
         "summary":     entry.get("summary", ""),
         "keywords":    kws[:5],
         "temperature": entry.get("temperature", {}),
     }
+    if is_weekly:
+        fields["is_weekly"] = True
+    return fields
 
 
 # ── 채널 전체 로드 ({date: fields}) ─────────────────────────────────────────────

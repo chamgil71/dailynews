@@ -208,6 +208,18 @@ python scripts/send_telegram.py --type stock --date 2026-06-09
 ```bash
 python scripts/notify_pipeline.py --type news --status success --date 2026-06-13
 python scripts/notify_pipeline.py --type stock --status failure
+python scripts/notify_pipeline.py --type cardnews --status failure --detail "❌ threads: 토큰 만료"
+```
+
+### `select_stock_send_target.py`
+**역할**: `stock_send.yml`의 발송 대상 리포트 선택 + 중복 발송 방지.  
+**규칙 (KST)**: 일=주간(`weekly_*.md`) / 화~토=일일(`stock_*.md`) / 월=없음. 기준일 이전 날짜만, 3일 초과 제외. 리포트 최초 커밋 시각 < 직전 정기 실행 시작 시각이면 이미 발송된 것으로 보고 건너뜀 (보낸 기록 커밋 없이 git 이력 + Actions API). 직전 실행 정보가 없으면 어제 날짜 리포트만.  
+**출력**: `$GITHUB_OUTPUT` — `exists`, `report_date`, `report_type`(daily|weekly), `report_file`  
+**사용처**: `stock_send.yml` "발송 대상 리포트 확인" 스텝  
+```bash
+python scripts/select_stock_send_target.py --prev-run-at 2026-09-28T01:20:52Z   # 정기 실행
+python scripts/select_stock_send_target.py --today 2026-09-25 --prev-run-at 2026-09-24T01:00:00Z  # 재현
+python scripts/select_stock_send_target.py --date 2026-09-26                      # 수동 재발송
 ```
 
 ---

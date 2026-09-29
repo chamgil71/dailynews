@@ -47,6 +47,7 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from core.shared import sns_source  # noqa: E402
+from core.shared.report_date import weekly_label  # noqa: E402
 from core.shared.sns_report import PlatformSkipped, SnsReport  # noqa: E402
 
 MODES = ("image", "text")
@@ -139,10 +140,13 @@ def _build_caption(channel: str, date_str: str, include_link: bool = True) -> st
     label = _channel_label(channel)
 
     if channel == "stock":
-        lines = [f"📈 {display} {label} 브리핑\n"]
+        is_weekly = bool(entry.get("is_weekly"))
+        header = (f"📅 {weekly_label(date_str)} 주식 시황 종합" if is_weekly
+                  else f"📈 {display} {label} 브리핑")
+        lines = [f"{header}\n"]
         temp_disp = (temperature or {}).get("display", "")
         if temp_disp:
-            lines.append(f"🌡 시장온도: {temp_disp}")
+            lines.append(f"🌡 {'주간 온도계' if is_weekly else '시장온도'}: {temp_disp}")
             lines.append("")
         if summary:
             summary_lines = [l.strip().lstrip("- ").strip()
@@ -155,7 +159,7 @@ def _build_caption(channel: str, date_str: str, include_link: bool = True) -> st
                          for kw in keywords[:3]]
             kw_titles = [t for t in kw_titles if t]
             if kw_titles:
-                lines.append("🔑 " + " | ".join(kw_titles))
+                lines.append(("🔥 핫 테마: " if is_weekly else "🔑 ") + " | ".join(kw_titles))
     else:
         icons = ["🔥", "📢", "💡"]
         lines = [f"📰 {display} {label} 브리핑\n"]

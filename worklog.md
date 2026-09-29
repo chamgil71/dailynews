@@ -27,3 +27,14 @@
   - `config/cardnews_themes.json`: `sns.default_platforms` (text: threads,facebook / image: 기존 4개).
 - **테스트·검증**: `pytest tests/test_sns_text_mode.py` 15 passed, `tests/test_stock_v6.py` 83건 통과, py_compile·YAML 파싱 OK, 3채널 캡션 dry-run(실발송 없음), 카드 data.json extra 필드 동일성 112/16/81건 불일치 0.
 - **다음 계획**: Threads 토큰 재발급(전까지 매 실행 실패 알림), `post_cardnews.py` 658줄 → 플랫폼별 모듈 분리, 다음 자동 실행에서 Facebook 텍스트 게시·알림 형식 확인.
+
+## 2026-09-29 — 세션 27(2): 주식 발송 중복 제거 + 주간 일요일 1회 + 카드뉴스 발송일 한정 + "(주간)" 표기
+- **원인 확인(gh 로그)**: 주간 시황 일·월 2회 발송(9/13·14, 9/20·21, 9/27·28), 추석 연휴 9/23 리포트 3회 발송(9/24~26). `stock_send.yml` 매일 실행 + "3일 내 최신 리포트"를 보냈는지 확인 없이 선택. AI이슈는 일요일 1회로 정상.
+- **변경**:
+  - `scripts/select_stock_send_target.py`(신규): 일=주간/화~토=일일/월=없음, 기준일 이전만, 3일 초과 제외, 최초 커밋 시각 < 직전 정기 실행 시각이면 중복으로 건너뜀(기록 커밋 불필요). 직전 실행 미상 시 어제 날짜만.
+  - `stock_send.yml`: cron `0 23 * * 1-6`(KST 화~일), actions:write, fetch-depth 0(blob:none), 발송한 경우에만 `cardnews.yml` workflow_dispatch 호출.
+  - `cardnews.yml`: `Stock Briefing Send`·`Weekly Stock Build` workflow_run 트리거 제거.
+  - "YYYY-MM-DD (주간)" 표기: `report_date.weekly_label()` → 주식 아카이브·주간 페이지 제목·이메일 제목·SNS 캡션, SPA `weeklyLabel()`(app.html·index.html).
+  - 문서: `docs/weekly_routine_v1.md` 현행화, `docs/scripts_guide.md`, `CLAUDE.md`(흐름도·패턴 15).
+- **테스트·검증**: `pytest tests/` 33 passed. 실제 9/13~9/29 이력 재현 — 일요일 주간 1회·월 없음·9/25·9/26 중복 차단. 표기 렌더링·SPA 스크립트 파싱·YAML 파싱 OK.
+- **다음 계획**: 다음 stock_send 실행 로그로 직전 실행 조회·cardnews 호출 확인. 9/5 주간 리포트 누락 원인(루틴) 확인. 주간 루틴 실제 실행 시각(문서 09:00 vs 실제 15:20) 루틴 설정 확인.

@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from core.shared.mailer import send_email
+from core.shared.report_date import weekly_label
 from core.shared.report_date import kst_today
 
 logging.basicConfig(
@@ -94,7 +95,7 @@ def _send_weekly_stock(date_str: str) -> None:
         logger.error(f"[이메일/주간주식] MD 파일 없음: {md_path}")
         sys.exit(1)
 
-    subject = f"📅 [주간 시황] {date_str} 주간 주식 종합 브리핑"
+    subject = f"📅 [주간 시황] {weekly_label(date_str)} 주식 종합 브리핑"
     ok = send_email(
         md_path.read_text(encoding="utf-8"),
         template="weekly-stock",

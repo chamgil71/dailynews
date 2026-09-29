@@ -23,3 +23,14 @@ def kst_now() -> datetime:
 def kst_today() -> str:
     """현재 KST 기준 오늘 날짜 (YYYY-MM-DD)."""
     return kst_now().strftime("%Y-%m-%d")
+
+
+WEEKLY_SUFFIX = "(주간)"
+
+
+def weekly_label(date_str: str) -> str:
+    """주간 리포트 표시 라벨 — 'YYYY-MM-DD (주간)'. 사이트·이메일·SNS 공통.
+
+    SPA(publish/app.html·index.html)의 JS 는 Python 과 공유할 수 없어 같은 형식을 별도 구현한다.
+    """
+    return f"{date_str} {WEEKLY_SUFFIX}"

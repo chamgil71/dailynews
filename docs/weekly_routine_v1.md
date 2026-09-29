@@ -3,6 +3,9 @@
 ## 개요
 매주 토요일 오전 09:00 KST에 자동 실행 (평일 루틴과 독립). 역할: 주간 데이터 취합 → LLM 분석 → 주간 MD 저장 → Git push.
 
+> ⚠️ 실제 운영 기록(2026-08~09): `weekly_build.yml`이 매주 **토요일 15:20 KST 전후**에 실행됨 → 루틴 실제 실행 시각이 09:00이 아닐 수 있음. Claude Code 루틴 설정의 스케줄 확인 필요.
+> 이 문서는 루틴 프롬프트의 **사본**이다. 실제 실행되는 프롬프트는 Claude Code 루틴 설정에 있으므로 수정 시 양쪽을 함께 고칠 것.
+
 평일 일일 루틴은 별도 문서(`stock_routine_v6.md`) 참고.
 
 ---
@@ -208,7 +211,16 @@ MD 파일이 없는 날(공휴일·휴장)은 건너뛰고, 수집된 날짜만�
   - `message`: `"📅 주간 시황 종합 YYYY-MM-DD"`
   - `files`: `[{ path: "reports/stock/weekly_YYYY-MM-DD.md", content: <MD 전체 내용> }]`
 
-push 성공 후 루틴 종료. 주간 리포트의 이메일·HTML 빌드는 별도 GitHub Actions 구현 전까지 수동 처리.
+push 성공 후 루틴 종료. 이후는 GitHub Actions가 자동 처리한다:
+
+| 시점 | 워크플로우 | 동작 |
+|---|---|---|
+| push 직후 (토) | `weekly_build.yml` | 주간 HTML 빌드·배포 (사이트에 `YYYY-MM-DD (주간)`으로 표기) |
+| 일요일 08:00 KST | `stock_send.yml` | 주간 이메일·텔레그램 발송 (주간은 **일요일만**, 1회) |
+| 발송 직후 (일) | `cardnews.yml` (stock_send가 호출) | SNS 발송 (현재 텍스트 모드) |
+
+- 파일명 `weekly_YYYY-MM-DD.md`의 날짜는 **토요일**이어야 한다 (일요일 발송이 "어제 날짜" 기준으로 찾음).
+- 루틴이 늦어 일요일 발송을 놓치면 자동 재발송되지 않는다 → Actions에서 `Stock Briefing Send`를 `date=토요일날짜`로 수동 실행.
 
 ---
 
@@ -220,9 +232,9 @@ push 성공 후 루틴 종료. 주간 리포트의 이메일·HTML 빌드는 별
 
 ---
 
-## 클로드 코드 작업 시 체크리스트 (향후)
+## 클로드 코드 작업 시 체크리스트
 
-- [ ] `stock_build.yml`에 `weekly_*.md` 트리거 추가 — 주간 MD push 시 주간 HTML 빌드
-- [ ] `build_stock_site.py`에 weekly MD 파서 추가 (`reports/stock/weekly_*.md`)
-- [ ] 주간 카드뉴스 템플릿 신규 제작 (5섹션 구조, 평일 카드뉴스와 별도)
-- [ ] `stock_send.yml`에 주간 리포트 이메일 발송 추가 (토요일 09:00 이후 발송)
+- [x] 주간 MD push 시 주간 HTML 빌드 — 별도 워크플로우 `weekly_build.yml`로 구현
+- [x] `build_stock_site.py`에 weekly MD 파서 추가 (`parse_weekly_md`)
+- [x] 주간 카드뉴스 템플릿 (`build_cardnews.py::build_weekly_stock_html`) — 단, 2026-09-29부터 카드 이미지 생성 중단(텍스트 SNS)
+- [x] `stock_send.yml` 주간 이메일·텔레그램 발송 — 일요일 1회 (2026-09-29 중복 발송 수정)

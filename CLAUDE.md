@@ -18,7 +18,8 @@
 | 채널 | 수집 | 빌드/배포 | 발송 |
 |------|------|----------|---------|
 | 뉴스 | `news.yml` KST 03:15 | 동일 워크플로우 | 배포 완료 후 즉시 |
-| 주식 | Claude Code 루틴 21:25 | `stock_build.yml` 23:00 | `stock_send.yml` 익일 08:00 |
+| 주식 | Claude Code 루틴 21:25 | `stock_build.yml` 23:00 | `stock_send.yml` 익일 08:00 (일일 화~토) |
+| 주간 주식 | Claude Code 주간 루틴 (토) | `weekly_build.yml` push 트리거 | `stock_send.yml` 일요일 08:00 |
 | AI이슈 | `ai_issue.yml` 일 07:00 | 동일 워크플로우 | 배포 완료 후 즉시 |
 
 ### 핵심 파일 구조
@@ -115,6 +116,17 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 - 없음
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **주식 발송 중복 제거(주간 일요일 1회·일일 화~토) + 카드뉴스는 실제 발송한 날만 + 주간 "(주간)" 표기** (2026-09-29) — 세션 27차(2) — **main push 완료**
+  - **증상(실행 로그로 확인)**: 주간 시황이 **일요일+월요일 두 번** 발송(9/13·14, 9/20·21, 9/27·28), 추석 연휴에 9/23 일일 리포트가 **9/24·25·26 세 번** 발송. AI이슈는 일요일 1회로 정상(중복으로 보인 건 주간 주식)
+  - **원인**: `stock_send.yml` cron이 `0 23 * * 0-6`(매일, 주석은 "월~토"로 불일치) + "3일 이내 최신 리포트"를 **보냈는지 확인 없이** 매번 선택 → 새 리포트 없는 날(월·휴장) 직전 리포트 재발송. `cardnews.yml`은 `stock_send` **성공이면 무조건** 실행돼 SNS도 매일 중복, 주간 SNS는 토(주간 빌드)·일·월 3회
+  - `scripts/select_stock_send_target.py` 신설 (bash 인라인 → 테스트 가능한 Python): 일=주간 / 화~토=일일 / 월=없음, **기준일 이전 날짜만**, 3일 초과 제외, **중복 방지 = 리포트 최초 커밋 시각 < 직전 정기 실행 시작 시각이면 이미 발송된 것**(보낸 기록 커밋 불필요 — git 이력 + Actions API). 직전 실행 조회 실패 시 "어제 날짜 리포트만" 보수 규칙. `--date` 수동 재발송은 규칙 미적용
+  - `stock_send.yml`: cron `0 23 * * 1-6`(KST 화~일), `permissions: actions: write`, checkout `fetch-depth: 0` + `filter: blob:none`, 마지막 스텝에서 **발송한 경우에만** `gh workflow run cardnews.yml -f type=stock -f date=…`
+  - `cardnews.yml`: workflow_run 트리거에서 `Stock Briefing Send`·`Weekly Stock Build` 제거 (뉴스·AI이슈는 기존 유지)
+  - 주간 표기 `YYYY-MM-DD (주간)`: `core/shared/report_date.py::weekly_label()` — 주식 아카이브(`templates/web_stock_archive.html`)·주간 페이지 제목(`build_stock_site.py`)·이메일 제목(`send_email.py`)·SNS 캡션(`post_cardnews.py`, 주간 온도계·핫 테마 형식)·SPA 사이드바/아카이브/본문 제목(`app.html`+`index.html` `weeklyLabel()`). 파일명 `weekly_YYYY-MM-DD.md`·루틴은 변경 없음. 텔레그램은 기존대로 기간(`week_range`) 표기
+  - `docs/weekly_routine_v1.md`: "이메일·HTML 수동 처리"/미완 체크리스트 등 낡은 부분 현행화, 실제 실행 시각(토 15:20 KST 전후) 불일치 메모
+  - 검증: `pytest tests/` 33 passed(신규 `tests/test_stock_send_target.py` 17건), **실제 9/13~9/29 이력 재현** — 일요일 주간 1회, 월 없음, 9/25·9/26 중복 차단, 나머지 전날 리포트 정상 선택. 주간 표기 렌더링(아카이브·주간 페이지·이메일 제목·SNS 캡션) 확인, SPA 인라인 스크립트 node 파싱 OK, YAML 파싱 OK
+  - **이미 생성된 과거 정적 페이지**: 주식 페이지·아카이브는 `build_stock_site.py`가 매 빌드마다 전체 재생성하므로 다음 주식 빌드 때 자동 반영. `index.html`은 직접 패치함
+  - **9/5 주간 리포트 누락 발견**: `reports/stock/weekly_2026-09-05.md` 없음 — 그 주 주간 루틴이 실행/push되지 않음 (원인 미확인)
 - [x] **카드뉴스 이미지 생성 중단 + SNS 텍스트 전용 발송 전환 + 플랫폼별 실패 알림** (2026-09-29) — 세션 27차 — **main push 완료**
   - **배경(로그로 확인)**: 9/26~9/28 `cardnews.yml` 4회 실행 모두 Instagram·Facebook·Telegram은 ✅ 성공, **Threads만 ❌ 토큰 만료**(`OAuthException code 190`, 2026-08-10 만료). 플랫폼은 원래 서로 독립 실행이라 전체가 막힌 게 아니었는데, 한 곳 실패로 스텝 전체가 failure → 알림 내용이 "카드뉴스 SNS 파이프라인 실패"뿐이라 원인을 알 수 없었음. 이번 세션부터 로컬에 `gh` CLI가 있어 Actions 로그 직접 조회 가능(`gh run view <id> --log`)
   - **발송 모드 스위치**: `.github/workflows/cardnews.yml` job env `CARDNEWS_MODE: text` 한 줄. `text`면 폰트/Playwright 설치·카드 HTML 빌드·PNG 생성·카드 커밋·CDN 대기 스텝 전부 skip. **이미지 카드 재개 = 이 값을 `image`로 변경하는 것만으로 끝** (이미지 코드 경로는 삭제하지 않고 보존)
@@ -416,9 +428,15 @@ stock_build.yml 23:00 스케줄 (백업, 월~금):
   TODAY MD 있는데 핵심 요약 비어있음? → stock_main.py 실행 + 텔레그램/이메일 알림
   TODAY MD 있고 내용 정상?       → 건너뜀
 
-stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
-  이메일 + Notion + 텔레그램(@msstockbrief) 발송
-  (최근 MD ≤3일 이내만 발송)
+주간 루틴 (토, Claude Code 루틴) → weekly_YYYY-MM-DD.md(토요일 날짜) push
+  → weekly_build.yml push 트리거 → 주간 HTML 빌드·배포
+
+stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도착 09~10시):
+  대상 선택: scripts/select_stock_send_target.py
+    화~토 → 전날 이전 최신 일일 리포트 / 일 → 주간 리포트 / 월 → 실행 안 함
+    3일 초과 리포트 제외, 직전 정기 실행 전에 이미 있던 리포트는 제외(중복 방지)
+  이메일 + Notion(일일만) + 텔레그램(@msstockbrief) 발송
+  → 실제 발송한 경우에만 cardnews.yml 을 workflow_dispatch(type=stock,date=…)로 호출
 ```
 
 ### 검증 필요 (다음 실행 시 확인)
@@ -471,6 +489,8 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - [ ] Threads stock 캡션이 500자를 넘는 날 자동 축약되어 정상 발송되는지 확인 (PR #46)
 - [ ] `cardnews.yml` 다음 자동 실행(text 모드) — 이미지 스텝 5개 skip, Facebook 텍스트 게시 성공, 텔레그램 실패 알림에 "❌ threads: 토큰 만료 … / ✅ 성공: facebook" 형태로 표시되는지 확인 (세션 27차)
 - [ ] Facebook text 모드 게시물에 링크 미리보기 카드가 붙는지 페이지에서 육안 확인 (세션 27차)
+- [ ] `stock_send.yml` 다음 실행들 — 로그 "직전 정기 실행: …" 값이 채워지는지(Actions API 권한), 화~토 전날 리포트 1회·일요일 주간 1회·월요일 미실행인지, 발송한 날만 `cardnews.yml`이 `workflow_dispatch`로 뜨는지 확인 (세션 27차(2))
+- [ ] 다음 주식 빌드 후 사이트 주식 목록/아카이브에 `2026-09-26 (주간)` 표기 반영 확인, 다음 일요일 주간 이메일 제목 `📅 [주간 시황] YYYY-MM-DD (주간) 주식 종합 브리핑` 확인
 
 ### 다음 개발 (우선순위 순)
 - [ ] **Threads 토큰 재발급** — `THREADS_ACCESS_TOKEN` 2026-08-10 만료(code 190). 재발급 전까지 cardnews 실행마다 실패 알림 발생
@@ -554,9 +574,9 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - **`cardnews.yml` SNS 실패 알림**: SNS발송 스텝에 `id: sns`, 후속 스텝 `if: always() && steps.sns.outcome == 'failure'`로 텔레그램 알림. `continue-on-error: true`와 `steps.*.outcome` vs `steps.*.conclusion` 차이 주의 — `outcome`이 실제 결과, `conclusion`은 continue-on-error 반영 후 값
 - **`notify_pipeline.py` cardnews 타입**: `--type cardnews` 지원. `_msg_failure()` 레이블 `"카드뉴스 SNS"`, `_msg_cardnews_success()` 추가
 - **`core/shared/alert.py`**: 3채널 공통 실패 알림 모듈. `send_pipeline_alert(channel, date_str, reason)` — 텔레그램+관리자 이메일(`mailer.send_admin_alert()` 재사용) best-effort 발송
-- **`core/shared/report_date.py`**: KST 날짜 계산 공통 모듈. `kst_today()`/`kst_now()` — 타임존을 코드에 명시. `mailer.py`/`telegram.py`/`run_*.py`/`send_*.py` 전체 사용
+- **`core/shared/report_date.py`**: KST 날짜 계산 공통 모듈. `kst_today()`/`kst_now()` — 타임존을 코드에 명시. `weekly_label(date)` → `'YYYY-MM-DD (주간)'` 주간 주식 표기(사이트 목록·주간 페이지 제목·이메일 제목·SNS 캡션). SPA JS(`app.html`·`index.html`의 `weeklyLabel()`)는 같은 형식을 별도 구현 — 형식 변경 시 3곳(Python 1 + JS 2) 수정. `mailer.py`/`telegram.py`/`run_*.py`/`send_*.py` 전체 사용
 - **카드뉴스 `data.json` extra 필드**: `_update_index(extra_data=)` 파라미터로 채널별 추가 데이터 저장. news/ai-issue: `issue_titles`(top3), stock: `summary`/`keywords`/`temperature`. `post_cardnews.py::_build_caption()`에서 채널 분기로 활용
-- **카드뉴스 발송 순서 (stock)**: `stock_build.yml`(밤 빌드) → `stock_send.yml`(08:00 텍스트) → `cardnews.yml` 트리거(카드뉴스 이미지). `cardnews.yml` 트리거가 `"Stock Briefing Send"`임에 주의 — `"Stock Briefing Build"`가 아님
+- **카드뉴스 발송 순서 (stock)**: `stock_send.yml`이 **실제로 발송한 경우에만** 마지막 스텝에서 `gh workflow run cardnews.yml -f type=stock -f date=…`로 호출 (2026-09-29~). `cardnews.yml`의 workflow_run 트리거에서 `Stock Briefing Send`·`Weekly Stock Build`는 제거됨 — 발송 없는 날(월·휴장·중복) SNS 미발송, 주간 시황 SNS는 일요일 1회
 - **Instagram 카루셀 타이밍 에러(2207027)**: FINISHED 후에도 카루셀 생성 즉시 시도 시 "Media ID not available" 에러 발생. `_ig_wait_container()` 완료 후 5초 추가 대기 + 10초 간격 3회 재시도로 대응 (`post_cardnews.py`)
 - **`core/shared/text_utils.py`**: Gemini가 마크다운 대신 JSON 래퍼로 반환하는 응답(`next_week_outlook`/`company_trends` 등)을 텍스트로 환원하는 공통 모듈. `unwrap_md_wrapper(parsed)`(전체 마크다운 변환)/`extract_wrapped_points(parsed, limit)`(포인트 라벨만 추출, 텔레그램 요약용) — 리스트 키 이름(`points`/`monitoring_points` 등)을 하드코딩하지 않고 구조(리스트-오브-딕셔너리)로 감지. `core/ai_issue/analyzer.py`/`core/shared/telegram.py`/`scripts/build_ai_issue_site.py`가 사용. SPA JS(`app.html`·`index.html`의 `extractMdField()`)는 Python과 공유 불가하므로 동일 로직을 별도 구현 — **새 JSON 키 변형이 또 발견되면 이 Python 모듈 하나 + JS 2파일(app.html/index.html) 총 2곳만 수정하면 됨**
 - **GitHub Pages 배포 스텝 `continue-on-error`**: `news.yml`/`ai_issue.yml`의 "Deploy to GitHub Pages" 스텝에 `continue-on-error: true` 적용됨(세션 24차). GitHub Pages는 백업 미러일 뿐이므로 이 스텝이 실패해도 job 전체는 success 처리되고 이메일/텔레그램은 정상 발송됨 — Pages 배포 자체의 성공 여부를 확인하려면 Actions 로그를 직접 봐야 함
@@ -663,6 +683,13 @@ stock_send.yml 익일 KST 08:00 (UTC 23:00, 월~토):
 - **세션 26차 사례**: `core/ai_issue/analyzer.py`가 기사를 `articles[:40]`로 상한 처리 + `GEMINI_MINI_THRESHOLD=40` 조합 때문에, 이 핵심 분석 프롬프트가 **매주 예외 없이 mini(`gemini-3.1-flash-lite`) 모델로만** 실행되고 있었음(제한 개수와 임계값이 우연히 같은 게 함정). 게다가 기존 모델 폴백 로직(`core/news/analyzer.py`)은 `model_name == "gemini-3.5-flash"`(=full)일 때만 동작해 mini 모델 실패 시엔 폴백 없이 동일 모델로 3회 재시도만 반복 — 하나가 실패하면 셋 다 같은 이유로 실패할 확률이 높은 구조였음
 - **수정**: `BaseAnalyzer._pick_model()`/각 `*Analyzer._call()`에 `force_full: bool = False` 추가, `ai_issue/analyzer.py`의 재시도 루프에서 2회차부터 `force_full=True`로 승격. 정상 시(1회차 성공) 비용 변화 없음
 - **백필 시 주의**: 로컬에서 `python scripts/run_ai_issue.py --date YYYY-MM-DD`로 재생성 가능하나, (1) `build_site.py --from`은 실제 대상 날짜로 좁게 지정할 것 — 과거로 넓게 잡으면 무관한 `publish/news/*.html`까지 재빌드됨, (2) 로컬 `.env`의 `SITE_BASE_URL`이 프로덕션과 다르면 구독 링크가 절대/상대경로로 어긋날 수 있으니 커밋 전 `git diff`로 의도치 않은 파일 확인, (3) `reports.json`은 죽은 코드(패턴 9 관련 세션 19차 기록)이므로 재빌드돼도 커밋 대상에서 제외
+
+### 패턴 15: "같은 주식 리포트(주간/일일)가 이틀 이상 연속으로 온다"
+- **원인(세션 27차 이전)**: `stock_send.yml`이 매일 실행되며 "최근 N일 내 최신 리포트"를 보냈는지 확인 없이 선택 → 새 리포트가 없는 날(월요일·휴장일) 직전 리포트 재발송
+- **현재 구조**: `scripts/select_stock_send_target.py`가 요일 규칙(일=주간, 화~토=일일) + "리포트 최초 커밋 시각 < 직전 정기 실행 시작 시각이면 이미 발송" 규칙으로 판단
+- **진단**: `stock_send` 실행 로그의 `직전 정기 실행: …`과 `✅ 발송 대상` / `⏭ 발송 안 함: …` 줄 확인 (`gh run view <id> --log | grep -v echo | grep "발송"`). `직전 정기 실행: (알 수 없음)`이면 Actions API 조회 실패 → 보수 규칙(어제 날짜만)으로 동작 중 — `permissions: actions` 확인
+- **주의**: 로그 grep 시 스크립트 원문(`echo "..."`)도 로그에 찍히므로 `grep -v echo`로 걸러야 실제 출력만 보임 (세션 27차에서 오판했던 함정)
+- **재발송이 필요할 때**: Actions → Stock Briefing Send → Run workflow → `date` 입력 (수동 지정은 요일·중복 규칙 미적용)
 
 ---
 
