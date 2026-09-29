@@ -501,6 +501,7 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [ ] 다음 주식 빌드 후 사이트 주식 목록/아카이브에 `2026-09-26 (주간)` 표기 반영 확인, 다음 일요일 주간 이메일 제목 `📅 [주간 시황] YYYY-MM-DD (주간) 주식 종합 브리핑` 확인
 
 ### 다음 개발 (우선순위 순)
+- [ ] **리포트 MD 머리말(프론트매터) 형식 통일** — 뉴스(`생성일시:`+`수집:`)·AI이슈(`생성일시: | 기준:`)·주식 일일(`데이터 기준: | 생성:`)·주간(`기간: | 생성:`)이 제각각이라 정규식 파싱에 의존. 단계안: ① 소비측(`build_stock_site.py`·`mailer.py`·`notify_pipeline.py`·`report_date.report_generated_at` 등)이 YAML 프론트매터+구형식 둘 다 읽고 렌더 전 프론트매터 제거 → ② Python 생산측(뉴스·AI이슈·주식 백업) 전환 → ③ Claude 일일/주간 루틴 프롬프트 수정(사용자가 루틴 설정에 반영). 과거 ~300개 파일은 변환하지 않음 (2026-09-29 보류 결정)
 - [ ] **Threads 토큰 재발급** — `THREADS_ACCESS_TOKEN` 2026-08-10 만료(code 190). 재발급 전까지 cardnews 실행마다 실패 알림 발생
 - [ ] **`post_cardnews.py` 플랫폼별 모듈 분리** — 658줄(200라인 규칙 초과). 핸들러 5개를 `scripts/sns/` 하위로 분리, `run()`/`main()`만 남기기
 - [ ] **카드뉴스 이미지 재개 시** — `cardnews.yml` `CARDNEWS_MODE: image`로 변경. Instagram·Facebook Meta 토큰 유효기간(60일) 먼저 확인
