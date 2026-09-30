@@ -1903,9 +1903,15 @@ function copyCmdStock() {
   // ── hash routing ─────────────────────────────────────────────────────────────
   // archive.html 등 외부 페이지에서 index.html#ai-issue, index.html#stock 으로 진입 시
   // 해당 탭을 자동 활성화. 해시는 URL에서 제거해 브라우저 히스토리를 깔끔하게 유지.
+  // 서브페이지 테마 버튼: index.html#theme-{news|ai-issue|stock|archive} → 해당 탭 + 테마 패널 열기
   const _initHash = location.hash.slice(1);
-  if (_initHash === 'ai-issue' || _initHash === 'stock') {
-    switchSection(_initHash);
+  const _hashSection = _initHash.replace(/^theme-?/, '');
+  if (_hashSection === 'ai-issue' || _hashSection === 'stock') {
+    switchSection(_hashSection);
+  }
+  const _isTheme = _initHash.startsWith('theme');
+  if (_isTheme) openThemePanel();
+  if (_isTheme || _hashSection === 'ai-issue' || _hashSection === 'stock') {
     history.replaceState(null, '', location.pathname);
   }
 })();

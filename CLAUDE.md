@@ -118,6 +118,10 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **서브페이지 테마 버튼 → SPA 테마 패널 연결** (2026-09-30) — 세션 28차(3)
+  - 확인: "테마 chip 그룹 분리" TODO는 이미 `4708f579`에서 구현·반영돼 있었음(문서만 미갱신 — 패턴 9). 주식 페이지(`templates/header.html`)의 테마 버튼은 `window.openThemePanel`이 서브페이지에 없어 **눌러도 아무 동작 없던 죽은 버튼**이었고, editorial(뉴스·AI이슈·아카이브)에는 버튼 자체가 없었음
+  - 서브페이지는 독립 레이아웃이라 제자리 테마 전환이 구조상 불가 → 테마 버튼을 `index.html#theme-{탭}` 링크로: `templates/header.html`(주식, `active_tab`) + `editorial.py::_layout()`(`_SVG_THEME`, `active`). SPA(`app.html`+`index.html`) hash 라우팅이 `#theme-*`면 해당 탭 전환 + `openThemePanel()` 후 hash 제거 (기존 `#ai-issue`/`#stock` 동작 유지)
+  - 반영 범위: 주식·AI이슈 페이지는 다음 빌드 때 전체 재생성으로 자동 반영, 뉴스는 이후 생성분부터(과거 뉴스 HTML은 소급 패치 안 함), `index.html`은 직접 패치
 - [x] **`post_cardnews.py` 플랫폼별 모듈 분리 + GitHub Actions Node 24 전환** (2026-09-30) — 세션 28차(2)
   - `post_cardnews.py` 662→130줄(진입점: `run()`/`main()`/`PLATFORM_HANDLERS`/기본 플랫폼·날짜 결정만). 핸들러는 `scripts/sns/{instagram,threads,facebook,telegram,twitter}.py`, 공통 유틸 `scripts/sns/common.py`(env·PNG 경로·이미지 URL·사이트 URL·CDN 확인·config 로드), 캡션 `scripts/sns/caption.py` — 전 파일 200줄 이하
   - 동작 변경 없음: 실데이터 31개 날짜×링크 유무 62건 캡션 기존과 불일치 0건. Instagram 재시도 2곳은 `_post_with_retry()`로 공통화(2207027만 재시도, 횟수·간격 동일). 테스트 `tests/test_sns_modules.py` 4건 추가, 전체 48 passed
@@ -520,8 +524,6 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [ ] **리포트 MD 머리말(프론트매터) 형식 통일** — 뉴스(`생성일시:`+`수집:`)·AI이슈(`생성일시: | 기준:`)·주식 일일(`데이터 기준: | 생성:`)·주간(`기간: | 생성:`)이 제각각이라 정규식 파싱에 의존. 단계안: ① 소비측(`build_stock_site.py`·`mailer.py`·`notify_pipeline.py`·`report_date.report_generated_at` 등)이 YAML 프론트매터+구형식 둘 다 읽고 렌더 전 프론트매터 제거 → ② Python 생산측(뉴스·AI이슈·주식 백업) 전환 → ③ Claude 일일/주간 루틴 프롬프트 수정(사용자가 루틴 설정에 반영). 과거 ~300개 파일은 변환하지 않음 (2026-09-29 보류 결정)
 - [ ] **Threads 토큰 재발급** — `THREADS_ACCESS_TOKEN` 2026-08-10 만료(code 190). 재발급 전까지 cardnews 실행마다 실패 알림 발생
 - [ ] **카드뉴스 이미지 재개 시** — `cardnews.yml` `CARDNEWS_MODE: image`로 변경. Instagram·Facebook Meta 토큰 유효기간(60일) 먼저 확인
-- [ ] **테마 chip 그룹 분리** — `build_site.py` 테마 패널에서 `skins/` (색상 변형: classic/ink/forest)와 `layouts/` (레이아웃 변형: editorial/minimal/terminal)를 헤더로 구분
-- [ ] **editorial 페이지 테마 버튼 추가** — `editorial.py::_layout()`에 `id="themeBtn"` 추가 (현재 editorial 서브페이지에서 테마 버튼이 사라짐)
 - [ ] **구독 알림 이메일 템플릿 개선** — 인라인 HTML → `templates/email_confirm.html` 분리
 - [ ] **SNS 카드뉴스 실제 테스트** — Instagram/Threads/Facebook/Telegram 채널별 발송 검증
 - [ ] **Twitter/X 카드뉴스** — Basic 티어 결제 후 활성화
@@ -741,7 +743,7 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 | `NOTION_DATABASE_ID_AI_ISSUE` | Notion AI이슈 DB | ✅ |
 | `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | 주식 국내뉴스 수집 | ✅ |
 | `GH_CONTENTS_TOKEN` | GitHub Contents API (레거시, obsi 접근 불가) | ✅ |
-| `OBSI_PUSH_TOKEN` | obsi 노트 push (fine-grained, obsi Contents R/W) — `ai_issue_obsi.yml` | ✅ (2026-09-30) |
+| `OBSI_PUSH_TOKEN` | obsi 노트 push (fine-grained, obsi Contents R/W) — `ai_issue_obsi.yml` | ✅ 만료 2026-12-29 — GitHub 토큰 페이지 Regenerate → Secret 덮어쓰기 |
 | `INSTAGRAM_ACCESS_TOKEN` | Meta Graph API (60일 만료 주의) | ✅ |
 | `INSTAGRAM_BUSINESS_ACCOUNT_ID` | Instagram Business ID | ✅ |
 | `FACEBOOK_PAGE_ID` | Facebook Page ID (Ainews) | ✅ |

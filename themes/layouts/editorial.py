@@ -239,6 +239,7 @@ _SVG_ARCHIVE = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentCol
 _SVG_MAIL    = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg>'
 _SVG_GITHUB  = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>'
 _SVG_INFO    = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>'
+_SVG_THEME   = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM8 4a4 4 0 1 0 0 8A4 4 0 0 0 8 4zm0 1.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>'
 
 _NAV_TABS = [
     ("news",     "index.html",   "뉴스 브리핑", _SVG_NEWS),
@@ -262,6 +263,9 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
         f'<a href="{SUBSCRIBE_URL}" class="btn-hdr" title="뉴스레터 구독">{_SVG_MAIL}</a>'
     ) if SUBSCRIBE_URL else ""
     about_btn = f'<a href="{nav_prefix}about.html" class="btn-hdr" title="사이트 소개">{_SVG_INFO}</a>'
+    # 서브페이지는 독립 레이아웃이라 제자리 테마 전환 불가 → SPA로 이동해 해당 탭의 테마 패널을 연다
+    theme_btn = (f'<a href="{nav_prefix}index.html#theme-{active}" class="btn-hdr"'
+                 f' title="테마 설정">{_SVG_THEME}</a>')
 
     # 탭별 메인색 반영 (뉴스=파랑, AI이슈=보라, 주식=초록)
     accent_override = ""
@@ -290,6 +294,7 @@ def _layout(title: str, body: str, active: str, site_title: str, now: str, site_
       {about_btn}
       {subscribe_btn}
       <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-hdr" title="GitHub">{_SVG_GITHUB}</a>
+      {theme_btn}
     </div>
   </header>
   <div class="wrap">
