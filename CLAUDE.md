@@ -122,6 +122,7 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
   - 증상: `/api/subscribe|confirm|unsubscribe|manage` 전부 `FUNCTION_INVOCATION_FAILED`. Vercel 런타임 로그 `ModuleNotFoundError: No module named 'requests'` (`api/_supabase.py`)
   - 원인: 2026-07-25 `c91e212c`(번들 225MB 대응)에서 추가한 `.vercelignore`의 `requirements.txt`가 슬래시 없이 적혀 gitignore 규칙상 모든 깊이에 매칭 → `api/requirements.txt`까지 번들 제외 → 의존성 미설치. 7/25 이후 구독 API 전부 장애였을 것(구독 기능은 현재 미사용)
   - 수정: 루트 전용 항목 전부 `/` 앵커(`/requirements.txt`·`/main.py`·`/worklog.md`·`/scripts/` 등). `git -c core.excludesFile=.vercelignore check-ignore -v`로 `api/*`는 포함, 나머지는 기존대로 제외 확인
+  - 배포 후 확인: `unsubscribe`·`manage`·`confirm` 파라미터 없이 400(정상 오류 페이지), `subscribe` GET 302 — 함수 정상 기동. (로컬 PC는 SSL 해지 확인 문제로 `curl --ssl-no-revoke` 필요)
   - **주의(재발 방지)**: `.vercelignore`에 항목을 추가할 때 루트 파일·폴더는 반드시 `/`로 시작할 것
 - [x] **세션 브랜치 정리 + 누락된 8/26 주식 리포트 복구 + 검증 목록 정리** (2026-09-30) — 세션 28차(4)
   - 원격 브랜치 29개 전수 조사(병합 여부 + `git cherry`로 main에 없는 커밋 확인) → 28개 삭제(병합됐거나, 닫힌 PR·이후 재작업으로 대체된 것). 로컬 옛 브랜치 2개도 삭제(5월, main 포함)

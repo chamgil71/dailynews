@@ -67,3 +67,7 @@
 - **브랜치 정리**: 원격 28개·로컬 2개 삭제. 8/26 주식 리포트가 세션 브랜치에만 있던 것 발견 → main 병합, 페이지 생성.
 - **검증 목록 정리**: 21건 근거 확인 체크. 신규 발견 — `/api/unsubscribe`·`/api/manage` 500(FUNCTION_INVOCATION_FAILED).
 - **다음 계획**: 구독취소 API 500 원인 조사(Vercel 런타임 로그), 10/4 주간·옵시디언 자동 연동 확인.
+
+## 2026-09-30 — 세션 28(5): Vercel 구독 API 500 수정
+- 원인: `.vercelignore`의 `requirements.txt`(슬래시 없음)가 `api/requirements.txt`까지 제외 → requests 미설치 → /api/* 전부 FUNCTION_INVOCATION_FAILED(7/25~).
+- 수정: 루트 전용 항목 `/` 앵커(`218b9396`). 배포 후 unsubscribe·manage·confirm 400, subscribe 302 확인.
