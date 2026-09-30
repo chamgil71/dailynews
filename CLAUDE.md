@@ -110,10 +110,13 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 
 ---
 
-## 현재 상태 (2026-09-30)
+## 현재 상태 (2026-09-30, 세션 28 마감)
+
+> **다음 세션 시작 시**: 10/4(일)·10/5(월) 확인 항목(검증 필요 목록 하단) 먼저 점검. 로컬 테스트는 `PYTHONUTF8=1 python -m pytest tests/`, 로컬 curl 은 `--ssl-no-revoke` 필요.
 
 ### 사용자 조치 대기 (기록만 — 2026-09-30 결정: 별도 착수 없음)
-- Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / Vercel 환경변수에 남은 `GH_CONTENTS_TOKEN`·`GITHUB_REPOSITORY` 삭제 / GitHub 토큰 `content_write`·`allrepo`·`obsi` 삭제 / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급
+- (보류, 2026-09-30 사용자 결정) Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급
+- (완료 2026-09-30) GitHub 토큰 `content_write`·`allrepo`·`obsi` 삭제(사용자). Vercel 환경변수 `GH_CONTENTS_TOKEN`·`GITHUB_REPOSITORY`는 남아 있으면 삭제 가능(api/*.py 미사용 — 필수 6개: GMAIL_USER·GMAIL_APP_PASSWORD·SITE_BASE_URL·SUPABASE_SERVICE_KEY·SUPABASE_URL·UNSUBSCRIBE_SECRET)
 - (완료 2026-09-30) `OBSI_PUSH_TOKEN` 등록 — dispatch 실행으로 obsi checkout·노트 판정 성공 확인(생성 대상 0건이라 push 권한은 10/4 첫 자동 실행에서 확인)
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 

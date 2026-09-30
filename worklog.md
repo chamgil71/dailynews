@@ -80,3 +80,8 @@
 - 프론트매터 전환 검토 → 비용 대비 실익 작아 A안(형식 유지, 읽는 쪽 통합) 결정.
 - `core/shared/report_meta.py` 신설, 흩어진 머리말 정규식 5곳 교체(검색 범위 머리말로 한정). 기존 대비 320개 결과 차이 0건.
 - `tests/test_report_meta.py` — 과거 리포트 전체 회귀. 전체 372 passed.
+
+## 2026-09-30 — 세션 28 마감
+- **오늘 반영(main)**: 옵시디언 자동 등록+9주 백필(`160d623c`) / post_cardnews 모듈 분리+Actions Node 24(`05d34a30`) / 서브페이지 테마 버튼→SPA 패널(`3e281f2d`) / 브랜치 29개 정리+8/26 주식 리포트 복구(`9fc3c18c`) / Vercel 구독 API 500 수정(`218b9396`) / 레거시 Secret 정리(`e243ac8f`) / 머리말 파싱 통합(`0e183758`).
+- **세션 종료 점검**: 스펙 변경 없음(docs/spec.md 미수정) · `PYTHONUTF8=1 pytest tests/` 372 passed · 오늘 변경 파일 자격증명 패턴 스캔 CLEAN · worklog/CLAUDE.md 갱신.
+- **다음 세션**: 10/4(일) 주간 주식 1회·`(주간)` 제목·옵시디언 첫 자동 등록(push 권한) 확인, 10/5(월) stock_send 미실행 확인. 보류: Threads 토큰, AdSense·Twitter. 토큰 만료 12/29(OBSI_PUSH_TOKEN)·2027-01-01(REPO_SYNC_TOKEN→obsi MY_GITHUB_TOKEN).
