@@ -518,7 +518,7 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [x] cardnews text 모드 — 9/29·9/30 Facebook 성공, 알림 상세 `❌ threads: 토큰 만료 / ✅ 성공: facebook` (2026-09-30 확인)
 - [ ] Facebook text 모드 게시물에 링크 미리보기 카드가 붙는지 페이지에서 육안 확인 (세션 27차)
 - [x] `stock_send.yml` 9/30(수) — `직전 정기 실행: 2026-09-29T02:26:59Z`, 9/29 일일 리포트 1회 발송, 직후 `cardnews.yml` `workflow_dispatch` 실행 확인. text 모드 Facebook 성공·Threads 토큰 만료 알림 상세 정상 표시. 주식 23:00 빌드 커밋이 `reports/history/*` 31개만 변경(publish HTML 변동 없음 = 결정적 빌드 확인) (2026-09-30)
-- [ ] **`/api/unsubscribe`·`/api/manage` 500 (`FUNCTION_INVOCATION_FAILED`)** — 2026-09-30 확인. 파라미터 없는 요청에도 함수 자체가 크래시(=401/키 누락과 다른 증상, 임포트/런타임 오류 추정). 이메일 구독취소 링크가 동작하지 않을 수 있음 — Vercel 런타임 로그 확인 필요
+- [ ] **Vercel 구독 API 4종(`/api/subscribe|confirm|unsubscribe|manage`) 500 — 원인 확인됨, 미수정(구독 기능 현재 미사용, 2026-09-30 사용자 결정: 확인만)**. Vercel 런타임 로그: `ModuleNotFoundError: No module named 'requests'` (`api/_supabase.py`). 원인: `.vercelignore`(2026-07-25 `c91e212c`, 번들 225MB 대응)의 `requirements.txt` 패턴이 슬래시 없이 적혀 gitignore 규칙상 **모든 깊이에 매칭** → `api/requirements.txt`까지 번들에서 제외되어 의존성 미설치(`git -c core.excludesFile=.vercelignore check-ignore -v api/requirements.txt`로 재현). 수정안: 루트 전용 항목을 `/requirements.txt`·`/main.py`·`/worklog.md`처럼 앵커(디렉터리 항목도 `/scripts/` 등), 배포 후 `/api/unsubscribe`가 500이 아닌 400을 반환하는지 확인
 - [ ] 카드뉴스 이미지 모드 재개 시: Instagram 카루셀(2207027 재시도 포함)·Threads 카루셀·Facebook 멀티사진 실발송 확인 (text 모드 전환으로 보류)
 - [ ] 10/4(일) 주간 1회 발송 + 주간 이메일 제목 `(주간)` 표기, 10/5(월) stock_send 미실행 확인 (세션 27차(2))
 - [ ] 10/4(일) AI이슈 자동 실행 후 `AI Issue → Obsidian`이 이어서 실행되어 `ai_issue_주간_2026-10-04.md`가 obsi·mywiki에 게시되는지 확인 (세션 28차)
