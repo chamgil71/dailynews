@@ -35,7 +35,7 @@ if _ROOT not in sys.path:
 load_dotenv()
 
 from config.settings import SITE_BASE_URL
-from core.shared.report_date import report_generated_at
+from core.shared.report_meta import parse_report_meta, report_generated_at
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL
 
 REPORTS_DIR  = "reports"
@@ -49,17 +49,8 @@ os.makedirs(NEWS_HTML_DIR, exist_ok=True)
 def parse_md_for_json(md_path: str, date_str: str) -> dict:
     raw = Path(md_path).read_text(encoding="utf-8")
 
-    # 통계 파싱
-    stats_line = next(
-        (ln.lstrip("> ").strip() for ln in raw.splitlines() if ln.startswith("> 📊")),
-        ""
-    )
-    stats = {
-        "total":      int(m.group(1)) if (m := re.search(r'총 (\d+)건', stats_line)) else 0,
-        "en":         int(m.group(1)) if (m := re.search(r'EN:\s*(\d+)', stats_line)) else 0,
-        "ko":         int(m.group(1)) if (m := re.search(r'KO:\s*(\d+)', stats_line)) else 0,
-        "sent_to_ai": int(m.group(1)) if (m := re.search(r'AI 분석:\s*(\d+)건', stats_line)) else 0,
-    }
+    # 통계 파싱 (머리말 '> 📊 수집: 총 N건 …' — core/shared/report_meta.py)
+    stats = parse_report_meta(raw).stats or {"total": 0, "en": 0, "ko": 0, "sent_to_ai": 0}
 
     # 뉴스 항목 파싱
     news_en, news_ko = [], []

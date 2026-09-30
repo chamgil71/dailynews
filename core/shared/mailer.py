@@ -31,6 +31,7 @@ from config.settings import (
     UNSUBSCRIBE_SECRET,
 )
 from core.shared.report_date import kst_now, kst_today
+from core.shared.report_meta import parse_report_meta
 
 _TEMPLATE_FILE               = Path(__file__).parent.parent.parent / "templates" / "email_news.html"
 _STOCK_TEMPLATE_FILE         = Path(__file__).parent.parent.parent / "templates" / "email_stock.html"
@@ -365,9 +366,7 @@ def _parse_md_for_weekly_stock_email(md: str) -> dict:
     temp_m     = re.search(r'## 주간 온도계[:\s]*(.*)', md)
     reason_m   = re.search(r'## 주간 온도계.*\n+>\s*(.*)', md)
 
-    # 기간 파싱 (> 기간: ... 줄에서)
-    period_m = re.search(r'기간:\s*(.+?)(?:\s*\||\s*$)', md, re.M)
-    period   = period_m.group(1).strip() if period_m else ""
+    period = parse_report_meta(md).period  # 머리말 '> 기간: …' (core/shared/report_meta.py)
 
     summary_html  = markdown2.markdown(summary_m.group(1).strip(),  extras=_ext) if summary_m  else ""
     index_html    = markdown2.markdown(index_m.group(1).strip(),    extras=_ext) if index_m    else ""

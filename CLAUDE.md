@@ -118,6 +118,12 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **리포트 머리말 파싱 통합 (`core/shared/report_meta.py`) — 프론트매터 전환 대신** (2026-09-30) — 세션 28차(7)
+  - 검토 결과(사용자 결정 A안): 머리말에서 실제 쓰는 값은 생성시각·뉴스 수집통계·주간 기간 3가지뿐이고 현 파서 성공률 사실상 100%(320개 중 초기 포맷 3개만 생성시각 없음). YAML 프론트매터 전환은 생산 3곳+Claude 루틴 2개+MD→HTML 렌더 4곳+읽는 곳 5곳 수정, 옵시디언 노트 프론트매터 이중화, 화면의 '생성:' 줄 소실, 과거 320개 이중 지원이 필요한 데 비해 실익이 작아 **형식은 유지하고 읽는 쪽만 통합**
+  - `parse_report_meta(md) → ReportMeta(generated_at, data_as_of, period, stats)` — 검색 범위를 머리말(첫 `## ` 전, 최대 15줄)로 한정(기존 정규식 3종은 문서 전체에서 '기간:'을 찾아 본문 오매칭 위험). `report_generated_at()`은 `report_date.py`에서 이동
+  - 교체: `build_site.py`(수집 통계), `build_stock_site.py::_parse_week_range`, `notify_pipeline.py`(주간 기간), `mailer.py`(주간 이메일 기간), 빌드 3종 `report_generated_at` import
+  - 검증: 기존 파서 5종 vs 신규 — 과거 리포트 320개 결과 차이 0건. `tests/test_report_meta.py`(단위 4 + 과거 리포트 전체 회귀 320) — **Claude 루틴이 새 머리말 변형을 만들면 이 테스트가 실패**. 전체 372 passed
+  - 프론트매터가 필요한 기능(태그 검색 등)이 생기면 `report_meta.py` 한 곳만 확장
 - [x] **레거시 토큰·Secret 정리** (2026-09-30) — 세션 28차(6): `GH_CONTENTS_TOKEN`·`RECIPIENT_EMAIL`·`RESEND_API_KEY` Secret 삭제, `config/settings.py`·`.env.example`·`ai_issue_obsi.yml`(폴백 제거, `OBSI_PUSH_TOKEN`만 사용)에서 흔적 제거, `docs/env_spec.md`에 삭제 기록. 상세는 아래 환경변수 표 하단
 - [x] **Vercel 구독 API 4종 500 수정 — `.vercelignore` 루트 항목 앵커** (2026-09-30) — 세션 28차(5)
   - 증상: `/api/subscribe|confirm|unsubscribe|manage` 전부 `FUNCTION_INVOCATION_FAILED`. Vercel 런타임 로그 `ModuleNotFoundError: No module named 'requests'` (`api/_supabase.py`)
@@ -531,7 +537,6 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [ ] 다음 주식 빌드 후 사이트 주식 목록/아카이브에 `2026-09-26 (주간)` 표기 반영 확인, 다음 일요일 주간 이메일 제목 `📅 [주간 시황] YYYY-MM-DD (주간) 주식 종합 브리핑` 확인
 
 ### 다음 개발 (우선순위 순)
-- [ ] **리포트 MD 머리말(프론트매터) 형식 통일** — 뉴스(`생성일시:`+`수집:`)·AI이슈(`생성일시: | 기준:`)·주식 일일(`데이터 기준: | 생성:`)·주간(`기간: | 생성:`)이 제각각이라 정규식 파싱에 의존. 단계안: ① 소비측(`build_stock_site.py`·`mailer.py`·`notify_pipeline.py`·`report_date.report_generated_at` 등)이 YAML 프론트매터+구형식 둘 다 읽고 렌더 전 프론트매터 제거 → ② Python 생산측(뉴스·AI이슈·주식 백업) 전환 → ③ Claude 일일/주간 루틴 프롬프트 수정(사용자가 루틴 설정에 반영). 과거 ~300개 파일은 변환하지 않음 (2026-09-29 보류 결정)
 - [ ] **Threads 토큰 재발급** — `THREADS_ACCESS_TOKEN` 2026-08-10 만료(code 190). 재발급 전까지 cardnews 실행마다 실패 알림 발생
 - [ ] **카드뉴스 이미지 재개 시** — `cardnews.yml` `CARDNEWS_MODE: image`로 변경. Instagram·Facebook Meta 토큰 유효기간(60일) 먼저 확인
 - [ ] **구독 알림 이메일 템플릿 개선** — 인라인 HTML → `templates/email_confirm.html` 분리
@@ -613,7 +618,8 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - **`cardnews.yml` SNS 실패 알림**: SNS발송 스텝에 `id: sns`, 후속 스텝 `if: always() && steps.sns.outcome == 'failure'`로 텔레그램 알림. `continue-on-error: true`와 `steps.*.outcome` vs `steps.*.conclusion` 차이 주의 — `outcome`이 실제 결과, `conclusion`은 continue-on-error 반영 후 값
 - **`notify_pipeline.py` cardnews 타입**: `--type cardnews` 지원. `_msg_failure()` 레이블 `"카드뉴스 SNS"`, `_msg_cardnews_success()` 추가
 - **`core/shared/alert.py`**: 3채널 공통 실패 알림 모듈. `send_pipeline_alert(channel, date_str, reason)` — 텔레그램+관리자 이메일(`mailer.send_admin_alert()` 재사용) best-effort 발송
-- **`core/shared/report_date.py`**: KST 날짜 계산 공통 모듈. `report_generated_at()` — 정적 페이지 '생성' 표기는 반드시 이것(리포트 생성 시각)을 쓰고 `datetime.now()` 금지(전체 재생성 페이지가 매 빌드 바뀜). `kst_today()`/`kst_now()` — 타임존을 코드에 명시. `weekly_label(date)` → `'YYYY-MM-DD (주간)'` 주간 주식 표기(사이트 목록·주간 페이지 제목·이메일 제목·SNS 캡션). SPA JS(`app.html`·`index.html`의 `weeklyLabel()`)는 같은 형식을 별도 구현 — 형식 변경 시 3곳(Python 1 + JS 2) 수정. `mailer.py`/`telegram.py`/`run_*.py`/`send_*.py` 전체 사용
+- **`core/shared/report_meta.py`**: 리포트 MD 머리말 파서 단일 진입점(`parse_report_meta`, `report_generated_at`). 머리말 값을 새로 읽을 땐 정규식을 따로 쓰지 말고 여기에 추가. 정적 페이지 '생성' 표기는 `report_generated_at()`(리포트 생성 시각) 사용, `datetime.now()` 금지(전체 재생성 페이지가 매 빌드 바뀜)
+- **`core/shared/report_date.py`**: KST 날짜 계산 공통 모듈. `kst_today()`/`kst_now()` — 타임존을 코드에 명시. `weekly_label(date)` → `'YYYY-MM-DD (주간)'` 주간 주식 표기(사이트 목록·주간 페이지 제목·이메일 제목·SNS 캡션). SPA JS(`app.html`·`index.html`의 `weeklyLabel()`)는 같은 형식을 별도 구현 — 형식 변경 시 3곳(Python 1 + JS 2) 수정. `mailer.py`/`telegram.py`/`run_*.py`/`send_*.py` 전체 사용
 - **카드뉴스 `data.json` extra 필드**: `_update_index(extra_data=)` 파라미터로 채널별 추가 데이터 저장. news/ai-issue: `issue_titles`(top3), stock: `summary`/`keywords`/`temperature`. `post_cardnews.py::_build_caption()`에서 채널 분기로 활용
 - **카드뉴스 발송 순서 (stock)**: `stock_send.yml`이 **실제로 발송한 경우에만** 마지막 스텝에서 `gh workflow run cardnews.yml -f type=stock -f date=…`로 호출 (2026-09-29~). `cardnews.yml`의 workflow_run 트리거에서 `Stock Briefing Send`·`Weekly Stock Build`는 제거됨 — 발송 없는 날(월·휴장·중복) SNS 미발송, 주간 시황 SNS는 일요일 1회
 - **Instagram 카루셀 타이밍 에러(2207027)**: FINISHED 후에도 카루셀 생성 즉시 시도 시 "Media ID not available" 에러 발생. `_ig_wait_container()` 완료 후 5초 추가 대기 + 10초 간격 3회 재시도로 대응 (`post_cardnews.py`)

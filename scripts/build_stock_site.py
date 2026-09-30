@@ -28,7 +28,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from config.settings import SITE_BASE_URL
-from core.shared.report_date import report_generated_at, weekly_label
+from core.shared.report_date import weekly_label
+from core.shared.report_meta import parse_report_meta, report_generated_at
 from config.theme_config import SECTION_THEMES, SITE_THEME, SITE_TITLE, SUBSCRIBE_URL
 from themes import load_theme
 
@@ -150,9 +151,8 @@ def _parse_sectors(raw: str) -> list[dict]:
 # ── 주간 MD 파서 ──────────────────────────────────────────────────────────────
 
 def _parse_week_range(raw: str) -> str:
-    """'> 기간: ...' 에서 주간 범위 추출."""
-    m = re.search(r'기간:\s*([^|\n]+?)(?:\s*\||\n)', raw)
-    return m.group(1).strip() if m else ""
+    """머리말 '> 기간: ...' 에서 주간 범위 추출 (core/shared/report_meta.py)."""
+    return parse_report_meta(raw).period
 
 
 def _parse_weekly_summary(raw: str) -> str:

@@ -23,6 +23,11 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 _ROOT = Path(__file__).parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from core.shared.report_meta import parse_report_meta  # noqa: E402
+
 _KST = timezone(timedelta(hours=9))
 
 ACTIONS_URL = "https://github.com/chamgil71/dailynews/actions"
@@ -205,10 +210,7 @@ def _msg_weekly_stock_success(date_str: str) -> str:
     if md_path.exists():
         try:
             text = md_path.read_text(encoding="utf-8")
-            # 기간
-            m = re.search(r"기간:\s*(.+?)\s*\|", text)
-            if m:
-                period = m.group(1).strip()
+            period = parse_report_meta(text).period  # 머리말 '> 기간: …'
             # 주간 한줄 총평
             m2 = re.search(r"## ■ 주간 한줄 총평\s*\n+([\s\S]+?)(?=\n---|\n## |\Z)", text)
             if m2:

@@ -14,7 +14,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from core.shared.report_date import report_generated_at  # noqa: E402
+from core.shared.report_meta import report_generated_at  # noqa: E402
 
 
 @pytest.mark.parametrize("header,expected", [

@@ -26,7 +26,7 @@ load_dotenv()
 from config.settings import SITE_BASE_URL
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL
 from core.shared.text_utils import unwrap_md_wrapper
-from core.shared.report_date import report_generated_at
+from core.shared.report_meta import report_generated_at
 
 REPORTS_DIR = "reports/ai-issue"
 PUBLISH_DIR = "publish/ai-issue"
