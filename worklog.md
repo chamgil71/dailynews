@@ -57,4 +57,5 @@
 - **사용자 결정**: 조치 필요 항목(Threads 토큰·Vercel Supabase 키·AdSense 슬롯·Twitter/레거시 Secrets)은 기록만. 옵시디언 — 주간 자동 등록 + 누락분 백필, 월간 수동 유지, 토큰은 기존 PAT(`GH_CONTENTS_TOKEN`) 우선 사용.
 - **변경**: `.github/workflows/ai_issue_obsi.yml`(AI이슈 성공 시 workflow_run + dispatch), `core/ai_issue/obsidian_export.py`, `scripts/export_obsidian_notes.py`(없는 노트만 생성·덮어쓰기 금지), `notify_pipeline.py --type obsidian`.
 - **테스트·검증**: `PYTHONUTF8=1 pytest tests/` 44 passed(신규 4). 생성 노트가 수동 등록분(07-12·07-26)과 바이트 동일. 로컬 dry-run 대상 9건(08-02~09-27).
-- **다음 계획**: main push 후 dispatch로 백필 실행(토큰 권한 확인). 실패하면 새 PAT를 `OBSI_PUSH_TOKEN`으로 등록 후 재실행. 10/4 자동 연동 확인.
+- **백필 결과**: dispatch 실행 → `GH_CONTENTS_TOKEN` obsi 접근 불가(Not Found)로 실패(모니터 알림). 로컬 obsi에서 9건 생성·push(`c1481d0`) → mywiki `90aafc2` 게시·Pages 배포 성공.
+- **다음 계획**: 사용자가 `OBSI_PUSH_TOKEN` 발급·등록(절차 `.env.example`) 후 dispatch로 확인. 10/4 자동 연동 확인.

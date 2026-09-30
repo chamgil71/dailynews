@@ -114,6 +114,7 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 
 ### 사용자 조치 대기 (기록만 — 2026-09-30 결정: 별도 착수 없음)
 - Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / Vercel `SUPABASE_SERVICE_KEY` 등록 확인 / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급 + 레거시 Secrets(`RECIPIENT_EMAIL`·`RESEND_API_KEY`) 정리
+- **`OBSI_PUSH_TOKEN` 발급·등록** — 기존 `GH_CONTENTS_TOKEN`은 obsi 접근 불가(Actions `Not Found`) 확인. 발급·등록 절차는 `.env.example` 옵시디언 섹션. 등록 전까지 `AI Issue → Obsidian`은 매주 실패 알림 → 로컬에서 `python scripts/export_obsidian_notes.py --note-dir C:/obsidian/msshin/10-Projects/AI이슈` 후 obsi push로 대체 가능
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
@@ -122,6 +123,7 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
   - `.github/workflows/ai_issue_obsi.yml` 신설 — `AI Issue Weekly Report` 성공 시 `workflow_run`으로 실행 + `workflow_dispatch`(`date` 입력 시 그 날짜만). obsi를 `msshin/10-Projects/AI이슈`만 sparse checkout → 노트 생성 → obsi main push → obsi `publish.yml`이 mywiki 게시. 기존 `ai_issue.yml`은 수정하지 않음(발송 파이프라인과 분리, 실패해도 AI이슈 발송에 영향 없음)
   - 토큰: `secrets.OBSI_PUSH_TOKEN || secrets.GH_CONTENTS_TOKEN` — 새 PAT를 `OBSI_PUSH_TOKEN`으로 등록하면 자동으로 우선 사용. 실패 시 모니터 채널로 `AI이슈 옵시디언 등록 파이프라인 실패` 알림(`notify_pipeline.py --type obsidian`)
   - `core/ai_issue/obsidian_export.py` + `scripts/export_obsidian_notes.py` — **노트가 없는 날짜만 생성**(since `OBSI_SYNC_SINCE=2026-08-02`, 이전은 수동 구간) → 누락 주차는 다음 실행 때 자동 백필, 이미 있는 노트(옵시디언 수기 편집 포함)는 절대 덮어쓰지 않음. 생성 노트는 수동 등록분(07-12·07-26)과 **바이트 단위 동일** 확인
+  - **백필 완료(2026-09-30)**: 기존 토큰 실패로 로컬 `C:\obsidian`에서 같은 스크립트로 9건(08-02~09-27) 생성 → obsi `c1481d0` push → obsi publish.yml 성공 → mywiki `90aafc2`(`content/report/AI이슈/` 9개) → Quartz Pages 배포 성공
   - 테스트: `tests/test_obsidian_export.py` 4건, 전체 `PYTHONUTF8=1 pytest tests/` 44 passed (Windows 로컬은 `PYTHONUTF8=1` 없으면 `test_stock_v6.py`가 cp949 디코드 오류로 수집 실패 — 기존 환경 문제)
 
 - [x] **정적 페이지 "생성 시각"을 빌드 시각 → 리포트 실제 생성 시각으로 (결정적 빌드 출력)** (2026-09-29) — 세션 27차(3) — **main push 완료**
@@ -735,7 +737,8 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 | `NOTION_DATABASE_ID_STOCK` | Notion 주식 DB | ✅ |
 | `NOTION_DATABASE_ID_AI_ISSUE` | Notion AI이슈 DB | ✅ |
 | `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | 주식 국내뉴스 수집 | ✅ |
-| `GH_CONTENTS_TOKEN` | GitHub Contents API (레거시) | ✅ |
+| `GH_CONTENTS_TOKEN` | GitHub Contents API (레거시, obsi 접근 불가) | ✅ |
+| `OBSI_PUSH_TOKEN` | obsi 노트 push (fine-grained, obsi Contents R/W) — `ai_issue_obsi.yml` | ❌ 미등록 |
 | `INSTAGRAM_ACCESS_TOKEN` | Meta Graph API (60일 만료 주의) | ✅ |
 | `INSTAGRAM_BUSINESS_ACCOUNT_ID` | Instagram Business ID | ✅ |
 | `FACEBOOK_PAGE_ID` | Facebook Page ID (Ainews) | ✅ |
