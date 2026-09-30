@@ -71,3 +71,7 @@
 ## 2026-09-30 — 세션 28(5): Vercel 구독 API 500 수정
 - 원인: `.vercelignore`의 `requirements.txt`(슬래시 없음)가 `api/requirements.txt`까지 제외 → requests 미설치 → /api/* 전부 FUNCTION_INVOCATION_FAILED(7/25~).
 - 수정: 루트 전용 항목 `/` 앵커(`218b9396`). 배포 후 unsubscribe·manage·confirm 400, subscribe 302 확인.
+
+## 2026-09-30 — 세션 28(6): 레거시 토큰·Secret 정리
+- `GH_CONTENTS_TOKEN`(5/1 구 구독취소 파일 기록용, 6/10 이후 미사용)·`RECIPIENT_EMAIL`·`RESEND_API_KEY` Secret 삭제. 코드(settings.py·.env.example·ai_issue_obsi.yml 폴백) 정리, env_spec.md·CLAUDE.md에 삭제 기록.
+- Vercel 환경변수는 MCP 권한 부족으로 미확인 → 사용자 대시보드 확인 필요.

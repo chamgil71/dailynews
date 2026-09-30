@@ -113,11 +113,12 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 ## 현재 상태 (2026-09-30)
 
 ### 사용자 조치 대기 (기록만 — 2026-09-30 결정: 별도 착수 없음)
-- Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / Vercel `SUPABASE_SERVICE_KEY` 등록 확인 / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급 + 레거시 Secrets(`RECIPIENT_EMAIL`·`RESEND_API_KEY`) 정리
+- Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / Vercel `SUPABASE_SERVICE_KEY` 등록 확인 / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급
 - (완료 2026-09-30) `OBSI_PUSH_TOKEN` 등록 — dispatch 실행으로 obsi checkout·노트 판정 성공 확인(생성 대상 0건이라 push 권한은 10/4 첫 자동 실행에서 확인)
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **레거시 토큰·Secret 정리** (2026-09-30) — 세션 28차(6): `GH_CONTENTS_TOKEN`·`RECIPIENT_EMAIL`·`RESEND_API_KEY` Secret 삭제, `config/settings.py`·`.env.example`·`ai_issue_obsi.yml`(폴백 제거, `OBSI_PUSH_TOKEN`만 사용)에서 흔적 제거, `docs/env_spec.md`에 삭제 기록. 상세는 아래 환경변수 표 하단
 - [x] **Vercel 구독 API 4종 500 수정 — `.vercelignore` 루트 항목 앵커** (2026-09-30) — 세션 28차(5)
   - 증상: `/api/subscribe|confirm|unsubscribe|manage` 전부 `FUNCTION_INVOCATION_FAILED`. Vercel 런타임 로그 `ModuleNotFoundError: No module named 'requests'` (`api/_supabase.py`)
   - 원인: 2026-07-25 `c91e212c`(번들 225MB 대응)에서 추가한 `.vercelignore`의 `requirements.txt`가 슬래시 없이 적혀 gitignore 규칙상 모든 깊이에 매칭 → `api/requirements.txt`까지 번들 제외 → 의존성 미설치. 7/25 이후 구독 API 전부 장애였을 것(구독 기능은 현재 미사용)
@@ -536,7 +537,6 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [ ] **구독 알림 이메일 템플릿 개선** — 인라인 HTML → `templates/email_confirm.html` 분리
 - [ ] **SNS 카드뉴스 실제 테스트** — Instagram/Threads/Facebook/Telegram 채널별 발송 검증
 - [ ] **Twitter/X 카드뉴스** — Basic 티어 결제 후 활성화
-- [ ] **레거시 GitHub Secrets 정리** — `RECIPIENT_EMAIL`(단수), `RESEND_API_KEY` 삭제 권장
 
 ### 주요 아키텍처 메모
 - **옵시디언/mywiki 게시 파이프라인 (2026-09-29 확인)**: 로컬 볼트 `C:\obsidian\msshin` = 저장소 `chamgil71/obsi`(private, git 루트 `C:\obsidian`, 저장소 내 경로 `msshin/…`). obsi main push → obsi `.github/workflows/publish.yml`(`scripts/vault_publish_build.py`+`sync_to_mywiki.py`, `MY_GITHUB_TOKEN`)이 `publish: true` 노트를 `chamgil71/mywiki`(public, Quartz) `content/`에 동기화·push → mywiki `deploy.yaml`이 GitHub Pages 배포. **즉 obsi `msshin/10-Projects/AI이슈/`에 노트를 넣으면 위키(`report/AI이슈/`)까지 자동**. 선례: obsi `gmail-clip.yml`이 `msshin/30-Resources/gmail-clips/`에 자동 커밋 중. (mywiki 로컬 `deploy.ps1`/`export_publish_notes.py`는 구 방식)
@@ -750,7 +750,6 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 | `NOTION_DATABASE_ID_STOCK` | Notion 주식 DB | ✅ |
 | `NOTION_DATABASE_ID_AI_ISSUE` | Notion AI이슈 DB | ✅ |
 | `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | 주식 국내뉴스 수집 | ✅ |
-| `GH_CONTENTS_TOKEN` | GitHub Contents API (레거시, obsi 접근 불가) | ✅ |
 | `OBSI_PUSH_TOKEN` | obsi 노트 push (fine-grained, obsi Contents R/W) — `ai_issue_obsi.yml` | ✅ 만료 2026-12-29 — GitHub 토큰 페이지 Regenerate → Secret 덮어쓰기 |
 | `INSTAGRAM_ACCESS_TOKEN` | Meta Graph API (60일 만료 주의) | ✅ |
 | `INSTAGRAM_BUSINESS_ACCOUNT_ID` | Instagram Business ID | ✅ |
@@ -760,6 +759,14 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 | `THREADS_ACCESS_TOKEN` | Threads API 토큰 | ✅ |
 | `TWITTER_API_KEY` / `TWITTER_API_SECRET` | Twitter Developer App | ❌ 미발급 |
 | `TWITTER_ACCESS_TOKEN` / `TWITTER_ACCESS_TOKEN_SECRET` | Twitter OAuth 1.0a | ❌ 미설정 |
+
+**삭제된 Secret (2026-09-30, 기록용)** — 코드 사용처 없음 확인 후 삭제
+- `GH_CONTENTS_TOKEN`: 2026-05-01 구 구독취소 방식(Vercel `api/unsubscribe.py`가 dailynews `storage/unsubscribed.txt`에 Contents API로 기록) 전용 → 06-10 Supabase 전환으로 미사용. 값은 fine-grained PAT `content_write`(dailynews 전용, 사용자가 삭제). Vercel 환경변수에도 남아 있을 수 있음(MCP 조회 권한 없어 미확인 — 대시보드에서 확인 후 삭제)
+- `RECIPIENT_EMAIL`(단수, `RECIPIENT_EMAILS`로 대체) / `RESEND_API_KEY`(Gmail SMTP 전환, 재도입 시 `core/shared/mailer_resend.py` 주석 참고)
+
+**GitHub 토큰 대응표** (Settings → Developer settings)
+- fine-grained `OBSI_PUSH_TOKEN` → dailynews Secret `OBSI_PUSH_TOKEN` (obsi 전용, 만료 2026-12-29)
+- classic `REPO_SYNC_TOKEN` → **obsi** Secret `MY_GITHUB_TOKEN` 추정(obsi→mywiki 게시, 만료 2027-01-01 — Regenerate 후 obsi Secret 갱신). 넓은 classic 권한이면 만료 시 mywiki 전용 fine-grained로 교체 권장
 
 ---
 

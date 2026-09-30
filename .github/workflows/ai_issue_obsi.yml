@@ -41,9 +41,9 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: ${{ env.OBSI_REPO }}
-          # OBSI_PUSH_TOKEN 이 등록되면 우선 사용, 없으면 기존 PAT 사용.
+          # fine-grained PAT (obsi 전용, Contents R/W) — 발급·갱신 절차는 .env.example 참고.
           # GITHUB_TOKEN 은 타 저장소 push 불가 + push 해도 obsi publish.yml 이 트리거되지 않음.
-          token: ${{ secrets.OBSI_PUSH_TOKEN || secrets.GH_CONTENTS_TOKEN }}
+          token: ${{ secrets.OBSI_PUSH_TOKEN }}
           path: obsi
           fetch-depth: 0      # push 전 rebase 용 이력 (blob 은 필요한 것만)
           filter: blob:none
@@ -86,7 +86,7 @@ jobs:
         run: |
           python scripts/notify_pipeline.py --type obsidian --status failure \
             --date "$(date +'%Y-%m-%d')" \
-            --detail "obsi 노트 등록 실패 — checkout/push 단계면 토큰(OBSI_PUSH_TOKEN, 없으면 GH_CONTENTS_TOKEN)의 obsi Contents 쓰기 권한 확인"
+            --detail "obsi 노트 등록 실패 — checkout/push 단계면 OBSI_PUSH_TOKEN 만료·권한(obsi Contents 쓰기) 확인"
         env:
           TELEGRAM_BOT_TOKEN:       ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID_MONITOR: ${{ secrets.TELEGRAM_CHAT_ID_MONITOR }}

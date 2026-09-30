@@ -43,10 +43,6 @@ STOCK_EMAIL_SUBJECT  = "📊 주식 시황 브리핑 — {date} ({weekday})"
 UNSUBSCRIBE_SECRET   = os.getenv("UNSUBSCRIBE_SECRET", "")
 SITE_BASE_URL        = os.getenv("SITE_BASE_URL", "").rstrip("/")
 
-# ── GitHub Contents API (구독 취소 기록용) ────────────────────────────────────
-GH_CONTENTS_TOKEN    = os.getenv("GH_CONTENTS_TOKEN", "")
-GITHUB_REPOSITORY    = os.getenv("GITHUB_REPOSITORY", "")   # "owner/repo" 형식
-
 # ── 리포트 ────────────────────────────────────────────────────────────────────
 REPORTS_DIR     = "reports"
 REPORT_FILENAME = "news_{date}.md"

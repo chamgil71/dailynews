@@ -86,7 +86,7 @@ UNSUBSCRIBE_SECRET     = (위 생성값)
 
 | 변수명 | 필요여부 | 설명 | 획득 방법 |
 |---|---|---|---|
-| `GH_CONTENTS_TOKEN` | 🗑️ 레거시 | 구 구독취소 파일 API용 — Supabase 전환으로 미사용 | GitHub → Settings → **Developer settings** → Personal access tokens → Fine-grained → 권한: Contents(Read & Write), Metadata(Read) |
+| `GH_CONTENTS_TOKEN` | ✗ 삭제됨(2026-09-30) | 구 구독취소 파일 API용 — Supabase 전환으로 미사용 | GitHub → Settings → **Developer settings** → Personal access tokens → Fine-grained → 권한: Contents(Read & Write), Metadata(Read) |
 | `GITHUB_REPOSITORY` | 🗑️ 레거시 | 구 구독취소 저장소 경로 | 직접 입력: `chamgil71/dailynews` |
 
 ---
@@ -201,8 +201,8 @@ LLM
 Supabase
   ✅ SUPABASE_SERVICE_KEY
 
-GitHub (레거시)
-  ✅ GH_CONTENTS_TOKEN        (향후 제거 예정)
+옵시디언 연동
+  ✅ OBSI_PUSH_TOKEN          (obsi 노트 push, fine-grained·obsi 전용, 만료 2026-12-29)
 
 네이버
   ✅ NAVER_CLIENT_ID
@@ -236,9 +236,11 @@ SNS — Twitter/X (미발급)
   □  TWITTER_API_KEY / TWITTER_API_SECRET
   □  TWITTER_ACCESS_TOKEN / TWITTER_ACCESS_TOKEN_SECRET
 
-레거시 (GitHub Secrets에서 삭제 권장)
-  ⚠️ RECIPIENT_EMAIL         (단수형, RECIPIENT_EMAILS로 대체)
-  ⚠️ RESEND_API_KEY          (Gmail SMTP 전환으로 폐기)
+삭제됨 (2026-09-30, 기록용)
+  ✗ GH_CONTENTS_TOKEN        (2026-05-01 구 구독취소: Vercel 함수가 storage/unsubscribed.txt 를
+                               Contents API로 기록 → 06-10 Supabase 전환으로 미사용. PAT 'content_write')
+  ✗ RECIPIENT_EMAIL          (단수형, RECIPIENT_EMAILS로 대체)
+  ✗ RESEND_API_KEY           (Gmail SMTP 전환으로 폐기 — 재도입 시 core/shared/mailer_resend.py 주석 참고)
 ```
 
 ### Vercel 환경변수 (서버리스 함수 /api/*.py 용)
