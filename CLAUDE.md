@@ -118,6 +118,10 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **`post_cardnews.py` 플랫폼별 모듈 분리 + GitHub Actions Node 24 전환** (2026-09-30) — 세션 28차(2)
+  - `post_cardnews.py` 662→130줄(진입점: `run()`/`main()`/`PLATFORM_HANDLERS`/기본 플랫폼·날짜 결정만). 핸들러는 `scripts/sns/{instagram,threads,facebook,telegram,twitter}.py`, 공통 유틸 `scripts/sns/common.py`(env·PNG 경로·이미지 URL·사이트 URL·CDN 확인·config 로드), 캡션 `scripts/sns/caption.py` — 전 파일 200줄 이하
+  - 동작 변경 없음: 실데이터 31개 날짜×링크 유무 62건 캡션 기존과 불일치 0건. Instagram 재시도 2곳은 `_post_with_retry()`로 공통화(2207027만 재시도, 횟수·간격 동일). 테스트 `tests/test_sns_modules.py` 4건 추가, 전체 48 passed
+  - **Node 20 deprecation 경고 대응**: 전 워크플로우 `actions/checkout@v4→v7`, `setup-python@v5→v7`, `upload-pages-artifact@v3→v5`, `deploy-pages@v4→v5`. 호환성 확인 — upload-pages-artifact v4+ 는 점(.) 파일 제외(`publish/`에 없음), setup-python v7 은 `pip-install` 입력 제거·EOL 버전 제거(미사용, 3.11 사용)
 - [x] **AI이슈 주간 → 옵시디언(obsi) → mywiki 자동 등록 + 누락분 백필** (2026-09-30) — 세션 28차
   - **사용자 결정(2026-09-30)**: ① 주간 자동 등록 + 누락 9주(08-02~09-27) 백필 진행 ② 월간은 당분간 수동(Claude 작성) 유지 ③ 토큰은 기존 PAT 사용, 안 되면 새로 발급
   - `.github/workflows/ai_issue_obsi.yml` 신설 — `AI Issue Weekly Report` 성공 시 `workflow_run`으로 실행 + `workflow_dispatch`(`date` 입력 시 그 날짜만). obsi를 `msshin/10-Projects/AI이슈`만 sparse checkout → 노트 생성 → obsi main push → obsi `publish.yml`이 mywiki 게시. 기존 `ai_issue.yml`은 수정하지 않음(발송 파이프라인과 분리, 실패해도 AI이슈 발송에 영향 없음)
@@ -515,7 +519,6 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 ### 다음 개발 (우선순위 순)
 - [ ] **리포트 MD 머리말(프론트매터) 형식 통일** — 뉴스(`생성일시:`+`수집:`)·AI이슈(`생성일시: | 기준:`)·주식 일일(`데이터 기준: | 생성:`)·주간(`기간: | 생성:`)이 제각각이라 정규식 파싱에 의존. 단계안: ① 소비측(`build_stock_site.py`·`mailer.py`·`notify_pipeline.py`·`report_date.report_generated_at` 등)이 YAML 프론트매터+구형식 둘 다 읽고 렌더 전 프론트매터 제거 → ② Python 생산측(뉴스·AI이슈·주식 백업) 전환 → ③ Claude 일일/주간 루틴 프롬프트 수정(사용자가 루틴 설정에 반영). 과거 ~300개 파일은 변환하지 않음 (2026-09-29 보류 결정)
 - [ ] **Threads 토큰 재발급** — `THREADS_ACCESS_TOKEN` 2026-08-10 만료(code 190). 재발급 전까지 cardnews 실행마다 실패 알림 발생
-- [ ] **`post_cardnews.py` 플랫폼별 모듈 분리** — 658줄(200라인 규칙 초과). 핸들러 5개를 `scripts/sns/` 하위로 분리, `run()`/`main()`만 남기기
 - [ ] **카드뉴스 이미지 재개 시** — `cardnews.yml` `CARDNEWS_MODE: image`로 변경. Instagram·Facebook Meta 토큰 유효기간(60일) 먼저 확인
 - [ ] **테마 chip 그룹 분리** — `build_site.py` 테마 패널에서 `skins/` (색상 변형: classic/ink/forest)와 `layouts/` (레이아웃 변형: editorial/minimal/terminal)를 헤더로 구분
 - [ ] **editorial 페이지 테마 버튼 추가** — `editorial.py::_layout()`에 `id="themeBtn"` 추가 (현재 editorial 서브페이지에서 테마 버튼이 사라짐)
@@ -558,7 +561,7 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - **관리자 vs 구독자**: is_admin=true → `send_admin_alert()` 시스템 알림 수신. 일반 구독자 → 채널별 브리핑만 수신. RECIPIENT_EMAILS는 Supabase 조회 실패 시 폴백
 - **헤더 CSS 통일**: `templates/web_*.html` 4개 모두 `.hnav-tab` + `flex:1` + `3px border` 구조로 통일. `index.html`(editorial SPA)이 기준
 - **`CLAUDE.md` 위치**: 프로젝트 루트가 표준 위치. Claude Code가 세션 시작 시 자동 로드하는 프로젝트 컨텍스트 파일. `.claude/`(디렉터리)와는 별개 — `.claude/`는 `agents/`·`rules/`·`skills/`·`reference/`(거버넌스 프레임워크, git 추적됨)와 `settings.local.json`(개인 권한 설정, `.gitignore`로 제외)이 공존한다
-- **SNS 카드뉴스 5개 플랫폼**: Instagram(카루셀), Threads(텍스트/카루셀 설정), Facebook(멀티사진), Telegram(미디어그룹+버튼), Twitter(이미지스레드) — `post_cardnews.py::PLATFORM_HANDLERS`
+- **SNS 카드뉴스 5개 플랫폼**: Instagram(카루셀), Threads(텍스트/카루셀 설정), Facebook(멀티사진), Telegram(미디어그룹+버튼), Twitter(이미지스레드) — `post_cardnews.py::PLATFORM_HANDLERS`, 핸들러 구현은 `scripts/sns/<플랫폼>.py`, 캡션은 `scripts/sns/caption.py::build_caption()` (2026-09-30 분리)
 - **Threads 발송 모드**: `config/cardnews_themes.json channels[].threads_mode` — `"text"`(기본, TEXT media_type) / `"carousel"`(이미지 카루셀). Instagram은 텍스트 단독 포스트 불가. `_get_threads_mode(channel)`로 로드
 - **SNS Telegram 채널 분기**: `post_cardnews.py::post_telegram()` — channel='stock'→`TELEGRAM_CHAT_ID_STOCK`, 그 외→`TELEGRAM_CHAT_ID`
 - **docs/ 파일명 규칙**: `{channel}_{type}.md` 또는 `{topic}_{type}.md` (underscore, 소문자). 구버전→`docs/backup/`, 계획→`docs/plan/`
