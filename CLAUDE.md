@@ -118,6 +118,11 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **Vercel 구독 API 4종 500 수정 — `.vercelignore` 루트 항목 앵커** (2026-09-30) — 세션 28차(5)
+  - 증상: `/api/subscribe|confirm|unsubscribe|manage` 전부 `FUNCTION_INVOCATION_FAILED`. Vercel 런타임 로그 `ModuleNotFoundError: No module named 'requests'` (`api/_supabase.py`)
+  - 원인: 2026-07-25 `c91e212c`(번들 225MB 대응)에서 추가한 `.vercelignore`의 `requirements.txt`가 슬래시 없이 적혀 gitignore 규칙상 모든 깊이에 매칭 → `api/requirements.txt`까지 번들 제외 → 의존성 미설치. 7/25 이후 구독 API 전부 장애였을 것(구독 기능은 현재 미사용)
+  - 수정: 루트 전용 항목 전부 `/` 앵커(`/requirements.txt`·`/main.py`·`/worklog.md`·`/scripts/` 등). `git -c core.excludesFile=.vercelignore check-ignore -v`로 `api/*`는 포함, 나머지는 기존대로 제외 확인
+  - **주의(재발 방지)**: `.vercelignore`에 항목을 추가할 때 루트 파일·폴더는 반드시 `/`로 시작할 것
 - [x] **세션 브랜치 정리 + 누락된 8/26 주식 리포트 복구 + 검증 목록 정리** (2026-09-30) — 세션 28차(4)
   - 원격 브랜치 29개 전수 조사(병합 여부 + `git cherry`로 main에 없는 커밋 확인) → 28개 삭제(병합됐거나, 닫힌 PR·이후 재작업으로 대체된 것). 로컬 옛 브랜치 2개도 삭제(5월, main 포함)
   - **발견**: `stock_2026-08-26.md`가 main에 없고 `claude/magical-cerf-oftiub`에만 존재 — 그날 루틴이 main 대신 세션 브랜치로 push(Step 6 `mcp__github__push_files` 미사용 추정). 리포트 온전(9섹션·116줄) 확인 후 cherry-pick → `stock_build.yml` push 빌드로 `publish/stock/2026-08-26.html` 생성(`d13196b3`, 이 빌드에서 헤더 테마 버튼 변경도 전 주식 페이지에 반영). 3일 초과라 발송·카드뉴스 없음
@@ -518,7 +523,6 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [x] cardnews text 모드 — 9/29·9/30 Facebook 성공, 알림 상세 `❌ threads: 토큰 만료 / ✅ 성공: facebook` (2026-09-30 확인)
 - [ ] Facebook text 모드 게시물에 링크 미리보기 카드가 붙는지 페이지에서 육안 확인 (세션 27차)
 - [x] `stock_send.yml` 9/30(수) — `직전 정기 실행: 2026-09-29T02:26:59Z`, 9/29 일일 리포트 1회 발송, 직후 `cardnews.yml` `workflow_dispatch` 실행 확인. text 모드 Facebook 성공·Threads 토큰 만료 알림 상세 정상 표시. 주식 23:00 빌드 커밋이 `reports/history/*` 31개만 변경(publish HTML 변동 없음 = 결정적 빌드 확인) (2026-09-30)
-- [ ] **Vercel 구독 API 4종(`/api/subscribe|confirm|unsubscribe|manage`) 500 — 원인 확인됨, 미수정(구독 기능 현재 미사용, 2026-09-30 사용자 결정: 확인만)**. Vercel 런타임 로그: `ModuleNotFoundError: No module named 'requests'` (`api/_supabase.py`). 원인: `.vercelignore`(2026-07-25 `c91e212c`, 번들 225MB 대응)의 `requirements.txt` 패턴이 슬래시 없이 적혀 gitignore 규칙상 **모든 깊이에 매칭** → `api/requirements.txt`까지 번들에서 제외되어 의존성 미설치(`git -c core.excludesFile=.vercelignore check-ignore -v api/requirements.txt`로 재현). 수정안: 루트 전용 항목을 `/requirements.txt`·`/main.py`·`/worklog.md`처럼 앵커(디렉터리 항목도 `/scripts/` 등), 배포 후 `/api/unsubscribe`가 500이 아닌 400을 반환하는지 확인
 - [ ] 카드뉴스 이미지 모드 재개 시: Instagram 카루셀(2207027 재시도 포함)·Threads 카루셀·Facebook 멀티사진 실발송 확인 (text 모드 전환으로 보류)
 - [ ] 10/4(일) 주간 1회 발송 + 주간 이메일 제목 `(주간)` 표기, 10/5(월) stock_send 미실행 확인 (세션 27차(2))
 - [ ] 10/4(일) AI이슈 자동 실행 후 `AI Issue → Obsidian`이 이어서 실행되어 `ai_issue_주간_2026-10-04.md`가 obsi·mywiki에 게시되는지 확인 (세션 28차)
