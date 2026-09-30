@@ -118,6 +118,11 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **세션 브랜치 정리 + 누락된 8/26 주식 리포트 복구 + 검증 목록 정리** (2026-09-30) — 세션 28차(4)
+  - 원격 브랜치 29개 전수 조사(병합 여부 + `git cherry`로 main에 없는 커밋 확인) → 28개 삭제(병합됐거나, 닫힌 PR·이후 재작업으로 대체된 것). 로컬 옛 브랜치 2개도 삭제(5월, main 포함)
+  - **발견**: `stock_2026-08-26.md`가 main에 없고 `claude/magical-cerf-oftiub`에만 존재 — 그날 루틴이 main 대신 세션 브랜치로 push(Step 6 `mcp__github__push_files` 미사용 추정). 리포트 온전(9섹션·116줄) 확인 후 cherry-pick → `stock_build.yml` push 빌드로 `publish/stock/2026-08-26.html` 생성(`d13196b3`, 이 빌드에서 헤더 테마 버튼 변경도 전 주식 페이지에 반영). 3일 초과라 발송·카드뉴스 없음
+  - 검증 목록: 라이브 사이트·저장소·Actions 로그로 21건 확인 체크, 이미지 모드 전용 3건은 "이미지 재개 시 확인" 1건으로 통합, 장애 시에만 확인 가능한 항목은 표시
+  - **신규 발견**: `/api/unsubscribe`·`/api/manage`가 파라미터 없이도 500 `FUNCTION_INVOCATION_FAILED` — 검증 필요 목록에 등록(미조사)
 - [x] **서브페이지 테마 버튼 → SPA 테마 패널 연결** (2026-09-30) — 세션 28차(3)
   - 확인: "테마 chip 그룹 분리" TODO는 이미 `4708f579`에서 구현·반영돼 있었음(문서만 미갱신 — 패턴 9). 주식 페이지(`templates/header.html`)의 테마 버튼은 `window.openThemePanel`이 서브페이지에 없어 **눌러도 아무 동작 없던 죽은 버튼**이었고, editorial(뉴스·AI이슈·아카이브)에는 버튼 자체가 없었음
   - 서브페이지는 독립 레이아웃이라 제자리 테마 전환이 구조상 불가 → 테마 버튼을 `index.html#theme-{탭}` 링크로: `templates/header.html`(주식, `active_tab`) + `editorial.py::_layout()`(`_SVG_THEME`, `active`). SPA(`app.html`+`index.html`) hash 라우팅이 `#theme-*`면 해당 탭 전환 + `openThemePanel()` 후 hash 제거 (기존 `#ai-issue`/`#stock` 동작 유지)
@@ -482,40 +487,39 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [x] PR #37 → main 머지 완료 (텔레그램 미리보기 캐시 + SPA 헤더 배경 + Instagram ImportError + cardnews 에러 알림)
 - [ ] 주간주식(`weekly_build.yml`) 다음 실행 후 이메일 수신 — 주간 총평/지수/테마/전략/리스크/일정 섹션 표시 확인 (PR #40)
 - [ ] AI이슈 이메일 구독취소 링크 — 수신자 본인 이메일로 HMAC 토큰 생성되는지 확인 (PR #40)
-- [ ] 6/19(목) 이후 `cardnews.yml` 실행 → Instagram 정상 발송 확인 (ImportError 수정 반영)
-- [ ] 6/19(목) 이후 `cardnews.yml` 실패 시 텔레그램 에러 알림 수신 확인 (새 notification step)
-- [ ] SPA(`/`) 탭 전환 시 헤더 전체 배경이 섹션별로 바뀌는지 실제 브라우저 확인
-- [ ] 텔레그램 파이프라인 알림에서 날짜 카드 미리보기가 더 이상 고착되지 않는지 확인
-- [ ] `cardnews.yml` 다음 stock 실행 — `stock_send.yml` 완료 후 트리거되는지 확인 (카드뉴스 발송 순서)
-- [ ] Threads stock 캡션에 🌡 시장온도·📌 요약·🔑 키워드 포함되는지 확인
-- [ ] news/ai-issue Threads 캡션에 issue_titles(제목 3개) 포함되는지 확인
-- [ ] 6/21(일) 다음 AI이슈 자동 실행 — `ai_issue.yml` git add data.json 정상 반영 확인
-- [ ] 주간 주식 루틴 (`stock_build.yml`) → `data.json`에 최신 날짜 포함 확인
+- [x] cardnews 실패 알림 — 9/29·9/30 실행에서 `카드뉴스 발송 결과 알림` 스텝 성공, 플랫폼별 상세 표시 (2026-09-30 확인)
+- [x] SPA 탭 전환 시 헤더 `data-section` 전환 — 브라우저로 `#theme-stock` 진입 시 `data-section=stock` 확인 (2026-09-30 확인)
+- [x] 텔레그램 알림 미리보기 고착 — `notify_pipeline.py` `disable_web_page_preview` 적용 확인 (2026-09-30 확인)
+- [x] 주식 카드뉴스 순서 — 9/30 stock_send 발송 후 `workflow_dispatch`로 cardnews 실행 (세션 27 구조로 대체) (2026-09-30 확인)
+- [x] 주식 SNS 캡션(온도·요약·키워드) — Facebook text 게시 성공 + 캡션 회귀 62건 동일 + 테스트 (2026-09-30 확인)
+- [x] 뉴스·AI이슈 SNS 캡션 issue_titles — 캡션 회귀 비교·테스트로 확인 (2026-09-30 확인)
+- [x] AI이슈 data.json 반영 — 라이브 `/ai-issue/data.json` updated=2026-09-27 (2026-09-30 확인)
+- [x] 주식 data.json 최신 날짜 — 라이브 `/stock/data.json` 첫 항목 2026-09-29 (2026-09-30 확인)
 - [ ] `stock_send.yml` — Notion Summary `[키워드] 설명` 형식 + 시장온도 기록 확인
-- [ ] `Facebook META_PAGE_ACCESS_TOKEN` 재발급 필요 (2026-06-10 PDT 만료) — Facebook Developers → Graph API Explorer
-- [ ] `news.yml` 다음 자동 실행 — Vercel 배포 포함 확인 (`[skip ci]` 제거 반영)
-- [ ] `ai_issue.yml` 자동 실행 시 deploy-pages 이후 이메일·텔레그램 실행 확인
-- [ ] `/privacy` 페이지 Vercel 배포 확인 (vercel.json 라우팅 추가됨)
+- [x] Facebook 토큰 — 9/29·9/30 text 게시 성공으로 유효 확인 (2026-09-30 확인)
+- [x] news.yml Vercel 배포 — 라이브 사이트 최신 데이터 반영 (2026-09-30 확인)
+- [x] ai_issue.yml 9/27 실행 — Pages 배포·이메일·텔레그램·알림 스텝 모두 success (2026-09-30 확인)
+- [x] `/privacy`·`/subscribe`·`/about`·`/ads.txt` 모두 200 (2026-09-30 확인)
 - [ ] AdSense 사이트 심사 승인 후 실제 슬롯 ID로 `data-ad-slot="AUTO"` 교체 필요
 - [ ] `SUPABASE_SERVICE_KEY` Vercel 환경변수 등록 확인 → `/api/unsubscribe` 401 에러 해결
-- [ ] Vercel 배포 후 `/subscribe` 페이지 접속 + 구독 버튼 노출 확인
+- [x] `/subscribe` 200 (2026-09-30 확인)
 - [ ] 구독 신청 → 확인 이메일 수신 → confirm 링크 클릭 → Supabase status=active 확인
-- [ ] `cardnews.yml` 수동 실행 → Instagram/Threads(텍스트)/Facebook/Telegram 정상 발송 확인
 - [ ] `NOTION_DATABASE_ID_STOCK` / `NOTION_DATABASE_ID_AI_ISSUE` 실제 값으로 교체 필요
-- [ ] `news.yml` 다음 자동 실행 → `publish/stock/data.json` Vercel 반영 확인 (PR #31 수정)
-- [ ] `weekly_build.yml` 다음 실행 → 텔레그램 "주간 주식시황 빌드 완료" 메시지에 기간·총평·지수 포함 확인
+- [x] stock data.json Vercel 반영 — 라이브 최신 날짜 확인 (2026-09-30 확인)
+- [x] weekly_build 알림 스텝 success (9/26) (2026-09-30 확인)
 - [ ] `news.yml` 다음 자동 실행 — `분석 결과 확인`(`check_analysis`) 스텝이 `ok=true/false`를 의도대로 출력하는지 Actions 로그 확인 (세션 19차, 정적 검증만 완료·실행 미확인)
-- [ ] `news.yml`/`stock_build.yml`/`weekly_build.yml` 다음 실행 — 단독 라인 분리한 git add가 실제 커밋에 `app.html`/`index.html`/`archive.html` 모두 포함되는지 확인 (세션 19차)
-- [ ] 분석 실패 재현 시 `core/shared/alert.py::send_pipeline_alert()`가 텔레그램+이메일 둘 다 정상 발송하는지 확인 (세션 19차, 로컬 import만 확인했고 실제 발송 테스트 안 함)
-- [ ] 주식 백업 경로(`run_stock.py` 직접 이메일 발송 분기) 다음 실행 시 `channel="stock"` 수정분이 실제로 stock 구독자에게만 가는지 확인 (세션 19차)
-- [ ] `news.yml`/`ai_issue.yml` 다음 실행 중 GitHub Pages 배포가 실패해도 이메일/텔레그램이 정상 발송되는지 실제 재현 확인 (세션 24차, PR #47 — 재현이 GitHub 측 장애에 의존하므로 다음 발생 시 확인)
-- [ ] 다음 AI이슈 자동 실행 때 Gemini가 또 다른 JSON 키 형태로 응답해도 `core/shared/text_utils.py`가 정상적으로 마크다운 변환하는지 확인 (세션 24차, PR #48 — 구조 기반 감지라 이론상 새 키 이름에도 안전해야 함)
-- [ ] AI이슈 다음 자동 빌드 시 코드블록 줄바꿈 CSS가 정상 반영되는지, classic/ink/forest/minimal 테마 전환 시에도 코드블록이 있는 경우 동일하게 줄바꿈되는지 확인 (세션 24차, PR #49)
-- [ ] `cardnews.yml` 다음 stock 실행 — Instagram `media_publish` 2207027 재시도 적용 후 정상 게시되는지 확인 (PR #46)
-- [ ] Threads stock 캡션이 500자를 넘는 날 자동 축약되어 정상 발송되는지 확인 (PR #46)
-- [ ] `cardnews.yml` 다음 자동 실행(text 모드) — 이미지 스텝 5개 skip, Facebook 텍스트 게시 성공, 텔레그램 실패 알림에 "❌ threads: 토큰 만료 … / ✅ 성공: facebook" 형태로 표시되는지 확인 (세션 27차)
+- [x] 단독 라인 git add — 9/30 뉴스 커밋에 `publish/index.html`·`archive.html`·`search-index.json` 포함 (2026-09-30 확인)
+- [ ] (장애 시에만 확인 가능) 분석 실패 재현 시 `core/shared/alert.py::send_pipeline_alert()`가 텔레그램+이메일 둘 다 정상 발송하는지 확인 (세션 19차, 로컬 import만 확인했고 실제 발송 테스트 안 함)
+- [ ] (백업 경로 동작 시에만) 주식 백업 경로(`run_stock.py` 직접 이메일 발송 분기) 다음 실행 시 `channel="stock"` 수정분이 실제로 stock 구독자에게만 가는지 확인 (세션 19차)
+- [ ] (장애 시에만 확인 가능) `news.yml`/`ai_issue.yml` 다음 실행 중 GitHub Pages 배포가 실패해도 이메일/텔레그램이 정상 발송되는지 실제 재현 확인 (세션 24차, PR #47 — 재현이 GitHub 측 장애에 의존하므로 다음 발생 시 확인)
+- [x] AI이슈 JSON 래퍼 — 07~09월 리포트에 raw JSON 노출 없음(09-27의 `{"` 는 프롬프트 예시 코드블록, 정상) (2026-09-30 확인)
+- [x] 코드블록 줄바꿈 — 라이브 AI이슈 페이지에 `pre-wrap` 반영 (2026-09-30 확인)
+- [x] Threads 500자 축약 — `tests/test_sns_modules.py::test_truncate_caption_keeps_limit` (2026-09-30 확인)
+- [x] cardnews text 모드 — 9/29·9/30 Facebook 성공, 알림 상세 `❌ threads: 토큰 만료 / ✅ 성공: facebook` (2026-09-30 확인)
 - [ ] Facebook text 모드 게시물에 링크 미리보기 카드가 붙는지 페이지에서 육안 확인 (세션 27차)
 - [x] `stock_send.yml` 9/30(수) — `직전 정기 실행: 2026-09-29T02:26:59Z`, 9/29 일일 리포트 1회 발송, 직후 `cardnews.yml` `workflow_dispatch` 실행 확인. text 모드 Facebook 성공·Threads 토큰 만료 알림 상세 정상 표시. 주식 23:00 빌드 커밋이 `reports/history/*` 31개만 변경(publish HTML 변동 없음 = 결정적 빌드 확인) (2026-09-30)
+- [ ] **`/api/unsubscribe`·`/api/manage` 500 (`FUNCTION_INVOCATION_FAILED`)** — 2026-09-30 확인. 파라미터 없는 요청에도 함수 자체가 크래시(=401/키 누락과 다른 증상, 임포트/런타임 오류 추정). 이메일 구독취소 링크가 동작하지 않을 수 있음 — Vercel 런타임 로그 확인 필요
+- [ ] 카드뉴스 이미지 모드 재개 시: Instagram 카루셀(2207027 재시도 포함)·Threads 카루셀·Facebook 멀티사진 실발송 확인 (text 모드 전환으로 보류)
 - [ ] 10/4(일) 주간 1회 발송 + 주간 이메일 제목 `(주간)` 표기, 10/5(월) stock_send 미실행 확인 (세션 27차(2))
 - [ ] 10/4(일) AI이슈 자동 실행 후 `AI Issue → Obsidian`이 이어서 실행되어 `ai_issue_주간_2026-10-04.md`가 obsi·mywiki에 게시되는지 확인 (세션 28차)
 - [ ] 다음 주식 빌드 후 사이트 주식 목록/아카이브에 `2026-09-26 (주간)` 표기 반영 확인, 다음 일요일 주간 이메일 제목 `📅 [주간 시황] YYYY-MM-DD (주간) 주식 종합 브리핑` 확인
@@ -528,7 +532,6 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [ ] **SNS 카드뉴스 실제 테스트** — Instagram/Threads/Facebook/Telegram 채널별 발송 검증
 - [ ] **Twitter/X 카드뉴스** — Basic 티어 결제 후 활성화
 - [ ] **레거시 GitHub Secrets 정리** — `RECIPIENT_EMAIL`(단수), `RESEND_API_KEY` 삭제 권장
-- [ ] **오래된 세션 브랜치 정리** — `claude/cardnews-css-refactor`, `claude/optimistic-carson-*`, `claude/magical-cerf-2g7aos`/`f7v7s3`/`wnzard`, `claude/clever-meitner-*`, `fix/stock-send-fixes-0608`, `claude/stock-briefing-v6-weekly-idan6z` 등 다수 — 전부 06-05~06-24 사이 세션 잔여물로 작업 내용은 이미 다른 경로로 main에 반영됨(브랜치 삭제만 누락). GitHub UI(`/branches`)에서 일괄 삭제 권장
 
 ### 주요 아키텍처 메모
 - **옵시디언/mywiki 게시 파이프라인 (2026-09-29 확인)**: 로컬 볼트 `C:\obsidian\msshin` = 저장소 `chamgil71/obsi`(private, git 루트 `C:\obsidian`, 저장소 내 경로 `msshin/…`). obsi main push → obsi `.github/workflows/publish.yml`(`scripts/vault_publish_build.py`+`sync_to_mywiki.py`, `MY_GITHUB_TOKEN`)이 `publish: true` 노트를 `chamgil71/mywiki`(public, Quartz) `content/`에 동기화·push → mywiki `deploy.yaml`이 GitHub Pages 배포. **즉 obsi `msshin/10-Projects/AI이슈/`에 노트를 넣으면 위키(`report/AI이슈/`)까지 자동**. 선례: obsi `gmail-clip.yml`이 `msshin/30-Resources/gmail-clips/`에 자동 커밋 중. (mywiki 로컬 `deploy.ps1`/`export_publish_notes.py`는 구 방식)
