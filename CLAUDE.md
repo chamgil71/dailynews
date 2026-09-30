@@ -113,7 +113,7 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 ## 현재 상태 (2026-09-30)
 
 ### 사용자 조치 대기 (기록만 — 2026-09-30 결정: 별도 착수 없음)
-- Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / Vercel `SUPABASE_SERVICE_KEY` 등록 확인 / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급
+- Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / Vercel 환경변수에 남은 `GH_CONTENTS_TOKEN`·`GITHUB_REPOSITORY` 삭제 / GitHub 토큰 `content_write`·`allrepo`·`obsi` 삭제 / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급
 - (완료 2026-09-30) `OBSI_PUSH_TOKEN` 등록 — dispatch 실행으로 obsi checkout·노트 판정 성공 확인(생성 대상 0건이라 push 권한은 10/4 첫 자동 실행에서 확인)
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
@@ -502,19 +502,19 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [x] 뉴스·AI이슈 SNS 캡션 issue_titles — 캡션 회귀 비교·테스트로 확인 (2026-09-30 확인)
 - [x] AI이슈 data.json 반영 — 라이브 `/ai-issue/data.json` updated=2026-09-27 (2026-09-30 확인)
 - [x] 주식 data.json 최신 날짜 — 라이브 `/stock/data.json` 첫 항목 2026-09-29 (2026-09-30 확인)
-- [ ] `stock_send.yml` — Notion Summary `[키워드] 설명` 형식 + 시장온도 기록 확인
+- [ ] `stock_send.yml` — Notion Summary `[키워드] 설명` 형식 확인 (기록 자체·시장온도 파싱은 9/30 로그로 확인, 형식은 Notion 페이지 육안 확인 필요)
 - [x] Facebook 토큰 — 9/29·9/30 text 게시 성공으로 유효 확인 (2026-09-30 확인)
 - [x] news.yml Vercel 배포 — 라이브 사이트 최신 데이터 반영 (2026-09-30 확인)
 - [x] ai_issue.yml 9/27 실행 — Pages 배포·이메일·텔레그램·알림 스텝 모두 success (2026-09-30 확인)
 - [x] `/privacy`·`/subscribe`·`/about`·`/ads.txt` 모두 200 (2026-09-30 확인)
 - [ ] AdSense 사이트 심사 승인 후 실제 슬롯 ID로 `data-ad-slot="AUTO"` 교체 필요
-- [ ] `SUPABASE_SERVICE_KEY` Vercel 환경변수 등록 확인 → `/api/unsubscribe` 401 에러 해결
+- [x] `SUPABASE_SERVICE_KEY` Vercel 등록 — 구독 API 수정 후 `/api/manage?token=<가짜 32자>`가 DB 조회 후 "링크가 만료되었습니다" 반환(키 없으면 조회 불가) (2026-09-30 확인)
 - [x] `/subscribe` 200 (2026-09-30 확인)
 - [ ] 구독 신청 → 확인 이메일 수신 → confirm 링크 클릭 → Supabase status=active 확인
-- [ ] `NOTION_DATABASE_ID_STOCK` / `NOTION_DATABASE_ID_AI_ISSUE` 실제 값으로 교체 필요
+- [x] Notion DB ID — 9/30 stock_send `[Notion 주식] 2026-09-29 시황 기록 완료` (2026-09-30 확인)
 - [x] stock data.json Vercel 반영 — 라이브 최신 날짜 확인 (2026-09-30 확인)
 - [x] weekly_build 알림 스텝 success (9/26) (2026-09-30 확인)
-- [ ] `news.yml` 다음 자동 실행 — `분석 결과 확인`(`check_analysis`) 스텝이 `ok=true/false`를 의도대로 출력하는지 Actions 로그 확인 (세션 19차, 정적 검증만 완료·실행 미확인)
+- [x] news.yml `분석 결과 확인` 게이트 — 9/30 실행 스텝 success, 이후 빌드·발송 정상 (2026-09-30 확인)
 - [x] 단독 라인 git add — 9/30 뉴스 커밋에 `publish/index.html`·`archive.html`·`search-index.json` 포함 (2026-09-30 확인)
 - [ ] (장애 시에만 확인 가능) 분석 실패 재현 시 `core/shared/alert.py::send_pipeline_alert()`가 텔레그램+이메일 둘 다 정상 발송하는지 확인 (세션 19차, 로컬 import만 확인했고 실제 발송 테스트 안 함)
 - [ ] (백업 경로 동작 시에만) 주식 백업 경로(`run_stock.py` 직접 이메일 발송 분기) 다음 실행 시 `channel="stock"` 수정분이 실제로 stock 구독자에게만 가는지 확인 (세션 19차)
@@ -766,7 +766,7 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 
 **GitHub 토큰 대응표** (Settings → Developer settings)
 - fine-grained `OBSI_PUSH_TOKEN` → dailynews Secret `OBSI_PUSH_TOKEN` (obsi 전용, 만료 2026-12-29)
-- classic `REPO_SYNC_TOKEN` → **obsi** Secret `MY_GITHUB_TOKEN` 추정(obsi→mywiki 게시, 만료 2027-01-01 — Regenerate 후 obsi Secret 갱신). 넓은 classic 권한이면 만료 시 mywiki 전용 fine-grained로 교체 권장
+- classic `REPO_SYNC_TOKEN` → **obsi** Secret `MY_GITHUB_TOKEN` 추정 (토큰 Note와 Secret 이름은 무관, 값으로 연결 — obsi 게시 직후 토큰 'Last used' 갱신으로 확인 가능)(obsi→mywiki 게시, 만료 2027-01-01 — Regenerate 후 obsi Secret 갱신). 넓은 classic 권한이면 만료 시 mywiki 전용 fine-grained로 교체 권장
 
 ---
 
