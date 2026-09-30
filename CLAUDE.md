@@ -114,7 +114,7 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 
 ### 사용자 조치 대기 (기록만 — 2026-09-30 결정: 별도 착수 없음)
 - Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / Vercel `SUPABASE_SERVICE_KEY` 등록 확인 / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급 + 레거시 Secrets(`RECIPIENT_EMAIL`·`RESEND_API_KEY`) 정리
-- **`OBSI_PUSH_TOKEN` 발급·등록** — 기존 `GH_CONTENTS_TOKEN`은 obsi 접근 불가(Actions `Not Found`) 확인. 발급·등록 절차는 `.env.example` 옵시디언 섹션. 등록 전까지 `AI Issue → Obsidian`은 매주 실패 알림 → 로컬에서 `python scripts/export_obsidian_notes.py --note-dir C:/obsidian/msshin/10-Projects/AI이슈` 후 obsi push로 대체 가능
+- (완료 2026-09-30) `OBSI_PUSH_TOKEN` 등록 — dispatch 실행으로 obsi checkout·노트 판정 성공 확인(생성 대상 0건이라 push 권한은 10/4 첫 자동 실행에서 확인)
 - (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
@@ -738,7 +738,7 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 | `NOTION_DATABASE_ID_AI_ISSUE` | Notion AI이슈 DB | ✅ |
 | `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | 주식 국내뉴스 수집 | ✅ |
 | `GH_CONTENTS_TOKEN` | GitHub Contents API (레거시, obsi 접근 불가) | ✅ |
-| `OBSI_PUSH_TOKEN` | obsi 노트 push (fine-grained, obsi Contents R/W) — `ai_issue_obsi.yml` | ❌ 미등록 |
+| `OBSI_PUSH_TOKEN` | obsi 노트 push (fine-grained, obsi Contents R/W) — `ai_issue_obsi.yml` | ✅ (2026-09-30) |
 | `INSTAGRAM_ACCESS_TOKEN` | Meta Graph API (60일 만료 주의) | ✅ |
 | `INSTAGRAM_BUSINESS_ACCOUNT_ID` | Instagram Business ID | ✅ |
 | `FACEBOOK_PAGE_ID` | Facebook Page ID (Ainews) | ✅ |
