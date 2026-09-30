@@ -1,0 +1,93 @@
+name: AI Issue → Obsidian
+
+# AI이슈 주간 리포트를 obsi 저장소(옵시디언 볼트)에 노트로 등록한다.
+# obsi main push → obsi publish.yml 이 mywiki(Quartz)로 자동 게시.
+# 노트가 없는 날짜만 생성하므로 누락 주차는 다음 실행에서 자동 백필되고,
+# 이미 있는 노트(옵시디언에서 수기 편집한 것 포함)는 덮어쓰지 않는다.
+on:
+  workflow_run:
+    workflows: ["AI Issue Weekly Report"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '이 날짜 하나만 등록 (YYYY-MM-DD). 비우면 누락분 전체'
+        required: false
+
+concurrency:
+  group: obsi-export
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+      OBSI_REPO: chamgil71/obsi
+      OBSI_NOTE_DIR: obsi/msshin/10-Projects/AI이슈
+      OBSI_SYNC_SINCE: '2026-08-02'   # 이전 주차는 수동 등록 구간
+
+    steps:
+      - name: Checkout dailynews
+        uses: actions/checkout@v4
+        with:
+          ref: main   # workflow_run 이면 AI이슈 워크플로우가 방금 push한 리포트까지 포함
+
+      - name: Checkout obsi (AI이슈 폴더만)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.OBSI_REPO }}
+          # OBSI_PUSH_TOKEN 이 등록되면 우선 사용, 없으면 기존 PAT 사용.
+          # GITHUB_TOKEN 은 타 저장소 push 불가 + push 해도 obsi publish.yml 이 트리거되지 않음.
+          token: ${{ secrets.OBSI_PUSH_TOKEN || secrets.GH_CONTENTS_TOKEN }}
+          path: obsi
+          fetch-depth: 0      # push 전 rebase 용 이력 (blob 은 필요한 것만)
+          filter: blob:none
+          sparse-checkout: |
+            msshin/10-Projects/AI이슈
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 노트 생성
+        id: export
+        env:
+          ONLY_DATE: ${{ github.event.inputs.date }}
+        run: |
+          if [ -n "$ONLY_DATE" ]; then
+            python scripts/export_obsidian_notes.py --date "$ONLY_DATE"
+          else
+            python scripts/export_obsidian_notes.py
+          fi
+
+      - name: obsi 커밋 + 푸시
+        if: steps.export.outputs.created != '0'
+        working-directory: obsi
+        env:
+          DATES: ${{ steps.export.outputs.dates }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "actions@github.com"
+          for d in $DATES; do
+            git add "msshin/10-Projects/AI이슈/ai_issue_주간_${d}.md"
+          done
+          git commit -m "chore(ai-issue): 주간 AI이슈 노트 자동 등록 (${DATES})"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: 실패 알림
+        if: failure()
+        run: |
+          python scripts/notify_pipeline.py --type obsidian --status failure \
+            --date "$(date +'%Y-%m-%d')" \
+            --detail "obsi 노트 등록 실패 — checkout/push 단계면 토큰(OBSI_PUSH_TOKEN, 없으면 GH_CONTENTS_TOKEN)의 obsi Contents 쓰기 권한 확인"
+        env:
+          TELEGRAM_BOT_TOKEN:       ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_MONITOR: ${{ secrets.TELEGRAM_CHAT_ID_MONITOR }}
+          TELEGRAM_CHAT_ID:         ${{ secrets.TELEGRAM_CHAT_ID }}

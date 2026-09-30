@@ -51,3 +51,10 @@
 - **제안(결정 대기)**: ai_issue.yml에서 주간 노트 자동 push(기존 파일 덮어쓰기 금지, 실패 알림) + 9주 백필. 월간은 수동/자동 종합/초안 중 선택. 사용자 PAT(`OBSI_PUSH_TOKEN`) 등록 필요.
 - **오늘 세션 전체 요약**: 카드뉴스 이미지 중단·SNS 텍스트 전환·플랫폼별 실패 알림(`2a18370c`) / 주식 발송 중복 제거·주간 일요일 1회·카드뉴스 발송일 한정·(주간) 표기(`9a6f57d6`) / 결정적 빌드 출력(`0d4e64ee`) / 머리말 통일 보류 TODO(`ba3dc52f`).
 - **다음 계획**: 9/30 stock_send 로그 확인(직전 실행 조회·cardnews 호출), 10/4(일) 주간 1회·10/5(월) 미발송 확인, 옵시디언 연동 결정 후 구현, Threads 토큰 재발급.
+
+## 2026-09-30 — 세션 28: 미완료 작업 점검 + AI이슈 옵시디언 자동 등록
+- **점검(로그 확인)**: 9/30 stock_send — 직전 실행 조회 정상, 9/29 리포트 1회 발송, cardnews `workflow_dispatch` 호출 확인. text 모드 Facebook 성공·Threads 토큰 만료 알림 정상. 23:00 주식 빌드는 `reports/history/*`만 변경(결정적 빌드 확인). Facebook 토큰 유효 확인.
+- **사용자 결정**: 조치 필요 항목(Threads 토큰·Vercel Supabase 키·AdSense 슬롯·Twitter/레거시 Secrets)은 기록만. 옵시디언 — 주간 자동 등록 + 누락분 백필, 월간 수동 유지, 토큰은 기존 PAT(`GH_CONTENTS_TOKEN`) 우선 사용.
+- **변경**: `.github/workflows/ai_issue_obsi.yml`(AI이슈 성공 시 workflow_run + dispatch), `core/ai_issue/obsidian_export.py`, `scripts/export_obsidian_notes.py`(없는 노트만 생성·덮어쓰기 금지), `notify_pipeline.py --type obsidian`.
+- **테스트·검증**: `PYTHONUTF8=1 pytest tests/` 44 passed(신규 4). 생성 노트가 수동 등록분(07-12·07-26)과 바이트 동일. 로컬 dry-run 대상 9건(08-02~09-27).
+- **다음 계획**: main push 후 dispatch로 백필 실행(토큰 권한 확인). 실패하면 새 PAT를 `OBSI_PUSH_TOKEN`으로 등록 후 재실행. 10/4 자동 연동 확인.

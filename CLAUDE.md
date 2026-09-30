@@ -110,15 +110,20 @@ Claude Code 웹 환경은 세션 브랜치 제약으로 `git push origin main`�
 
 ---
 
-## 현재 상태 (2026-09-29)
+## 현재 상태 (2026-09-30)
 
-### 진행 중
-- **AI이슈 주간 → 옵시디언(obsi) → mywiki 자동 등록** (2026-09-29 검토 완료, 사용자 결정 대기) — 상세는 아래 "주요 아키텍처 메모 > 옵시디언/mywiki 게시 파이프라인"
-  - 결정 대기 ①: 주간 자동 등록 + 누락 9주(08-02~09-27) 백필 진행 여부
-  - 결정 대기 ②: 월간 방식 — (a) 지금처럼 수동 Claude 작성 (b) 주간 4~5개를 Gemini로 자동 종합 (c) 자동 초안 `publish: false` 후 검토 게시
-  - 사용자 할 일: fine-grained PAT(obsi, Contents R/W) 발급 → dailynews Secret `OBSI_PUSH_TOKEN` 등록 (GITHUB_TOKEN은 타 저장소 push 불가, 또 GITHUB_TOKEN push는 obsi publish.yml을 트리거하지 않음)
+### 사용자 조치 대기 (기록만 — 2026-09-30 결정: 별도 착수 없음)
+- Threads 토큰 재발급(8/10 만료, 카드뉴스 실행마다 실패 알림) / Vercel `SUPABASE_SERVICE_KEY` 등록 확인 / AdSense 승인 후 슬롯 ID 교체 / Twitter 키 발급 + 레거시 Secrets(`RECIPIENT_EMAIL`·`RESEND_API_KEY`) 정리
+- (확인됨 2026-09-30) Facebook `META_PAGE_ACCESS_TOKEN`은 유효 — text 모드 게시 성공 로그 확인
 
 ### 완료된 작업 (main 반영 완료)
+- [x] **AI이슈 주간 → 옵시디언(obsi) → mywiki 자동 등록 + 누락분 백필** (2026-09-30) — 세션 28차
+  - **사용자 결정(2026-09-30)**: ① 주간 자동 등록 + 누락 9주(08-02~09-27) 백필 진행 ② 월간은 당분간 수동(Claude 작성) 유지 ③ 토큰은 기존 PAT 사용, 안 되면 새로 발급
+  - `.github/workflows/ai_issue_obsi.yml` 신설 — `AI Issue Weekly Report` 성공 시 `workflow_run`으로 실행 + `workflow_dispatch`(`date` 입력 시 그 날짜만). obsi를 `msshin/10-Projects/AI이슈`만 sparse checkout → 노트 생성 → obsi main push → obsi `publish.yml`이 mywiki 게시. 기존 `ai_issue.yml`은 수정하지 않음(발송 파이프라인과 분리, 실패해도 AI이슈 발송에 영향 없음)
+  - 토큰: `secrets.OBSI_PUSH_TOKEN || secrets.GH_CONTENTS_TOKEN` — 새 PAT를 `OBSI_PUSH_TOKEN`으로 등록하면 자동으로 우선 사용. 실패 시 모니터 채널로 `AI이슈 옵시디언 등록 파이프라인 실패` 알림(`notify_pipeline.py --type obsidian`)
+  - `core/ai_issue/obsidian_export.py` + `scripts/export_obsidian_notes.py` — **노트가 없는 날짜만 생성**(since `OBSI_SYNC_SINCE=2026-08-02`, 이전은 수동 구간) → 누락 주차는 다음 실행 때 자동 백필, 이미 있는 노트(옵시디언 수기 편집 포함)는 절대 덮어쓰지 않음. 생성 노트는 수동 등록분(07-12·07-26)과 **바이트 단위 동일** 확인
+  - 테스트: `tests/test_obsidian_export.py` 4건, 전체 `PYTHONUTF8=1 pytest tests/` 44 passed (Windows 로컬은 `PYTHONUTF8=1` 없으면 `test_stock_v6.py`가 cp949 디코드 오류로 수집 실패 — 기존 환경 문제)
+
 - [x] **정적 페이지 "생성 시각"을 빌드 시각 → 리포트 실제 생성 시각으로 (결정적 빌드 출력)** (2026-09-29) — 세션 27차(3) — **main push 완료**
   - **문제**: 주식(`build_stock_site.py`)·AI이슈(`build_ai_issue_site.py`)는 빌드마다 과거 페이지까지 전체 재생성하는데, 하단 "생성 … KST"에 `datetime.now()`(빌드 시각)를 넣어 **내용이 같아도 매번 모든 파일이 바뀜** — 주식 빌드 커밋마다 약 100개 파일(각 1줄) 변경, AI이슈 매주 약 20개. 저장소 비대·커밋 이력 잡음 + 과거 페이지에 실제 생성 시각이 아닌 마지막 빌드 시각이 표시되는 오표기
   - `core/shared/report_date.py::report_generated_at(md_text, fallback)` 신설 — MD 머리말(앞 15줄)의 `생성일시: …`(뉴스·AI이슈) / `생성: …`(주식 일일·주간) 추출, 없으면 리포트 날짜(초기 포맷 3개: news 05-23·05-24, stock 05-18)
@@ -500,7 +505,9 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - [ ] Threads stock 캡션이 500자를 넘는 날 자동 축약되어 정상 발송되는지 확인 (PR #46)
 - [ ] `cardnews.yml` 다음 자동 실행(text 모드) — 이미지 스텝 5개 skip, Facebook 텍스트 게시 성공, 텔레그램 실패 알림에 "❌ threads: 토큰 만료 … / ✅ 성공: facebook" 형태로 표시되는지 확인 (세션 27차)
 - [ ] Facebook text 모드 게시물에 링크 미리보기 카드가 붙는지 페이지에서 육안 확인 (세션 27차)
-- [ ] `stock_send.yml` 다음 실행들 — 로그 "직전 정기 실행: …" 값이 채워지는지(Actions API 권한), 화~토 전날 리포트 1회·일요일 주간 1회·월요일 미실행인지, 발송한 날만 `cardnews.yml`이 `workflow_dispatch`로 뜨는지 확인 (세션 27차(2))
+- [x] `stock_send.yml` 9/30(수) — `직전 정기 실행: 2026-09-29T02:26:59Z`, 9/29 일일 리포트 1회 발송, 직후 `cardnews.yml` `workflow_dispatch` 실행 확인. text 모드 Facebook 성공·Threads 토큰 만료 알림 상세 정상 표시. 주식 23:00 빌드 커밋이 `reports/history/*` 31개만 변경(publish HTML 변동 없음 = 결정적 빌드 확인) (2026-09-30)
+- [ ] 10/4(일) 주간 1회 발송 + 주간 이메일 제목 `(주간)` 표기, 10/5(월) stock_send 미실행 확인 (세션 27차(2))
+- [ ] 10/4(일) AI이슈 자동 실행 후 `AI Issue → Obsidian`이 이어서 실행되어 `ai_issue_주간_2026-10-04.md`가 obsi·mywiki에 게시되는지 확인 (세션 28차)
 - [ ] 다음 주식 빌드 후 사이트 주식 목록/아카이브에 `2026-09-26 (주간)` 표기 반영 확인, 다음 일요일 주간 이메일 제목 `📅 [주간 시황] YYYY-MM-DD (주간) 주식 종합 브리핑` 확인
 
 ### 다음 개발 (우선순위 순)
@@ -520,7 +527,8 @@ stock_send.yml KST 화~일 08:00 (cron '0 23 * * 1-6' = UTC 월~토, 실제 도�
 - **옵시디언/mywiki 게시 파이프라인 (2026-09-29 확인)**: 로컬 볼트 `C:\obsidian\msshin` = 저장소 `chamgil71/obsi`(private, git 루트 `C:\obsidian`, 저장소 내 경로 `msshin/…`). obsi main push → obsi `.github/workflows/publish.yml`(`scripts/vault_publish_build.py`+`sync_to_mywiki.py`, `MY_GITHUB_TOKEN`)이 `publish: true` 노트를 `chamgil71/mywiki`(public, Quartz) `content/`에 동기화·push → mywiki `deploy.yaml`이 GitHub Pages 배포. **즉 obsi `msshin/10-Projects/AI이슈/`에 노트를 넣으면 위키(`report/AI이슈/`)까지 자동**. 선례: obsi `gmail-clip.yml`이 `msshin/30-Resources/gmail-clips/`에 자동 커밋 중. (mywiki 로컬 `deploy.ps1`/`export_publish_notes.py`는 구 방식)
   - 주간 노트 형식: `ai_issue_주간_YYYY-MM-DD.md` = 프론트매터(`title`=파일명, `publish: true`, `type: [report]`, `tags: [AI이슈]`, `source:`, `created`/`modified`=리포트 날짜) + `reports/ai-issue/ai_issue_YYYY-MM-DD.md` 본문 그대로(07-26 본문 diff 0줄). 수동 등록은 07-26까지
   - 월간 `ai_issue_월간_YYYYMM.md`(05·06·07)는 주간 합본이 아니라 Claude가 주제 재구성+추가 출처 조사한 보고서(`source: claude`, ~58KB)
-  - 자동화 설계안: `ai_issue.yml` 리포트 커밋 후 obsi 해당 폴더만 체크아웃 → 노트 생성 → **동일 파일 존재 시 덮어쓰지 않음(사용자 수기 편집 보호)** → PAT로 push, `continue-on-error` + 실패 시 모니터 알림
+  - 자동화(2026-09-30 구현): `.github/workflows/ai_issue_obsi.yml` — 별도 워크플로우(`workflow_run`). 노트 폴더 경로·저장소·since 날짜는 워크플로우 env(`OBSI_REPO`/`OBSI_NOTE_DIR`/`OBSI_SYNC_SINCE`). 특정 주 재등록은 obsi에서 노트를 지운 뒤 dispatch(`date`) — 존재하는 노트는 덮어쓰지 않으므로
+  - 월간은 수동 유지(2026-09-30 결정)
 - **카드뉴스 SNS 발송 모드**: `cardnews.yml` job env `CARDNEWS_MODE`(text|image)가 단일 스위치 — 워크플로우 스텝 skip 조건과 `post_cardnews.py --mode`가 모두 이 값을 따름. 모드별 기본 플랫폼은 `config/cardnews_themes.json` `sns.default_platforms`. 캡션 원본은 `core/shared/sns_source.py`(원본 발행 데이터), 발송 결과·알림 상세는 `core/shared/sns_report.py` → `$GITHUB_OUTPUT` `detail` → `notify_pipeline.py --detail`. 플랫폼은 서로 독립(한 곳 실패가 다른 곳을 막지 않음), `PlatformSkipped`는 실패 아님
 - **Actions 로그 조회**: 로컬에 `gh` CLI 설치됨 — `gh run list --workflow <file>` / `gh run view <id> --log | grep ...`로 직접 원인 확인 가능 (패턴 14의 "Claude는 로그 접근 불가" 전제는 이제 해당 없음). 단 `gh workflow disable` 등 CI 설정 변경 명령은 권한 정책상 차단됨 → 파일 수정·커밋으로 처리
 - **LLM mini→full 에스컬레이션**: `core/news/analyzer.py::BaseAnalyzer._pick_model(..., force_full=False)` — 전 provider(GPT/Claude/Gemini) `_call()`에 `force_full` 파라미터 존재. `ai_issue/analyzer.py`의 TOP10 재시도 루프처럼, mini 모델 실패가 반복되는 재시도 루프에서 2회차 이후 `force_full=True`로 승격 가능(패턴 14). `news_count ≤ threshold`로 mini가 선택되는 프롬프트가 항상 같은 건수(예: 상한 slice)로 호출되면 사실상 threshold 분기가 무의미해지므로, 새 LLM 호출부를 추가할 때 이 함정을 염두에 둘 것

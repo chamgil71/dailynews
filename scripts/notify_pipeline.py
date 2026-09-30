@@ -267,6 +267,7 @@ def _msg_failure(channel: str, date_str: str, detail: str = "") -> str:
     labels = {
         "news": "뉴스 브리핑", "ai-issue": "AI 주간이슈",
         "stock": "주식시황", "cardnews": "카드뉴스 SNS",
+        "obsidian": "AI이슈 옵시디언 등록",
     }
     label = labels.get(channel, channel)
     body = (f"{_escape_md(detail.strip())}\n\n" if detail.strip()
@@ -284,7 +285,8 @@ def _msg_failure(channel: str, date_str: str, detail: str = "") -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="파이프라인 결과 텔레그램 알림")
     parser.add_argument("--type", dest="channel",
-                        choices=["news", "stock", "ai-issue", "weekly-stock", "cardnews"], required=True)
+                        choices=["news", "stock", "ai-issue", "weekly-stock", "cardnews", "obsidian"],
+                        required=True)
     parser.add_argument("--status", choices=["success", "failure"], default="failure")
     parser.add_argument("--date",
                         default=datetime.now(_KST).strftime("%Y-%m-%d"),
