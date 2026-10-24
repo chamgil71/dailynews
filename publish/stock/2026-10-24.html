@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI 자동 생성 주식 시황 브리핑">
+  <title>2026-10-24 (주간) 주식시황 — AI News Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" crossorigin>
+  <style>
+  
+  :root {
+    --color-blue:        #8b2a1f;
+    --color-blue-light:  #c4735a;
+    --color-blue-50:     #fdf4ee;
+    --color-blue-200:    #e8c9b8;
+    --color-navy:        #2b231a;
+    --color-bg:          #f4ede0;
+    --color-card:        #ece2cf;
+    --color-border:      #c8bda7;
+    --color-text:        #1a1612;
+    --color-muted:       #8a7e6f;
+    --color-code-bg:     #ece2cf;
+    --color-green:       #4a6741;
+    --color-green-50:    #f0fdf4;
+    --color-green-200:   #bbf7d0;
+    --color-orange:      #8b5a2a;
+    --color-orange-50:   #fff7ed;
+    --color-orange-200:  #fed7aa;
+    --color-up:          #4a6741;
+    --color-up-50:       #f0fdf4;
+    --color-up-200:      #bbf7d0;
+    --color-down:        #dc2626;
+    --color-down-50:     #fef2f2;
+    --color-down-200:    #fecaca;
+    --font-sans:         'Noto Serif KR', Georgia, serif;
+    --leading-base:      1.8;
+  }
+  
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: var(--leading-base);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    background: var(--color-navy);
+    color: #fff;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    height: 58px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.22);
+  }
+  header .logo {
+    font-size: 1.05rem; font-weight: 700; letter-spacing: -.3px;
+    margin-right: 24px; white-space: nowrap; cursor: pointer;
+  }
+  header .logo .accent { color: var(--color-blue-light); }
+  .header-nav {
+    display: flex; align-items: center; height: 100%; flex: 1; gap: 2px;
+  }
+  .hnav-tab {
+    display: flex; align-items: center; height: 100%;
+    padding: 0 14px;
+    color: rgba(255,255,255,.6);
+    text-decoration: none; font-size: .875rem; font-weight: 500;
+    border-bottom: 3px solid transparent;
+    border-top: none; border-left: none; border-right: none;
+    cursor: pointer; background: none;
+    transition: color .15s, border-color .15s; white-space: nowrap;
+  }
+  .hnav-tab:hover { color: rgba(255,255,255,.9); }
+  .hnav-tab.active {
+    color: #fff; font-weight: 600;
+    border-bottom-color: var(--color-blue-light);
+  }
+  .tab-label { pointer-events: none; }
+  @media (max-width: 600px) {
+    header { padding: 0 12px; }
+    header .logo { font-size: .95rem; margin-right: 6px; }
+    .tab-label { display: none; }
+    .hnav-tab { padding: 0 10px; }
+  }
+  .header-actions {
+    display: flex; align-items: center; gap: 8px; margin-left: auto;
+  }
+  .btn-icon {
+    background: none; border: none; color: rgba(255,255,255,.65);
+    cursor: pointer; padding: 6px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s, background .15s; text-decoration: none;
+  }
+  .btn-icon:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .btn-subscribe {
+    font-size: 12px; font-weight: 700; letter-spacing: .03em;
+    padding: 5px 13px; border-radius: 20px;
+    background: var(--color-blue); color: #fff !important;
+    text-decoration: none; white-space: nowrap;
+    transition: opacity .15s;
+  }
+  .btn-subscribe:hover { opacity: .8; }
+
+  /* legacy nav fallback (nav.js 교체 전 id="site-nav" 깜빡임 방지) */
+  header nav a {
+    color: rgba(255,255,255,.6); text-decoration: none;
+    padding: 0 14px; font-size: .875rem;
+    display: flex; align-items: center; height: 100%;
+  }
+  header nav a.active { color: #fff; font-weight: 600; }
+
+  /* 탭별 활성 border 색상 + 배경 강조 (뉴스=파랑, AI이슈=보라, 주식=초록) */
+  .hnav-tab[data-section="news"].active     { border-bottom-color: #60a5fa; background: rgba(96,165,250,.12); }
+  .hnav-tab[data-section="ai-issue"].active { border-bottom-color: #a78bfa; background: rgba(167,139,250,.12); }
+  .hnav-tab[data-section="stock"].active    { border-bottom-color: #4ade80; background: rgba(74,222,128,.12); }
+  .hnav-tab[data-section="archive"].active  { border-bottom-color: #60a5fa; background: rgba(96,165,250,.12); }
+
+  /* ── 허브 섹션 카드 ── */
+  .hub-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .hub-section-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: border-color .15s, box-shadow .15s;
+    display: block;
+  }
+  .hub-section-card:hover {
+    border-color: var(--color-blue);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .section-abbr {
+    display: inline-block;
+    font-family: ui-monospace, monospace;
+    font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+    color: var(--color-blue);
+    border: 1px solid var(--color-blue-200);
+    background: var(--color-blue-50);
+    padding: 2px 6px; border-radius: 3px;
+    margin-bottom: 10px;
+  }
+  .hub-section-card h3 { color: var(--color-navy); margin: 0 0 4px;
+    font-size: .95rem; font-weight: 700; }
+  .hub-section-card p { color: var(--color-muted); font-size: .85rem; margin: 0; }
+
+  /* ── 컨테이너 ── */
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+
+  /* ── 타이포그래피 ── */
+  h1 {
+    font-size: 1.5rem; color: var(--color-navy);
+    font-weight: 800; line-height: 1.25; margin-bottom: 8px;
+  }
+  .section-kicker {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--color-blue);
+    display: block; margin-bottom: 2px; font-family: ui-monospace, monospace;
+  }
+  h2 {
+    font-size: 1.15rem; color: var(--color-navy); margin: 2em 0 .6em;
+    padding-bottom: 6px; border-bottom: 2px solid var(--color-navy);
+    font-weight: 700; line-height: 1.3;
+  }
+  h3 {
+    font-size: .97rem; color: var(--color-navy);
+    margin: 1.3em 0 .4em; font-weight: 600;
+  }
+  p  { margin-bottom: .85em; }
+  a  { color: var(--color-blue); text-underline-offset: 2px; }
+  ul, ol { padding-left: 1.4em; margin-bottom: .85em; }
+  li { margin-bottom: .3em; }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 1.8em 0; }
+  code {
+    background: var(--color-code-bg); padding: 2px 6px;
+    border-radius: 4px; font-size: .87em;
+    font-family: ui-monospace, monospace;
+  }
+  pre {
+    background: var(--color-code-bg); padding: 12px 14px;
+    border-radius: 6px; overflow-x: auto;
+    white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+  }
+  pre code { background: none; padding: 0; }
+  blockquote {
+    border-left: 3px solid var(--color-blue);
+    padding: 8px 16px;
+    background: var(--color-blue-50);
+    border-radius: 0 6px 6px 0;
+    margin: 1em 0;
+    color: var(--color-muted);
+  }
+  mark { background: #fef08a; border-radius: 2px; padding: 0 2px; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--color-border); padding: 8px 12px;
+           text-align: left; font-size: .88rem; }
+  th { background: var(--color-blue-50); color: var(--color-navy); font-weight: 600; }
+
+  /* ── 태그 (배지 대체 — 이모지 없이, 모노스페이스) ── */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+  .tag {
+    font-size: 11px; font-weight: 600; letter-spacing: .05em;
+    border: 1px solid var(--color-border);
+    padding: 3px 9px; border-radius: 4px;
+    color: var(--color-muted);
+    font-family: ui-monospace, monospace;
+    white-space: nowrap;
+    background: var(--color-bg);
+  }
+  .tag-up   { background: var(--color-up-50);   color: var(--color-up);
+              border-color: var(--color-up-200); }
+  .tag-down { background: var(--color-down-50); color: var(--color-down);
+              border-color: var(--color-down-200); }
+  /* 링크 태그 — hover + 44px 모바일 터치 타깃 */
+  a.tag {
+    position: relative;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--color-muted);
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  a.tag:hover {
+    background: var(--color-navy);
+    color: #fff;
+    border-color: var(--color-navy);
+  }
+  a.tag::after {
+    content: '';
+    position: absolute;
+    inset: -12px -2px;
+  }
+
+  /* 구버전 .badge 호환 */
+  .meta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+  .badge { font-size: 11px; font-weight: 600; border: 1px solid var(--color-border);
+    padding: 3px 9px; border-radius: 4px; color: var(--color-muted);
+    font-family: ui-monospace, monospace; background: var(--color-bg); }
+  .badge-green { background: var(--color-up-50);   color: var(--color-up);
+                 border-color: var(--color-up-200); }
+  .badge-orange { background: var(--color-down-50); color: var(--color-down);
+                  border-color: var(--color-down-200); }
+
+  /* ── 온도 인디케이터 (주식 전용) ── */
+  .temp-indicator {
+    display: inline-block;
+    font-size: 11px; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; padding: 4px 12px;
+    border: 1.5px solid var(--color-border); border-radius: 4px;
+    font-family: ui-monospace, monospace; margin-bottom: 16px;
+  }
+  .temp-neutral   { color: var(--color-muted); }
+  .temp-risk-on   { background: var(--color-up-50);   color: var(--color-up);
+                    border-color: var(--color-up-200); }
+  .temp-rising    { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+  .temp-risk-off  { background: var(--color-down-50); color: var(--color-down);
+                    border-color: var(--color-down-200); }
+  .temp-recession { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+  /* 주식 수치 색상 */
+  .change-pos { color: var(--color-up);   font-weight: 600; }
+  .change-neg { color: var(--color-down); font-weight: 600; }
+
+  /* ── 뉴스 목록 ── */
+  .news-label {
+    display: inline-block; font-size: .72rem; font-weight: 600;
+    background: var(--color-bg); color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    padding: 1px 6px; border-radius: 3px; margin-right: 6px;
+    font-family: ui-monospace, monospace; white-space: nowrap;
+  }
+
+  /* ── 아카이브 목록 ── */
+  .archive-list { list-style: none; padding: 0; }
+  .archive-list li { border-bottom: 1px solid var(--color-border); padding: 12px 0; }
+  .archive-list li:last-child { border-bottom: none; }
+  .archive-list a { font-weight: 500; font-size: .95rem; text-decoration: none;
+                    color: var(--color-text); }
+  .archive-list a:hover { color: var(--color-blue); }
+  .archive-list .date { color: var(--color-muted); font-size: .82rem;
+    margin-top: 2px; font-family: ui-monospace, monospace; }
+
+  /* 아카이브 검색 타입 배지 */
+  .arc-result { padding: 8px 0; border-bottom: 1px solid var(--color-border);
+    font-size: .88rem; line-height: 1.55; }
+  .arc-result:last-child { border-bottom: none; }
+  .arc-type { display: inline-block; font-size: .68rem; font-weight: 700;
+    padding: 1px 5px; border-radius: 3px; margin-right: 4px;
+    vertical-align: middle; font-family: ui-monospace, monospace;
+    letter-spacing: .05em; }
+  .arc-type-news  { background: var(--color-blue-50);  color: var(--color-blue);
+                    border: 1px solid var(--color-blue-200); }
+  .arc-type-ai    { background: #f5f3ff; color: #5b21b6;
+                    border: 1px solid #ddd6fe; }
+  .arc-type-stock { background: var(--color-up-50);    color: var(--color-up);
+                    border: 1px solid var(--color-up-200); }
+  .arc-date { font-family: ui-monospace, monospace; font-size: .76rem;
+    color: var(--color-muted); margin-right: 4px; }
+  .arc-date a { color: var(--color-muted); text-decoration: none; }
+  .arc-label { display: inline-block; font-size: .68rem; background: var(--color-bg);
+    color: var(--color-muted); border: 1px solid var(--color-border);
+    border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
+  .arc-result a { color: var(--color-text); text-decoration: none; }
+  .arc-result a:hover { text-decoration: underline; }
+
+  /* ── 푸터 ── */
+  footer {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: .8rem;
+    padding: 24px;
+    border-top: 1px solid var(--color-border);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 600px) {
+    .card { padding: 18px 16px; }
+    header .logo { font-size: .95rem; }
+    .hub-sections { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* 주식 페이지 전용 — 공통 CSS 이외에 필요한 것만 */
+  </style>
+</head>
+<body>
+  <!-- templates/header.html -->
+<header>
+  <div class="logo" onclick="location.href='../index.html'" style="cursor:pointer;">AI <span>News</span> Brief</div>
+
+  <nav class="header-nav">
+    <a class="hnav-tab" href="../index.html" data-section="news"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v2h3a1 1 0 0 0 1-1v-1zm-5 2v-2H6v2h4zm-5 0v-2H1v1a1 1 0 0 0 1 1h3zm-4-4h4V8H1v4zm0-5h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg><span class="tab-label"> 뉴스 브리핑</span></a>
+    <a class="hnav-tab" href="../ai-issue/" data-section="ai-issue"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14A2.5 2.5 0 0 1 11.5 12V14H11v1.5a.5.5 0 0 1-1 0V14H9v1.5a.5.5 0 0 1-1 0V14H7v1.5a.5.5 0 0 1-1 0V14H5.5A2.5 2.5 0 0 1 3 11.5H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3v-1H1.5a.5.5 0 0 1 0-1H3A2.5 2.5 0 0 1 5.5 4V2H5V.5A.5.5 0 0 1 5 0zm-.5 4.5v7A1.5 1.5 0 0 0 6 13h4a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 10 3H6A1.5 1.5 0 0 0 4.5 4.5zM6 5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 2h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/></svg><span class="tab-label"> AI이슈</span></a>
+    <a class="hnav-tab active" href="../stock/" data-section="stock"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/></svg><span class="tab-label"> 주식 시황</span></a>
+    <a class="hnav-tab" href="../archive.html" data-section="archive"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style="flex-shrink:0"><path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg><span class="tab-label"> 아카이브</span></a>
+  </nav>
+
+  <div class="header-actions">
+    <a href="../about.html" class="btn-icon" title="사이트 소개">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+    </a>
+    <a href="https://ms-dailynews.vercel.app/subscribe" class="btn-icon" title="뉴스레터 구독">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/></svg>
+    </a>
+    <a href="https://github.com/chamgil71/dailynews" target="_blank" class="btn-icon" title="GitHub">
+      <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    </a>
+    
+    <a href="../index.html#theme-stock" class="btn-icon" id="themeBtn" title="테마 설정">
+      <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM8 4a4 4 0 1 0 0 8A4 4 0 0 0 8 4zm0 1.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>
+    </a>
+  </div>
+</header>
+
+  <div class="container">
+    <div class="card">
+      <h1>주식 시황 브리핑</h1>
+      <div class="tag-row">
+        <span class="tag">2026-10-24 (주간)</span>
+        <span class="temp-indicator temp-risk-on">🟢 약세</span>
+      </div>
+      <h1 id="주간-주식-시황-종합-2026-10-24-주">📅 주간 주식 시황 종합 — 2026-10-24 (주)</h1>
+
+<blockquote>
+  <p>기간: 2026-10-19(월) ~ 2026-10-23(금) | 생성: 2026-10-24 15:30 KST</p>
+</blockquote>
+
+<hr />
+
+<h2 id="주간-한줄-총평">■ 주간 한줄 총평</h2>
+
+<p>코스피가 하루 3%대 급등락을 반복하며 주간 -3.77%, 코스닥은 -7.07% 하락했고, 고유가(WTI 100달러 상회)와 미 기술주 약세 속에 바이오만 홀로 오른 변동성 장세였다.</p>
+
+<hr />
+
+<h2 id="1-주간-지수-성과">1. 주간 지수 성과</h2>
+
+<table>
+<thead>
+<tr>
+  <th>지수</th>
+  <th>주간 시가</th>
+  <th>주간 종가</th>
+  <th>주간 변동</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>코스피</td>
+  <td>5,768.01</td>
+  <td>5,550.30</td>
+  <td>-3.77% ▼</td>
+</tr>
+<tr>
+  <td>코스닥</td>
+  <td>808.89</td>
+  <td>751.69</td>
+  <td>-7.07% ▼</td>
+</tr>
+<tr>
+  <td>S&amp;P 500</td>
+  <td>7,659.44</td>
+  <td>7,663.40</td>
+  <td>+0.05% ▲</td>
+</tr>
+<tr>
+  <td>나스닥</td>
+  <td>26,140.03</td>
+  <td>26,008.90</td>
+  <td>-0.50% ▼</td>
+</tr>
+<tr>
+  <td>원/달러</td>
+  <td>-</td>
+  <td>1,324.1원</td>
+  <td>주간 -5.9원 (1,329.96→1,324.1)</td>
+</tr>
+<tr>
+  <td>WTI 유가</td>
+  <td>-</td>
+  <td>100.8달러</td>
+  <td>주간 +2.5% (98.29→100.8)</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p>※ 주간 시가는 월요일(10-19) 종가 기준이라 월요일 당일 등락은 포함되지 않습니다. 미국 지수는 월요일 리포트의 10-16 종가와 금요일 리포트의 10-22 종가를 비교한 값입니다. 10-20(화) 일일 리포트는 수록되지 않았으며, 10-21 코스피 +3.29%(5,735.66)로 역산하면 10-20 종가는 약 5,553(약 -3.7%)으로 추정됩니다.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="2-섹터-주간-성과">2. 섹터 주간 성과</h2>
+
+<h3 id="상위-섹터">상위 섹터</h3>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th>대표종목</th>
+  <th>주간 누적</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>바이오</td>
+  <td>삼성바이오로직스</td>
+  <td>+2.73%</td>
+</tr>
+<tr>
+  <td>반도체</td>
+  <td>삼성전자 / SK하이닉스</td>
+  <td>-1.15% / 0.00%</td>
+</tr>
+<tr>
+  <td>금융</td>
+  <td>우리은행</td>
+  <td>-4.90%</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="하위-섹터">하위 섹터</h3>
+
+<table>
+<thead>
+<tr>
+  <th>섹터</th>
+  <th>대표종목</th>
+  <th>주간 누적</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>방산</td>
+  <td>한화에어로스페이스</td>
+  <td>-12.49%</td>
+</tr>
+<tr>
+  <td>우주</td>
+  <td>한국항공우주</td>
+  <td>-12.35%</td>
+</tr>
+<tr>
+  <td>원전/SMR</td>
+  <td>두산에너빌리티</td>
+  <td>-10.81%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p>참고: 전력인프라(HD현대일렉트릭) -10.48%, 로봇(레인보우로보틱스) -6.75%. 월요일 종가 대비 금요일 종가 기준이며, 상위·하위는 상대 순위입니다(9개 섹터 중 상승은 바이오 1개).</p>
+</blockquote>
+
+<hr />
+
+<h2 id="3-이번-주-핫-테마-top-3">3. 이번 주 핫 테마 TOP 3</h2>
+
+<h3 id="1-고변동성-장세와-반도체-쏠림">① 고변동성 장세와 반도체 쏠림</h3>
+
+<p>코스피는 이번 주 일간 +3.29%(21일), -3.52%(22일)처럼 3%대 등락을 반복했고 삼성전자·SK하이닉스 같은 반도체 대형주가 지수 방향을 좌우했다. 삼성전자는 주간 -1.15%, SK하이닉스는 보합으로 마감해 큰 변동 끝에 제자리로 돌아왔다.</p>
+
+<h3 id="2-고유가고금리-부담">② 고유가·고금리 부담</h3>
+
+<p>WTI가 98달러대에서 시작해 금요일 100.8달러로 100달러를 넘어섰고 미 10년물은 5.1%대에서 4.95%로 내려왔지만 여전히 높은 수준이다. 유가·금리 부담이 위험자산 선호를 제약하는 모습이었다.</p>
+
+<h3 id="3-바이오-강세와-미-기술주-약세의-엇갈림">③ 바이오 강세와 미 기술주 약세의 엇갈림</h3>
+
+<p>삼성바이오로직스가 주간 +2.73%(23일 하루 +7.71%)로 유일하게 상승한 섹터가 됐고 일라이릴리도 강세였다. 반면 23일 나스닥이 -2.60%, 엔비디아가 -4.40% 급락해 AI·빅테크는 약세였다.</p>
+
+<hr />
+
+<h2 id="4-차주-주요-일정">4. 차주 주요 일정</h2>
+
+<table>
+<thead>
+<tr>
+  <th>날짜</th>
+  <th>이벤트</th>
+  <th>예상 영향</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>-</td>
+  <td>일정 미확인 (뉴스 검색 도구 미연결로 수집하지 못함)</td>
+  <td>미국 연준·한국 금통위·경제지표 발표 일정은 별도 확인 필요</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<h2 id="5-차주-전략-포인트">5. 차주 전략 포인트</h2>
+
+<ol>
+<li>일간 3%대 변동이 반복되는 고변동 국면이므로 추격 매수보다 분할 접근과 비중 관리가 유효하다.</li>
+<li>코스피 대형주는 보합권을 지켰으나 코스닥·방산·우주·원전 등 중소형·테마주 낙폭이 커, 반등 시 종목별 차별화 확인이 필요하다.</li>
+<li>바이오 등 방어적 성장 섹터로의 자금 이동과 미 기술주(나스닥 -2.60%) 후속 흐름을 함께 점검할 필요가 있다.</li>
+</ol>
+
+<hr />
+
+<h2 id="6-리스크-요인">6. 리스크 요인</h2>
+
+<ul>
+<li>WTI 100달러 상회에 따른 인플레이션·비용 압력과 높은 장기금리 수준(미 10년물 4.95%)</li>
+<li>미국 기술주 급락의 후속 파급 및 코스닥 등 중소형주 약세 지속 가능성</li>
+</ul>
+
+<hr />
+
+<h2 id="주간-온도계-약세">주간 온도계: 🟢 약세</h2>
+
+<blockquote>
+  <p>코스피 -3.77%, 코스닥 -7.07%로 주요 섹터 대부분이 하락했고, 유가·금리 부담과 미 기술주 약세가 겹쳐 약세 국면으로 판단한다.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="일별-온도-변화">일별 온도 변화</h2>
+
+<table>
+<thead>
+<tr>
+  <th>날짜</th>
+  <th>온도</th>
+  <th>한줄 특징</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>10-19(월)</td>
+  <td>🟡 중립</td>
+  <td>코스피 +1.76% 이틀째 반등, 미 기술주 약세</td>
+</tr>
+<tr>
+  <td>10-20(화)</td>
+  <td>-</td>
+  <td>일일 리포트 없음 (코스피 약 -3.7% 하락 추정)</td>
+</tr>
+<tr>
+  <td>10-21(수)</td>
+  <td>🟠 상승</td>
+  <td>코스피 +3.29%, 반도체 랠리·유가 급락</td>
+</tr>
+<tr>
+  <td>10-22(목)</td>
+  <td>🟢 하락</td>
+  <td>코스피 -3.52%, 코스닥 -2.29% 동반 급락</td>
+</tr>
+<tr>
+  <td>10-23(금)</td>
+  <td>🟡 중립</td>
+  <td>코스피 +0.30%, 코스닥 -1.62%, 바이오 강세</td>
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<p><em>※ 본 브리핑은 AI가 생성한 참고 정보이며 투자 권유가 아닙니다.</em></p>
+
+    </div>
+  </div>
+
+  <footer>
+  GitHub Actions · RSS Feeds · 매일 자동 업데이트<br>
+  Generated by Gemini 2.0 Flash ·
+  <a href="https://github.com/chamgil71/dailynews" style="color:inherit">chamgil71/dailynews</a>
+  · 생성: 2026-10-24 15:30 KST
+</footer>
+  <script src="../nav.js" defer></script>
+</body>
+</html>
