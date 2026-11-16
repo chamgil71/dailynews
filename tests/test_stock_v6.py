@@ -494,7 +494,7 @@ if weekly_yml_path.exists():
 # ─────────────────────────────────────────────────────────────
 # 결과 요약
 # ─────────────────────────────────────────────────────────────
-total = sum(1 for line in open(__file__) if "check(" in line and "check_" not in line)
+total = sum(1 for line in open(__file__, encoding="utf-8") if "check(" in line and "check_" not in line)
 passed = total - len(_failures)
 
 print(f"\n{'='*60}")
