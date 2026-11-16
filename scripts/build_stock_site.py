@@ -27,14 +27,13 @@ import markdown2
 from dotenv import load_dotenv
 load_dotenv()
 
-from config.settings import SITE_BASE_URL
+from config.settings import SITE_BASE_URL, STOCK_REPORTS_DIR, PUBLISH_DIR
 from core.shared.report_date import weekly_label
 from core.shared.report_meta import parse_report_meta, report_generated_at
 from config.theme_config import SECTION_THEMES, SITE_THEME, SITE_TITLE, SUBSCRIBE_URL
 from themes import load_theme
 
-STOCK_REPORTS_DIR = "reports/stock"
-STOCK_PUBLISH_DIR = "publish/stock"
+STOCK_PUBLISH_DIR = os.path.join(PUBLISH_DIR, "stock")
 
 os.makedirs(STOCK_PUBLISH_DIR, exist_ok=True)
 

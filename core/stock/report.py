@@ -16,8 +16,8 @@ from jinja2 import Environment, BaseLoader
 
 logger = logging.getLogger(__name__)
 
-STOCK_REPORTS_DIR = "reports/stock"
-STOCK_TEMPLATE    = "templates/stock_report.md"
+from config.settings import STOCK_REPORTS_DIR, TEMPLATES_DIR
+STOCK_TEMPLATE    = os.path.join(TEMPLATES_DIR, "stock_report.md")
 
 
 def _fmt(val: float | None, decimals: int = 2, prefix: str = "", suffix: str = "") -> str:

@@ -21,7 +21,7 @@ import feedparser
 from config.rss_sources import RSS_FEEDS
 from config.keywords import WATCH_KEYWORDS
 from config.settings import (
-    CACHE_ENABLED, CACHE_FILE, CACHE_TTL_HOURS,
+    CACHE_ENABLED, CACHE_FILE, CACHE_TTL_HOURS, PUBLISH_DIR,
     MAX_ENTRIES_PER_FEED, MAX_TITLES_TO_ANALYZE,
     RSS_TIMEOUT_SECONDS,
 )
@@ -62,7 +62,7 @@ def _load_cache() -> set:
 
     # 2. publish/reports-data.json에서 수집 이력 URL 자동 추출
     # GitHub Actions 등 매번 초기화되는 가상 머신 환경에서도 Git Checkout된 JSON 데이터를 읽어 중복 수집 원천 방지
-    reports_data_file = "publish/reports-data.json"
+    reports_data_file = os.path.join(PUBLISH_DIR, "reports-data.json")
     if os.path.exists(reports_data_file):
         try:
             with open(reports_data_file, "r", encoding="utf-8") as f:

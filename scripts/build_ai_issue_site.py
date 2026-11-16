@@ -23,13 +23,13 @@ if _ROOT not in sys.path:
 
 load_dotenv()
 
-from config.settings import SITE_BASE_URL
+from config.settings import SITE_BASE_URL, AI_ISSUE_REPORTS_DIR, PUBLISH_DIR as _PUBLISH_ROOT
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL
 from core.shared.text_utils import unwrap_md_wrapper
 from core.shared.report_meta import report_generated_at
 
-REPORTS_DIR = "reports/ai-issue"
-PUBLISH_DIR = "publish/ai-issue"
+REPORTS_DIR = AI_ISSUE_REPORTS_DIR
+PUBLISH_DIR = os.path.join(_PUBLISH_ROOT, "ai-issue")
 
 os.makedirs(PUBLISH_DIR, exist_ok=True)
 

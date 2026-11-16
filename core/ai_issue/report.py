@@ -15,8 +15,8 @@ from jinja2 import Environment, BaseLoader
 
 logger = logging.getLogger(__name__)
 
-AI_ISSUE_REPORTS_DIR = "reports/ai-issue"
-AI_ISSUE_TEMPLATE = "templates/ai_issue_report.md"
+from config.settings import AI_ISSUE_REPORTS_DIR, TEMPLATES_DIR
+AI_ISSUE_TEMPLATE = os.path.join(TEMPLATES_DIR, "ai_issue_report.md")
 
 
 def generate_weekly_report(analysis_data: dict) -> str:

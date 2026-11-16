@@ -10,7 +10,9 @@ from openpyxl.utils import get_column_letter
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = Path("storage/news_db.xlsx")
+from config.settings import STORAGE_DIR
+
+DB_PATH = Path(STORAGE_DIR) / "news_db.xlsx"
 SHEET_NAME = "뉴스DB"
 
 _HEADERS = ["날짜", "카테고리", "출처라벨", "언어", "제목", "링크", "발행일시", "요약"]

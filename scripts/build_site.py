@@ -34,12 +34,11 @@ if _ROOT not in sys.path:
 
 load_dotenv()
 
-from config.settings import SITE_BASE_URL
+from config.settings import SITE_BASE_URL, REPORTS_DIR, PUBLISH_DIR
 from core.shared.report_meta import parse_report_meta, report_generated_at
 from config.theme_config import SECTION_THEMES, SITE_TITLE, FOOTER_CONFIG, SUBSCRIBE_URL
 
-REPORTS_DIR  = "reports"
-DOCS_DIR     = "publish"
+DOCS_DIR     = PUBLISH_DIR
 NEWS_HTML_DIR = os.path.join(DOCS_DIR, "news")   # 날짜별 HTML 전용 디렉토리
 os.makedirs(DOCS_DIR, exist_ok=True)
 os.makedirs(NEWS_HTML_DIR, exist_ok=True)

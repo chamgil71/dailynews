@@ -1,7 +1,7 @@
-# scripts/init_db.py
+# scripts/migrations/init_db.py
 """
 기존 reports/*.md 파일로 storage/news_db.xlsx 초기화
-실행: python scripts/init_db.py
+실행: python scripts/migrations/init_db.py
 """
 
 import glob
@@ -9,11 +9,11 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# 프로젝트 루트 (scripts/migrations/init_db.py → 세 단계 위). 예전엔 scripts/ 를 넣어 core 를 못 찾았음
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from config.settings import REPORTS_DIR
 from core.shared.db import append_news
-
-REPORTS_DIR = "reports"
 
 LABEL_MAP = {
     "국내 종합":      ("korean_general",      "ko"),

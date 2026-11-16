@@ -1,5 +1,16 @@
 # config/settings.py
 import os
+from pathlib import Path
+
+# ── 경로 (실행 위치가 아니라 프로젝트 루트 기준) ─────────────────────────────
+# 모든 파일 경로는 여기서만 정한다. 문자열이라 os.path.join·glob·f-string 에 그대로 쓴다.
+PROJECT_ROOT         = Path(__file__).resolve().parent.parent
+REPORTS_DIR          = str(PROJECT_ROOT / "reports")
+STOCK_REPORTS_DIR    = str(PROJECT_ROOT / "reports" / "stock")
+AI_ISSUE_REPORTS_DIR = str(PROJECT_ROOT / "reports" / "ai-issue")
+PUBLISH_DIR          = str(PROJECT_ROOT / "publish")
+TEMPLATES_DIR        = str(PROJECT_ROOT / "templates")
+STORAGE_DIR          = str(PROJECT_ROOT / "storage")
 
 # ── LLM 설정 ──────────────────────────────────────────────────────────────────
 LLM_PROVIDER    = os.getenv("LLM_PROVIDER", "gemini")   # "gpt" | "claude" | "gemini"
@@ -31,7 +42,7 @@ RSS_TIMEOUT_SECONDS     = 10
 
 # ── 캐시 설정 ─────────────────────────────────────────────────────────────────
 CACHE_ENABLED   = True
-CACHE_FILE      = ".cache/last_urls.json"
+CACHE_FILE      = str(PROJECT_ROOT / ".cache" / "last_urls.json")
 CACHE_TTL_HOURS = 23
 
 # ── 이메일 설정 ───────────────────────────────────────────────────────────────
@@ -44,5 +55,4 @@ UNSUBSCRIBE_SECRET   = os.getenv("UNSUBSCRIBE_SECRET", "")
 SITE_BASE_URL        = os.getenv("SITE_BASE_URL", "").rstrip("/")
 
 # ── 리포트 ────────────────────────────────────────────────────────────────────
-REPORTS_DIR     = "reports"
 REPORT_FILENAME = "news_{date}.md"
